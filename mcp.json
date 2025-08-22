@@ -1,0 +1,35 @@
+{
+  "name": "documcp",
+  "version": "0.1.0",
+  "description": "Intelligent MCP server for GitHub Pages documentation deployment",
+  "author": "Tosin Akinosho",
+  "license": "MIT",
+  "runtime": "node",
+  "main": "dist/index.js",
+  "tools": [
+    {
+      "name": "analyze_repository",
+      "description": "Analyze repository structure, dependencies, and documentation needs"
+    },
+    {
+      "name": "recommend_ssg",
+      "description": "Recommend the best static site generator based on project analysis"
+    },
+    {
+      "name": "generate_config",
+      "description": "Generate configuration files for the selected static site generator"
+    },
+    {
+      "name": "setup_structure",
+      "description": "Create Diataxis-compliant documentation structure"
+    },
+    {
+      "name": "deploy_pages",
+      "description": "Set up GitHub Pages deployment workflow"
+    },
+    {
+      "name": "verify_deployment",
+      "description": "Verify and troubleshoot GitHub Pages deployment"
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "name": "documcp",
+  "version": "0.1.0",
+  "description": "Intelligent MCP server for GitHub Pages documentation deployment",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "test": "jest",
+    "test:coverage": "jest --coverage",
+    "test:performance": "jest --testPathPattern=benchmarks",
+    "test:ci": "jest --coverage --ci --watchAll=false",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\"",
+    "typecheck": "tsc --noEmit",
+    "validate:rules": "npm run lint && npm run typecheck && npm run test:coverage",
+    "security:check": "npm audit --audit-level=moderate",
+    "ci": "npm run typecheck && npm run lint && npm run test:ci && npm run build",
+    "prepare": "npm run build",
+    "benchmark:run": "tsx src/scripts/benchmark.ts run",
+    "benchmark:current": "tsx src/scripts/benchmark.ts current", 
+    "benchmark:create-config": "tsx src/scripts/benchmark.ts create-config",
+    "benchmark:help": "tsx src/scripts/benchmark.ts help"
+  },
+  "keywords": [
+    "mcp",
+    "documentation",
+    "github-pages",
+    "static-site-generator",
+    "diataxis"
+  ],
+  "author": "Tosin Akinosho",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.6.0",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.11",
+    "@types/node": "^20.11.0",
+    "@typescript-eslint/eslint-plugin": "^6.19.0",
+    "@typescript-eslint/parser": "^6.19.0",
+    "eslint": "^8.56.0",
+    "jest": "^29.7.0",
+    "prettier": "^3.2.4",
+    "ts-jest": "^29.1.1",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
