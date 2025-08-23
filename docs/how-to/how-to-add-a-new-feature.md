@@ -404,7 +404,7 @@ npm run typecheck
 ### 3. Tool Review Checklist
 - [ ] Follows MCP protocol specifications
 - [ ] Includes comprehensive error handling
-- [ ] Has >90% test coverage
+- [ ] Has &gt;90% test coverage
 - [ ] Documentation is complete
 - [ ] Integrates with existing DocuMCP workflows
 - [ ] Performance is acceptable

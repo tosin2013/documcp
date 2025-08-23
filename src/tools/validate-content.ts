@@ -3,12 +3,12 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import { fileURLToPath } from 'url';
 
 // ESM-compatible __dirname replacement - fallback for test environments
 function getDirname(): string {
   try {
     if (typeof import.meta !== 'undefined' && import.meta.url) {
-      const { fileURLToPath } = require('url');
       return path.dirname(fileURLToPath(import.meta.url));
     }
   } catch {
@@ -244,8 +244,6 @@ class ContentAccuracyValidator {
     result: ValidationResult
   ): Promise<void> {
     if (!this.projectContext) return;
-
-    const dependencies = this.projectContext.dependencies?.packages || [];
     
     // Check if mentioned versions align with project dependencies
     const versionPattern = /@(\d+\.\d+\.\d+)/g;
@@ -615,7 +613,7 @@ class ContentAccuracyValidator {
       await fs.writeFile(tempFile, code, 'utf-8');
       
       // Try to compile with TypeScript
-      const { stdout, stderr } = await execAsync(`npx tsc --noEmit --skipLibCheck ${tempFile}`);
+      const { stderr } = await execAsync(`npx tsc --noEmit --skipLibCheck ${tempFile}`);
       
       if (stderr && stderr.includes('error')) {
         validation.issues.push({
@@ -647,7 +645,9 @@ class ContentAccuracyValidator {
       // Clean up temp file
       try {
         await fs.unlink(tempFile);
-      } catch {}
+      } catch {
+        // Ignore cleanup errors
+      }
     }
   }
 
@@ -826,7 +826,7 @@ class ContentAccuracyValidator {
     }
   }
 
-  private generateRecommendations(result: ValidationResult, options: ValidationOptions): void {
+  private generateRecommendations(result: ValidationResult, _options: ValidationOptions): void {
     const recommendations: string[] = [];
     const nextSteps: string[] = [];
     

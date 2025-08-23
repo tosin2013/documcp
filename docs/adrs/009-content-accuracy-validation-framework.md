@@ -471,12 +471,12 @@ describe('ContentAccuracyFramework', () => {
 ### Accuracy Metrics
 - **Content Accuracy Rate**: 85%+ technical accuracy for generated content
 - **Confidence Calibration**: ±10% alignment between confidence and actual accuracy
-- **False Positive Rate**: <5% validation failures for actually correct content
-- **User Correction Rate**: <20% of content sections require user correction
+- **False Positive Rate**: &lt;5% validation failures for actually correct content
+- **User Correction Rate**: &lt;20% of content sections require user correction
 
 ### User Experience Metrics
 - **Trust Score**: 90%+ user confidence in system accuracy
-- **Workflow Efficiency**: Validation processes add <15% to generation time
+- **Workflow Efficiency**: Validation processes add &lt;15% to generation time
 - **Clarification Effectiveness**: 80%+ of clarification requests improve accuracy
 - **Learning Effectiveness**: 70% reduction in repeat accuracy issues
 
@@ -484,7 +484,7 @@ describe('ContentAccuracyFramework', () => {
 - **Validation Coverage**: 95%+ of generated content passes through validation
 - **Fallback Effectiveness**: 100% of failed generations provide safe alternatives
 - **Error Recovery**: 90%+ of validation failures result in improved content
-- **Performance Impact**: <30 seconds total for accuracy-validated content generation
+- **Performance Impact**: &lt;30 seconds total for accuracy-validated content generation
 
 ## Future Enhancements
 

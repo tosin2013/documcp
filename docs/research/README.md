@@ -70,8 +70,8 @@ This directory contains comprehensive research planning and findings for the Doc
 
 ### **✅ Success Criteria Framework**
 Each research question includes:
-- **Quantitative Metrics**: Measurable success criteria (e.g., "<30 seconds analysis time")
-- **Qualitative Assessments**: Expert validation requirements (e.g., ">85% expert agreement")
+- **Quantitative Metrics**: Measurable success criteria (e.g., "&lt;30 seconds analysis time")
+- **Qualitative Assessments**: Expert validation requirements (e.g., "&gt;85% expert agreement")
 - **Risk Mitigation**: Identified risks and mitigation strategies
 - **Implementation Guidance**: Actionable development recommendations
 

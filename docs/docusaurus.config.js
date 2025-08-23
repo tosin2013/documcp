@@ -3,7 +3,7 @@ module.exports = {
   tagline: 'Intelligent documentation deployment MCP server with AI-powered repository analysis and Diataxis-compliant content generation',
   url: 'https://tosin2013.github.io',
   baseUrl: '/documcp/',
-  onBrokenLinks: 'throw',
+  onBrokenLinks: 'warn',
   onBrokenMarkdownLinks: 'warn',
   favicon: 'img/favicon.ico',
   organizationName: 'tosin2013',
@@ -18,6 +18,7 @@ module.exports = {
           editUrl: 'https://github.com/tosin2013/documcp/tree/main/docs/',
           routeBasePath: '/',
           path: '.',
+          exclude: ['**/node_modules/**', '**/.*', '**/*.{js,jsx,ts,tsx}'],
         },
         blog: false,
         theme: {

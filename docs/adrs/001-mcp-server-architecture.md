@@ -117,7 +117,7 @@ src/
    - ✅ Type safety adds compile-time benefits without runtime performance cost
 
 2. **Node.js Memory Optimization** (Critical for Repository Analysis):
-   - **Streaming Implementation**: 10x memory reduction for files >100MB
+   - **Streaming Implementation**: 10x memory reduction for files &gt;100MB
    - **Worker Thread Pool**: 3-4x performance improvement for parallel processing
    - **Memory-Mapped Files**: 5x speed improvement for large directory traversal
 
@@ -157,9 +157,9 @@ class RepositoryAnalyzer {
 
 ### Performance Benchmarks
 Research-validated performance targets:
-- **Small Repositories** (<100 files): <1 second analysis time
-- **Medium Repositories** (100-1000 files): <10 seconds analysis time
-- **Large Repositories** (1000+ files): <60 seconds analysis time
+- **Small Repositories** (&lt;100 files): &lt;1 second analysis time
+- **Medium Repositories** (100-1000 files): &lt;10 seconds analysis time
+- **Large Repositories** (1000+ files): &lt;60 seconds analysis time
 - **Memory Usage**: Constant memory profile regardless of repository size
 
 ## Future Considerations

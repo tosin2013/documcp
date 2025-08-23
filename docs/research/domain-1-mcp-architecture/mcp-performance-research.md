@@ -41,7 +41,7 @@ Research findings on TypeScript MCP SDK performance characteristics, Node.js opt
    - Use memory-mapped files for large repository scanning
 
 2. **Performance Benchmarks**:
-   - Streaming approach: 10x memory reduction for files >100MB
+   - Streaming approach: 10x memory reduction for files &gt;100MB
    - Worker threads: 3-4x performance improvement for parallel processing
    - Memory-mapped files: 5x faster for large directory traversal
 
@@ -72,7 +72,7 @@ const analyzeFileStream = (filePath: string) => {
 ### Critical Insights for DocuMCP
 1. **Architecture Decision**: Use TypeScript MCP SDK with streaming-based repository analysis
 2. **Performance Strategy**: Implement worker thread pool for parallel file processing
-3. **Memory Management**: Apply streaming patterns for files >10MB, memory mapping for directory scans
+3. **Memory Management**: Apply streaming patterns for files &gt;10MB, memory mapping for directory scans
 4. **Error Handling**: Implement circuit breaker pattern for external service calls
 
 ### Next Steps

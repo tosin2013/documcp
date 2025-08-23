@@ -6,9 +6,9 @@ This document describes DocuMCP's performance benchmarking system, implemented a
 
 The performance benchmarking system ensures that repository analysis operations meet strict performance targets based on repository size:
 
-- **Small repositories** (<100 files): **<1 second**
-- **Medium repositories** (100-1000 files): **<10 seconds**  
-- **Large repositories** (1000+ files): **<60 seconds**
+- **Small repositories** (&lt;100 files): **&lt;1 second**
+- **Medium repositories** (100-1000 files): **&lt;10 seconds**  
+- **Large repositories** (1000+ files): **&lt;60 seconds**
 
 ## Quick Start
 
@@ -271,7 +271,7 @@ The PERF-001 targets are based on:
 1. **User Experience**: Analysis should feel instantaneous for small projects
 2. **CI/CD Integration**: Must not significantly slow down build pipelines  
 3. **Large Repository Support**: Must handle enterprise-scale repositories
-4. **Memory Efficiency**: Analysis should use <100MB additional memory
+4. **Memory Efficiency**: Analysis should use &lt;100MB additional memory
 
 ## Future Enhancements
 

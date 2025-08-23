@@ -185,8 +185,8 @@ time echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"analy
 ```
 
 **Common Causes**:
-- Large repositories (>1GB)
-- Deep directory structures (>20 levels) 
+- Large repositories (&gt;1GB)
+- Deep directory structures (&gt;20 levels) 
 - Network issues during GitHub API calls
 
 **Solutions**:

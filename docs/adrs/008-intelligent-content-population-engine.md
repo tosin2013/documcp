@@ -1124,7 +1124,7 @@ interface ContributionStandards {
     minimumPatterns: 3;
     requiredTypes: ['file', 'dependency'];
     weightDistribution: 'balanced'; // No single pattern > 70% weight
-    falsePositiveRate: '<5%';
+    falsePositiveRate: '&lt;5%';
   };
   
   content: {
@@ -1143,10 +1143,10 @@ interface ContributionStandards {
   };
   
   testing: {
-    detectionAccuracy: '>90%';
+    detectionAccuracy: '&gt;90%';
     contentGeneration: 'functional tests';
     integrationTests: 'with existing systems';
-    performanceImpact: '<10% generation time increase';
+    performanceImpact: '&lt;10% generation time increase';
   };
 }
 ```

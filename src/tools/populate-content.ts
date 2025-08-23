@@ -25,13 +25,14 @@ interface ContentPlan {
   explanation: any[];
 }
 
-interface ProjectContext {
-  primaryLanguage: string;
-  frameworks: any[];
-  testingFrameworks: any[];
-  dependencies: any;
-  devopsTools?: DevOpsToolProfile;
-}
+// ProjectContext interface - currently unused but kept for future enhancements
+// interface ProjectContext {
+//   primaryLanguage: string;
+//   frameworks: any[];
+//   testingFrameworks: any[];
+//   dependencies: any;
+//   devopsTools?: DevOpsToolProfile;
+// }
 
 interface DevOpsToolProfile {
   containerization: ContainerTechnology[];
@@ -352,7 +353,7 @@ class ContentPopulationEngine {
   }
 
   // Content generation methods
-  private generateGettingStartedContent(analysis: any): string {
+  private generateGettingStartedContent(_analysis: any): string {
     return `# Getting Started with ${analysis.metadata.projectName}
 
 Welcome to ${analysis.metadata.projectName}! This tutorial will guide you through setting up and running the project for the first time.
@@ -405,7 +406,7 @@ npm test
 `;
   }
 
-  private generateGettingStartedExamples(analysis: any): string[] {
+  private generateGettingStartedExamples(_analysis: any): string[] {
     return [
       `// Example: Basic usage
 import { initialize } from './${analysis.metadata.projectName}';
@@ -430,7 +431,7 @@ app.start();`,
     ];
   }
 
-  private generateNodeSetupContent(analysis: any): string {
+  private generateNodeSetupContent(_analysis: any): string {
     return `# Setting Up Your Development Environment
 
 This guide will help you configure a complete Node.js and TypeScript development environment.
@@ -508,7 +509,7 @@ Create a \`.vscode/launch.json\` file:
     ];
   }
 
-  private generateTestingTutorialContent(analysis: any): string {
+  private generateTestingTutorialContent(_analysis: any): string {
     const testFramework = analysis.technologies.testing?.[0] || 'Jest';
     
     return `# Writing and Running Tests
@@ -570,7 +571,7 @@ npm test -- --coverage
 `;
   }
 
-  private generateTestingExamples(analysis: any): string[] {
+  private generateTestingExamples(_analysis: any): string[] {
     return [
       `// Unit test example
 import { calculateTotal } from './calculator';
@@ -617,7 +618,7 @@ describe('API Endpoints', () => {
     ];
   }
 
-  private generateFeatureGuideContent(analysis: any): string {
+  private generateFeatureGuideContent(_analysis: any): string {
     return `# How to Add a New Feature
 
 This guide walks you through the process of adding a new feature to ${analysis.metadata.projectName}.
@@ -673,7 +674,7 @@ Create tests for your new feature:
 `;
   }
 
-  private generateDebuggingGuideContent(analysis: any): string {
+  private generateDebuggingGuideContent(_analysis: any): string {
     return `# How to Debug Common Issues
 
 This guide helps you troubleshoot and debug common issues in ${analysis.metadata.projectName}.
@@ -750,7 +751,7 @@ If you're still stuck:
 `;
   }
 
-  private generateDeploymentGuideContent(analysis: any): string {
+  private generateDeploymentGuideContent(_analysis: any): string {
     return `# How to Deploy Your Application
 
 This guide covers deployment options and best practices for ${analysis.metadata.projectName}.
@@ -1087,7 +1088,7 @@ ${analysis.metadata.projectName} build --minify --output ./production
 `;
   }
 
-  private generateArchitectureContent(analysis: any): string {
+  private generateArchitectureContent(_analysis: any): string {
     return `# Architecture Overview
 
 Understanding the architecture of ${analysis.metadata.projectName}.
@@ -1183,7 +1184,7 @@ The application supports horizontal scaling through:
 `;
   }
 
-  private generateDesignDecisionsContent(analysis: any): string {
+  private generateDesignDecisionsContent(_analysis: any): string {
     return `# Design Decisions
 
 Key architectural and design decisions made in ${analysis.metadata.projectName}.
@@ -1336,7 +1337,7 @@ Prepared for cloud deployment:
 `;
   }
 
-  private generateTechnologyStackContent(analysis: any): string {
+  private generateTechnologyStackContent(_analysis: any): string {
     return `# Technology Stack
 
 Complete overview of technologies used in ${analysis.metadata.projectName}.
@@ -1534,7 +1535,9 @@ ${analysis.technologies.database ? `### Database
         try {
           await fs.access(filePath);
           continue;
-        } catch {}
+        } catch {
+          // File doesn't exist, proceed with creation
+        }
       }
       
       await fs.writeFile(filePath, howTo.content, 'utf-8');
@@ -1550,7 +1553,9 @@ ${analysis.technologies.database ? `### Database
         try {
           await fs.access(filePath);
           continue;
-        } catch {}
+        } catch {
+          // File doesn't exist, proceed with creation
+        }
       }
       
       await fs.writeFile(filePath, ref.content, 'utf-8');
@@ -1566,7 +1571,9 @@ ${analysis.technologies.database ? `### Database
         try {
           await fs.access(filePath);
           continue;
-        } catch {}
+        } catch {
+          // File doesn't exist, proceed with creation
+        }
       }
       
       await fs.writeFile(filePath, exp.content, 'utf-8');
@@ -1803,7 +1810,7 @@ ${contentPlan.explanation.map(e => `- [${e.title}](explanation/${this.slugify(e.
     return files.some((f: any) => f.content?.includes(content));
   }
 
-  private extractDockerVersion(analysis: any): string | undefined {
+  private extractDockerVersion(_analysis: any): string | undefined {
     return undefined; // Could be implemented to parse Dockerfile
   }
 
@@ -1828,11 +1835,11 @@ ${contentPlan.explanation.map(e => `- [${e.title}](explanation/${this.slugify(e.
       .map((f: any) => f.name);
   }
 
-  private analyzeKubernetesResources(analysis: any): string[] {
+  private analyzeKubernetesResources(_analysis: any): string[] {
     return ['Deployment', 'Service', 'ConfigMap']; // Simplified
   }
 
-  private extractNamespaces(analysis: any): string[] {
+  private extractNamespaces(_analysis: any): string[] {
     return ['default']; // Simplified
   }
 
@@ -1851,7 +1858,7 @@ ${contentPlan.explanation.map(e => `- [${e.title}](explanation/${this.slugify(e.
   }
 
   // Content generation methods for new features
-  private generateContainerTutorialContent(analysis: any, containerTech: ContainerTechnology): string {
+  private generateContainerTutorialContent(_analysis: any, _containerTech: ContainerTechnology): string {
     return `# Containerizing ${analysis.metadata.projectName} with ${containerTech.name}
 
 Learn how to package your ${analysis.metadata.primaryLanguage} application into a container for consistent deployment across environments.
@@ -1901,7 +1908,7 @@ ${containerTech.name} run -p 3000:3000 ${analysis.metadata.projectName}:latest
 `;
   }
 
-  private generateOrchestrationTutorialContent(analysis: any, orchestrationTech: OrchestrationTechnology): string {
+  private generateOrchestrationTutorialContent(_analysis: any, _orchestrationTech: OrchestrationTechnology): string {
     return `# Deploying ${analysis.metadata.projectName} to ${orchestrationTech.name}
 
 Deploy your containerized application to ${orchestrationTech.name} for scalable, production-ready hosting.
@@ -1959,7 +1966,7 @@ kubectl scale deployment ${analysis.metadata.projectName} --replicas=3
 `;
   }
 
-  private generatePythonEnvironmentContent(analysis: any): string {
+  private generatePythonEnvironmentContent(_analysis: any): string {
     return `# Python Virtual Environment Setup
 
 Set up an isolated Python development environment for ${analysis.metadata.projectName}.
@@ -2038,7 +2045,7 @@ deactivate
 `;
   }
 
-  private generatePythonFrameworkTutorialContent(analysis: any, framework: any): string {
+  private generatePythonFrameworkTutorialContent(_analysis: any, framework: any): string {
     if (framework.name === 'django') {
       return this.generateDjangoTutorialContent(analysis);
     } else if (framework.name === 'fastapi') {
@@ -2065,7 +2072,7 @@ Create your first ${framework.name} application and explore the framework's core
 `;
   }
 
-  private generateDjangoTutorialContent(analysis: any): string {
+  private generateDjangoTutorialContent(_analysis: any): string {
     return `# Building Applications with Django
 
 Create robust web applications using Django's Model-View-Template architecture.
@@ -2159,7 +2166,7 @@ python manage.py runserver
 `;
   }
 
-  private generateFastAPITutorialContent(analysis: any): string {
+  private generateFastAPITutorialContent(_analysis: any): string {
     return `# Building APIs with FastAPI
 
 Create modern, fast APIs with automatic documentation using FastAPI.
@@ -2226,7 +2233,7 @@ FastAPI automatically generates interactive API documentation:
 `;
   }
 
-  private generateFlaskTutorialContent(analysis: any): string {
+  private generateFlaskTutorialContent(_analysis: any): string {
     return `# Building Applications with Flask
 
 Create lightweight web applications and APIs using Flask's minimalist approach.
@@ -2303,7 +2310,7 @@ Popular Flask extensions:
   }
 
   // Helper methods for container content generation
-  private generateContainerFileContent(analysis: any, containerTech: ContainerTechnology): string {
+  private generateContainerFileContent(_analysis: any, _containerTech: ContainerTechnology): string {
     const language = analysis.metadata.primaryLanguage?.toLowerCase();
     
     if (language === 'python') {
@@ -2391,7 +2398,7 @@ spec:
     return '';
   }
 
-  private generateContainerExamples(analysis: any, containerTech: ContainerTechnology): string[] {
+  private generateContainerExamples(_analysis: any, _containerTech: ContainerTechnology): string[] {
     return [
       `# Build the container image
 ${containerTech.name} build -t ${analysis.metadata.projectName}:latest .`,
@@ -2404,7 +2411,7 @@ ${containerTech.name} ps`
     ];
   }
 
-  private generateOrchestrationExamples(analysis: any, orchestrationTech: OrchestrationTechnology): string[] {
+  private generateOrchestrationExamples(_analysis: any, _orchestrationTech: OrchestrationTechnology): string[] {
     return [
       `# Deploy the application
 kubectl apply -f k8s/`,

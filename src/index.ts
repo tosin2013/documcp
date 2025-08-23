@@ -531,7 +531,7 @@ markup:
           ],
         };
 
-      default:
+      default: {
         // Try to find specific workflow
         const workflow = DOCUMENTATION_WORKFLOWS[workflowType || ''];
         if (workflow) {
@@ -546,6 +546,7 @@ markup:
           };
         }
         throw new Error(`Unknown workflow: ${workflowType}`);
+      }
     }
   }
 

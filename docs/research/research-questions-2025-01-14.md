@@ -41,10 +41,10 @@ This document contains systematic research questions organized by architectural 
 - **Dependencies**: None
 
 **Q1.2: Node.js Memory Management for Repository Analysis**
-- **Question**: How can we optimize Node.js memory usage when analyzing large repositories (>10GB)?
+- **Question**: How can we optimize Node.js memory usage when analyzing large repositories (&gt;10GB)?
 - **Priority**: HIGH
 - **Research Method**: Memory profiling, stress testing
-- **Success Criteria**: Memory optimization strategies with <2GB footprint for 10GB repos
+- **Success Criteria**: Memory optimization strategies with &lt;2GB footprint for 10GB repos
 - **Timeline**: Week 1-2
 - **Dependencies**: Q1.1
 
@@ -102,7 +102,7 @@ This document contains systematic research questions organized by architectural 
 - **Question**: How can we optimize the performance of parallel multi-layered repository analysis?
 - **Priority**: CRITICAL
 - **Research Method**: Algorithm optimization, parallel processing research
-- **Success Criteria**: Analysis completion <30 seconds for typical repositories
+- **Success Criteria**: Analysis completion &lt;30 seconds for typical repositories
 - **Timeline**: Week 1-2
 - **Dependencies**: Q1.2
 
@@ -110,7 +110,7 @@ This document contains systematic research questions organized by architectural 
 - **Question**: What are the most reliable methods for detecting and analyzing language ecosystems in repositories?
 - **Priority**: HIGH
 - **Research Method**: Accuracy testing across diverse repositories
-- **Success Criteria**: >95% accuracy for major language ecosystems
+- **Success Criteria**: &gt;95% accuracy for major language ecosystems
 - **Timeline**: Week 2
 - **Dependencies**: None
 
@@ -134,14 +134,14 @@ This document contains systematic research questions organized by architectural 
 - **Question**: How can we implement incremental analysis for repositories that change over time?
 - **Priority**: LOW
 - **Research Method**: Differential analysis research, caching strategies
-- **Success Criteria**: Incremental analysis reduces re-analysis time by >80%
+- **Success Criteria**: Incremental analysis reduces re-analysis time by &gt;80%
 - **Timeline**: Week 4+
 - **Dependencies**: Q2.1
 
 #### Scalability and Performance Questions
 
 **Q2.6: Large Repository Handling**
-- **Question**: What strategies ensure reliable analysis of enterprise-scale repositories (>100GB)?
+- **Question**: What strategies ensure reliable analysis of enterprise-scale repositories (&gt;100GB)?
 - **Priority**: MEDIUM
 - **Research Method**: Scalability testing, streaming analysis research
 - **Success Criteria**: Successful analysis of repositories up to 100GB
@@ -152,7 +152,7 @@ This document contains systematic research questions organized by architectural 
 - **Question**: What caching strategies provide optimal performance for repository analysis?
 - **Priority**: MEDIUM
 - **Research Method**: Caching pattern research, performance testing
-- **Success Criteria**: Cache hit rates >70% for repeated analysis
+- **Success Criteria**: Cache hit rates &gt;70% for repeated analysis
 - **Timeline**: Week 3
 - **Dependencies**: Q2.1
 
@@ -168,7 +168,7 @@ This document contains systematic research questions organized by architectural 
 - **Question**: How can we validate the accuracy of the MCDA framework for SSG recommendations?
 - **Priority**: CRITICAL
 - **Research Method**: Validation against expert recommendations, A/B testing
-- **Success Criteria**: Algorithm recommendations match expert choices >85% of the time
+- **Success Criteria**: Algorithm recommendations match expert choices &gt;85% of the time
 - **Timeline**: Week 1-2
 - **Dependencies**: Q2.4
 
@@ -200,7 +200,7 @@ This document contains systematic research questions organized by architectural 
 - **Question**: Should recommendation weights be dynamically adjusted based on project characteristics?
 - **Priority**: LOW
 - **Research Method**: Machine learning research, adaptive algorithm development
-- **Success Criteria**: Dynamic weighting improves recommendation accuracy by >10%
+- **Success Criteria**: Dynamic weighting improves recommendation accuracy by &gt;10%
 - **Timeline**: Week 4+
 - **Dependencies**: Q3.1, Q3.3
 
@@ -242,7 +242,7 @@ This document contains systematic research questions organized by architectural 
 - **Question**: How can we intelligently suggest content based on project analysis and Diataxis principles?
 - **Priority**: MEDIUM
 - **Research Method**: Content analysis algorithms, suggestion accuracy testing
-- **Success Criteria**: Content suggestions deemed useful by documentation experts >80% of time
+- **Success Criteria**: Content suggestions deemed useful by documentation experts &gt;80% of time
 - **Timeline**: Week 3
 - **Dependencies**: Q2.3, Q4.1
 
@@ -258,7 +258,7 @@ This document contains systematic research questions organized by architectural 
 - **Question**: What algorithms generate the most intuitive navigation for Diataxis-organized content?
 - **Priority**: MEDIUM
 - **Research Method**: UX research, navigation pattern analysis
-- **Success Criteria**: Navigation usability scores >90% in user testing
+- **Success Criteria**: Navigation usability scores &gt;90% in user testing
 - **Timeline**: Week 4
 - **Dependencies**: Q4.1, Q4.3
 
@@ -268,7 +268,7 @@ This document contains systematic research questions organized by architectural 
 - **Question**: How can we automatically validate Diataxis compliance in generated structures?
 - **Priority**: MEDIUM
 - **Research Method**: Validation algorithm development, compliance testing
-- **Success Criteria**: Automated compliance checking with >95% accuracy
+- **Success Criteria**: Automated compliance checking with &gt;95% accuracy
 - **Timeline**: Week 3
 - **Dependencies**: Q4.1
 
@@ -292,7 +292,7 @@ This document contains systematic research questions organized by architectural 
 - **Question**: What are the optimal GitHub Actions configurations for each supported SSG?
 - **Priority**: CRITICAL
 - **Research Method**: Workflow benchmarking, optimization testing
-- **Success Criteria**: Optimized workflows reduce build times by >30%
+- **Success Criteria**: Optimized workflows reduce build times by &gt;30%
 - **Timeline**: Week 1-2
 - **Dependencies**: Q3.2
 
@@ -300,7 +300,7 @@ This document contains systematic research questions organized by architectural 
 - **Question**: What caching strategies provide maximum build performance in GitHub Actions?
 - **Priority**: HIGH
 - **Research Method**: Caching pattern research, performance testing
-- **Success Criteria**: Cache strategies reduce build times by >50% for incremental changes
+- **Success Criteria**: Cache strategies reduce build times by &gt;50% for incremental changes
 - **Timeline**: Week 2
 - **Dependencies**: Q5.1
 
@@ -308,7 +308,7 @@ This document contains systematic research questions organized by architectural 
 - **Question**: How can we implement intelligent build failure diagnosis and automatic recovery?
 - **Priority**: HIGH
 - **Research Method**: Error pattern analysis, recovery strategy development
-- **Success Criteria**: Automatic recovery for >70% of common build failures
+- **Success Criteria**: Automatic recovery for &gt;70% of common build failures
 - **Timeline**: Week 3
 - **Dependencies**: Q5.1
 
@@ -392,7 +392,7 @@ This document contains systematic research questions organized by architectural 
 - **Question**: How can we provide the most helpful error messages and recovery guidance?
 - **Priority**: HIGH
 - **Research Method**: Error analysis, user experience research
-- **Success Criteria**: Error messages that enable users to resolve issues >90% of the time
+- **Success Criteria**: Error messages that enable users to resolve issues &gt;90% of the time
 - **Timeline**: Week 2-3
 - **Dependencies**: Q6.1
 
@@ -418,7 +418,7 @@ This document contains systematic research questions organized by architectural 
 - **Question**: How can we optimize API performance through intelligent caching and response optimization?
 - **Priority**: MEDIUM
 - **Research Method**: Performance testing, caching strategy research
-- **Success Criteria**: API response times <1 second for all operations
+- **Success Criteria**: API response times &lt;1 second for all operations
 - **Timeline**: Week 3
 - **Dependencies**: Q6.2
 
@@ -452,7 +452,7 @@ This document contains systematic research questions organized by architectural 
 - **Question**: How can we optimize the complete workflow from repository analysis to deployed documentation?
 - **Priority**: HIGH
 - **Research Method**: Workflow analysis, performance optimization
-- **Success Criteria**: End-to-end workflow completion in <10 minutes for typical projects
+- **Success Criteria**: End-to-end workflow completion in &lt;10 minutes for typical projects
 - **Timeline**: Week 3-4
 - **Dependencies**: All previous domains
 
@@ -478,7 +478,7 @@ This document contains systematic research questions organized by architectural 
 - **Question**: What testing strategies ensure reliable operation across all components?
 - **Priority**: MEDIUM
 - **Research Method**: Testing framework research, integration test development
-- **Success Criteria**: Comprehensive integration tests with >95% coverage
+- **Success Criteria**: Comprehensive integration tests with &gt;95% coverage
 - **Timeline**: Week 4
 - **Dependencies**: All previous domains
 
@@ -486,7 +486,7 @@ This document contains systematic research questions organized by architectural 
 - **Question**: How can we validate that the complete system meets user needs and expectations?
 - **Priority**: LOW
 - **Research Method**: User research, acceptance testing
-- **Success Criteria**: User satisfaction scores >85% in testing
+- **Success Criteria**: User satisfaction scores &gt;85% in testing
 - **Timeline**: Week 4+
 - **Dependencies**: Q7.1, Q7.4
 

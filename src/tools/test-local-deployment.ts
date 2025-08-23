@@ -108,7 +108,7 @@ export async function testLocalDeployment(args: unknown): Promise<{ content: any
     // Step 2: Install dependencies if needed
     if (config.installCommand && !skipBuild) {
       try {
-        const { stdout: _stdout, stderr } = await execAsync(config.installCommand, { 
+        const { stderr } = await execAsync(config.installCommand, { 
           cwd: repositoryPath,
           timeout: timeout * 1000 
         });
