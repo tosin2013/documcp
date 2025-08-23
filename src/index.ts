@@ -10,6 +10,7 @@ import {
   ReadResourceRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 import { z } from 'zod';
+import { zodToJsonSchema } from 'zod-to-json-schema';
 
 import { analyzeRepository } from './tools/analyze-repository.js';
 import { recommendSSG } from './tools/recommend-ssg.js';
@@ -206,7 +207,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
   tools: TOOLS.map((tool) => ({
     name: tool.name,
     description: tool.description,
-    inputSchema: tool.inputSchema,
+    inputSchema: zodToJsonSchema(tool.inputSchema),
   })),
 }));
 

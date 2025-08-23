@@ -1,0 +1,8 @@
+node_modules/
+dist/
+coverage/
+tests/
+*.js
+!.eslintrc.js
+*.d.ts
+jest.config.js

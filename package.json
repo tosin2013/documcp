@@ -12,8 +12,8 @@
     "test:coverage": "jest --coverage",
     "test:performance": "jest --testPathPattern=benchmarks",
     "test:ci": "jest --coverage --ci --watchAll=false",
-    "lint": "eslint src --ext .ts",
-    "lint:fix": "eslint src --ext .ts --fix",
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts --fix",
     "format": "prettier --write \"src/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\"",
     "typecheck": "tsc --noEmit",
@@ -22,7 +22,7 @@
     "ci": "npm run typecheck && npm run lint && npm run test:ci && npm run build",
     "prepare": "npm run build",
     "benchmark:run": "tsx src/scripts/benchmark.ts run",
-    "benchmark:current": "tsx src/scripts/benchmark.ts current", 
+    "benchmark:current": "tsx src/scripts/benchmark.ts current",
     "benchmark:create-config": "tsx src/scripts/benchmark.ts create-config",
     "benchmark:help": "tsx src/scripts/benchmark.ts help"
   },
@@ -37,7 +37,8 @@
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^0.6.0",
-    "zod": "^3.22.4"
+    "zod": "^3.22.4",
+    "zod-to-json-schema": "^3.24.6"
   },
   "devDependencies": {
     "@types/jest": "^29.5.11",
