@@ -7,7 +7,7 @@ This directory contains the complete CI/CD pipeline for DocuMCP, implementing au
 ### 🔄 **ci.yml** - Continuous Integration
 **Triggers**: Push to main/develop, Pull Requests to main
 **Features**:
-- Multi-Node.js version testing (18.x, 20.x)
+- Multi-Node.js version testing (20.x, 22.x)
 - Type checking with TypeScript
 - ESLint code quality checks
 - Jest test suite with coverage reporting

@@ -566,7 +566,7 @@ describe('Functional Testing - MCP Tools', () => {
       },
       devDependencies: {
         jest: '^29.0.0',
-        '@types/node': '^18.0.0'
+        '@types/node': '^20.0.0'
       }
     };
     await fs.writeFile(path.join(repoPath, 'package.json'), JSON.stringify(packageJson, null, 2));

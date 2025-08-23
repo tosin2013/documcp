@@ -96,7 +96,7 @@ require (
       await fs.mkdir(dockerDir, { recursive: true });
       
       await fs.writeFile(path.join(dockerDir, 'Dockerfile'), `
-FROM node:18
+FROM node:20
 WORKDIR /app
 COPY . .
 RUN npm install

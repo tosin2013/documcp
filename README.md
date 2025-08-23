@@ -15,6 +15,11 @@ DocuMCP is an intelligent Model Context Protocol (MCP) server that revolutionize
 - 🚀 **GitHub Pages Deployment**: Automated workflow generation with SSG-specific optimizations
 - ✅ **Deployment Verification**: Comprehensive checks and troubleshooting for successful deployments
 
+## Requirements
+
+- **Node.js**: 20.0.0 or higher
+- **npm**: Latest stable version
+
 ## Installation
 
 ```bash
