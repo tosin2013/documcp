@@ -1,4 +1,18 @@
+---
+id: 007-mcp-prompts-and-resources-integration
+title: 'ADR-007: MCP Prompts and Resources Integration'
+sidebar_label: 'ADR-7: MCP Prompts and Resources Integration'
+sidebar_position: 7
+---
+
 # ADR-007: MCP Prompts and Resources Integration for AI Assistance
+---
+id: 007-mcp-prompts-and-resources-integration
+title: 'ADR-007: MCP Prompts and Resources Integration'
+sidebar_label: 'ADR-7: MCP Prompts and Resources Integration'
+sidebar_position: 7
+---
+
 
 ## Status
 Proposed

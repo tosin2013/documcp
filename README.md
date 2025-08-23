@@ -1,8 +1,8 @@
 # DocuMCP - Intelligent Documentation Deployment MCP Server
 
-[![CI](https://github.com/tosinakinosho/documcp/actions/workflows/ci.yml/badge.svg)](https://github.com/tosinakinosho/documcp/actions/workflows/ci.yml)
-[![CodeQL](https://github.com/tosinakinosho/documcp/actions/workflows/codeql.yml/badge.svg)](https://github.com/tosinakinosho/documcp/actions/workflows/codeql.yml)
-[![Coverage](https://codecov.io/gh/tosinakinosho/documcp/branch/main/graph/badge.svg)](https://codecov.io/gh/tosinakinosho/documcp)
+[![CI](https://github.com/tosin2013/documcp/actions/workflows/ci.yml/badge.svg)](https://github.com/tosin2013/documcp/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/tosin2013/documcp/actions/workflows/codeql.yml/badge.svg)](https://github.com/tosin2013/documcp/actions/workflows/codeql.yml)
+[![Coverage](https://codecov.io/gh/tosin2013/documcp/branch/main/graph/badge.svg)](https://codecov.io/gh/tosin2013/documcp)
 [![npm version](https://badge.fury.io/js/documcp.svg)](https://badge.fury.io/js/documcp)
 
 DocuMCP is an intelligent Model Context Protocol (MCP) server that revolutionizes documentation deployment for open-source projects. It provides deep repository analysis, intelligent static site generator recommendations, and automated GitHub Pages deployment workflows.
@@ -24,7 +24,7 @@ DocuMCP is an intelligent Model Context Protocol (MCP) server that revolutionize
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/documcp.git
+git clone https://github.com/tosin2013/documcp.git
 cd documcp
 
 # Install dependencies

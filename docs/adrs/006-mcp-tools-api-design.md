@@ -1,3 +1,10 @@
+---
+id: 006-mcp-tools-api-design
+title: 'ADR-006: MCP Tools API Design and Interface Specification'
+sidebar_label: 'ADR-006: MCP Tools API Design'
+sidebar_position: 6
+---
+
 # ADR-006: MCP Tools API Design and Interface Specification
 
 ## Status

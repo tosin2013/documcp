@@ -18,6 +18,11 @@ import { generateConfig } from './tools/generate-config.js';
 import { setupStructure } from './tools/setup-structure.js';
 import { deployPages } from './tools/deploy-pages.js';
 import { verifyDeployment } from './tools/verify-deployment.js';
+import { handlePopulateDiataxisContent } from './tools/populate-content.js';
+import { handleValidateDiataxisContent } from './tools/validate-content.js';
+import { detectDocumentationGaps } from './tools/detect-gaps.js';
+import { testLocalDeployment } from './tools/test-local-deployment.js';
+import { DOCUMENTATION_WORKFLOWS, WORKFLOW_EXECUTION_GUIDANCE, WORKFLOW_METADATA } from './workflows/documentation-workflow.js';
 
 const server = new Server(
   {
@@ -89,6 +94,50 @@ const TOOLS = [
     inputSchema: z.object({
       repository: z.string().describe('Repository path or URL'),
       url: z.string().optional().describe('Expected deployment URL'),
+    }),
+  },
+  {
+    name: 'populate_diataxis_content',
+    description: 'Intelligently populate Diataxis documentation with project-specific content',
+    inputSchema: z.object({
+      analysisId: z.string().describe('Repository analysis ID from analyze_repository tool'),
+      docsPath: z.string().describe('Path to documentation directory'),
+      populationLevel: z.enum(['basic', 'comprehensive', 'intelligent']).optional().default('comprehensive'),
+      includeProjectSpecific: z.boolean().optional().default(true),
+      preserveExisting: z.boolean().optional().default(true),
+      technologyFocus: z.array(z.string()).optional().describe('Specific technologies to emphasize'),
+    }),
+  },
+  {
+    name: 'validate_diataxis_content',
+    description: 'Validate the accuracy, completeness, and compliance of generated Diataxis documentation',
+    inputSchema: z.object({
+      contentPath: z.string().describe('Path to the documentation directory to validate'),
+      analysisId: z.string().optional().describe('Optional repository analysis ID for context-aware validation'),
+      validationType: z.enum(['accuracy', 'completeness', 'compliance', 'all']).optional().default('all'),
+      includeCodeValidation: z.boolean().optional().default(true),
+      confidence: z.enum(['strict', 'moderate', 'permissive']).optional().default('moderate'),
+    }),
+  },
+  {
+    name: 'detect_documentation_gaps',
+    description: 'Analyze repository and existing documentation to identify missing content and gaps',
+    inputSchema: z.object({
+      repositoryPath: z.string().describe('Path to the repository to analyze'),
+      documentationPath: z.string().optional().describe('Path to existing documentation (if any)'),
+      analysisId: z.string().optional().describe('Optional existing analysis ID to reuse'),
+      depth: z.enum(['quick', 'standard', 'comprehensive']).optional().default('standard'),
+    }),
+  },
+  {
+    name: 'test_local_deployment',
+    description: 'Test documentation build and local server before deploying to GitHub Pages',
+    inputSchema: z.object({
+      repositoryPath: z.string().describe('Path to the repository'),
+      ssg: z.enum(['jekyll', 'hugo', 'docusaurus', 'mkdocs', 'eleventy']),
+      port: z.number().optional().default(3000).describe('Port for local server'),
+      timeout: z.number().optional().default(60).describe('Timeout in seconds for build process'),
+      skipBuild: z.boolean().optional().default(false).describe('Skip build step and only start server'),
     }),
   },
 ];
@@ -199,6 +248,12 @@ const RESOURCES = [
     name: 'Reusable Templates',
     description: 'Template files for documentation setup',
     mimeType: 'text/plain',
+  },
+  {
+    uri: 'documcp://workflows/',
+    name: 'Documentation Workflows',
+    description: 'Guided workflows for different documentation scenarios',
+    mimeType: 'application/json',
   },
 ];
 
@@ -420,6 +475,80 @@ markup:
     }
   }
 
+  // Handle workflow resources
+  if (uri.startsWith('documcp://workflows/')) {
+    const workflowType = uri.split('/').pop();
+    
+    switch (workflowType) {
+      case 'all':
+        return {
+          contents: [
+            {
+              uri,
+              mimeType: 'application/json',
+              text: JSON.stringify({
+                workflows: DOCUMENTATION_WORKFLOWS,
+                executionGuidance: WORKFLOW_EXECUTION_GUIDANCE,
+                metadata: WORKFLOW_METADATA
+              }, null, 2),
+            },
+          ],
+        };
+
+      case 'quick-setup':
+        return {
+          contents: [
+            {
+              uri,
+              mimeType: 'application/json',
+              text: JSON.stringify(DOCUMENTATION_WORKFLOWS['quick-documentation-setup'], null, 2),
+            },
+          ],
+        };
+
+      case 'full-setup':
+        return {
+          contents: [
+            {
+              uri,
+              mimeType: 'application/json',
+              text: JSON.stringify(DOCUMENTATION_WORKFLOWS['full-documentation-setup'], null, 2),
+            },
+          ],
+        };
+
+      case 'guidance':
+        return {
+          contents: [
+            {
+              uri,
+              mimeType: 'application/json',
+              text: JSON.stringify({
+                executionGuidance: WORKFLOW_EXECUTION_GUIDANCE,
+                recommendationEngine: "Use recommendWorkflow() function with project status and requirements"
+              }, null, 2),
+            },
+          ],
+        };
+
+      default:
+        // Try to find specific workflow
+        const workflow = DOCUMENTATION_WORKFLOWS[workflowType || ''];
+        if (workflow) {
+          return {
+            contents: [
+              {
+                uri,
+                mimeType: 'application/json',
+                text: JSON.stringify(workflow, null, 2),
+              },
+            ],
+          };
+        }
+        throw new Error(`Unknown workflow: ${workflowType}`);
+    }
+  }
+
   throw new Error(`Resource not found: ${uri}`);
 });
 
@@ -496,6 +625,88 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       
       case 'verify_deployment':
         return await verifyDeployment(args);
+      
+      case 'populate_diataxis_content': {
+        const result = await handlePopulateDiataxisContent(args);
+        // Store populated content info as resource
+        const populationId = `population-${Date.now()}`;
+        storeResource(
+          `documcp://structure/${populationId}`,
+          JSON.stringify(result, null, 2),
+          'application/json'
+        );
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Content population completed successfully. Generated ${result.filesCreated} files with ${Math.round(result.populationMetrics.coverage)}% coverage.`,
+            },
+            {
+              type: 'text',
+              text: `Population metrics: Coverage: ${result.populationMetrics.coverage}%, Completeness: ${result.populationMetrics.completeness}%, Project Specificity: ${result.populationMetrics.projectSpecificity}%`,
+            },
+            {
+              type: 'text', 
+              text: `Next steps:\n${result.nextSteps.map(step => `- ${step}`).join('\n')}`,
+            },
+          ],
+        };
+      }
+      
+      case 'validate_diataxis_content': {
+        const result = await handleValidateDiataxisContent(args);
+        // Store validation results as resource
+        const validationId = `validation-${Date.now()}`;
+        storeResource(
+          `documcp://analysis/${validationId}`,
+          JSON.stringify(result, null, 2),
+          'application/json'
+        );
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Content validation ${result.success ? 'passed' : 'found issues'}. Overall confidence: ${result.confidence.overall}%.`,
+            },
+            {
+              type: 'text',
+              text: `Issues found: ${result.issues.length} (${result.issues.filter(i => i.type === 'error').length} errors, ${result.issues.filter(i => i.type === 'warning').length} warnings)`,
+            },
+            ...(result.issues.length > 0 ? [{
+              type: 'text' as const,
+              text: `Top issues:\n${result.issues.slice(0, 5).map(issue => `- ${issue.type.toUpperCase()}: ${issue.description}`).join('\n')}`,
+            }] : []),
+            {
+              type: 'text',
+              text: `Recommendations:\n${result.recommendations.map(rec => `- ${rec}`).join('\n')}`,
+            },
+          ],
+        };
+      }
+      
+      case 'detect_documentation_gaps': {
+        const result = await detectDocumentationGaps(args);
+        // Store gap analysis as resource
+        const gapAnalysisId = `gaps-${Date.now()}`;
+        storeResource(
+          `documcp://analysis/${gapAnalysisId}`,
+          JSON.stringify(result, null, 2),
+          'application/json'
+        );
+        return result;
+      }
+      
+      case 'test_local_deployment': {
+        const result = await testLocalDeployment(args);
+        // Store test results as resource
+        const testId = `test-${args?.ssg || 'unknown'}-${Date.now()}`;
+        storeResource(
+          `documcp://deployment/${testId}`,
+          JSON.stringify(result, null, 2),
+          'application/json'
+        );
+        return result;
+      }
       
       default:
         throw new Error(`Unknown tool: ${name}`);

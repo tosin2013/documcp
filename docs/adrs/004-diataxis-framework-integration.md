@@ -1,4 +1,18 @@
+---
+id: 004-diataxis-framework-integration
+title: 'ADR-004: Diataxis Framework Integration'
+sidebar_label: 'ADR-4: Diataxis Framework Integration'
+sidebar_position: 4
+---
+
 # ADR-004: Diataxis Framework Integration for Documentation Structure
+---
+id: 004-diataxis-framework-integration
+title: 'ADR-004: Diataxis Framework Integration'
+sidebar_label: 'ADR-4: Diataxis Framework Integration'
+sidebar_position: 4
+---
+
 
 ## Status
 Accepted

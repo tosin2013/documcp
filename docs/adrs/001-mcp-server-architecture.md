@@ -1,3 +1,10 @@
+---
+id: 001-mcp-server-architecture
+title: 'ADR-001: MCP Server Architecture using TypeScript SDK'
+sidebar_label: 'ADR-001: MCP Server Architecture'
+sidebar_position: 1
+---
+
 # ADR-001: MCP Server Architecture using TypeScript SDK
 
 ## Status

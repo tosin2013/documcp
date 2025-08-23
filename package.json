@@ -35,6 +35,14 @@
   ],
   "author": "Tosin Akinosho",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tosin2013/documcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tosin2013/documcp/issues"
+  },
+  "homepage": "https://github.com/tosin2013/documcp#readme",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^0.6.0",
     "zod": "^3.22.4",

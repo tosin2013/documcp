@@ -1,3 +1,10 @@
+---
+id: README
+title: Architectural Decision Records
+sidebar_label: ADR Overview
+sidebar_position: 1
+---
+
 # Architectural Decision Records (ADRs)
 
 This directory contains the Architectural Decision Records for the DocuMCP project - an intelligent MCP server for GitHub Pages documentation deployment.
@@ -13,6 +20,8 @@ This directory contains the Architectural Decision Records for the DocuMCP proje
 | [005](005-github-pages-deployment-automation.md) | GitHub Pages Deployment Automation Architecture | Accepted | 2025-01-14 | Comprehensive deployment orchestration with SSG-specific workflows, security best practices, and performance optimization |
 | [006](006-mcp-tools-api-design.md) | MCP Tools API Design and Interface Specification | Accepted | 2025-01-14 | Six core MCP tools providing comprehensive documentation workflow coverage with robust validation and error handling |
 | [007](007-mcp-prompts-and-resources-integration.md) | MCP Prompts and Resources Integration for AI Assistance | Proposed | 2025-01-14 | Native MCP prompts and resources for guided workflows and content access, leveraging built-in protocol capabilities |
+| [008](008-intelligent-content-population-engine.md) | Intelligent Content Population Engine for Diataxis Documentation | Proposed | 2025-01-23 | Project-aware content generation engine that transforms repository analysis into contextually relevant Diataxis documentation |
+| [009](009-content-accuracy-validation-framework.md) | Content Accuracy and Validation Framework for Generated Documentation | Proposed | 2025-01-23 | Comprehensive accuracy assurance system with confidence scoring, reality-check validation, and interactive correction workflows |
 
 ## ADR Process
 
@@ -40,13 +49,18 @@ Our ADRs are organized into the following categories:
 - Static site generator recommendation algorithms
 - Decision-making frameworks
 
-#### Content & Structure (ADR 004)
+#### Content & Structure (ADRs 004, 008, 009)
 - Documentation framework integration
 - Information architecture decisions
+- Intelligent content population and generation
+- Content accuracy and validation frameworks
 
 #### Deployment & Integration (ADRs 005-006)
 - GitHub Pages deployment automation
 - MCP tools API design
+
+#### AI & Assistance (ADR 007)
+- MCP prompts and resources for guided workflows
 
 ## Key Architectural Principles
 
@@ -115,6 +129,6 @@ Our ADRs acknowledge areas for future evolution:
 
 ---
 
-**Last Updated**: January 14, 2025  
-**Total ADRs**: 6  
-**Status**: All ADRs Accepted and Ready for Implementation
+**Last Updated**: January 23, 2025  
+**Total ADRs**: 9  
+**Status**: ADRs 001-006 Accepted and Implemented, ADRs 007-009 Proposed

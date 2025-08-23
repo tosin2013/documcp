@@ -2,6 +2,8 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { z } from 'zod';
 import { MCPToolResponse, formatMCPResponse } from '../types/api.js';
+// import { extractRepositoryContent, ExtractedContent } from '../utils/content-extractor.js'; // For future use
+type ExtractedContent = any;
 
 // Analysis result schema based on ADR-002
 export interface RepositoryAnalysis {
@@ -27,6 +29,7 @@ export interface RepositoryAnalysis {
     hasLicense: boolean;
     existingDocs: string[];
     estimatedComplexity: 'simple' | 'moderate' | 'complex';
+    extractedContent?: ExtractedContent;
   };
   recommendations: {
     primaryLanguage: string;
