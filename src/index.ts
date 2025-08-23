@@ -531,7 +531,7 @@ markup:
           ],
         };
 
-      default:
+      default: {
         // Try to find specific workflow
         const workflow = DOCUMENTATION_WORKFLOWS[workflowType || ''];
         if (workflow) {
@@ -546,6 +546,7 @@ markup:
           };
         }
         throw new Error(`Unknown workflow: ${workflowType}`);
+      }
     }
   }
 
@@ -726,7 +727,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 });
 
 // Start the server
-async function main() {
+async function main(): Promise<void> {
   const transport = new StdioServerTransport();
   await server.connect(transport);
   console.error('DocuMCP server started successfully');

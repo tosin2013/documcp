@@ -25,13 +25,6 @@ interface ContentPlan {
   explanation: any[];
 }
 
-interface ProjectContext {
-  primaryLanguage: string;
-  frameworks: any[];
-  testingFrameworks: any[];
-  dependencies: any;
-  devopsTools?: DevOpsToolProfile;
-}
 
 interface DevOpsToolProfile {
   containerization: ContainerTechnology[];
@@ -430,7 +423,7 @@ app.start();`,
     ];
   }
 
-  private generateNodeSetupContent(analysis: any): string {
+  private generateNodeSetupContent(_analysis: any): string {
     return `# Setting Up Your Development Environment
 
 This guide will help you configure a complete Node.js and TypeScript development environment.
@@ -570,7 +563,7 @@ npm test -- --coverage
 `;
   }
 
-  private generateTestingExamples(analysis: any): string[] {
+  private generateTestingExamples(_analysis: any): string[] {
     return [
       `// Unit test example
 import { calculateTotal } from './calculator';
@@ -1534,7 +1527,9 @@ ${analysis.technologies.database ? `### Database
         try {
           await fs.access(filePath);
           continue;
-        } catch {}
+        } catch {
+          // File doesn't exist, continue to create it
+        }
       }
       
       await fs.writeFile(filePath, howTo.content, 'utf-8');
@@ -1550,7 +1545,9 @@ ${analysis.technologies.database ? `### Database
         try {
           await fs.access(filePath);
           continue;
-        } catch {}
+        } catch {
+          // File doesn't exist, continue to create it
+        }
       }
       
       await fs.writeFile(filePath, ref.content, 'utf-8');
@@ -1566,7 +1563,9 @@ ${analysis.technologies.database ? `### Database
         try {
           await fs.access(filePath);
           continue;
-        } catch {}
+        } catch {
+          // File doesn't exist, continue to create it
+        }
       }
       
       await fs.writeFile(filePath, exp.content, 'utf-8');
@@ -1803,7 +1802,7 @@ ${contentPlan.explanation.map(e => `- [${e.title}](explanation/${this.slugify(e.
     return files.some((f: any) => f.content?.includes(content));
   }
 
-  private extractDockerVersion(analysis: any): string | undefined {
+  private extractDockerVersion(_analysis: any): string | undefined {
     return undefined; // Could be implemented to parse Dockerfile
   }
 
@@ -1828,11 +1827,11 @@ ${contentPlan.explanation.map(e => `- [${e.title}](explanation/${this.slugify(e.
       .map((f: any) => f.name);
   }
 
-  private analyzeKubernetesResources(analysis: any): string[] {
+  private analyzeKubernetesResources(_analysis: any): string[] {
     return ['Deployment', 'Service', 'ConfigMap']; // Simplified
   }
 
-  private extractNamespaces(analysis: any): string[] {
+  private extractNamespaces(_analysis: any): string[] {
     return ['default']; // Simplified
   }
 
@@ -2159,7 +2158,7 @@ python manage.py runserver
 `;
   }
 
-  private generateFastAPITutorialContent(analysis: any): string {
+  private generateFastAPITutorialContent(_analysis: any): string {
     return `# Building APIs with FastAPI
 
 Create modern, fast APIs with automatic documentation using FastAPI.
@@ -2226,7 +2225,7 @@ FastAPI automatically generates interactive API documentation:
 `;
   }
 
-  private generateFlaskTutorialContent(analysis: any): string {
+  private generateFlaskTutorialContent(_analysis: any): string {
     return `# Building Applications with Flask
 
 Create lightweight web applications and APIs using Flask's minimalist approach.
@@ -2303,7 +2302,7 @@ Popular Flask extensions:
   }
 
   // Helper methods for container content generation
-  private generateContainerFileContent(analysis: any, containerTech: ContainerTechnology): string {
+  private generateContainerFileContent(analysis: any, _containerTech: ContainerTechnology): string {
     const language = analysis.metadata.primaryLanguage?.toLowerCase();
     
     if (language === 'python') {
@@ -2404,7 +2403,7 @@ ${containerTech.name} ps`
     ];
   }
 
-  private generateOrchestrationExamples(analysis: any, orchestrationTech: OrchestrationTechnology): string[] {
+  private generateOrchestrationExamples(analysis: any, _orchestrationTech: OrchestrationTechnology): string[] {
     return [
       `# Deploy the application
 kubectl apply -f k8s/`,
