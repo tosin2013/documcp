@@ -531,7 +531,7 @@ describe('Edge Cases and Error Handling', () => {
       try {
         await Promise.race([longOperation, timeoutPromise]);
       } catch (error) {
-        if (error.message === 'Operation timed out') {
+        if (error instanceof Error && error.message === 'Operation timed out') {
           console.warn('Long operation test timed out - this is expected behavior');
         } else {
           throw error;
