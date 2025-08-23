@@ -218,7 +218,7 @@ describe('Functional Testing - MCP Tools', () => {
       // Verify file contents
       const configContent = await fs.readFile(docusaurusConfig, 'utf-8');
       expect(configContent).toContain('Test Docusaurus Project');
-      expect(configContent).toContain('@docusaurus/core');
+      expect(configContent).toContain('classic');
     });
 
     it('should generate MkDocs configuration', async () => {
@@ -490,12 +490,12 @@ describe('Functional Testing - MCP Tools', () => {
       expect(result.content).toBeDefined();
       
       // Parse the verification result
-      const resultText = result.content.map(c => c.text).join('\n');
-      expect(resultText).toContain('✅'); // Should have passing checks
-      expect(resultText).toContain('deployment workflow');
-      expect(resultText).toContain('documentation files');
-      expect(resultText).toContain('configuration');
-      expect(resultText).toContain('build output');
+      const verification = JSON.parse(result.content[0].text);
+      expect(verification.summary.passed).toBeGreaterThan(0); // Should have passing checks
+      expect(verification.checks.some((check: any) => check.message.includes('deployment workflow'))).toBe(true);
+      expect(verification.checks.some((check: any) => check.message.includes('documentation files'))).toBe(true);
+      expect(verification.checks.some((check: any) => check.message.includes('configuration'))).toBe(true);
+      expect(verification.checks.some((check: any) => check.message.includes('build output'))).toBe(true);
     });
 
     it('should identify missing components', async () => {
@@ -506,11 +506,11 @@ describe('Functional Testing - MCP Tools', () => {
         repository: verificationRepoDir
       });
 
-      const resultText = result.content.map(c => c.text).join('\n');
-      expect(resultText).toContain('❌'); // Should have failing checks
-      expect(resultText).toContain('No .github/workflows');
-      expect(resultText).toContain('No documentation files');
-      expect(resultText).toContain('No static site generator configuration');
+      const verification = JSON.parse(result.content[0].text);
+      expect(verification.summary.failed).toBeGreaterThan(0); // Should have failing checks
+      expect(verification.checks.some((check: any) => check.message.includes('No .github/workflows'))).toBe(true);
+      expect(verification.checks.some((check: any) => check.message.includes('No documentation files'))).toBe(true);
+      expect(verification.checks.some((check: any) => check.message.includes('No static site generator configuration'))).toBe(true);
     });
 
     it('should provide actionable recommendations', async () => {

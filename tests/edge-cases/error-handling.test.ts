@@ -206,9 +206,10 @@ describe('Edge Cases and Error Handling', () => {
       expect(result.content).toBeDefined();
       expect((result as any).isError).toBeFalsy();
       
-      // Should count all files
+      // Should count all files (excluding hidden files that start with .)
       const analysisData = JSON.parse(result.content.find(c => c.text.includes('"totalFiles"'))!.text);
-      expect(analysisData.structure.totalFiles).toBe(unusualExtensions.length + 1); // +1 for README
+      // The analyze function filters out .hidden files, so we expect 7 files instead of 8
+      expect(analysisData.structure.totalFiles).toBe(7); // 8 files minus .hidden
     });
 
     it('should handle binary files gracefully', async () => {
@@ -454,7 +455,7 @@ describe('Edge Cases and Error Handling', () => {
       expect((result as any).isError).toBeFalsy();
       
       const analysisData = JSON.parse(result.content.find(c => c.text.includes('"totalFiles"'))!.text);
-      expect(analysisData.structure.totalFiles).toBe(unicodeFiles.length + 1); // +1 for README
+      expect(analysisData.structure.totalFiles).toBe(unicodeFiles.length); // No README created in this test
     });
 
     it('should handle different line ending styles', async () => {
@@ -523,18 +524,24 @@ describe('Edge Cases and Error Handling', () => {
         depth: 'deep'
       });
       
-      // Set a reasonable timeout
+      // Set a reasonable timeout with proper cleanup
+      let timeoutId: NodeJS.Timeout | undefined;
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Operation timed out')), 30000); // 30 seconds
+        timeoutId = setTimeout(() => reject(new Error('Operation timed out')), 30000); // 30 seconds
       });
       
       try {
         await Promise.race([longOperation, timeoutPromise]);
       } catch (error) {
-        if (error.message === 'Operation timed out') {
+        if ((error as Error).message === 'Operation timed out') {
           console.warn('Long operation test timed out - this is expected behavior');
         } else {
           throw error;
+        }
+      } finally {
+        // Clean up the timeout to prevent Jest hanging
+        if (timeoutId) {
+          clearTimeout(timeoutId);
         }
       }
     });

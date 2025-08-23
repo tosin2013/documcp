@@ -296,8 +296,9 @@ describe('All MCP Tools Coverage Tests', () => {
       });
       
       expect(result.content).toBeDefined();
-      const resultText = result.content.map(c => c.text).join('\n');
-      expect(resultText).toContain('✅');
+      const verification = JSON.parse(result.content[0].text);
+      expect(verification.overallStatus).toBe('Ready for deployment');
+      expect(verification.summary.passed).toBeGreaterThan(0);
     });
 
     it('should identify missing components', async () => {
@@ -306,9 +307,10 @@ describe('All MCP Tools Coverage Tests', () => {
         repository: emptyDir
       });
       
-      const resultText = result.content.map(c => c.text).join('\n');
-      expect(resultText).toContain('❌');
-      expect(resultText).toContain('No .github/workflows');
+      const verification = JSON.parse(result.content[0].text);
+      expect(verification.overallStatus).toContain('Configuration required');
+      expect(verification.summary.failed).toBeGreaterThan(0);
+      expect(verification.checks.some((check: any) => check.message.includes('No .github/workflows'))).toBe(true);
     });
 
     it('should handle different repository paths', async () => {

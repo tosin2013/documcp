@@ -89,6 +89,12 @@ export function formatMCPResponse<T>(response: MCPToolResponse<T>): MCPContentWr
       });
     }
   } else if (response.error) {
+    // For error cases, include both human-readable and structured data
+    content.push({
+      type: 'text',
+      text: JSON.stringify(response, null, 2),
+    });
+    
     content.push({
       type: 'text',
       text: `Error: ${response.error.message}`,

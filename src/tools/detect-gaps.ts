@@ -65,6 +65,12 @@ export async function detectDocumentationGaps(args: unknown): Promise<{ content:
       if (analysisResult.content && analysisResult.content[0]) {
         // The analyze_repository tool returns the analysis data directly as JSON text
         repositoryAnalysis = JSON.parse(analysisResult.content[0].text);
+        
+        // Check if the analysis was successful
+        if (repositoryAnalysis.success === false) {
+          throw new Error('Repository analysis failed');
+        }
+        
         analysisId = repositoryAnalysis.id; // Use the 'id' field from the analysis
       } else {
         throw new Error('Repository analysis failed - no content returned');
@@ -80,19 +86,24 @@ export async function detectDocumentationGaps(args: unknown): Promise<{ content:
     // Step 3: Perform content validation if documentation exists
     let validationResult: any = null;
     if (documentationAnalysis.exists && documentationPath) {
-      const validation = await handleValidateDiataxisContent({
-        contentPath: documentationPath,
-        analysisId: analysisId,
-        validationType: 'all',
-        includeCodeValidation: true,
-        confidence: 'moderate'
-      });
-      
-      if (validation && (validation as any).content && (validation as any).content[0]) {
-        const validationData = JSON.parse((validation as any).content[0].text);
-        if (validationData.success) {
-          validationResult = validationData.data;
+      try {
+        const validation = await handleValidateDiataxisContent({
+          contentPath: documentationPath,
+          analysisId: analysisId,
+          validationType: 'all',
+          includeCodeValidation: true,
+          confidence: 'moderate'
+        });
+        
+        if (validation && (validation as any).content && (validation as any).content[0]) {
+          const validationData = JSON.parse((validation as any).content[0].text);
+          if (validationData.success) {
+            validationResult = validationData.data;
+          }
         }
+      } catch (error) {
+        // Validation errors are non-fatal - continue without validation data
+        console.warn('Content validation failed, continuing without validation data:', error);
       }
     }
 
