@@ -354,9 +354,9 @@ class ContentPopulationEngine {
 
   // Content generation methods
   private generateGettingStartedContent(_analysis: any): string {
-    return `# Getting Started with ${analysis.metadata.projectName}
+    return `# Getting Started with ${_analysis.metadata.projectName}
 
-Welcome to ${analysis.metadata.projectName}! This tutorial will guide you through setting up and running the project for the first time.
+Welcome to ${_analysis.metadata.projectName}! This tutorial will guide you through setting up and running the project for the first time.
 
 ## Prerequisites
 
@@ -371,7 +371,7 @@ Before you begin, ensure you have the following installed:
 1. Clone the repository:
    \`\`\`bash
    git clone <repository-url>
-   cd ${analysis.metadata.projectName}
+   cd ${_analysis.metadata.projectName}
    \`\`\`
 
 2. Install dependencies:
@@ -409,7 +409,7 @@ npm test
   private generateGettingStartedExamples(_analysis: any): string[] {
     return [
       `// Example: Basic usage
-import { initialize } from './${analysis.metadata.projectName}';
+import { initialize } from './${_analysis.metadata.projectName}';
 
 const app = initialize({
   // Configuration options
@@ -510,11 +510,11 @@ Create a \`.vscode/launch.json\` file:
   }
 
   private generateTestingTutorialContent(_analysis: any): string {
-    const testFramework = analysis.technologies.testing?.[0] || 'Jest';
+    const testFramework = _analysis.technologies.testing?.[0] || 'Jest';
     
     return `# Writing and Running Tests
 
-Learn how to write effective tests for your ${analysis.metadata.projectName} code using ${testFramework}.
+Learn how to write effective tests for your ${_analysis.metadata.projectName} code using ${testFramework}.
 
 ## Test Structure
 
@@ -621,7 +621,7 @@ describe('API Endpoints', () => {
   private generateFeatureGuideContent(_analysis: any): string {
     return `# How to Add a New Feature
 
-This guide walks you through the process of adding a new feature to ${analysis.metadata.projectName}.
+This guide walks you through the process of adding a new feature to ${_analysis.metadata.projectName}.
 
 ## Step 1: Plan Your Feature
 
@@ -677,7 +677,7 @@ Create tests for your new feature:
   private generateDebuggingGuideContent(_analysis: any): string {
     return `# How to Debug Common Issues
 
-This guide helps you troubleshoot and debug common issues in ${analysis.metadata.projectName}.
+This guide helps you troubleshoot and debug common issues in ${_analysis.metadata.projectName}.
 
 ## Debugging Tools
 
@@ -754,7 +754,7 @@ If you're still stuck:
   private generateDeploymentGuideContent(_analysis: any): string {
     return `# How to Deploy Your Application
 
-This guide covers deployment options and best practices for ${analysis.metadata.projectName}.
+This guide covers deployment options and best practices for ${_analysis.metadata.projectName}.
 
 ## Pre-Deployment Checklist
 
@@ -799,12 +799,12 @@ git push heroku main
 
 1. Build the Docker image:
    \`\`\`bash
-   docker build -t ${analysis.metadata.projectName} .
+   docker build -t ${_analysis.metadata.projectName} .
    \`\`\`
 
 2. Run the container:
    \`\`\`bash
-   docker run -p 3000:3000 ${analysis.metadata.projectName}
+   docker run -p 3000:3000 ${_analysis.metadata.projectName}
    \`\`\`
 
 ## Continuous Deployment
@@ -1091,11 +1091,11 @@ ${analysis.metadata.projectName} build --minify --output ./production
   private generateArchitectureContent(_analysis: any): string {
     return `# Architecture Overview
 
-Understanding the architecture of ${analysis.metadata.projectName}.
+Understanding the architecture of ${_analysis.metadata.projectName}.
 
 ## System Architecture
 
-${analysis.metadata.projectName} follows a modular architecture designed for scalability and maintainability.
+${_analysis.metadata.projectName} follows a modular architecture designed for scalability and maintainability.
 
 ### Core Components
 
@@ -1130,7 +1130,7 @@ Components communicate through events:
 ## Directory Structure
 
 \`\`\`
-${analysis.metadata.projectName}/
+${_analysis.metadata.projectName}/
 ├── src/
 │   ├── core/           # Core functionality
 │   ├── plugins/        # Plugin implementations
@@ -1187,13 +1187,13 @@ The application supports horizontal scaling through:
   private generateDesignDecisionsContent(_analysis: any): string {
     return `# Design Decisions
 
-Key architectural and design decisions made in ${analysis.metadata.projectName}.
+Key architectural and design decisions made in ${_analysis.metadata.projectName}.
 
 ## Technology Stack
 
-### Why ${analysis.metadata.primaryLanguage}?
+### Why ${_analysis.metadata.primaryLanguage}?
 
-We chose ${analysis.metadata.primaryLanguage} for:
+We chose ${_analysis.metadata.primaryLanguage} for:
 - Strong type safety
 - Excellent tooling support
 - Large ecosystem of libraries
@@ -1340,13 +1340,13 @@ Prepared for cloud deployment:
   private generateTechnologyStackContent(_analysis: any): string {
     return `# Technology Stack
 
-Complete overview of technologies used in ${analysis.metadata.projectName}.
+Complete overview of technologies used in ${_analysis.metadata.projectName}.
 
 ## Core Technologies
 
 ### Runtime & Language
-- **${analysis.metadata.primaryLanguage}**: Primary development language
-- **${analysis.metadata.ecosystem}**: Runtime environment
+- **${_analysis.metadata.primaryLanguage}**: Primary development language
+- **${_analysis.metadata.ecosystem}**: Runtime environment
 - **TypeScript**: Type-safe JavaScript development
 
 ### Package Management
@@ -1368,7 +1368,7 @@ Complete overview of technologies used in ${analysis.metadata.projectName}.
 - **lint-staged**: Pre-commit checks
 
 ### Testing
-${analysis.technologies.testing?.map((t: string) => `- **${t}**: Testing framework`).join('\\n') || '- **Jest**: Testing framework'}
+${_analysis.technologies.testing?.map((t: string) => `- **${t}**: Testing framework`).join('\\n') || '- **Jest**: Testing framework'}
 - **Supertest**: API testing
 - **Coverage tools**: Code coverage reporting
 
@@ -1380,7 +1380,7 @@ ${analysis.technologies.testing?.map((t: string) => `- **${t}**: Testing framewo
 - **GitHub Actions**: CI/CD pipelines
 
 ### Deployment
-${analysis.technologies.deployment?.map((t: string) => `- **${t}**: Deployment platform`).join('\\n') || '- **Docker**: Containerization'}
+${_analysis.technologies.deployment?.map((t: string) => `- **${t}**: Deployment platform`).join('\\n') || '- **Docker**: Containerization'}
 - **GitHub Pages**: Documentation hosting
 
 ### Monitoring
@@ -1392,7 +1392,7 @@ ${analysis.technologies.deployment?.map((t: string) => `- **${t}**: Deployment p
 
 ### Core Dependencies
 \`\`\`json
-${JSON.stringify(analysis.dependencies.packages?.slice(0, 5) || [], null, 2)}
+${JSON.stringify(_analysis.dependencies.packages?.slice(0, 5) || [], null, 2)}
 \`\`\`
 
 ### Development Dependencies
@@ -1403,8 +1403,8 @@ ${JSON.stringify(analysis.dependencies.packages?.slice(0, 5) || [], null, 2)}
 
 ## Database & Storage
 
-${analysis.technologies.database ? `### Database
-- **${analysis.technologies.database}**: Primary database
+${_analysis.technologies.database ? `### Database
+- **${_analysis.technologies.database}**: Primary database
 - **Migration tools**: Database versioning
 - **ORMs/Query builders**: Data access layer` : `### Storage
 - File system for local development
@@ -1859,13 +1859,13 @@ ${contentPlan.explanation.map(e => `- [${e.title}](explanation/${this.slugify(e.
 
   // Content generation methods for new features
   private generateContainerTutorialContent(_analysis: any, _containerTech: ContainerTechnology): string {
-    return `# Containerizing ${analysis.metadata.projectName} with ${containerTech.name}
+    return `# Containerizing ${_analysis.metadata.projectName} with ${_containerTech.name}
 
-Learn how to package your ${analysis.metadata.primaryLanguage} application into a container for consistent deployment across environments.
+Learn how to package your ${_analysis.metadata.primaryLanguage} application into a container for consistent deployment across environments.
 
 ## Prerequisites
 
-- ${containerTech.name} installed on your system
+- ${_containerTech.name} installed on your system
 - Basic understanding of containerization concepts
 - Your application running locally
 
@@ -1873,24 +1873,24 @@ Learn how to package your ${analysis.metadata.primaryLanguage} application into 
 
 Containers provide a lightweight, portable way to package applications with all their dependencies. This ensures your application runs consistently across different environments.
 
-## Creating a ${containerTech.name === 'docker' ? 'Dockerfile' : 'Containerfile'}
+## Creating a ${_containerTech.name === 'docker' ? 'Dockerfile' : 'Containerfile'}
 
-1. Create a ${containerTech.name === 'docker' ? 'Dockerfile' : 'Containerfile'} in your project root:
+1. Create a ${_containerTech.name === 'docker' ? 'Dockerfile' : 'Containerfile'} in your project root:
 
 \`\`\`dockerfile
-${this.generateContainerFileContent(analysis, containerTech)}
+${this.generateContainerFileContent(_analysis, _containerTech)}
 \`\`\`
 
 ## Building Your Container Image
 
 \`\`\`bash
-${containerTech.name} build -t ${analysis.metadata.projectName}:latest .
+${_containerTech.name} build -t ${_analysis.metadata.projectName}:latest .
 \`\`\`
 
 ## Running Your Container
 
 \`\`\`bash
-${containerTech.name} run -p 3000:3000 ${analysis.metadata.projectName}:latest
+${_containerTech.name} run -p 3000:3000 ${_analysis.metadata.projectName}:latest
 \`\`\`
 
 ## Best Practices
@@ -1909,35 +1909,35 @@ ${containerTech.name} run -p 3000:3000 ${analysis.metadata.projectName}:latest
   }
 
   private generateOrchestrationTutorialContent(_analysis: any, _orchestrationTech: OrchestrationTechnology): string {
-    return `# Deploying ${analysis.metadata.projectName} to ${orchestrationTech.name}
+    return `# Deploying ${_analysis.metadata.projectName} to ${_orchestrationTech.name}
 
-Deploy your containerized application to ${orchestrationTech.name} for scalable, production-ready hosting.
+Deploy your containerized application to ${_orchestrationTech.name} for scalable, production-ready hosting.
 
 ## Prerequisites
 
-- ${orchestrationTech.name} cluster access
+- ${_orchestrationTech.name} cluster access
 - kubectl CLI tool installed
 - Container image built and pushed to registry
 
-## Understanding ${orchestrationTech.name}
+## Understanding ${_orchestrationTech.name}
 
-${orchestrationTech.name} is a container orchestration platform that automates deployment, scaling, and management of containerized applications.
+${_orchestrationTech.name} is a container orchestration platform that automates deployment, scaling, and management of containerized applications.
 
 ## Creating Deployment Manifests
 
 1. Create a deployment configuration:
 
 \`\`\`yaml
-${this.generateKubernetesManifest(analysis, 'deployment')}
+${this.generateKubernetesManifest(_analysis, 'deployment')}
 \`\`\`
 
 2. Create a service configuration:
 
 \`\`\`yaml
-${this.generateKubernetesManifest(analysis, 'service')}
+${this.generateKubernetesManifest(_analysis, 'service')}
 \`\`\`
 
-## Deploying to ${orchestrationTech.name}
+## Deploying to ${_orchestrationTech.name}
 
 \`\`\`bash
 kubectl apply -f deployment.yaml
@@ -1949,13 +1949,13 @@ kubectl apply -f service.yaml
 \`\`\`bash
 kubectl get pods
 kubectl get services
-kubectl logs -f deployment/${analysis.metadata.projectName}
+kubectl logs -f deployment/${_analysis.metadata.projectName}
 \`\`\`
 
 ## Scaling Your Application
 
 \`\`\`bash
-kubectl scale deployment ${analysis.metadata.projectName} --replicas=3
+kubectl scale deployment ${_analysis.metadata.projectName} --replicas=3
 \`\`\`
 
 ## Next Steps
@@ -1969,7 +1969,7 @@ kubectl scale deployment ${analysis.metadata.projectName} --replicas=3
   private generatePythonEnvironmentContent(_analysis: any): string {
     return `# Python Virtual Environment Setup
 
-Set up an isolated Python development environment for ${analysis.metadata.projectName}.
+Set up an isolated Python development environment for ${_analysis.metadata.projectName}.
 
 ## Why Virtual Environments?
 
@@ -1993,7 +1993,7 @@ virtualenv venv
 ### Using conda
 
 \`\`\`bash
-conda create --name ${analysis.metadata.projectName} python=3.11
+conda create --name ${_analysis.metadata.projectName} python=3.11
 \`\`\`
 
 ## Activating the Environment
@@ -2013,7 +2013,7 @@ venv\\Scripts\\activate
 ### Conda
 
 \`\`\`bash
-conda activate ${analysis.metadata.projectName}
+conda activate ${_analysis.metadata.projectName}
 \`\`\`
 
 ## Installing Dependencies
@@ -2047,11 +2047,11 @@ deactivate
 
   private generatePythonFrameworkTutorialContent(_analysis: any, framework: any): string {
     if (framework.name === 'django') {
-      return this.generateDjangoTutorialContent(analysis);
+      return this.generateDjangoTutorialContent(_analysis);
     } else if (framework.name === 'fastapi') {
-      return this.generateFastAPITutorialContent(analysis);
+      return this.generateFastAPITutorialContent(_analysis);
     } else if (framework.name === 'flask') {
-      return this.generateFlaskTutorialContent(analysis);
+      return this.generateFlaskTutorialContent(_analysis);
     }
     
     return `# Building Applications with ${framework.name}
@@ -2088,8 +2088,8 @@ pip install django
 2. Create a new Django project:
 
 \`\`\`bash
-django-admin startproject ${analysis.metadata.projectName}
-cd ${analysis.metadata.projectName}
+django-admin startproject ${_analysis.metadata.projectName}
+cd ${_analysis.metadata.projectName}
 \`\`\`
 
 3. Create your first app:
@@ -2311,7 +2311,7 @@ Popular Flask extensions:
 
   // Helper methods for container content generation
   private generateContainerFileContent(_analysis: any, _containerTech: ContainerTechnology): string {
-    const language = analysis.metadata.primaryLanguage?.toLowerCase();
+    const language = _analysis.metadata.primaryLanguage?.toLowerCase();
     
     if (language === 'python') {
       return `FROM python:3.11-slim
@@ -2401,13 +2401,13 @@ spec:
   private generateContainerExamples(_analysis: any, _containerTech: ContainerTechnology): string[] {
     return [
       `# Build the container image
-${containerTech.name} build -t ${analysis.metadata.projectName}:latest .`,
+${_containerTech.name} build -t ${_analysis.metadata.projectName}:latest .`,
       
       `# Run the container locally
-${containerTech.name} run -p 3000:3000 -d ${analysis.metadata.projectName}:latest`,
+${_containerTech.name} run -p 3000:3000 -d ${_analysis.metadata.projectName}:latest`,
       
       `# View running containers
-${containerTech.name} ps`
+${_containerTech.name} ps`
     ];
   }
 
@@ -2420,7 +2420,7 @@ kubectl apply -f k8s/`,
 kubectl get deployments`,
       
       `# View application logs
-kubectl logs -f deployment/${analysis.metadata.projectName}`
+kubectl logs -f deployment/${_analysis.metadata.projectName}`
     ];
   }
 
