@@ -2,7 +2,7 @@ module.exports = {
   title: 'DocuMCP',
   tagline: 'Intelligent documentation deployment MCP server with AI-powered repository analysis and Diataxis-compliant content generation',
   url: 'https://tosin2013.github.io',
-  baseUrl: '/',
+  baseUrl: '/documcp/',
   onBrokenLinks: 'warn',
   onBrokenMarkdownLinks: 'warn',
   favicon: 'img/favicon.ico',
@@ -96,7 +96,7 @@ module.exports = {
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} DocuMCP. Built with Docusaurus.`,
+      copyright: `Copyright ${new Date().getFullYear()} DocuMCP. Built with Docusaurus.`,
     },
     prism: {
       theme: require('prism-react-renderer').themes.github,
