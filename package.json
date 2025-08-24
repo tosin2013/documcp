@@ -3,6 +3,9 @@
   "version": "0.2.2",
   "description": "Intelligent MCP server for GitHub Pages documentation deployment",
   "main": "dist/index.js",
+  "bin": {
+    "documcp": "dist/index.js"
+  },
   "type": "module",
   "scripts": {
     "build": "tsc",
