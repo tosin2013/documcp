@@ -3,21 +3,13 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import { fileURLToPath } from 'url';
-
-// ESM-compatible __dirname replacement - fallback for test environments
+// ESM-compatible dirname replacement - fallback for test environments
 function getDirname(): string {
-  try {
-    if (typeof import.meta !== 'undefined' && import.meta.url) {
-      return path.dirname(fileURLToPath(import.meta.url));
-    }
-  } catch {
-    // Fallback for test environment
-  }
+  // Use process.cwd() as fallback for all environments to avoid import.meta issues
   return process.cwd();
 }
 
-const __dirname = getDirname();
+const currentDir = getDirname();
 
 const execAsync = promisify(exec);
 
@@ -86,7 +78,7 @@ interface ExampleValidation {
   confidence: number;
 }
 
-interface ValidationResult {
+export interface ValidationResult {
   success: boolean;
   confidence: ConfidenceMetrics;
   issues: ValidationIssue[];
@@ -101,7 +93,7 @@ class ContentAccuracyValidator {
   private tempDir: string;
 
   constructor() {
-    this.tempDir = path.join(__dirname, '../../.tmp');
+    this.tempDir = path.join(currentDir, '.tmp');
   }
 
   async validateContent(options: ValidationOptions): Promise<ValidationResult> {
@@ -119,6 +111,9 @@ class ContentAccuracyValidator {
       this.projectContext = await this.loadProjectContext(options.analysisId);
     }
 
+    // Determine if we should analyze application code vs documentation
+    const isApplicationValidation = await this.shouldAnalyzeApplicationCode(options.contentPath);
+    
     // Perform different types of validation based on request
     if (options.validationType === 'all' || options.validationType === 'accuracy') {
       await this.validateAccuracy(options.contentPath, result);
@@ -129,7 +124,11 @@ class ContentAccuracyValidator {
     }
 
     if (options.validationType === 'all' || options.validationType === 'compliance') {
-      await this.validateDiataxisCompliance(options.contentPath, result);
+      if (isApplicationValidation) {
+        await this.validateApplicationStructureCompliance(options.contentPath, result);
+      } else {
+        await this.validateDiataxisCompliance(options.contentPath, result);
+      }
     }
 
     // Code validation if requested
@@ -429,6 +428,105 @@ class ContentAccuracyValidator {
       
       if (section) {
         await this.checkSectionCompliance(file, content, section, result);
+      }
+    }
+  }
+
+  private async validateApplicationStructureCompliance(contentPath: string, result: ValidationResult): Promise<void> {
+    // Analyze application source code for Diataxis compliance
+    await this.validateSourceCodeDocumentation(contentPath, result);
+    await this.validateApplicationArchitecture(contentPath, result);
+    await this.validateInlineDocumentationPatterns(contentPath, result);
+  }
+
+  private async validateSourceCodeDocumentation(contentPath: string, result: ValidationResult): Promise<void> {
+    const sourceFiles = await this.getSourceFiles(contentPath);
+    
+    for (const file of sourceFiles) {
+      const content = await fs.readFile(file, 'utf-8');
+      
+      // Check for proper JSDoc/TSDoc documentation
+      await this.checkInlineDocumentationQuality(file, content, result);
+      
+      // Check for README files and their structure
+      if (file.endsWith('README.md')) {
+        await this.validateReadmeStructure(file, content, result);
+      }
+      
+      // Check for proper module/class documentation
+      await this.checkModuleDocumentation(file, content, result);
+    }
+  }
+
+  private async validateApplicationArchitecture(contentPath: string, result: ValidationResult): Promise<void> {
+    // Check if the application structure supports different types of documentation
+    const hasToolsDir = await this.pathExists(path.join(contentPath, 'tools'));
+    const hasTypesDir = await this.pathExists(path.join(contentPath, 'types'));
+    // Check for workflows directory (currently not used but may be useful for future validation)
+    // const hasWorkflowsDir = await this.pathExists(path.join(contentPath, 'workflows'));
+    
+    if (!hasToolsDir) {
+      result.issues.push({
+        type: 'warning',
+        category: 'compliance',
+        location: { file: 'application structure' },
+        description: 'No dedicated tools directory found - may impact reference documentation organization',
+        evidence: ['Missing /tools directory'],
+        suggestedFix: 'Organize tools into dedicated directory for better reference documentation',
+        confidence: 80
+      });
+    }
+
+    if (!hasTypesDir) {
+      result.issues.push({
+        type: 'info',
+        category: 'compliance',
+        location: { file: 'application structure' },
+        description: 'No types directory found - may impact API reference documentation',
+        evidence: ['Missing /types directory'],
+        suggestedFix: 'Consider organizing types for better API documentation',
+        confidence: 70
+      });
+    }
+  }
+
+  private async validateInlineDocumentationPatterns(contentPath: string, result: ValidationResult): Promise<void> {
+    const sourceFiles = await this.getSourceFiles(contentPath);
+    
+    for (const file of sourceFiles) {
+      const content = await fs.readFile(file, 'utf-8');
+      
+      // Check for proper function documentation that could support tutorials
+      const functions = this.extractFunctions(content);
+      for (const func of functions) {
+        if (func.isExported && !func.hasDocumentation) {
+          result.issues.push({
+            type: 'warning',
+            category: 'compliance',
+            location: { file: path.basename(file), line: func.line },
+            description: `Exported function '${func.name}' lacks documentation`,
+            evidence: [func.signature],
+            suggestedFix: 'Add JSDoc/TSDoc documentation to support tutorial and reference content',
+            confidence: 85
+          });
+        }
+      }
+      
+      // Check for proper error handling documentation
+      const errorPatterns = content.match(/throw new \w*Error/g);
+      if (errorPatterns && errorPatterns.length > 0) {
+        const hasErrorDocs = content.includes('@throws') || content.includes('@error');
+        if (!hasErrorDocs) {
+          result.issues.push({
+            type: 'info',
+            category: 'compliance',
+            location: { file: path.basename(file) },
+            description: 'Error throwing code found without error documentation',
+            evidence: errorPatterns,
+            suggestedFix: 'Document error conditions to support troubleshooting guides',
+            confidence: 75
+          });
+        }
       }
     }
   }
@@ -772,6 +870,182 @@ class ContentAccuracyValidator {
     }
     
     return files;
+  }
+
+  private async getSourceFiles(contentPath: string): Promise<string[]> {
+    const files: string[] = [];
+    
+    async function scan(dir: string) {
+      const entries = await fs.readdir(dir, { withFileTypes: true });
+      
+      for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name);
+        
+        if (entry.isDirectory() && !entry.name.includes('node_modules') && !entry.name.includes('.git')) {
+          await scan(fullPath);
+        } else if (entry.name.endsWith('.ts') || entry.name.endsWith('.js') || entry.name.endsWith('.md')) {
+          files.push(fullPath);
+        }
+      }
+    }
+    
+    try {
+      await scan(contentPath);
+    } catch (error) {
+      // Directory might not exist
+    }
+    
+    return files;
+  }
+
+  private async pathExists(filePath: string): Promise<boolean> {
+    try {
+      await fs.access(filePath);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private extractFunctions(content: string): Array<{name: string, line: number, signature: string, isExported: boolean, hasDocumentation: boolean}> {
+    const functions: Array<{name: string, line: number, signature: string, isExported: boolean, hasDocumentation: boolean}> = [];
+    const lines = content.split('\n');
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      
+      // Match function declarations and exports
+      const functionMatch = line.match(/^(export\s+)?(async\s+)?function\s+(\w+)/);
+      const arrowMatch = line.match(/^(export\s+)?(?:const|let|var)\s+(\w+)\s*=\s*(async\s+)?\(/);
+      const methodMatch = line.match(/^\s*(async\s+)?(\w+)\s*\(/);
+      
+      if (functionMatch) {
+        const name = functionMatch[3];
+        const isExported = !!functionMatch[1];
+        const hasDocumentation = this.checkForDocumentation(lines, i);
+        
+        functions.push({
+          name,
+          line: i + 1,
+          signature: line.trim(),
+          isExported,
+          hasDocumentation
+        });
+      } else if (arrowMatch) {
+        const name = arrowMatch[2];
+        const isExported = !!arrowMatch[1];
+        const hasDocumentation = this.checkForDocumentation(lines, i);
+        
+        functions.push({
+          name,
+          line: i + 1,
+          signature: line.trim(),
+          isExported,
+          hasDocumentation
+        });
+      }
+    }
+    
+    return functions;
+  }
+
+  private async checkInlineDocumentationQuality(_file: string, _content: string, _result: ValidationResult): Promise<void> {
+    // Implementation for checking JSDoc/TSDoc quality
+    // This could check for proper parameter documentation, return types, etc.
+  }
+
+  private async validateReadmeStructure(_file: string, content: string, result: ValidationResult): Promise<void> {
+    // Check if README follows good structure
+    const hasTitle = /^#\s+/.test(content);
+    const hasDescription = content.includes('## Description') || content.includes('## Overview');
+    const hasInstallation = content.includes('## Installation') || content.includes('## Setup');
+    const hasUsage = content.includes('## Usage') || content.includes('## Getting Started');
+    
+    if (!hasTitle) {
+      result.issues.push({
+        type: 'warning',
+        category: 'compliance',
+        location: { file: 'README.md' },
+        description: 'README missing clear title',
+        evidence: ['No H1 heading found'],
+        suggestedFix: 'Add clear title with # heading',
+        confidence: 90
+      });
+    }
+
+    if (!hasDescription && !hasInstallation && !hasUsage) {
+      result.issues.push({
+        type: 'warning',
+        category: 'compliance',
+        location: { file: 'README.md' },
+        description: 'README lacks essential sections (description, installation, usage)',
+        evidence: ['Missing standard README sections'],
+        suggestedFix: 'Add sections for description, installation, and usage following Diataxis principles',
+        confidence: 85
+      });
+    }
+  }
+
+  private async checkModuleDocumentation(_file: string, _content: string, _result: ValidationResult): Promise<void> {
+    // Implementation for checking module-level documentation
+    // This could check for file-level JSDoc, proper exports documentation, etc.
+  }
+
+  private checkForDocumentation(lines: string[], functionLineIndex: number): boolean {
+    // Look backwards from the function line to find documentation
+    let checkIndex = functionLineIndex - 1;
+    
+    // Skip empty lines
+    while (checkIndex >= 0 && lines[checkIndex].trim() === '') {
+      checkIndex--;
+    }
+    
+    // Check if we found the end of a JSDoc comment
+    if (checkIndex >= 0 && lines[checkIndex].trim() === '*/') {
+      // Look backwards to find the start of the JSDoc block
+      let jsDocStart = checkIndex;
+      while (jsDocStart >= 0) {
+        const line = lines[jsDocStart].trim();
+        if (line.startsWith('/**')) {
+          return true; // Found complete JSDoc block
+        }
+        if (!line.startsWith('*') && line !== '*/') {
+          break; // Not part of JSDoc block
+        }
+        jsDocStart--;
+      }
+    }
+    
+    // Also check for single-line JSDoc comments
+    if (checkIndex >= 0 && lines[checkIndex].trim().startsWith('/**') && lines[checkIndex].includes('*/')) {
+      return true;
+    }
+    
+    return false;
+  }
+
+  private async shouldAnalyzeApplicationCode(contentPath: string): Promise<boolean> {
+    // Check if the path contains application source code vs documentation
+    const hasSrcDir = await this.pathExists(path.join(contentPath, 'src'));
+    const hasPackageJson = await this.pathExists(path.join(contentPath, 'package.json'));
+    const hasTypescriptFiles = (await this.getSourceFiles(contentPath)).some(file => file.endsWith('.ts'));
+    
+    // If path ends with 'src' or is a project root with src/, analyze as application code
+    if (contentPath.endsWith('/src') || contentPath.endsWith('\\src') || (hasSrcDir && hasPackageJson)) {
+      return true;
+    }
+    
+    // If path contains TypeScript/JavaScript files and package.json, treat as application code
+    if (hasTypescriptFiles && hasPackageJson) {
+      return true;
+    }
+    
+    // If path is specifically a documentation directory, analyze as documentation
+    if (contentPath.includes('/docs') || contentPath.includes('\\docs')) {
+      return false;
+    }
+    
+    return false;
   }
 
   private async analyzeDiataxisStructure(contentPath: string): Promise<{ sections: string[] }> {
