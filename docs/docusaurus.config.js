@@ -1,6 +1,8 @@
+const packageJson = require('../package.json');
+
 module.exports = {
   title: 'DocuMCP',
-  tagline: 'Intelligent documentation deployment MCP server with AI-powered repository analysis and Diataxis-compliant content generation',
+  tagline: `Intelligent documentation deployment MCP server v${packageJson.version} with AI-powered repository analysis and Diataxis-compliant content generation`,
   url: 'https://tosin2013.github.io',
   baseUrl: '/documcp/',
   onBrokenLinks: 'warn',

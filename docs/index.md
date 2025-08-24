@@ -1,5 +1,7 @@
 # DocuMCP Documentation
 
+[![NPM Version](https://img.shields.io/npm/v/documcp?style=flat-square&logo=npm&logoColor=white)](https://www.npmjs.com/package/documcp)
+[![GitHub Release](https://img.shields.io/github/v/release/tosin2013/documcp?style=flat-square&logo=github)](https://github.com/tosin2013/documcp/releases)
 
 **DocuMCP** is an intelligent MCP (Model Context Protocol) server that revolutionizes documentation deployment. It analyzes your repository, recommends the best static site generator, and automatically creates production-ready documentation following the Diataxis framework.
 
