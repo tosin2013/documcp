@@ -1,488 +1,456 @@
-# How to Develop Custom MCP Tools
+# How to Create Custom MCP Tools
 
-This guide explains how to extend DocuMCP with custom MCP tools for specialized documentation workflows.
+This guide shows you how to develop custom MCP tools for documcp to extend its documentation capabilities.
 
-## Understanding MCP Tool Architecture
+## Prerequisites
 
-DocuMCP follows the [Model Context Protocol](https://modelcontextprotocol.io/) specification. Each tool is a self-contained function that processes structured input and returns structured output.
+- Node.js 20+ and TypeScript knowledge
+- Understanding of MCP protocol basics
+- documcp development environment set up
+- Familiarity with Zod schema validation
 
-### MCP Tool Structure
+## MCP Tool Architecture
+
+documcp tools follow the MCP (Model Context Protocol) specification:
 
 ```typescript
-// Basic MCP tool structure
-{
-  name: 'tool_name',
-  description: 'What this tool does',
-  inputSchema: zodSchema,  // Input validation
-  handler: async (args) => { /* implementation */ }
+interface MCPTool {
+  name: string;
+  description: string;
+  inputSchema: ZodSchema;
+  handler: (args: any) => Promise<ToolResult>;
 }
 ```
 
-## Planning Your Custom Tool
+## Step 1: Plan Your Tool
 
-### 1. Define the Use Case
+### Define Tool Purpose
 
-Ask yourself:
-- **What documentation task** does this tool solve?
-- **What inputs** does it need from the user?
-- **What outputs** should it provide?
-- **How does it fit** into the existing DocuMCP workflow?
+1. **Identify the Documentation Need**:
+   - What documentation task will this tool solve?
+   - How does it fit into the Diataxis framework?
+   - What inputs and outputs are required?
 
-### 2. Design the Tool Interface
+2. **Create Feature Branch**:
+   ```bash
+   git checkout -b feature/tool-your-tool-name
+   ```
 
-**Example Planning Document:**
-```markdown
-## Tool: `analyze_dependencies`
+### Example Tool Concept
 
-**Purpose**: Analyze project dependencies for security vulnerabilities
+Let's create a `validate_markdown_links` tool that checks for broken links in documentation.
 
-**Inputs**:
-- `projectPath` (string): Path to project
-- `severity` (enum): 'low' | 'medium' | 'high' | 'critical'
-- `includeDevDeps` (boolean): Include dev dependencies
+## Step 2: Create Tool Structure
 
-**Outputs**:
-- `vulnerabilities`: Array of security issues
-- `recommendations`: Suggested fixes
-- `summary`: Overall security score
+### Tool File Structure
+
+Create your tool in `src/tools/`:
+```bash
+touch src/tools/validate-markdown-links.ts
 ```
 
-## Implementation Steps
-
-### 1. Create the Tool Definition
-
-Add your tool to `src/index.ts`:
-
-```typescript
-// Add to TOOLS array
-{
-  name: 'analyze_dependencies',
-  description: 'Analyze project dependencies for security vulnerabilities',
-  inputSchema: z.object({
-    projectPath: z.string().describe('Path to the project to analyze'),
-    severity: z.enum(['low', 'medium', 'high', 'critical']).optional().default('medium'),
-    includeDevDeps: z.boolean().optional().default(true),
-  }),
-},
-```
-
-### 2. Create the Tool Implementation
-
-Create `src/tools/analyze-dependencies.ts`:
+### Basic Tool Template
 
 ```typescript
 import { z } from 'zod';
+import { Tool } from '@modelcontextprotocol/sdk/types.js';
 
-// Define input schema
-const AnalyzeDependenciesArgsSchema = z.object({
-  projectPath: z.string(),
-  severity: z.enum(['low', 'medium', 'high', 'critical']).optional().default('medium'),
-  includeDevDeps: z.boolean().optional().default(true),
+// Input validation schema
+const ValidateMarkdownLinksSchema = z.object({
+  path: z.string().describe('Path to markdown files or directory'),
+  recursive: z.boolean().optional().default(true).describe('Check subdirectories'),
+  external: z.boolean().optional().default(false).describe('Validate external URLs'),
+  timeout: z.number().optional().default(5000).describe('Timeout for external links (ms)')
 });
 
-type AnalyzeDependenciesArgs = z.infer<typeof AnalyzeDependenciesArgsSchema>;
+export type ValidateMarkdownLinksArgs = z.infer<typeof ValidateMarkdownLinksSchema>;
 
-// Define output type
-interface DependencyAnalysisResult {
-  vulnerabilities: Vulnerability[];
-  recommendations: string[];
-  summary: {
-    totalDependencies: number;
-    vulnerablePackages: number;
-    securityScore: number;
-  };
-}
-
-interface Vulnerability {
-  package: string;
-  version: string;
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  description: string;
-  fixedIn?: string;
-  cve?: string;
-}
-
-export async function analyzeDependencies(
-  args: unknown
-): Promise<DependencyAnalysisResult> {
-  // Validate inputs
-  const validatedArgs = AnalyzeDependenciesArgsSchema.parse(args);
-  const { projectPath, severity, includeDevDeps } = validatedArgs;
-
-  try {
-    // Implementation logic
-    const packageJsonPath = `${projectPath}/package.json`;
-    
-    // 1. Read package.json
-    const packageJson = await readPackageJson(packageJsonPath);
-    
-    // 2. Analyze dependencies
-    const vulnerabilities = await scanForVulnerabilities(
-      packageJson,
-      includeDevDeps,
-      severity
-    );
-    
-    // 3. Generate recommendations
-    const recommendations = generateSecurityRecommendations(vulnerabilities);
-    
-    // 4. Calculate summary
-    const summary = calculateSecuritySummary(packageJson, vulnerabilities);
-
+export const validateMarkdownLinks: Tool = {
+  name: 'validate_markdown_links',
+  description: 'Validate internal and external links in markdown documentation files',
+  inputSchema: ValidateMarkdownLinksSchema.describe('Validate markdown links tool parameters'),
+  
+  async handler(args: ValidateMarkdownLinksArgs) {
+    // Implementation goes here
     return {
-      vulnerabilities,
-      recommendations,
-      summary,
+      content: [
+        {
+          type: 'text',
+          text: 'Link validation results...'
+        }
+      ]
     };
-  } catch (error) {
-    throw new Error(`Failed to analyze dependencies: ${error.message}`);
   }
-}
+};
+```
+
+## Step 3: Implement Tool Logic
+
+### Core Implementation
+
+```typescript
+import fs from 'fs/promises';
+import path from 'path';
+import { glob } from 'glob';
+
+export const validateMarkdownLinks: Tool = {
+  name: 'validate_markdown_links',
+  description: 'Validate internal and external links in markdown documentation files',
+  inputSchema: ValidateMarkdownLinksSchema,
+  
+  async handler(args: ValidateMarkdownLinksArgs) {
+    try {
+      // Validate input
+      const validatedArgs = ValidateMarkdownLinksSchema.parse(args);
+      
+      // Find markdown files
+      const pattern = path.join(validatedArgs.path, validatedArgs.recursive ? '**/*.md' : '*.md');
+      const files = await glob(pattern);
+      
+      const results = {
+        totalFiles: files.length,
+        brokenLinks: [] as Array<{
+          file: string;
+          link: string;
+          error: string;
+        }>,
+        validLinks: 0
+      };
+      
+      // Process each file
+      for (const file of files) {
+        const content = await fs.readFile(file, 'utf-8');
+        const links = extractLinks(content);
+        
+        for (const link of links) {
+          try {
+            await validateLink(link, file, validatedArgs);
+            results.validLinks++;
+          } catch (error) {
+            results.brokenLinks.push({
+              file: path.relative(process.cwd(), file),
+              link,
+              error: error instanceof Error ? error.message : 'Unknown error'
+            });
+          }
+        }
+      }
+      
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(results, null, 2)
+          }
+        ]
+      };
+      
+    } catch (error) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Error validating links: ${error instanceof Error ? error.message : 'Unknown error'}`
+          }
+        ],
+        isError: true
+      };
+    }
+  }
+};
 
 // Helper functions
-async function readPackageJson(path: string) {
-  // Implementation
+function extractLinks(content: string): string[] {
+  const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+  const links: string[] = [];
+  let match;
+  
+  while ((match = linkRegex.exec(content)) !== null) {
+    links.push(match[2]);
+  }
+  
+  return links;
 }
 
-async function scanForVulnerabilities(packageJson: any, includeDevDeps: boolean, severity: string) {
-  // Implementation using npm audit or similar
-}
-
-function generateSecurityRecommendations(vulnerabilities: Vulnerability[]): string[] {
-  // Generate actionable recommendations
-}
-
-function calculateSecuritySummary(packageJson: any, vulnerabilities: Vulnerability[]) {
-  // Calculate security metrics
+async function validateLink(link: string, sourceFile: string, args: ValidateMarkdownLinksArgs): Promise<void> {
+  if (link.startsWith('http')) {
+    if (args.external) {
+      // Validate external URL
+      const response = await fetch(link, { 
+        method: 'HEAD',
+        signal: AbortSignal.timeout(args.timeout || 5000)
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+    }
+  } else {
+    // Validate internal link
+    const targetPath = path.resolve(path.dirname(sourceFile), link);
+    try {
+      await fs.access(targetPath);
+    } catch {
+      throw new Error(`File not found: ${link}`);
+    }
+  }
 }
 ```
 
-### 3. Register the Tool Handler
+## Step 4: Register Your Tool
 
-Add the handler to `src/index.ts`:
+### Add to Tool Registry
+
+Update `src/index.ts` to include your new tool:
 
 ```typescript
-// In the CallToolRequestSchema handler
-case 'analyze_dependencies': {
-  const result = await analyzeDependencies(args);
-  
-  // Store result as resource
-  const analysisId = `security-analysis-${Date.now()}`;
-  storeResource(
-    `documcp://analysis/${analysisId}`,
-    JSON.stringify(result, null, 2),
-    'application/json'
-  );
-  
-  return {
-    content: [
-      {
-        type: 'text',
-        text: `Security analysis complete. Found ${result.vulnerabilities.length} vulnerabilities.`,
-      },
-      {
-        type: 'text',
-        text: `Security Score: ${result.summary.securityScore}/100`,
-      },
-      {
-        type: 'text',
-        text: `Recommendations:\n${result.recommendations.slice(0, 5).map(r => `- ${r}`).join('\n')}`,
-      },
-    ],
-  };
-}
+import { validateMarkdownLinks } from './tools/validate-markdown-links.js';
+
+// Add to tools array
+const tools = [
+  analyzeRepository,
+  recommendSSG,
+  generateConfig,
+  setupStructure,
+  populateDiataxisContent,
+  detectGaps,
+  validateContent,
+  validateDiataxisContent,
+  deployPages,
+  testLocalDeployment,
+  verifyDeployment,
+  validateMarkdownLinks, // Your new tool
+];
 ```
 
-### 4. Write Comprehensive Tests
+## Step 5: Add Comprehensive Tests
 
-Create `tests/tools/analyze-dependencies.test.ts`:
+### Create Test File
 
 ```typescript
-import { analyzeDependencies } from '../../src/tools/analyze-dependencies';
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+// tests/tools/validate-markdown-links.test.ts
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { validateMarkdownLinks } from '../../src/tools/validate-markdown-links.js';
+import fs from 'fs/promises';
+import path from 'path';
 
-describe('analyzeDependencies', () => {
-  beforeEach(() => {
-    // Setup test environment
+describe('validateMarkdownLinks', () => {
+  const testDir = path.join(__dirname, 'test-markdown');
+  
+  beforeEach(async () => {
+    await fs.mkdir(testDir, { recursive: true });
   });
-
-  it('should analyze project dependencies successfully', async () => {
-    const args = {
-      projectPath: './test-fixtures/sample-project',
-      severity: 'medium',
-      includeDevDeps: true,
-    };
-
-    const result = await analyzeDependencies(args);
-
-    expect(result).toMatchObject({
-      vulnerabilities: expect.any(Array),
-      recommendations: expect.any(Array),
-      summary: expect.objectContaining({
-        totalDependencies: expect.any(Number),
-        vulnerablePackages: expect.any(Number),
-        securityScore: expect.any(Number),
-      }),
-    });
+  
+  afterEach(async () => {
+    await fs.rm(testDir, { recursive: true, force: true });
   });
-
-  it('should filter by severity level', async () => {
-    const args = {
-      projectPath: './test-fixtures/vulnerable-project',
-      severity: 'high',
-      includeDevDeps: false,
-    };
-
-    const result = await analyzeDependencies(args);
-    
-    // All vulnerabilities should be high or critical
-    result.vulnerabilities.forEach(vuln => {
-      expect(['high', 'critical']).toContain(vuln.severity);
-    });
-  });
-
-  it('should handle missing package.json gracefully', async () => {
-    const args = {
-      projectPath: './non-existent-project',
-    };
-
-    await expect(analyzeDependencies(args)).rejects.toThrow(
-      'Failed to analyze dependencies'
+  
+  it('should validate internal links correctly', async () => {
+    // Create test files
+    await fs.writeFile(
+      path.join(testDir, 'test.md'),
+      '[Link to reference](../reference/api-reference.md)'
     );
+    
+    const result = await validateMarkdownLinks.handler({
+      path: testDir,
+      recursive: false,
+      external: false
+    });
+    
+    const parsed = JSON.parse(result.content[0].text);
+    expect(parsed.brokenLinks).toHaveLength(0);
+    expect(parsed.validLinks).toBe(1);
+  });
+  
+  it('should detect broken internal links', async () => {
+    await fs.writeFile(
+      path.join(testDir, 'test.md'),
+      '[Broken link](./nonexistent-file.md)'
+    );
+    
+    const result = await validateMarkdownLinks.handler({
+      path: testDir,
+      recursive: false,
+      external: false
+    });
+    
+    const parsed = JSON.parse(result.content[0].text);
+    expect(parsed.brokenLinks).toHaveLength(1);
+    expect(parsed.brokenLinks[0].link).toBe('./nonexistent-file.md');
   });
 });
 ```
 
-### 5. Add Integration Tests
+### Run Tests
 
-Create `tests/integration/custom-tools.test.ts`:
-
-```typescript
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-
-describe('Custom Tools Integration', () => {
-  it('should execute analyze_dependencies tool through MCP', async () => {
-    // Test MCP tool execution
-    const request = {
-      jsonrpc: '2.0',
-      id: 1,
-      method: 'tools/call',
-      params: {
-        name: 'analyze_dependencies',
-        arguments: {
-          projectPath: './test-fixtures/sample-project',
-        },
-      },
-    };
-
-    // Test the tool through the MCP server
-    const response = await callMCPTool(request);
-    expect(response.result).toBeDefined();
-  });
-});
+```bash
+npm test -- validate-markdown-links
 ```
 
-## Advanced Tool Development
+## Step 6: Add Documentation
 
-### Error Handling Best Practices
+### Tool Documentation
 
-```typescript
-export async function myCustomTool(args: unknown): Promise<MyResult> {
-  try {
-    const validatedArgs = MyArgsSchema.parse(args);
-    
-    // Implementation with specific error types
-    if (!validatedArgs.path) {
-      throw new ValidationError('Path is required');
-    }
-    
-    const result = await processData(validatedArgs);
-    return result;
-    
-  } catch (error) {
-    if (error instanceof ValidationError) {
-      throw new Error(`Invalid input: ${error.message}`);
-    }
-    
-    if (error instanceof NetworkError) {
-      throw new Error(`Network issue: ${error.message}`);
-    }
-    
-    // Generic fallback
-    throw new Error(`Tool execution failed: ${error.message}`);
+Create documentation in `docs/reference/tools/`:
+
+```markdown
+# validate_markdown_links
+
+Validates internal and external links in markdown documentation files.
+
+## Parameters
+
+- `path` (string): Path to markdown files or directory
+- `recursive` (boolean, optional): Check subdirectories (default: true)
+- `external` (boolean, optional): Validate external URLs (default: false)
+- `timeout` (number, optional): Timeout for external links in ms (default: 5000)
+
+## Example Usage
+
+```json
+{
+  "name": "validate_markdown_links",
+  "arguments": {
+    "path": "./docs",
+    "recursive": true,
+    "external": true,
+    "timeout": 10000
   }
 }
 ```
 
-### Resource Storage Integration
+## Return Format
+
+Returns JSON with validation results:
+- `totalFiles`: Number of files processed
+- `brokenLinks`: Array of broken link details
+- `validLinks`: Count of valid links found
+```
+
+### Update API Reference
+
+Add your tool to `docs/reference/api-reference.md`:
+
+```markdown
+### validate_markdown_links
+
+**Purpose**: Validate internal and external links in markdown files
+
+**Use Cases**:
+- Documentation quality assurance
+- Pre-deployment link validation
+- Maintenance of large documentation sites
+
+**Integration**: Works with all SSGs and documentation frameworks
+```
+
+## Step 7: Integration Testing
+
+### Test with AI Client
+
+Test your tool with Claude Desktop or other MCP clients:
+
+```
+Can you validate all the links in my documentation using the validate_markdown_links tool?
+```
+
+### Performance Testing
+
+Test with large documentation sets:
+
+```bash
+# Create performance test
+DEBUG=documcp:performance npm run dev
+```
+
+## Best Practices
+
+### Code Quality
+
+1. **Input Validation**: Always use Zod schemas for type safety
+2. **Error Handling**: Provide clear, actionable error messages
+3. **Performance**: Consider memory usage for large repositories
+4. **Security**: Validate file paths and prevent directory traversal
+
+### Tool Design
+
+1. **Single Responsibility**: Each tool should have one clear purpose
+2. **Composability**: Tools should work well together
+3. **Consistency**: Follow existing tool patterns and naming
+4. **Documentation**: Provide comprehensive usage examples
+
+### Testing Strategy
+
+1. **Unit Tests**: Test core logic in isolation
+2. **Integration Tests**: Test with real file systems
+3. **Error Cases**: Test all failure scenarios
+4. **Performance Tests**: Validate with large datasets
+
+## Advanced Features
+
+### Tool Chaining
+
+Design tools to work together:
 
 ```typescript
-// Store tool results for later retrieval
-export function storeToolResult(toolName: string, result: any): string {
-  const resourceId = `${toolName}-${Date.now()}`;
-  const uri = `documcp://${toolName}/${resourceId}`;
+// Tool that uses results from other tools
+export const generateQualityReport: Tool = {
+  name: 'generate_quality_report',
+  description: 'Generate comprehensive documentation quality report',
   
-  storeResource(uri, JSON.stringify(result, null, 2), 'application/json');
-  
-  return resourceId;
-}
+  async handler(args) {
+    // Use multiple tools together
+    const gapAnalysis = await detectGaps.handler(args);
+    const linkValidation = await validateMarkdownLinks.handler(args);
+    const contentValidation = await validateContent.handler(args);
+    
+    // Combine results
+    return combineReports(gapAnalysis, linkValidation, contentValidation);
+  }
+};
 ```
 
-### Performance Optimization
+### Configuration Support
+
+Add tool-specific configuration:
 
 ```typescript
-// Add timeout and progress tracking
-export async function longRunningTool(args: MyArgs): Promise<MyResult> {
-  const timeout = args.timeout || 30000; // 30 seconds default
-  
-  return Promise.race([
-    performAnalysis(args),
-    new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Tool execution timeout')), timeout)
-    ),
-  ]);
-}
+const config = {
+  linkValidation: {
+    timeout: process.env.LINK_TIMEOUT || 5000,
+    retries: process.env.LINK_RETRIES || 3,
+    userAgent: process.env.USER_AGENT || 'documcp-validator'
+  }
+};
 ```
 
-## Testing Your Custom Tool
+## Deployment and Distribution
 
-### Unit Testing
+### Build and Test
+
 ```bash
-# Test specific tool
-npm test -- --testPathPattern=analyze-dependencies
-
-# Test with coverage
-npm run test:coverage
-```
-
-### Manual MCP Testing
-```bash
-# Build and test tool directly
 npm run build
-
-# Test tool through MCP protocol
-echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"analyze_dependencies","arguments":{"projectPath":"."}}}' | node dist/index.js
+npm test
+npm run lint
 ```
 
-### Integration Testing
+### Create Pull Request
+
 ```bash
-# Test in MCP client (Claude Desktop)
-# Add tool to your MCP configuration and test in Claude
+git add .
+git commit -m "feat: add validate_markdown_links tool
+
+- Validates internal and external markdown links
+- Supports recursive directory scanning
+- Configurable timeout for external URLs
+- Comprehensive test coverage"
+
+git push origin feature/tool-validate-markdown-links
 ```
 
-## Documentation Requirements
+## Related Resources
 
-### 1. Add to API Reference
-Update `docs/reference/api-reference.md` with your tool documentation.
-
-### 2. Create Usage Examples
-Add examples to `docs/how-to/` showing real-world usage.
-
-### 3. Update Tool Listings
-Add your tool to the main tool list in documentation.
-
-## Contributing Your Tool
-
-### 1. Follow Code Standards
-```bash
-# Lint your code
-npm run lint:fix
-
-# Format code
-npm run format
-
-# Type check
-npm run typecheck
-```
-
-### 2. Create Pull Request
-- Describe the tool's purpose and use cases
-- Include test coverage reports
-- Add documentation examples
-- Reference any related issues
-
-### 3. Tool Review Checklist
-- [ ] Follows MCP protocol specifications
-- [ ] Includes comprehensive error handling
-- [ ] Has &gt;90% test coverage
-- [ ] Documentation is complete
-- [ ] Integrates with existing DocuMCP workflows
-- [ ] Performance is acceptable
-- [ ] Security considerations addressed
-
-## Common Tool Patterns
-
-### File System Tools
-```typescript
-// Pattern for tools that work with files
-import { promises as fs } from 'fs';
-import { join } from 'path';
-
-export async function fileSystemTool(args: FileSystemArgs) {
-  // Always validate paths for security
-  const safePath = validateAndSanitizePath(args.path);
-  
-  // Check permissions
-  await fs.access(safePath, fs.constants.R_OK);
-  
-  // Process files
-  const result = await processFiles(safePath);
-  return result;
-}
-```
-
-### Network Tools
-```typescript
-// Pattern for tools that make HTTP requests
-export async function networkTool(args: NetworkArgs) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 30000);
-  
-  try {
-    const response = await fetch(args.url, {
-      signal: controller.signal,
-      headers: { 'User-Agent': 'DocuMCP/1.0' },
-    });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-    
-    return await response.json();
-  } finally {
-    clearTimeout(timeout);
-  }
-}
-```
-
-### Analysis Tools
-```typescript
-// Pattern for tools that analyze code/content
-export async function analysisTool(args: AnalysisArgs) {
-  const metrics = {
-    linesProcessed: 0,
-    issuesFound: 0,
-    executionTime: 0,
-  };
-  
-  const startTime = Date.now();
-  
-  try {
-    const analysis = await performAnalysis(args, (progress) => {
-      metrics.linesProcessed = progress.lines;
-    });
-    
-    metrics.executionTime = Date.now() - startTime;
-    
-    return {
-      ...analysis,
-      metadata: metrics,
-    };
-  } catch (error) {
-    metrics.executionTime = Date.now() - startTime;
-    throw new Error(`Analysis failed after ${metrics.executionTime}ms: ${error.message}`);
-  }
-}
-```
-
-Your custom MCP tool should seamlessly integrate with DocuMCP's existing documentation workflow while adding specialized functionality for your specific use case.
+- [MCP Protocol Specification](https://modelcontextprotocol.io/docs)
+- [Zod Validation Library](https://zod.dev/)
+- [documcp Architecture](../explanation/architecture-overview.md)
+- [Testing Guide](../tutorials/writing-and-running-tests.md)

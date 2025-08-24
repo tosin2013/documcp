@@ -1,149 +1,189 @@
 # Design Decisions
 
-Key architectural and design decisions made in documcp.
+Key architectural and design decisions made in documcp MCP server.
 
-## Technology Stack
+## MCP vs Traditional CLI Architecture
 
-### Why TypeScript?
+### Why Model Context Protocol?
 
-We chose TypeScript for:
-- Strong type safety
-- Excellent tooling support
-- Large ecosystem of libraries
-- Good performance characteristics
-- Team familiarity
+We chose MCP over traditional CLI tools for:
+- **AI-Native Integration**: Seamless interaction with AI assistants like Claude Desktop
+- **Natural Language Interface**: Users describe intent rather than memorizing commands
+- **Intelligent Orchestration**: AI handles complex workflow coordination automatically
+- **Context Preservation**: Analysis results flow naturally between tool calls
+- **Future-Proof Design**: Built for the emerging AI-assisted development ecosystem
 
-### Framework Selection
+### Traditional CLI Limitations
 
-After evaluating multiple options, we selected our current stack based on:
-- Community support and documentation
-- Performance benchmarks
-- Learning curve for new developers
-- Long-term maintenance considerations
+Traditional documentation tools require manual orchestration:
+```bash
+# Manual workflow coordination required
+./analyze --path ./project > analysis.json
+./recommend --input analysis.json > recommendation.json  
+./configure --ssg docusaurus --name "MyProject"
+./deploy --config docs/docusaurus.config.js
+```
 
-## Architectural Patterns
+**Problems:**
+- Users must understand tool sequence and dependencies
+- Manual parameter passing between tools
+- No intelligent error recovery
+- Steep learning curve for complex workflows
 
-### Repository Pattern
+### MCP Advantages
 
-We implement the repository pattern for data access:
-- **Benefit**: Abstracts data source details
-- **Trade-off**: Additional abstraction layer
-- **Rationale**: Enables easy switching between data sources
+With MCP, AI assistants handle orchestration:
+```typescript
+// Natural language intent → AI orchestrates tools
+"Analyze my repository and set up complete documentation with deployment"
+// AI automatically: analyze → recommend → configure → deploy
+```
 
-### Service Layer
+**Benefits:**
+- Zero workflow orchestration burden on users
+- Intelligent parameter flow between tools
+- Natural language interface
+- AI-powered error recovery and guidance
 
-Business logic is encapsulated in services:
-- **Benefit**: Reusable business logic
-- **Trade-off**: More files and complexity
-- **Rationale**: Clear separation of concerns
+## Static Site Generator Selection Logic
 
-### Dependency Injection
+### Multi-Criteria Decision Framework
 
-We use dependency injection throughout:
-- **Benefit**: Improved testability and flexibility
-- **Trade-off**: Initial setup complexity
-- **Rationale**: Essential for large-scale applications
+Our SSG recommendation engine evaluates:
 
-## API Design
+#### Project Characteristics (40% weight)
+- **Language Ecosystem**: Match SSG to primary project language
+- **Project Size**: Small projects favor simplicity, large projects need performance
+- **Complexity**: Simple sites use Jekyll, complex docs use Docusaurus
+- **Existing Infrastructure**: Leverage current tooling and knowledge
 
-### RESTful vs GraphQL
+#### Team Capabilities (30% weight)
+- **Technical Skills**: Match SSG complexity to team expertise
+- **Maintenance Capacity**: Consider long-term maintenance requirements
+- **Learning Appetite**: Balance new technology adoption with productivity
 
-We chose REST because:
-- Simpler to implement and understand
-- Better caching strategies
-- Fits our use case well
-- Lower operational complexity
+#### Performance Requirements (20% weight)
+- **Build Speed**: Hugo for large sites requiring fast builds
+- **Site Performance**: Static generation vs client-side rendering trade-offs
+- **Scalability**: Consider future growth and content volume
 
-### Versioning Strategy
+#### Integration Needs (10% weight)
+- **GitHub Pages Compatibility**: Native Jekyll support vs GitHub Actions
+- **Existing Tooling**: CI/CD pipeline integration requirements
+- **Deployment Complexity**: Balance features with deployment simplicity
 
-API versioning through URL paths:
-- **Format**: /api/v1/resource
-- **Benefit**: Clear version boundaries
-- **Trade-off**: URL complexity
-- **Rationale**: Industry standard approach
+### SSG Decision Matrix
 
-## Database Decisions
+| SSG | Best For | Strengths | Trade-offs |
+|-----|----------|-----------|------------|
+| **Jekyll** | Simple sites, GitHub-native | Zero-config GitHub Pages, Ruby ecosystem | Limited theming, slower builds |
+| **Hugo** | Large sites, performance-critical | Extremely fast builds, powerful templating | Go templates learning curve |
+| **Docusaurus** | Technical docs, interactive content | React ecosystem, rich features | Complex setup, heavier builds |
+| **MkDocs** | API docs, Python projects | Clean themes, simple configuration | Limited customization |
+| **Eleventy** | Custom designs, JAMstack | Template flexibility, JavaScript ecosystem | More configuration required |
 
-### SQL vs NoSQL
+## Tool Design Philosophy
 
-We use SQL for:
-- ACID compliance requirements
-- Complex relational data
-- Mature tooling and expertise
-- Predictable performance
+### Stateless Tool Architecture
 
-### Migration Strategy
+Each MCP tool is independent and idempotent:
+- **Benefit**: Consistent behavior across different AI clients
+- **Trade-off**: Parameters must be passed between tools
+- **Rationale**: Aligns with MCP protocol principles and enables reliable AI orchestration
 
-Database migrations are managed through:
-- Version-controlled migration files
-- Automated migration on deployment
-- Rollback capabilities
-- Data validation steps
+### Progressive Complexity
 
-## Testing Strategy
+Tools support simple to advanced use cases:
+- **Basic Mode**: Minimal parameters, intelligent defaults
+- **Advanced Mode**: Full customization and control
+- **Expert Mode**: Raw configuration access and overrides
 
-### Test Pyramid
+**Example:**
+```typescript
+// Simple: analyzeRepository({ repositoryPath: "./project" })
+// Advanced: analyzeRepository({ 
+//   repositoryPath: "./project",
+//   analysisDepth: "deep",
+//   focusAreas: ["security", "performance"]
+// })
+```
 
-Our testing approach follows the test pyramid:
-- Many unit tests (fast, isolated)
-- Some integration tests (component interaction)
-- Few E2E tests (full system validation)
+### Comprehensive Validation
 
-### Coverage Goals
+All tool inputs use Zod schemas for validation:
+- **Runtime Safety**: Catch invalid parameters before processing
+- **Clear Error Messages**: Actionable guidance for parameter fixes
+- **Type Safety**: Compile-time and runtime type checking
+- **Schema Documentation**: Automatic JSON schema generation for MCP clients
 
-- Unit test coverage: 80% minimum
-- Critical path coverage: 100%
-- Integration test coverage: Key workflows
+## Content Intelligence Decisions
 
-## Performance Decisions
+### Diataxis Framework Adoption
+
+We chose the Diataxis framework for documentation structure:
+- **Proven Methodology**: Battle-tested approach to technical documentation
+- **User-Centered Design**: Addresses different user needs and contexts
+- **Scalable Structure**: Works for projects of all sizes
+- **Industry Standard**: Widely adopted by successful documentation projects
+
+### Intelligent Content Population
+
+Rather than empty templates, we generate contextual content:
+- **Technology-Specific Examples**: Code samples match detected languages
+- **Project-Aware Guidance**: Instructions tailored to actual project structure  
+- **Progressive Enhancement**: Basic structure with intelligent placeholders
+- **Maintenance Guidance**: Ongoing documentation improvement recommendations
+
+## Performance and Scalability Decisions
+
+### Memory-Efficient Analysis
+
+For large repository handling:
+- **Streaming Processing**: Avoid loading entire files into memory
+- **Chunked Analysis**: Process repositories in manageable segments
+- **Intelligent Sampling**: Focus analysis on representative files
+- **Garbage Collection**: Explicit cleanup of temporary objects
 
 ### Caching Strategy
 
-Multi-level caching approach:
-- Application-level caching
-- Database query caching
-- CDN for static assets
-- Redis for session data
+Multi-level caching for performance:
+- **Analysis Results**: Cache repository analysis for repeated operations
+- **Template Generation**: Reuse generated configurations for similar projects
+- **Recommendation Logic**: Cache decision matrices for common scenarios
+- **File System Operations**: Minimize redundant disk I/O
 
-### Async Processing
+## Security and Quality Decisions
 
-Background jobs for:
-- Email sending
-- Report generation
-- Data processing
-- Third-party integrations
+### Type Safety First
 
-## Security Decisions
+Comprehensive TypeScript usage:
+- **Strict Mode**: Maximum type checking enabled
+- **No Any Types**: Explicit typing throughout codebase
+- **Runtime Validation**: Zod schemas for all external inputs
+- **Compile-Time Guarantees**: Catch errors before deployment
 
-### Authentication Method
+### Minimal Dependencies
 
-JWT tokens because:
-- Stateless authentication
-- Scalable across services
-- Standard implementation
-- Good library support
+Focused dependency management:
+- **Core Dependencies**: Only essential MCP, validation, and TypeScript tools
+- **Trusted Sources**: Well-maintained packages with active communities
+- **Regular Updates**: Automated dependency vulnerability scanning
+- **Supply Chain Security**: Lock file usage and audit processes
 
-### Data Encryption
+## Future Architecture Considerations
 
-- Passwords: bcrypt with salt rounds
-- Sensitive data: AES-256 encryption
-- Communications: TLS 1.3
-- Secrets: Environment variables
+### Plugin System Evolution
 
-## Future Considerations
+Planned extensibility improvements:
+- **Dynamic Tool Loading**: Runtime tool registration and discovery
+- **Custom SSG Support**: User-defined static site generator integration
+- **Workflow Extensions**: Custom multi-tool orchestration patterns
+- **Community Contributions**: Open ecosystem for tool development
 
-### Microservices
+### AI Integration Enhancement
 
-Currently monolithic, but designed for potential splitting:
-- Clear module boundaries
-- Service-oriented architecture
-- Database per service capability
-- API gateway ready
-
-### Cloud Native
-
-Prepared for cloud deployment:
-- 12-factor app principles
-- Container-ready architecture
-- Environment-based configuration
-- Stateless design
+Leveraging advancing AI capabilities:
+- **Content Generation**: AI-powered documentation writing assistance
+- **Quality Analysis**: Automated content review and improvement suggestions
+- **Predictive Workflows**: Anticipating user needs based on project patterns
+- **Intelligent Debugging**: AI-assisted troubleshooting and error resolution

@@ -351,18 +351,42 @@ interface DeploymentVerification {
 
 class DeploymentVerifier {
   async verifyDeployment(siteUrl: string, config: DeploymentVerification): Promise<VerificationReport> {
-    const results = await Promise.all([
-      this.runHealthChecks(siteUrl, config.healthChecks),
-      this.runPerformanceTests(siteUrl, config.performanceTests),
-      this.runAccessibilityTests(siteUrl, config.accessibilityTests),
-      this.validateLinks(siteUrl, config.linkValidation)
-    ]);
+    try {
+      const results = await Promise.allSettled([
+        this.runHealthChecks(siteUrl, config.healthChecks),
+        this.runPerformanceTests(siteUrl, config.performanceTests),
+        this.runAccessibilityTests(siteUrl, config.accessibilityTests),
+        this.validateLinks(siteUrl, config.linkValidation)
+      ]);
 
-    return this.generateVerificationReport(results);
+      // Handle partial failures gracefully
+      const processedResults = results.map((result, index) => {
+        if (result.status === 'fulfilled') {
+          return result.value;
+        } else {
+          console.warn(`Verification step ${index} failed:`, result.reason);
+          return null;
+        }
+      }).filter(result => result !== null);
+
+      return this.generateVerificationReport(processedResults);
+    } catch (error) {
+      throw new Error(`Deployment verification failed: ${error.message}`);
+    }
   }
 
   private async runHealthChecks(siteUrl: string, checks: HealthCheck[]): Promise<HealthCheckResult[]> {
-    return Promise.all(checks.map(check => this.executeHealthCheck(siteUrl, check)));
+    try {
+      const results = await Promise.allSettled(
+        checks.map(check => this.executeHealthCheck(siteUrl, check))
+      );
+      
+      return results
+        .filter((result): result is PromiseFulfilledResult<HealthCheckResult> => result.status === 'fulfilled')
+        .map(result => result.value);
+    } catch (error) {
+      throw new Error(`Health checks failed: ${error.message}`);
+    }
   }
 
   private async executeHealthCheck(siteUrl: string, check: HealthCheck): Promise<HealthCheckResult> {

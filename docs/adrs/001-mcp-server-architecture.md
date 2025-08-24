@@ -131,26 +131,43 @@ class RepositoryAnalyzer {
   private streamThreshold = 10 * 1024 * 1024; // 10MB
   
   async analyzeRepository(repoPath: string): Promise<AnalysisResult> {
-    const files = await this.scanDirectory(repoPath);
-    
-    // Parallel processing with worker threads
-    const chunks = this.chunkFiles(files, this.workerPool.size);
-    const results = await Promise.all(
-      chunks.map(chunk => this.workerPool.execute('analyzeChunk', chunk))
-    );
-    
-    return this.aggregateResults(results);
+    try {
+      const files = await this.scanDirectory(repoPath);
+      
+      // Parallel processing with worker threads
+      const chunks = this.chunkFiles(files, this.workerPool.size);
+      const results = await Promise.allSettled(
+        chunks.map(chunk => this.workerPool.execute('analyzeChunk', chunk))
+      );
+      
+      // Handle partial failures gracefully
+      const successfulResults = results
+        .filter((result): result is PromiseFulfilledResult<any> => result.status === 'fulfilled')
+        .map(result => result.value);
+      
+      if (successfulResults.length === 0) {
+        throw new Error('All analysis chunks failed');
+      }
+      
+      return this.aggregateResults(successfulResults);
+    } catch (error) {
+      throw new Error(`Repository analysis failed: ${error.message}`);
+    }
   }
   
   private async analyzeFile(filePath: string): Promise<FileAnalysis> {
-    const stats = await fs.stat(filePath);
-    
-    // Use streaming for large files
-    if (stats.size > this.streamThreshold) {
-      return this.analyzeFileStream(filePath);
+    try {
+      const stats = await fs.stat(filePath);
+      
+      // Use streaming for large files
+      if (stats.size > this.streamThreshold) {
+        return await this.analyzeFileStream(filePath);
+      }
+      
+      return await this.analyzeFileStandard(filePath);
+    } catch (error) {
+      throw new Error(`File analysis failed for ${filePath}: ${error.message}`);
     }
-    
-    return this.analyzeFileStandard(filePath);
   }
 }
 ```

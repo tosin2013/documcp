@@ -8,13 +8,13 @@ This guide will help you configure a complete Node.js and TypeScript development
 
 1. Install nvm:
    ```bash
-   curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+   curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/latest/install.sh | bash
    ```
 
 2. Install and use the correct Node.js version:
    ```bash
-   nvm install 18
-   nvm use 18
+   nvm install 20
+   nvm use 20
    ```
 
 ## TypeScript Setup

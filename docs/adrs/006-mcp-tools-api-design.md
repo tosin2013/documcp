@@ -417,38 +417,54 @@ class MCPToolValidator {
 // Common workflow: Analysis → Recommendation → Configuration → Deployment
 class DocumentationWorkflow {
   async executeCompleteWorkflow(repositoryPath: string): Promise<WorkflowResult> {
-    // Step 1: Analyze repository
-    const analysisResult = await this.callTool('analyzeRepository', { repositoryPath });
-    if (!analysisResult.success) throw new Error('Analysis failed');
-    
-    // Step 2: Get SSG recommendation
-    const recommendationResult = await this.callTool('recommendSSG', {
-      projectAnalysis: analysisResult.data
-    });
-    if (!recommendationResult.success) throw new Error('Recommendation failed');
-    
-    // Step 3: Generate configuration
-    const configResult = await this.callTool('generateConfiguration', {
-      selectedSSG: recommendationResult.data.primaryRecommendation.ssg,
-      projectAnalysis: analysisResult.data
-    });
-    if (!configResult.success) throw new Error('Configuration generation failed');
-    
-    // Step 4: Create Diataxis structure
-    const structureResult = await this.callTool('createDiataxisStructure', {
-      selectedSSG: recommendationResult.data.primaryRecommendation.ssg,
-      projectType: analysisResult.data.projectType
-    });
-    
-    // Step 5: Generate deployment workflow
-    const workflowResult = await this.callTool('generateWorkflow', {
-      ssgType: recommendationResult.data.primaryRecommendation.ssg,
-      deploymentStrategy: 'github-actions'
-    });
-    
-    return this.combineResults([
-      analysisResult, recommendationResult, configResult, structureResult, workflowResult
-    ]);
+    try {
+      // Step 1: Analyze repository
+      const analysisResult = await this.callTool('analyzeRepository', { repositoryPath });
+      if (!analysisResult.success) {
+        throw new Error(`Analysis failed: ${analysisResult.error?.message}`);
+      }
+      
+      // Step 2: Get SSG recommendation
+      const recommendationResult = await this.callTool('recommendSSG', {
+        projectAnalysis: analysisResult.data
+      });
+      if (!recommendationResult.success) {
+        throw new Error(`Recommendation failed: ${recommendationResult.error?.message}`);
+      }
+      
+      // Step 3: Generate configuration
+      const configResult = await this.callTool('generateConfiguration', {
+        selectedSSG: recommendationResult.data.primaryRecommendation.ssg,
+        projectAnalysis: analysisResult.data
+      });
+      if (!configResult.success) {
+        throw new Error(`Configuration generation failed: ${configResult.error?.message}`);
+      }
+      
+      // Step 4: Create Diataxis structure
+      const structureResult = await this.callTool('createDiataxisStructure', {
+        selectedSSG: recommendationResult.data.primaryRecommendation.ssg,
+        projectType: analysisResult.data.projectType
+      });
+      if (!structureResult.success) {
+        console.warn(`Diataxis structure creation failed: ${structureResult.error?.message}`);
+      }
+      
+      // Step 5: Generate deployment workflow
+      const workflowResult = await this.callTool('generateWorkflow', {
+        ssgType: recommendationResult.data.primaryRecommendation.ssg,
+        deploymentStrategy: 'github-actions'
+      });
+      if (!workflowResult.success) {
+        console.warn(`Workflow generation failed: ${workflowResult.error?.message}`);
+      }
+      
+      return this.combineResults([
+        analysisResult, recommendationResult, configResult, structureResult, workflowResult
+      ]);
+    } catch (error) {
+      throw new Error(`Complete workflow failed: ${error.message}`);
+    }
   }
 }
 ```

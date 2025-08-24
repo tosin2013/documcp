@@ -1,302 +1,315 @@
 # How to Debug MCP Server Issues
 
-This guide helps you troubleshoot and debug common issues when developing with or integrating DocuMCP.
+This guide helps you troubleshoot and debug common issues with the documcp MCP server and AI client integration.
 
-## MCP Server Debugging
-
-### Testing MCP Server Directly
-
-Test the server without an MCP client:
-```bash
-# Verify server starts correctly
-npm run build
-echo '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' | node dist/index.js
-
-# Expected output should list 10 tools
-```
+## MCP Server Debugging Tools
 
 ### Enable Debug Logging
 
-Set environment variables for detailed logging:
+Start the MCP server with comprehensive debugging:
 ```bash
-# Enable all MCP debugging
-DEBUG=mcp:* npm run dev
-
-# Enable specific tool debugging
 DEBUG=documcp:* npm run dev
-
-# Full debug output
-DEBUG=* npm run dev
 ```
 
-### Validate MCP Client Configuration
+For specific components:
+```bash
+# Tool execution debugging
+DEBUG=documcp:tools npm run dev
 
-Check your MCP client configuration file:
+# Repository analysis debugging  
+DEBUG=documcp:analysis npm run dev
 
-**Claude Desktop** (`~/.claude/mcp.json`):
-```json
-{
-  "mcpServers": {
-    "documcp": {
-      "command": "node",
-      "args": ["/absolute/path/to/documcp/dist/index.js"],
-      "env": {
-        "DEBUG": "documcp:*"
-      }
-    }
-  }
-}
+# MCP protocol debugging
+DEBUG=mcp:* npm run dev
 ```
 
-**Cursor** (`.cursor/mcp.json`):
-```json
-{
-  "mcpServers": {
-    "documcp": {
-      "command": "node", 
-      "args": ["/absolute/path/to/documcp/dist/index.js"],
-      "env": {}
-    }
-  }
-}
+### MCP Server Inspector
+
+Run with Node.js inspector for breakpoint debugging:
+```bash
+node --inspect dist/index.js
+```
+
+Connect via Chrome DevTools or VS Code debugger.
+
+### Validate MCP Configuration
+
+Check your MCP server configuration:
+```bash
+# Verify server starts correctly
+npm run build && node dist/index.js
+
+# Test MCP protocol handshake
+echo '{"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {}}' | node dist/index.js
 ```
 
 ## Common MCP Integration Issues
 
-### Issue: MCP Server Not Found
+### Issue: AI Client Cannot Find MCP Server
 
-**Symptoms**: "Failed to connect to MCP server" or "Server not available"
-
-**Diagnosis Steps**:
-1. Verify the build was successful:
-   ```bash
-   npm run build
-   ls -la dist/index.js  # Should exist
-   ```
-
-2. Test server manually:
-   ```bash
-   node dist/index.js
-   # Should not exit immediately
-   ```
-
-3. Check absolute paths in MCP configuration
+**Symptoms**: 
+- "MCP server not found" errors
+- AI client shows no documcp tools available
+- Connection timeouts
 
 **Solutions**:
-- Use absolute paths, not relative paths
-- Restart your MCP client after configuration changes
-- Verify Node.js version compatibility (18+)
-
-### Issue: Tools Not Available in MCP Client
-
-**Symptoms**: DocuMCP tools don't appear in tool lists
-
-**Diagnosis Steps**:
-1. Test tools list directly:
+1. **Verify Installation Path**:
    ```bash
-   echo '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' | node dist/index.js
+   which node
+   npm list -g documcp
    ```
 
-2. Check for JSON parsing errors in client logs
+2. **Check AI Client Configuration**:
+   ```json
+   // Claude Desktop: ~/Library/Application Support/Claude/claude_desktop_config.json
+   {
+     "mcpServers": {
+       "documcp": {
+         "command": "node",
+         "args": ["/correct/path/to/documcp/dist/index.js"]
+       }
+     }
+   }
+   ```
 
-**Solutions**:
-- Validate JSON syntax in MCP configuration
-- Check client-specific MCP extension is enabled
-- Restart MCP client completely
+3. **Test Server Startup**:
+   ```bash
+   node /path/to/documcp/dist/index.js
+   # Should show MCP server initialization logs
+   ```
 
 ### Issue: Tool Execution Failures
 
-**Symptoms**: Tools fail with permission or path errors
-
-**Common Error**: `ENOENT: no such file or directory`
-**Solution**: 
-```bash
-# Ensure proper absolute paths
-pwd  # Note current directory
-# Use full path like /Users/username/project instead of ./project
-```
-
-**Common Error**: `Permission denied` 
-**Solution**:
-```bash
-# Check file permissions
-ls -la /path/to/repository
-chmod -R 755 /path/to/repository  # If needed
-```
-
-## Tool-Specific Debugging
-
-### Repository Analysis Issues
-
-**Issue**: `analyze_repository` fails to scan files
-
-**Debug Steps**:
-```bash
-# Test repository access
-ls -la /path/to/repo
-find /path/to/repo -name "package.json" -o -name "*.ts" | head -10
-
-# Check for large files that might cause timeout
-find /path/to/repo -size +50M
-```
+**Symptoms**:
+- Tools appear available but fail when called
+- "Validation error" messages
+- Incomplete tool responses
 
 **Solutions**:
-- Exclude node_modules and build directories
-- Use relative paths from repository root
-- Check for symlinks that might cause loops
-
-### SSG Recommendation Issues
-
-**Issue**: `recommend_ssg` returns generic recommendations
-
-**Debug Steps**:
-1. Verify analysis ID is passed correctly
-2. Check analysis results contain project metadata:
+1. **Check File Permissions**:
    ```bash
-   # Analysis should detect languages and frameworks
-   grep -r "package.json\|requirements.txt\|Gemfile" /path/to/repo
+   # Ensure repository access
+   ls -la /path/to/target/repository
+   chmod -R 755 /path/to/target/repository
    ```
 
-### Deployment Issues
-
-**Issue**: `deploy_pages` creates invalid GitHub Actions workflows
-
-**Debug Steps**:
-1. Validate generated workflow syntax:
+2. **Validate Input Parameters**:
    ```bash
-   # Check .github/workflows/deploy-docs.yml
-   npx js-yaml .github/workflows/deploy-docs.yml
+   # Test tool with minimal valid input
+   DEBUG=documcp:validation npm run dev
    ```
 
-2. Test workflow locally:
-   ```bash
-   # Simulate build process
-   cd docs && npm install && npm run build
+3. **Review Zod Schema Validation**:
+   ```typescript
+   // Check tool parameter validation
+   import { z } from 'zod';
+   
+   const schema = z.object({
+     path: z.string().min(1),
+     depth: z.enum(['quick', 'standard', 'deep']).optional()
+   });
+   
+   // Validate your input
+   const result = schema.safeParse(yourInput);
+   if (!result.success) {
+     console.error('Validation errors:', result.error.issues);
+   }
    ```
+
+### Issue: Repository Analysis Failures
+
+**Symptoms**:
+- "Cannot analyze repository" errors
+- Incomplete analysis results
+- Memory or timeout errors
+
+**Solutions**:
+1. **Check Repository Structure**:
+   ```bash
+   # Verify it's a valid repository
+   cd /path/to/repository
+   ls -la
+   git status  # If it's a git repo
+   ```
+
+2. **Increase Memory Limits**:
+   ```bash
+   node --max-old-space-size=4096 dist/index.js
+   ```
+
+3. **Enable Analysis Debugging**:
+   ```bash
+   DEBUG=documcp:analysis,documcp:filesystem npm run dev
+   ```
+
+4. **Test with Smaller Scope**:
+   ```bash
+   # Analyze specific subdirectory first
+   DEBUG=documcp:* node -e "
+   const { analyzeRepository } = require('./dist/tools/analyze-repository');
+   analyzeRepository({ path: './src', depth: 'quick' });
+   "
+   ```
+
+## MCP Protocol Debugging
+
+### Trace MCP Messages
+
+Monitor MCP protocol communication:
+```bash
+# Enable MCP protocol tracing
+DEBUG=mcp:protocol npm run dev
+```
+
+### Validate Tool Definitions
+
+Check that tools are properly registered:
+```bash
+# List available tools
+echo '{"jsonrpc": "2.0", "id": 1, "method": "tools/list"}' | node dist/index.js
+```
+
+### Test Individual Tools
+
+Test tools in isolation:
+```bash
+# Test analyze_repository tool
+echo '{
+  "jsonrpc": "2.0", 
+  "id": 1, 
+  "method": "tools/call",
+  "params": {
+    "name": "analyze_repository",
+    "arguments": {"path": "./test-repo", "depth": "quick"}
+  }
+}' | node dist/index.js
+```
 
 ## Performance Debugging
 
-### Slow Tool Execution
+### Memory Usage Analysis
 
-**Monitor tool performance**:
+Monitor memory consumption during large repository analysis:
 ```bash
-# Time tool execution
-time echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"analyze_repository","arguments":{"path":"."}}}' | node dist/index.js
+# Enable garbage collection logs
+node --expose-gc --trace-gc dist/index.js
 ```
 
-**Common Causes**:
-- Large repositories (&gt;1GB)
-- Deep directory structures (&gt;20 levels) 
-- Network issues during GitHub API calls
+### Profile Tool Execution
+
+Profile slow tool execution:
+```bash
+# Generate CPU profile
+node --prof dist/index.js
+# Process profile after execution
+node --prof-process isolate-*.log > profile.txt
+```
+
+### Monitor File System Operations
+
+Track file system access patterns:
+```bash
+# macOS
+sudo fs_usage -w -f filesystem node dist/index.js
+
+# Linux  
+strace -e trace=file node dist/index.js
+```
+
+## TypeScript and Build Issues
+
+### Type Checking Errors
+
+**Symptoms**: TypeScript compilation failures
 
 **Solutions**:
-- Use `depth: "quick"` for large repositories
-- Exclude unnecessary directories in .gitignore
-- Check network connectivity for deployment tools
+1. **Run Type Checking**:
+   ```bash
+   npm run typecheck
+   ```
 
-### Memory Issues
+2. **Check tsconfig.json**:
+   ```bash
+   # Verify TypeScript configuration
+   npx tsc --showConfig
+   ```
 
-**Monitor memory usage**:
-```bash
-# Check memory during execution
-node --max-old-space-size=4096 dist/index.js
-```
+3. **Update Type Definitions**:
+   ```bash
+   npm install @types/node@latest
+   npm install @modelcontextprotocol/sdk@latest
+   ```
 
-## Integration Testing
+### Build Process Issues
 
-### End-to-End Workflow Testing
+**Symptoms**: Build failures, missing dist files
 
-Test complete documentation workflow:
-```bash
-# 1. Analyze repository
-echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"analyze_repository","arguments":{"path":".","depth":"standard"}}}' | node dist/index.js > analysis.json
+**Solutions**:
+1. **Clean Build**:
+   ```bash
+   rm -rf dist/
+   npm run build
+   ```
 
-# 2. Extract analysis ID
-ANALYSIS_ID=$(cat analysis.json | jq -r '.result.id')
+2. **Check Build Dependencies**:
+   ```bash
+   npm audit
+   npm install
+   ```
 
-# 3. Get recommendation
-echo "{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/call\",\"params\":{\"name\":\"recommend_ssg\",\"arguments\":{\"analysisId\":\"$ANALYSIS_ID\"}}}" | node dist/index.js
-```
+## AI Client Specific Issues
 
-### Validate Documentation Output
+### Claude Desktop Integration
 
-After running documentation tools:
-```bash
-# Check generated structure
-find docs -type f -name "*.md" | sort
+**Debug Claude Desktop MCP Issues**:
+1. Check Claude Desktop logs:
+   - **macOS**: `~/Library/Logs/Claude/`
+   - **Windows**: `%LOCALAPPDATA%\Claude\logs\`
 
-# Validate markdown syntax
-npm install -g markdownlint-cli
-markdownlint docs/**/*.md
+2. Validate configuration syntax:
+   ```bash
+   # Validate JSON syntax
+   python -m json.tool ~/Library/Application\ Support/Claude/claude_desktop_config.json
+   ```
 
-# Test SSG build
-cd docs
-npm install && npm run build
-```
+### GitHub Copilot Integration
 
-## MCP Client-Specific Issues
+**Debug Copilot MCP Issues**:
+1. Check VS Code extension logs
+2. Verify MCP extension configuration
+3. Test with minimal MCP server first
 
-### Claude Desktop
+## Getting Help
 
-**Issue**: Tools appear but fail to execute
-```bash
-# Check Claude Desktop logs (macOS)
-tail -f ~/Library/Logs/Claude/claude.log
-```
+### Diagnostic Information Collection
 
-### Cursor IDE
-
-**Issue**: MCP extension not loading
-1. Check Cursor extension logs
-2. Verify MCP extension is enabled
-3. Restart Cursor completely
-
-### VS Code
-
-**Issue**: MCP tools not appearing
-1. Check MCP extension status
-2. Reload VS Code window
-3. Check extension output panel
-
-## Getting Advanced Help
-
-### Log Collection for Bug Reports
-
-Collect comprehensive debugging information:
+When reporting issues, collect this information:
 ```bash
 # System information
 node --version
 npm --version
 uname -a
 
-# MCP server test
-npm run build
-echo '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' | node dist/index.js > mcp-test.json
+# documcp information  
+npm list documcp
+DEBUG=documcp:* npm run dev 2>&1 | head -50
 
-# Configuration check
-cat ~/.claude/mcp.json # or .cursor/mcp.json
-
-# Repository structure
-find . -type f -name "*.json" -o -name "*.md" | head -20
+# MCP configuration
+cat ~/.config/claude/claude_desktop_config.json  # or appropriate path
 ```
 
-### Community Resources
+### Support Resources
 
-- **GitHub Issues**: [Report bugs](https://github.com/tosin2013/documcp/issues)
-- **Discussions**: [Ask questions](https://github.com/tosin2013/documcp/discussions)
-- **MCP Protocol**: [Official docs](https://modelcontextprotocol.io/)
+1. **Check Documentation**: [API Reference](../reference/api-reference.md)
+2. **Search Issues**: [GitHub Issues](https://github.com/tosin2013/documcp/issues)
+3. **MCP Protocol**: [MCP Specification](https://modelcontextprotocol.io/docs)
+4. **Community Support**: [Discussions](https://github.com/tosin2013/documcp/discussions)
 
-### Advanced Debugging
+### Creating Bug Reports
 
-Enable comprehensive debugging:
-```bash
-# Full debug with timing
-DEBUG=* TIME=1 node dist/index.js
-
-# Memory profiling
-node --inspect --max-old-space-size=4096 dist/index.js
-
-# CPU profiling
-node --prof dist/index.js
-node --prof-process isolate-*.log > profile.txt
-```
+Include in bug reports:
+- **Environment**: OS, Node.js version, AI client
+- **Configuration**: MCP server config (sanitized)
+- **Reproduction Steps**: Minimal example
+- **Logs**: Debug output with sensitive data removed
+- **Expected vs Actual**: Clear description of the issue

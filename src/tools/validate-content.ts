@@ -846,53 +846,119 @@ class ContentAccuracyValidator {
     return Math.round(totalConfidence / examples.length);
   }
 
-  public async getMarkdownFiles(contentPath: string): Promise<string[]> {
+  public async getMarkdownFiles(contentPath: string, maxDepth: number = 5): Promise<string[]> {
     const files: string[] = [];
+    const excludedDirs = new Set([
+      'node_modules', '.git', 'dist', 'build', '.next', '.nuxt', 
+      'coverage', '.tmp', 'tmp', '.cache', '.vscode', '.idea',
+      'logs', '.logs', '.npm', '.yarn'
+    ]);
     
-    async function scan(dir: string) {
-      const entries = await fs.readdir(dir, { withFileTypes: true });
+    const scan = async (dir: string, currentDepth: number = 0): Promise<void> => {
+      if (currentDepth > maxDepth) return;
       
-      for (const entry of entries) {
-        const fullPath = path.join(dir, entry.name);
+      try {
+        const entries = await fs.readdir(dir, { withFileTypes: true });
         
-        if (entry.isDirectory()) {
-          await scan(fullPath);
-        } else if (entry.name.endsWith('.md')) {
-          files.push(fullPath);
+        for (const entry of entries) {
+          const fullPath = path.join(dir, entry.name);
+          
+          if (entry.isDirectory()) {
+            // Skip excluded directories  
+            if (excludedDirs.has(entry.name) || entry.name.startsWith('.')) {
+              continue;
+            }
+            
+            // Prevent symlink loops
+            try {
+              const stats = await fs.lstat(fullPath);
+              if (stats.isSymbolicLink()) {
+                continue;
+              }
+            } catch {
+              continue;
+            }
+            
+            await scan(fullPath, currentDepth + 1);
+          } else if (entry.name.endsWith('.md')) {
+            files.push(fullPath);
+            
+            // Limit total files to prevent memory issues
+            if (files.length > 500) {
+              console.warn('Markdown file limit reached (500), stopping scan');
+              return;
+            }
+          }
         }
+      } catch (error) {
+        // Skip directories that can't be read
+        console.warn(`Warning: Could not read directory ${dir}:`, error);
       }
-    }
+    };
     
     try {
       await scan(contentPath);
     } catch (error) {
-      // Directory might not exist
+      console.warn('Error scanning directory:', error);
     }
     
     return files;
   }
 
-  private async getSourceFiles(contentPath: string): Promise<string[]> {
+  private async getSourceFiles(contentPath: string, maxDepth: number = 5): Promise<string[]> {
     const files: string[] = [];
+    const excludedDirs = new Set([
+      'node_modules', '.git', 'dist', 'build', '.next', '.nuxt', 
+      'coverage', '.tmp', 'tmp', '.cache', '.vscode', '.idea',
+      'logs', '.logs', '.npm', '.yarn'
+    ]);
     
-    async function scan(dir: string) {
-      const entries = await fs.readdir(dir, { withFileTypes: true });
+    const scan = async (dir: string, currentDepth: number = 0): Promise<void> => {
+      if (currentDepth > maxDepth) return;
       
-      for (const entry of entries) {
-        const fullPath = path.join(dir, entry.name);
+      try {
+        const entries = await fs.readdir(dir, { withFileTypes: true });
         
-        if (entry.isDirectory() && !entry.name.includes('node_modules') && !entry.name.includes('.git')) {
-          await scan(fullPath);
-        } else if (entry.name.endsWith('.ts') || entry.name.endsWith('.js') || entry.name.endsWith('.md')) {
-          files.push(fullPath);
+        for (const entry of entries) {
+          const fullPath = path.join(dir, entry.name);
+          
+          if (entry.isDirectory()) {
+            // Skip excluded directories
+            if (excludedDirs.has(entry.name) || entry.name.startsWith('.')) {
+              continue;
+            }
+            
+            // Prevent symlink loops
+            try {
+              const stats = await fs.lstat(fullPath);
+              if (stats.isSymbolicLink()) {
+                continue;
+              }
+            } catch {
+              continue;
+            }
+            
+            await scan(fullPath, currentDepth + 1);
+          } else if (entry.name.endsWith('.ts') || entry.name.endsWith('.js') || entry.name.endsWith('.md')) {
+            files.push(fullPath);
+            
+            // Limit total files to prevent memory issues
+            if (files.length > 1000) {
+              console.warn('File limit reached (1000), stopping scan');
+              return;
+            }
+          }
         }
+      } catch (error) {
+        // Skip directories that can't be read
+        console.warn(`Warning: Could not read directory ${dir}:`, error);
       }
-    }
+    };
     
     try {
       await scan(contentPath);
     } catch (error) {
-      // Directory might not exist
+      console.warn('Error scanning directory:', error);
     }
     
     return files;
@@ -917,7 +983,6 @@ class ContentAccuracyValidator {
       // Match function declarations and exports
       const functionMatch = line.match(/^(export\s+)?(async\s+)?function\s+(\w+)/);
       const arrowMatch = line.match(/^(export\s+)?(?:const|let|var)\s+(\w+)\s*=\s*(async\s+)?\(/);
-      const methodMatch = line.match(/^\s*(async\s+)?(\w+)\s*\(/);
       
       if (functionMatch) {
         const name = functionMatch[3];
@@ -1207,7 +1272,55 @@ export const validateDiataxisContent: Tool = {
 
 export async function handleValidateDiataxisContent(args: any): Promise<ValidationResult> {
   const validator = new ContentAccuracyValidator();
-  return await validator.validateContent(args);
+  
+  // Add timeout protection to prevent infinite hangs
+  const timeoutMs = 120000; // 2 minutes
+  const timeoutPromise = new Promise<ValidationResult>((_, reject) => {
+    setTimeout(() => {
+      reject(new Error(`Validation timed out after ${timeoutMs / 1000} seconds. This may be due to a large directory structure. Try validating a smaller subset or specific directory.`));
+    }, timeoutMs);
+  });
+  
+  const validationPromise = validator.validateContent(args);
+  
+  try {
+    return await Promise.race([validationPromise, timeoutPromise]);
+  } catch (error: any) {
+    // Return a partial result with error information
+    return {
+      success: false,
+      confidence: {
+        overall: 0,
+        breakdown: {
+          technologyDetection: 0,
+          frameworkVersionAccuracy: 0,
+          codeExampleRelevance: 0,
+          architecturalAssumptions: 0,
+          businessContextAlignment: 0
+        },
+        riskFactors: [{
+          type: 'high',
+          category: 'validation',
+          description: 'Validation process failed or timed out',
+          impact: 'Unable to complete content validation',
+          mitigation: 'Try validating a smaller directory or specific subset of files'
+        }]
+      },
+      issues: [],
+      uncertainties: [],
+      recommendations: [
+        'Validation failed or timed out',
+        'Consider validating smaller directory subsets',
+        'Check for very large files or deep directory structures',
+        `Error: ${error.message}`
+      ],
+      nextSteps: [
+        'Verify the content path is correct and accessible',
+        'Try validating specific subdirectories instead of the entire project',
+        'Check for circular symlinks or very deep directory structures'
+      ]
+    };
+  }
 }
 
 interface GeneralValidationResult {

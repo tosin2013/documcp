@@ -3,7 +3,7 @@ describe('DocuMCP Server', () => {
     const packageJson = require('../package.json');
     
     expect(packageJson.name).toBe('documcp');
-    expect(packageJson.version).toBe('0.1.0');
+    expect(packageJson.version).toBe('0.2.0');
     expect(packageJson.dependencies).toHaveProperty('@modelcontextprotocol/sdk');
     expect(packageJson.dependencies).toHaveProperty('zod');
   });

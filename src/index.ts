@@ -114,9 +114,9 @@ const TOOLS = [
     inputSchema: z.object({
       contentPath: z.string().describe('Path to the documentation directory to validate'),
       analysisId: z.string().optional().describe('Optional repository analysis ID for context-aware validation'),
-      validationType: z.enum(['accuracy', 'completeness', 'compliance', 'all']).optional().default('all'),
-      includeCodeValidation: z.boolean().optional().default(true),
-      confidence: z.enum(['strict', 'moderate', 'permissive']).optional().default('moderate'),
+      validationType: z.string().optional().default('all').describe('Type of validation: accuracy, completeness, compliance, or all'),
+      includeCodeValidation: z.boolean().optional().default(true).describe('Whether to validate code examples'),
+      confidence: z.string().optional().default('moderate').describe('Validation confidence level: strict, moderate, or permissive'),
     }),
   },
   {
@@ -124,8 +124,8 @@ const TOOLS = [
     description: 'Validate general content quality: broken links, code syntax, references, and basic accuracy',
     inputSchema: z.object({
       contentPath: z.string().describe('Path to the content directory to validate'),
-      validationType: z.enum(['links', 'code', 'references', 'all']).optional().default('all'),
-      includeCodeValidation: z.boolean().optional().default(true),
+      validationType: z.string().optional().default('all').describe('Type of validation: links, code, references, or all'),
+      includeCodeValidation: z.boolean().optional().default(true).describe('Whether to validate code blocks'),
       followExternalLinks: z.boolean().optional().default(false).describe('Whether to validate external URLs (slower)'),
     }),
   },
@@ -218,6 +218,32 @@ const PROMPTS = [
       {
         name: 'error_description',
         description: 'Description of the deployment issue',
+        required: false,
+      },
+    ],
+  },
+  {
+    name: 'validate-content-quality',
+    description: 'Comprehensive content validation workflow for both application code and documentation',
+    arguments: [
+      {
+        name: 'content_path',
+        description: 'Path to validate (project root, src directory, or docs directory)',
+        required: true,
+      },
+      {
+        name: 'validation_scope',
+        description: 'Scope: application-code, documentation, or both',
+        required: false,
+      },
+      {
+        name: 'validation_level',
+        description: 'Validation level: quick, standard, or comprehensive',
+        required: false,
+      },
+      {
+        name: 'focus_areas',
+        description: 'Specific focus areas: accuracy, completeness, compliance, code-quality, links',
         required: false,
       },
     ],
@@ -358,6 +384,40 @@ Please:
           },
         ],
       };
+
+    case 'validate-content-quality': {
+      const validationScope = args?.validation_scope || 'both';
+      const validationLevel = args?.validation_level || 'standard';
+      const focusAreas = args?.focus_areas || 'all';
+      
+      return {
+        description: 'Comprehensive content validation workflow',
+        messages: [
+          {
+            role: 'user',
+            content: {
+              type: 'text',
+              text: `I need to validate the quality of my content. Here are the parameters:
+
+Content Path: ${args?.content_path || '[REQUIRED]'}
+Validation Scope: ${validationScope} (application-code, documentation, or both)
+Validation Level: ${validationLevel} (quick, standard, or comprehensive)  
+Focus Areas: ${focusAreas} (accuracy, completeness, compliance, code-quality, links, or all)
+
+Please:
+1. First, determine if the path contains application code, documentation, or both
+2. Run validate_diataxis_content for comprehensive Diataxis framework validation
+3. Run validate_content for general link and syntax validation
+4. Compare results and identify the most critical issues
+5. Provide actionable recommendations prioritized by impact
+6. Suggest specific next steps for improvement
+
+If validation scope is 'both', validate both the source code structure and any documentation directories found.`,
+            },
+          },
+        ],
+      };
+    }
 
     default:
       throw new Error(`Unknown prompt: ${name}`);
@@ -673,6 +733,29 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           JSON.stringify(result, null, 2),
           'application/json'
         );
+        
+        // Return structured validation results as JSON
+        const validationSummary = {
+          status: result.success ? 'PASSED' : 'ISSUES FOUND',
+          confidence: `${result.confidence.overall}%`,
+          issuesFound: result.issues.length,
+          breakdown: {
+            errors: result.issues.filter(i => i.type === 'error').length,
+            warnings: result.issues.filter(i => i.type === 'warning').length,
+            info: result.issues.filter(i => i.type === 'info').length
+          },
+          topIssues: result.issues.slice(0, 5).map(issue => ({
+            type: issue.type.toUpperCase(),
+            category: issue.category,
+            file: issue.location.file,
+            description: issue.description
+          })),
+          recommendations: result.recommendations,
+          nextSteps: result.nextSteps,
+          confidenceBreakdown: result.confidence.breakdown,
+          resourceId: validationId
+        };
+
         return {
           content: [
             {
@@ -683,13 +766,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
               type: 'text',
               text: `Issues found: ${result.issues.length} (${result.issues.filter(i => i.type === 'error').length} errors, ${result.issues.filter(i => i.type === 'warning').length} warnings)`,
             },
-            ...(result.issues.length > 0 ? [{
-              type: 'text' as const,
-              text: `Top issues:\n${result.issues.slice(0, 5).map(issue => `- ${issue.type.toUpperCase()}: ${issue.description}`).join('\n')}`,
-            }] : []),
             {
               type: 'text',
-              text: `Recommendations:\n${result.recommendations.map(rec => `- ${rec}`).join('\n')}`,
+              text: JSON.stringify(validationSummary, null, 2),
             },
           ],
         };
@@ -704,6 +783,19 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           JSON.stringify(result, null, 2),
           'application/json'
         );
+
+        // Return structured validation results as JSON
+        const contentSummary = {
+          status: result.success ? 'PASSED' : 'ISSUES FOUND',
+          summary: result.summary,
+          linksChecked: result.linksChecked || 0,
+          codeBlocksValidated: result.codeBlocksValidated || 0,
+          brokenLinks: result.brokenLinks || [],
+          codeErrors: (result.codeErrors || []).slice(0, 10), // Limit to first 10 errors
+          recommendations: result.recommendations || [],
+          resourceId: validationId
+        };
+
         return {
           content: [
             {
@@ -714,17 +806,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
               type: 'text',
               text: `Results: ${result.linksChecked || 0} links checked, ${result.codeBlocksValidated || 0} code blocks validated`,
             },
-            ...(result.brokenLinks && result.brokenLinks.length > 0 ? [{
-              type: 'text' as const,
-              text: `Broken links found (${result.brokenLinks.length}):\n${result.brokenLinks.slice(0, 10).map(link => `- ${link}`).join('\n')}`,
-            }] : []),
-            ...(result.codeErrors && result.codeErrors.length > 0 ? [{
-              type: 'text' as const,
-              text: `Code issues found (${result.codeErrors.length}):\n${result.codeErrors.slice(0, 5).map(error => `- ${error}`).join('\n')}`,
-            }] : []),
             {
               type: 'text',
-              text: `Recommendations:\n${result.recommendations.map(rec => `- ${rec}`).join('\n')}`,
+              text: JSON.stringify(contentSummary, null, 2),
             },
           ],
         };
