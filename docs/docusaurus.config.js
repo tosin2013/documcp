@@ -31,10 +31,6 @@ module.exports = {
   themeConfig: {
     navbar: {
       title: 'DocuMCP',
-      logo: {
-        alt: 'DocuMCP Logo',
-        src: 'img/logo.svg',
-      },
       items: [
         {
           type: 'doc',
