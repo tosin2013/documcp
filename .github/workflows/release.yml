@@ -146,12 +146,17 @@ jobs:
     - name: Install dependencies
       run: npm ci
       
+    - name: Generate test coverage
+      run: npm run test:coverage
+      
     - name: Generate documentation
       run: |
         mkdir -p docs-site
         cp README.md docs-site/index.md
         cp -r docs/ docs-site/
-        cp -r coverage/ docs-site/coverage/
+        if [ -d "coverage/" ]; then
+          cp -r coverage/ docs-site/coverage/
+        fi
         
     - name: Setup Pages
       uses: actions/configure-pages@v4
