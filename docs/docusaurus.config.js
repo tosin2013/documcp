@@ -2,7 +2,7 @@ module.exports = {
   title: 'DocuMCP',
   tagline: 'Intelligent documentation deployment MCP server with AI-powered repository analysis and Diataxis-compliant content generation',
   url: 'https://tosin2013.github.io',
-  baseUrl: '/documcp/',
+  baseUrl: '/',
   onBrokenLinks: 'warn',
   onBrokenMarkdownLinks: 'warn',
   favicon: 'img/favicon.ico',
