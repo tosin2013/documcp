@@ -20,6 +20,7 @@ const sidebars = {
         'how-to/how-to-add-a-new-feature',
         'how-to/how-to-deploy-your-application',
         'how-to/deploy-to-production',
+        'how-to/how-to-release',
       ],
     },
     {
@@ -27,9 +28,10 @@ const sidebars = {
       label: '📖 Reference',
       items: [
         'reference/api-reference',
-        'reference/api-documentation',
-        'reference/configuration-options',
+        'reference/mcp-tools-reference',
         'reference/command-line-interface',
+        'reference/configuration-options',
+        'reference/release-workflow-reference',
       ],
     },
     {

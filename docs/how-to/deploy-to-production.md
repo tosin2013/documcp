@@ -65,11 +65,35 @@ npm run dev
 {
   "mcpServers": {
     "documcp": {
-      "command": "node",
-      "args": ["/path/to/documcp/dist/index.js"],
+      "command": "npx",
+      "args": ["documcp"]
+    }
+  }
+}
+```
+
+**Optional: Set default target repository**:
+```json
+{
+  "mcpServers": {
+    "documcp": {
+      "command": "npx",
+      "args": ["documcp"],
       "env": {
-        "NODE_ENV": "production"
+        "DOCUMCP_TARGET_REPO": "/path/to/your/project"
       }
+    }
+  }
+}
+```
+
+**Alternative configuration** (if npx doesn't work):
+```json
+{
+  "mcpServers": {
+    "documcp": {
+      "command": "node",
+      "args": ["/usr/local/lib/node_modules/documcp/dist/index.js"]
     }
   }
 }
@@ -86,8 +110,37 @@ npm run dev
   "mcp.servers": {
     "documcp": {
       "transport": "stdio",
+      "command": "npx",
+      "args": ["documcp"]
+    }
+  }
+}
+```
+
+**Optional: Set default target repository**:
+```json
+{
+  "mcp.servers": {
+    "documcp": {
+      "transport": "stdio",
+      "command": "npx",
+      "args": ["documcp"],
+      "env": {
+        "DOCUMCP_TARGET_REPO": "/path/to/your/project"
+      }
+    }
+  }
+}
+```
+
+**Alternative configuration** (if npx doesn't work):
+```json
+{
+  "mcp.servers": {
+    "documcp": {
+      "transport": "stdio",
       "command": "node",
-      "args": ["/path/to/documcp/dist/index.js"]
+      "args": ["/usr/local/lib/node_modules/documcp/dist/index.js"]
     }
   }
 }
