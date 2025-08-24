@@ -98,6 +98,7 @@ git commit -m "chore(release): bump version to $NEW_VERSION
 
 🤖 Generated with [Claude Code](https://claude.ai/code)
 
+Authored-By: TOSIN AKINOSHO <tosinakinosho@gmail.com>
 Co-Authored-By: Claude <noreply@anthropic.com>"
 
 print_status "Creating git tag: $TAG_NAME"
@@ -114,6 +115,7 @@ Features:
 
 🤖 Generated with [Claude Code](https://claude.ai/code)
 
+Authored-By: TOSIN AKINOSHO <tosinakinosho@gmail.com>
 Co-Authored-By: Claude <noreply@anthropic.com>"
 
 print_status "Pushing changes and tag to origin..."
