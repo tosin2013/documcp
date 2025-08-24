@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.3] - 2025-08-24
+
+### Fixed
+- Added missing `bin` field to package.json to enable npx execution (Fixes #3)
+- Made dist/index.js executable with proper permissions
+
+### Added
+- CLI executable support via `npx documcp` command
+- Direct command-line invocation capability
+
+## [0.2.2] - 2025-08-24
+
+### Added
+- Version display and badges to documentation pages
+- Enhanced documentation structure
+
+## [0.2.1] - 2025-08-24
+
+### Changed
+- Minor documentation updates
+
 ## [0.2.0] - 2025-08-24
 
 ### Changed

@@ -11,6 +11,9 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import { z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 
 import { analyzeRepository } from './tools/analyze-repository.js';
 import { recommendSSG } from './tools/recommend-ssg.js';
@@ -24,10 +27,15 @@ import { detectDocumentationGaps } from './tools/detect-gaps.js';
 import { testLocalDeployment } from './tools/test-local-deployment.js';
 import { DOCUMENTATION_WORKFLOWS, WORKFLOW_EXECUTION_GUIDANCE, WORKFLOW_METADATA } from './workflows/documentation-workflow.js';
 
+// Get version from package.json
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const packageJson = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf-8'));
+
 const server = new Server(
   {
     name: 'documcp',
-    version: '0.1.0',
+    version: packageJson.version,
   },
   {
     capabilities: {
