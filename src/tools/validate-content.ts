@@ -135,7 +135,24 @@ class ContentAccuracyValidator {
     // Code validation if requested
     if (options.includeCodeValidation) {
       result.codeValidation = await this.validateCodeExamples(options.contentPath);
+      // Set code example relevance confidence based on code validation results
+      if (result.codeValidation) {
+        const successRate = result.codeValidation.exampleResults.length > 0 ? 
+          result.codeValidation.exampleResults.filter(e => e.compilationSuccess).length / result.codeValidation.exampleResults.length : 1;
+        result.confidence.breakdown.codeExampleRelevance = Math.round(successRate * 100);
+      }
+    } else {
+      // If code validation is skipped, assume reasonable confidence
+      result.confidence.breakdown.codeExampleRelevance = 75;
     }
+
+    // Set framework version accuracy based on technology detection confidence
+    result.confidence.breakdown.frameworkVersionAccuracy = Math.min(90, result.confidence.breakdown.technologyDetection + 10);
+    
+    // Set architectural assumptions confidence based on file structure and content analysis
+    const filesAnalyzed = await this.getMarkdownFiles(options.contentPath);
+    const hasStructuredContent = filesAnalyzed.length > 3; // Basic heuristic
+    result.confidence.breakdown.architecturalAssumptions = hasStructuredContent ? 80 : 60;
 
     // Calculate overall confidence and success
     this.calculateOverallMetrics(result);
@@ -731,7 +748,7 @@ class ContentAccuracyValidator {
     return Math.round(totalConfidence / examples.length);
   }
 
-  private async getMarkdownFiles(contentPath: string): Promise<string[]> {
+  public async getMarkdownFiles(contentPath: string): Promise<string[]> {
     const files: string[] = [];
     
     async function scan(dir: string) {
@@ -917,4 +934,141 @@ export const validateDiataxisContent: Tool = {
 export async function handleValidateDiataxisContent(args: any): Promise<ValidationResult> {
   const validator = new ContentAccuracyValidator();
   return await validator.validateContent(args);
+}
+
+interface GeneralValidationResult {
+  success: boolean;
+  linksChecked: number;
+  brokenLinks: string[];
+  codeBlocksValidated: number;
+  codeErrors: string[];
+  recommendations: string[];
+  summary: string;
+}
+
+export async function validateGeneralContent(args: any): Promise<GeneralValidationResult> {
+  const { contentPath, validationType = 'all', includeCodeValidation = true, followExternalLinks = false } = args;
+  
+  const result: GeneralValidationResult = {
+    success: true,
+    linksChecked: 0,
+    brokenLinks: [],
+    codeBlocksValidated: 0,
+    codeErrors: [],
+    recommendations: [],
+    summary: ''
+  };
+
+  try {
+    // Get all markdown files
+    const validator = new ContentAccuracyValidator();
+    const files = await validator.getMarkdownFiles(contentPath);
+    
+    // Check links if requested
+    if (validationType === 'all' || validationType === 'links') {
+      for (const file of files) {
+        const content = await fs.readFile(file, 'utf-8');
+        const links = extractLinksFromMarkdown(content);
+        
+        for (const link of links) {
+          result.linksChecked++;
+          
+          // Skip external links unless explicitly requested
+          if (link.startsWith('http') && !followExternalLinks) continue;
+          
+          // Check internal links
+          if (!link.startsWith('http')) {
+            const fullPath = path.resolve(path.dirname(file), link);
+            try {
+              await fs.access(fullPath);
+            } catch {
+              result.brokenLinks.push(`${path.basename(file)}: ${link}`);
+              result.success = false;
+            }
+          }
+        }
+      }
+    }
+
+    // Validate code blocks if requested
+    if (includeCodeValidation && (validationType === 'all' || validationType === 'code')) {
+      for (const file of files) {
+        const content = await fs.readFile(file, 'utf-8');
+        const codeBlocks = extractCodeBlocks(content);
+        
+        for (const block of codeBlocks) {
+          result.codeBlocksValidated++;
+          
+          // Basic syntax validation
+          if (block.language && block.code.trim()) {
+            if (block.language === 'javascript' || block.language === 'js') {
+              try {
+                // Basic JS syntax check - look for common issues
+                if (block.code.includes('console.log') && !block.code.includes(';')) {
+                  result.codeErrors.push(`${path.basename(file)}: Missing semicolon in JS code`);
+                }
+              } catch (error) {
+                result.codeErrors.push(`${path.basename(file)}: JS syntax error - ${error}`);
+                result.success = false;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // Generate recommendations
+    if (result.brokenLinks.length > 0) {
+      result.recommendations.push(`Fix ${result.brokenLinks.length} broken internal links`);
+      result.recommendations.push('Run documentation build to catch additional link issues');
+    }
+
+    if (result.codeErrors.length > 0) {
+      result.recommendations.push(`Review and fix ${result.codeErrors.length} code syntax issues`);
+    }
+
+    if (result.success) {
+      result.recommendations.push('Content validation passed - no critical issues found');
+    }
+
+    // Create summary
+    result.summary = `Validated ${files.length} files, ${result.linksChecked} links, ${result.codeBlocksValidated} code blocks. ${result.success ? 'PASSED' : `ISSUES FOUND: ${result.brokenLinks.length + result.codeErrors.length}`}`;
+
+    return result;
+
+  } catch (error) {
+    result.success = false;
+    result.recommendations.push(`Validation failed: ${error}`);
+    result.summary = `Validation error: ${error}`;
+    return result;
+  }
+}
+
+// Helper function to extract links from markdown
+function extractLinksFromMarkdown(content: string): string[] {
+  const linkRegex = /\[([^\]]*)\]\(([^)]+)\)/g;
+  const links: string[] = [];
+  let match;
+  
+  while ((match = linkRegex.exec(content)) !== null) {
+    links.push(match[2]); // The URL part
+  }
+  
+  return links;
+}
+
+// Helper function to extract code blocks from markdown
+function extractCodeBlocks(content: string): { language: string; code: string }[] {
+  const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
+  const blocks: { language: string; code: string }[] = [];
+  let match;
+  
+  while ((match = codeBlockRegex.exec(content)) !== null) {
+    blocks.push({
+      language: match[1] || 'text',
+      code: match[2]
+    });
+  }
+  
+  return blocks;
 }

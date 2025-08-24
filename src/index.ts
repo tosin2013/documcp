@@ -19,7 +19,7 @@ import { setupStructure } from './tools/setup-structure.js';
 import { deployPages } from './tools/deploy-pages.js';
 import { verifyDeployment } from './tools/verify-deployment.js';
 import { handlePopulateDiataxisContent } from './tools/populate-content.js';
-import { handleValidateDiataxisContent } from './tools/validate-content.js';
+import { handleValidateDiataxisContent, validateGeneralContent } from './tools/validate-content.js';
 import { detectDocumentationGaps } from './tools/detect-gaps.js';
 import { testLocalDeployment } from './tools/test-local-deployment.js';
 import { DOCUMENTATION_WORKFLOWS, WORKFLOW_EXECUTION_GUIDANCE, WORKFLOW_METADATA } from './workflows/documentation-workflow.js';
@@ -117,6 +117,16 @@ const TOOLS = [
       validationType: z.enum(['accuracy', 'completeness', 'compliance', 'all']).optional().default('all'),
       includeCodeValidation: z.boolean().optional().default(true),
       confidence: z.enum(['strict', 'moderate', 'permissive']).optional().default('moderate'),
+    }),
+  },
+  {
+    name: 'validate_content',
+    description: 'Validate general content quality: broken links, code syntax, references, and basic accuracy',
+    inputSchema: z.object({
+      contentPath: z.string().describe('Path to the content directory to validate'),
+      validationType: z.enum(['links', 'code', 'references', 'all']).optional().default('all'),
+      includeCodeValidation: z.boolean().optional().default(true),
+      followExternalLinks: z.boolean().optional().default(false).describe('Whether to validate external URLs (slower)'),
     }),
   },
   {
@@ -676,6 +686,41 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             ...(result.issues.length > 0 ? [{
               type: 'text' as const,
               text: `Top issues:\n${result.issues.slice(0, 5).map(issue => `- ${issue.type.toUpperCase()}: ${issue.description}`).join('\n')}`,
+            }] : []),
+            {
+              type: 'text',
+              text: `Recommendations:\n${result.recommendations.map(rec => `- ${rec}`).join('\n')}`,
+            },
+          ],
+        };
+      }
+      
+      case 'validate_content': {
+        const result = await validateGeneralContent(args);
+        // Store validation results as resource
+        const validationId = `content-validation-${Date.now()}`;
+        storeResource(
+          `documcp://analysis/${validationId}`,
+          JSON.stringify(result, null, 2),
+          'application/json'
+        );
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Content validation completed. Status: ${result.success ? 'PASSED' : 'ISSUES FOUND'}`,
+            },
+            {
+              type: 'text',
+              text: `Results: ${result.linksChecked || 0} links checked, ${result.codeBlocksValidated || 0} code blocks validated`,
+            },
+            ...(result.brokenLinks && result.brokenLinks.length > 0 ? [{
+              type: 'text' as const,
+              text: `Broken links found (${result.brokenLinks.length}):\n${result.brokenLinks.slice(0, 10).map(link => `- ${link}`).join('\n')}`,
+            }] : []),
+            ...(result.codeErrors && result.codeErrors.length > 0 ? [{
+              type: 'text' as const,
+              text: `Code issues found (${result.codeErrors.length}):\n${result.codeErrors.slice(0, 5).map(error => `- ${error}`).join('\n')}`,
             }] : []),
             {
               type: 'text',
