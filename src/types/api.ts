@@ -36,6 +36,47 @@ export interface NextStep {
   priority?: 'low' | 'medium' | 'high';
 }
 
+// Additional types for README health analysis and best practices
+// These types prevent compilation errors when health analysis functionality is added
+export interface HealthAnalysis {
+  score: number;
+  issues: HealthIssue[];
+  recommendations: string[];
+  metadata: {
+    checkDate: string;
+    version: string;
+  };
+}
+
+export interface HealthIssue {
+  type: 'critical' | 'warning' | 'info';
+  message: string;
+  section?: string;
+  line?: number;
+}
+
+export interface ChecklistItem {
+  id: string;
+  title: string;
+  description: string;
+  completed: boolean;
+  required: boolean;
+  category: string;
+}
+
+export interface BestPracticesReport {
+  items: ChecklistItem[];
+  score: number;
+  categories: {
+    [category: string]: {
+      total: number;
+      completed: number;
+      score: number;
+    };
+  };
+  recommendations: string[];
+}
+
 // MCP content format wrapper for backward compatibility
 export interface MCPContentWrapper {
   content: Array<{
@@ -124,4 +165,13 @@ function getRecommendationIcon(type: Recommendation['type']): string {
     default:
       return '•';
   }
+}
+
+// Utility functions for type conversions to prevent common type errors
+export function convertBestPracticesReportToChecklistItems(report: BestPracticesReport): ChecklistItem[] {
+  return report.items;
+}
+
+export function generateHealthRecommendations(analysis: HealthAnalysis): string[] {
+  return analysis.recommendations;
 }
