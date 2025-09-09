@@ -151,7 +151,7 @@ export function formatMCPResponse<T>(response: MCPToolResponse<T>): MCPContentWr
     return { content, isError: true };
   }
 
-  return { content };
+  return { content, isError: false };
 }
 
 function getRecommendationIcon(type: Recommendation['type']): string {

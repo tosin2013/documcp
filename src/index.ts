@@ -25,6 +25,10 @@ import { handlePopulateDiataxisContent } from './tools/populate-content.js';
 import { handleValidateDiataxisContent, validateGeneralContent } from './tools/validate-content.js';
 import { detectDocumentationGaps } from './tools/detect-gaps.js';
 import { testLocalDeployment } from './tools/test-local-deployment.js';
+import { evaluateReadmeHealth } from './tools/evaluate-readme-health.js';
+import { readmeBestPractices } from './tools/readme-best-practices.js';
+import { checkDocumentationLinks } from './tools/check-documentation-links.js';
+import { formatMCPResponse } from './types/api.js';
 import { DOCUMENTATION_WORKFLOWS, WORKFLOW_EXECUTION_GUIDANCE, WORKFLOW_METADATA } from './workflows/documentation-workflow.js';
 
 // Get version from package.json
@@ -156,6 +160,43 @@ const TOOLS = [
       port: z.number().optional().default(3000).describe('Port for local server'),
       timeout: z.number().optional().default(60).describe('Timeout in seconds for build process'),
       skipBuild: z.boolean().optional().default(false).describe('Skip build step and only start server'),
+    }),
+  },
+  {
+    name: 'evaluate_readme_health',
+    description: 'Evaluate README files for community health, accessibility, and onboarding effectiveness',
+    inputSchema: z.object({
+      readme_path: z.string().describe('Path to the README file to evaluate'),
+      project_type: z.enum(['community_library', 'enterprise_tool', 'personal_project', 'documentation']).optional().default('community_library').describe('Type of project for tailored evaluation'),
+      repository_path: z.string().optional().describe('Optional path to repository for additional context'),
+    }),
+  },
+  {
+    name: 'readme_best_practices',
+    description: 'Analyze README files against best practices checklist and generate templates for improvement',
+    inputSchema: z.object({
+      readme_path: z.string().describe('Path to the README file to analyze'),
+      project_type: z.enum(['library', 'application', 'tool', 'documentation', 'framework']).optional().default('library').describe('Type of project for tailored analysis'),
+      generate_template: z.boolean().optional().default(false).describe('Generate README templates and community files'),
+      output_directory: z.string().optional().describe('Directory to write generated templates and community files'),
+      include_community_files: z.boolean().optional().default(true).describe('Generate community health files (CONTRIBUTING.md, CODE_OF_CONDUCT.md, etc.)'),
+      target_audience: z.enum(['beginner', 'intermediate', 'advanced', 'mixed']).optional().default('mixed').describe('Target audience for recommendations'),
+    }),
+  },
+  {
+    name: 'check_documentation_links',
+    description: 'Comprehensive link checking for documentation deployment with external, internal, and anchor link validation',
+    inputSchema: z.object({
+      documentation_path: z.string().optional().default('./docs').describe('Path to the documentation directory to check'),
+      check_external_links: z.boolean().optional().default(true).describe('Validate external URLs (slower but comprehensive)'),
+      check_internal_links: z.boolean().optional().default(true).describe('Validate internal file references'),
+      check_anchor_links: z.boolean().optional().default(true).describe('Validate anchor links within documents'),
+      timeout_ms: z.number().min(1000).max(30000).optional().default(5000).describe('Timeout for external link requests in milliseconds'),
+      max_concurrent_checks: z.number().min(1).max(20).optional().default(5).describe('Maximum concurrent link checks'),
+      allowed_domains: z.array(z.string()).optional().default([]).describe('Whitelist of allowed external domains (empty = all allowed)'),
+      ignore_patterns: z.array(z.string()).optional().default([]).describe('URL patterns to ignore during checking'),
+      fail_on_broken_links: z.boolean().optional().default(false).describe('Fail the check if broken links are found'),
+      output_format: z.enum(['summary', 'detailed', 'json']).optional().default('detailed').describe('Output format for results'),
     }),
   },
 ];
@@ -702,8 +743,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return result;
       }
       
-      case 'verify_deployment':
-        return await verifyDeployment(args);
+      case 'verify_deployment': {
+        const result = await verifyDeployment(args);
+        return result;
+      }
       
       case 'populate_diataxis_content': {
         const result = await handlePopulateDiataxisContent(args);
@@ -844,6 +887,43 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           'application/json'
         );
         return result;
+      }
+      
+      case 'evaluate_readme_health': {
+        const result = await evaluateReadmeHealth(args as any);
+        // Store health evaluation as resource
+        const healthId = `readme-health-${Date.now()}`;
+        storeResource(
+          `documcp://analysis/${healthId}`,
+          JSON.stringify(result, null, 2),
+          'application/json'
+        );
+        return result;
+      }
+      
+      
+      case 'readme_best_practices': {
+        const result = await readmeBestPractices(args as any);
+        // Store best practices analysis as resource
+        const analysisId = `readme-best-practices-${Date.now()}`;
+        storeResource(
+          `documcp://analysis/${analysisId}`,
+          JSON.stringify(result, null, 2),
+          'application/json'
+        );
+        return formatMCPResponse(result);
+      }
+      
+      case 'check_documentation_links': {
+        const result = await checkDocumentationLinks(args as any);
+        // Store link check results as resource
+        const linkCheckId = `link-check-${Date.now()}`;
+        storeResource(
+          `documcp://analysis/${linkCheckId}`,
+          JSON.stringify(result, null, 2),
+          'application/json'
+        );
+        return formatMCPResponse(result);
       }
       
       default:

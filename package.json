@@ -27,7 +27,10 @@
     "benchmark:run": "tsx src/scripts/benchmark.ts run",
     "benchmark:current": "tsx src/scripts/benchmark.ts current",
     "benchmark:create-config": "tsx src/scripts/benchmark.ts create-config",
-    "benchmark:help": "tsx src/scripts/benchmark.ts help"
+    "benchmark:help": "tsx src/scripts/benchmark.ts help",
+    "docs:check-links": "tsx src/tools/check-documentation-links.ts",
+    "docs:validate": "./test-docs.sh",
+    "docs:test": "npm run docs:check-links && npm run docs:validate"
   },
   "keywords": [
     "mcp",
