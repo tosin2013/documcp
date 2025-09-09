@@ -22,7 +22,7 @@ const inputSchema = z.object({
   }).optional(),
 });
 
-export async function recommendSSG(args: unknown): Promise<{ content: any[] }> {
+export async function recommendSSG(args: unknown): Promise<{ content: any[]; isError?: boolean }> {
   const startTime = Date.now();
   const { analysisId, preferences } = inputSchema.parse(args);
   

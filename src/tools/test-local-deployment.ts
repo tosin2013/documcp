@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { promises as fs } from 'fs';
-import path from 'path';
+import * as path from 'path';
 import { spawn, exec } from 'child_process';
 import { promisify } from 'util';
 import { MCPToolResponse, formatMCPResponse } from '../types/api.js';
@@ -74,7 +74,7 @@ const SSG_CONFIGS: Record<string, SSGConfig> = {
   },
 };
 
-export async function testLocalDeployment(args: unknown): Promise<{ content: any[] }> {
+export async function testLocalDeployment(args: unknown): Promise<{ content: any[]; isError?: boolean }> {
   const startTime = Date.now();
   const { repositoryPath, ssg, port, timeout, skipBuild } = inputSchema.parse(args);
 

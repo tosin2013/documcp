@@ -40,7 +40,7 @@ describe('Edge Cases and Error Handling', () => {
       for (const input of invalidInputs) {
         try {
           const result = await analyzeRepository(input as any);
-          expect((result as any).isError).toBe(true);
+          expect(result.isError).toBe(true);
         } catch (error) {
           // Catching errors is also acceptable for invalid inputs
           expect(error).toBeDefined();
@@ -58,7 +58,7 @@ describe('Edge Cases and Error Handling', () => {
             projectName: 'Test',
             outputPath: tempDir
           });
-          expect((result as any).isError).toBe(true);
+          expect(result.isError).toBe(true);
         } catch (error) {
           expect(error).toBeDefined();
         }
@@ -102,7 +102,7 @@ describe('Edge Cases and Error Handling', () => {
         });
 
         expect(result.content).toBeDefined();
-        expect((result as any).isError).toBeFalsy();
+        expect(result.isError).toBeFalsy();
       }
     });
   });
@@ -126,7 +126,7 @@ describe('Edge Cases and Error Handling', () => {
           depth: 'standard'
         });
         
-        expect((result as any).isError).toBe(true);
+        expect(result.isError).toBe(true);
       } finally {
         // Restore permissions for cleanup
         await fs.chmod(restrictedDir, 0o755);
@@ -152,7 +152,7 @@ describe('Edge Cases and Error Handling', () => {
         });
         
         expect(result.content).toBeDefined();
-        expect((result as any).isError).toBeFalsy();
+        expect(result.isError).toBeFalsy();
       } catch (error) {
         // Symlinks might not be supported on all systems
         console.warn('Symlink test skipped:', error);
@@ -176,7 +176,7 @@ describe('Edge Cases and Error Handling', () => {
       });
       
       expect(result.content).toBeDefined();
-      expect((result as any).isError).toBeFalsy();
+      expect(result.isError).toBeFalsy();
     });
 
     it('should handle files with unusual extensions', async () => {
@@ -204,7 +204,7 @@ describe('Edge Cases and Error Handling', () => {
       });
       
       expect(result.content).toBeDefined();
-      expect((result as any).isError).toBeFalsy();
+      expect(result.isError).toBeFalsy();
       
       // Should count all files (excluding hidden files that start with .)
       const analysisData = JSON.parse(result.content.find(c => c.text.includes('"totalFiles"'))!.text);
@@ -228,7 +228,7 @@ describe('Edge Cases and Error Handling', () => {
       });
       
       expect(result.content).toBeDefined();
-      expect((result as any).isError).toBeFalsy();
+      expect(result.isError).toBeFalsy();
     });
   });
 
@@ -250,7 +250,7 @@ describe('Edge Cases and Error Handling', () => {
       const executionTime = Date.now() - startTime;
       
       expect(result.content).toBeDefined();
-      expect((result as any).isError).toBeFalsy();
+      expect(result.isError).toBeFalsy();
       expect(executionTime).toBeLessThan(10000); // Should complete within 10 seconds
     });
 
@@ -269,7 +269,7 @@ describe('Edge Cases and Error Handling', () => {
       });
       
       expect(result.content).toBeDefined();
-      expect((result as any).isError).toBeFalsy();
+      expect(result.isError).toBeFalsy();
     });
 
     it('should handle concurrent tool executions', async () => {
@@ -290,7 +290,7 @@ describe('Edge Cases and Error Handling', () => {
       
       results.forEach(result => {
         expect(result.content).toBeDefined();
-        expect((result as any).isError).toBeFalsy();
+        expect(result.isError).toBeFalsy();
       });
     });
   });
@@ -312,7 +312,7 @@ describe('Edge Cases and Error Handling', () => {
         });
         
         expect(result.content).toBeDefined();
-        expect((result as any).isError).toBeFalsy();
+        expect(result.isError).toBeFalsy();
         
         // Verify files were actually created
         const files = await fs.readdir(specialPath);
@@ -330,7 +330,7 @@ describe('Edge Cases and Error Handling', () => {
       });
       
       expect(result.content).toBeDefined();
-      expect((result as any).isError).toBeFalsy();
+      expect(result.isError).toBeFalsy();
       
       // Verify nested directories were created
       expect(await fs.access(nestedPath).then(() => true).catch(() => false)).toBe(true);
@@ -351,7 +351,7 @@ describe('Edge Cases and Error Handling', () => {
       });
       
       expect(result.content).toBeDefined();
-      expect((result as any).isError).toBeFalsy();
+      expect(result.isError).toBeFalsy();
       
       // Verify our important file still exists
       expect(await fs.access(path.join(existingFiles, 'important.txt')).then(() => true).catch(() => false)).toBe(true);
@@ -375,7 +375,7 @@ describe('Edge Cases and Error Handling', () => {
       });
       
       expect(result.content).toBeDefined();
-      expect((result as any).isError).toBeFalsy();
+      expect(result.isError).toBeFalsy();
       
       // Both workflows should exist
       const workflows = await fs.readdir(path.join(existingWorkflow, '.github', 'workflows'));
@@ -401,7 +401,7 @@ describe('Edge Cases and Error Handling', () => {
         });
         
         expect(result.content).toBeDefined();
-        expect((result as any).isError).toBeFalsy();
+        expect(result.isError).toBeFalsy();
         
         // Verify CNAME file
         const cnameContent = await fs.readFile(path.join(domainTest, 'CNAME'), 'utf-8');
@@ -425,7 +425,7 @@ describe('Edge Cases and Error Handling', () => {
         });
         
         expect(result.content).toBeDefined();
-        expect((result as any).isError).toBeFalsy();
+        expect(result.isError).toBeFalsy();
       }
     });
   });
@@ -452,7 +452,7 @@ describe('Edge Cases and Error Handling', () => {
       });
       
       expect(result.content).toBeDefined();
-      expect((result as any).isError).toBeFalsy();
+      expect(result.isError).toBeFalsy();
       
       const analysisData = JSON.parse(result.content.find(c => c.text.includes('"totalFiles"'))!.text);
       expect(analysisData.structure.totalFiles).toBe(unicodeFiles.length); // No README created in this test
@@ -474,7 +474,7 @@ describe('Edge Cases and Error Handling', () => {
       });
       
       expect(result.content).toBeDefined();
-      expect((result as any).isError).toBeFalsy();
+      expect(result.isError).toBeFalsy();
     });
   });
 
@@ -496,7 +496,7 @@ describe('Edge Cases and Error Handling', () => {
       });
       
       expect(result.content).toBeDefined();
-      expect((result as any).isError).toBeFalsy();
+      expect(result.isError).toBeFalsy();
       
       // Should still provide useful analysis despite issues
       const analysisData = JSON.parse(result.content.find(c => c.text.includes('"ecosystem"'))!.text);
@@ -509,7 +509,7 @@ describe('Edge Cases and Error Handling', () => {
         depth: 'standard'
       });
       
-      expect((result as any).isError).toBe(true);
+      expect(result.isError).toBe(true);
       const errorText = result.content.map(c => c.text).join(' ');
       
       // Error message should be helpful

@@ -15,7 +15,7 @@ interface DeploymentCheck {
   recommendation?: string;
 }
 
-export async function verifyDeployment(args: unknown): Promise<{ content: any[] }> {
+export async function verifyDeployment(args: unknown): Promise<{ content: any[]; isError?: boolean }> {
   const startTime = Date.now();
   const { repository, url } = inputSchema.parse(args);
 

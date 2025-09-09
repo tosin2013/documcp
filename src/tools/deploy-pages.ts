@@ -10,7 +10,7 @@ const inputSchema = z.object({
   customDomain: z.string().optional(),
 });
 
-export async function deployPages(args: unknown): Promise<{ content: any[] }> {
+export async function deployPages(args: unknown): Promise<{ content: any[]; isError?: boolean }> {
   const startTime = Date.now();
   const { repository, ssg, branch, customDomain } = inputSchema.parse(args);
 

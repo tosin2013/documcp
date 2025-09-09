@@ -25,6 +25,7 @@ import { handlePopulateDiataxisContent } from './tools/populate-content.js';
 import { handleValidateDiataxisContent, validateGeneralContent } from './tools/validate-content.js';
 import { detectDocumentationGaps } from './tools/detect-gaps.js';
 import { testLocalDeployment } from './tools/test-local-deployment.js';
+import { evaluateReadmeHealth } from './tools/evaluate-readme-health.js';
 import { DOCUMENTATION_WORKFLOWS, WORKFLOW_EXECUTION_GUIDANCE, WORKFLOW_METADATA } from './workflows/documentation-workflow.js';
 
 // Get version from package.json
@@ -156,6 +157,15 @@ const TOOLS = [
       port: z.number().optional().default(3000).describe('Port for local server'),
       timeout: z.number().optional().default(60).describe('Timeout in seconds for build process'),
       skipBuild: z.boolean().optional().default(false).describe('Skip build step and only start server'),
+    }),
+  },
+  {
+    name: 'evaluate_readme_health',
+    description: 'Evaluate README files for community health, accessibility, and onboarding effectiveness',
+    inputSchema: z.object({
+      readme_path: z.string().describe('Path to the README file to evaluate'),
+      project_type: z.enum(['community_library', 'enterprise_tool', 'personal_project', 'documentation']).optional().default('community_library').describe('Type of project for tailored evaluation'),
+      repository_path: z.string().optional().describe('Optional path to repository for additional context'),
     }),
   },
 ];
@@ -840,6 +850,18 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const testId = `test-${args?.ssg || 'unknown'}-${Date.now()}`;
         storeResource(
           `documcp://deployment/${testId}`,
+          JSON.stringify(result, null, 2),
+          'application/json'
+        );
+        return result;
+      }
+      
+      case 'evaluate_readme_health': {
+        const result = await evaluateReadmeHealth(args as any);
+        // Store health evaluation as resource
+        const healthId = `readme-health-${Date.now()}`;
+        storeResource(
+          `documcp://analysis/${healthId}`,
           JSON.stringify(result, null, 2),
           'application/json'
         );

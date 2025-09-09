@@ -43,7 +43,7 @@ const inputSchema = z.object({
   depth: z.enum(['quick', 'standard', 'deep']).optional().default('standard'),
 });
 
-export async function analyzeRepository(args: unknown): Promise<{ content: any[] }> {
+export async function analyzeRepository(args: unknown): Promise<{ content: any[]; isError?: boolean }> {
   const startTime = Date.now();
   const { path: repoPath, depth } = inputSchema.parse(args);
 

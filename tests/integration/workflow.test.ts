@@ -264,7 +264,7 @@ describe('Integration Testing - Complete Workflows', () => {
         depth: 'standard'
       });
       
-      expect((result as any).isError).toBe(true);
+      expect(result.isError).toBe(true);
       expect(result.content[0].text).toContain('Error:');
     });
 
@@ -277,7 +277,7 @@ describe('Integration Testing - Complete Workflows', () => {
         outputPath: invalidDir
       });
       
-      expect((result as any).isError).toBe(true);
+      expect(result.isError).toBe(true);
       expect(result.content[0].text).toContain('Error:');
     });
 
@@ -289,7 +289,7 @@ describe('Integration Testing - Complete Workflows', () => {
         includeExamples: false
       });
       
-      expect((result as any).isError).toBeFalsy();
+      expect(result.isError).toBeFalsy();
       expect(result.content).toBeDefined();
     });
 
@@ -299,7 +299,7 @@ describe('Integration Testing - Complete Workflows', () => {
         depth: 'standard'
       });
       
-      expect((errorResult as any).isError).toBe(true);
+      expect(errorResult.isError).toBe(true);
       const errorText = errorResult.content.map(c => c.text).join(' ');
       expect(errorText).toContain('Resolution:');
       expect(errorText.toLowerCase()).toContain('ensure');

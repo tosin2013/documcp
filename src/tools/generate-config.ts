@@ -10,7 +10,7 @@ const inputSchema = z.object({
   outputPath: z.string(),
 });
 
-export async function generateConfig(args: unknown): Promise<{ content: any[] }> {
+export async function generateConfig(args: unknown): Promise<{ content: any[]; isError?: boolean }> {
   const startTime = Date.now();
   const { ssg, projectName, projectDescription, outputPath } = inputSchema.parse(args);
 

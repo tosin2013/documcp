@@ -29,7 +29,7 @@ const DIATAXIS_STRUCTURE = {
   },
 };
 
-export async function setupStructure(args: unknown): Promise<{ content: any[] }> {
+export async function setupStructure(args: unknown): Promise<{ content: any[]; isError?: boolean }> {
   const startTime = Date.now();
   const { path: docsPath, ssg, includeExamples } = inputSchema.parse(args);
 
