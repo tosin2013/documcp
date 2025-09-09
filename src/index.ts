@@ -26,6 +26,7 @@ import { handleValidateDiataxisContent, validateGeneralContent } from './tools/v
 import { detectDocumentationGaps } from './tools/detect-gaps.js';
 import { testLocalDeployment } from './tools/test-local-deployment.js';
 import { evaluateReadmeHealth } from './tools/evaluate-readme-health.js';
+import { optimizeReadmeLength } from './tools/optimize-readme-length.js';
 import { DOCUMENTATION_WORKFLOWS, WORKFLOW_EXECUTION_GUIDANCE, WORKFLOW_METADATA } from './workflows/documentation-workflow.js';
 
 // Get version from package.json
@@ -166,6 +167,17 @@ const TOOLS = [
       readme_path: z.string().describe('Path to the README file to evaluate'),
       project_type: z.enum(['community_library', 'enterprise_tool', 'personal_project', 'documentation']).optional().default('community_library').describe('Type of project for tailored evaluation'),
       repository_path: z.string().optional().describe('Optional path to repository for additional context'),
+    }),
+  },
+  {
+    name: 'optimize_readme_length',
+    description: 'Analyze and optimize README length by segmenting content and creating progressive disclosure',
+    inputSchema: z.object({
+      readme_path: z.string().describe('Path to the README file to optimize'),
+      target_audience: z.enum(['community', 'enterprise', 'internal', 'academic']).optional().default('community').describe('Target audience for optimization strategy'),
+      max_recommended_lines: z.number().min(50).max(1000).optional().default(250).describe('Maximum recommended lines for the README'),
+      output_directory: z.string().optional().describe('Directory to create optimized README and segmented documentation files'),
+      preserve_original: z.boolean().optional().default(true).describe('Keep original README as backup'),
     }),
   },
 ];
@@ -862,6 +874,18 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const healthId = `readme-health-${Date.now()}`;
         storeResource(
           `documcp://analysis/${healthId}`,
+          JSON.stringify(result, null, 2),
+          'application/json'
+        );
+        return result;
+      }
+      
+      case 'optimize_readme_length': {
+        const result = await optimizeReadmeLength(args as any);
+        // Store optimization results as resource
+        const optimizationId = `readme-optimization-${Date.now()}`;
+        storeResource(
+          `documcp://analysis/${optimizationId}`,
           JSON.stringify(result, null, 2),
           'application/json'
         );
