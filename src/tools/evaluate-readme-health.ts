@@ -375,10 +375,10 @@ function getGrade(percentage: number): 'A' | 'B' | 'C' | 'D' | 'F' {
   return 'F';
 }
 
-function generateRecommendations(components: HealthScoreComponent[]): string[] {
+function generateHealthRecommendations(analysis: HealthAnalysis, projectType: string): string[] {
   const recommendations: string[] = [];
   
-  components.forEach(component => {
+  Object.values(analysis).forEach(component => {
     component.details.forEach(detail => {
       if (!detail.passed && detail.recommendation) {
         recommendations.push(`${component.name}: ${detail.recommendation}`);

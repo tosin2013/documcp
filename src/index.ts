@@ -27,6 +27,8 @@ import { detectDocumentationGaps } from './tools/detect-gaps.js';
 import { testLocalDeployment } from './tools/test-local-deployment.js';
 import { evaluateReadmeHealth } from './tools/evaluate-readme-health.js';
 import { optimizeReadmeLength } from './tools/optimize-readme-length.js';
+import { readmeBestPractices } from './tools/readme-best-practices.js';
+import { formatMCPResponse } from './types/api.js';
 import { DOCUMENTATION_WORKFLOWS, WORKFLOW_EXECUTION_GUIDANCE, WORKFLOW_METADATA } from './workflows/documentation-workflow.js';
 
 // Get version from package.json
@@ -178,6 +180,18 @@ const TOOLS = [
       max_recommended_lines: z.number().min(50).max(1000).optional().default(250).describe('Maximum recommended lines for the README'),
       output_directory: z.string().optional().describe('Directory to create optimized README and segmented documentation files'),
       preserve_original: z.boolean().optional().default(true).describe('Keep original README as backup'),
+    }),
+  },
+  {
+    name: 'readme_best_practices',
+    description: 'Analyze README files against best practices checklist and generate templates for improvement',
+    inputSchema: z.object({
+      readme_path: z.string().describe('Path to the README file to analyze'),
+      project_type: z.enum(['library', 'application', 'tool', 'documentation', 'framework']).optional().default('library').describe('Type of project for tailored analysis'),
+      generate_template: z.boolean().optional().default(false).describe('Generate README templates and community files'),
+      output_directory: z.string().optional().describe('Directory to write generated templates and community files'),
+      include_community_files: z.boolean().optional().default(true).describe('Generate community health files (CONTRIBUTING.md, CODE_OF_CONDUCT.md, etc.)'),
+      target_audience: z.enum(['beginner', 'intermediate', 'advanced', 'mixed']).optional().default('mixed').describe('Target audience for recommendations'),
     }),
   },
 ];
@@ -890,6 +904,18 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           'application/json'
         );
         return result;
+      }
+      
+      case 'readme_best_practices': {
+        const result = await readmeBestPractices(args as any);
+        // Store best practices analysis as resource
+        const analysisId = `readme-best-practices-${Date.now()}`;
+        storeResource(
+          `documcp://analysis/${analysisId}`,
+          JSON.stringify(result, null, 2),
+          'application/json'
+        );
+        return formatMCPResponse(result);
       }
       
       default:
