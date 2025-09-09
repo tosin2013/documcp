@@ -19,5 +19,13 @@
   "env": {
     "node": true,
     "es2022": true
-  }
+  },
+  "overrides": [
+    {
+      "files": ["src/benchmarks/**/*.ts", "src/scripts/**/*.ts"],
+      "rules": {
+        "no-console": "off"
+      }
+    }
+  ]
 }

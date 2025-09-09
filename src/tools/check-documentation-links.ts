@@ -66,8 +66,7 @@ export async function checkDocumentationLinks(input: Partial<LinkCheckInput>): P
       max_concurrent_checks,
       allowed_domains,
       ignore_patterns,
-      fail_on_broken_links,
-      output_format
+      fail_on_broken_links
     } = validatedInput;
 
     // Scan documentation files
@@ -334,7 +333,6 @@ async function checkLinksWithConcurrency(
   }
 ): Promise<LinkCheckResult[]> {
   const results: LinkCheckResult[] = [];
-  const semaphore = new Array(options.maxConcurrent).fill(null);
   
   async function checkSingleLink(link: {
     url: string;
@@ -555,7 +553,7 @@ async function checkAnchorLink(link: {
   sourceFile: string;
   lineNumber: number;
   linkType: 'internal' | 'external' | 'anchor' | 'mailto' | 'tel';
-}, documentationPath: string): Promise<LinkCheckResult> {
+}, _documentationPath: string): Promise<LinkCheckResult> {
   const startTime = Date.now();
   
   // For now, just mark anchor links as valid

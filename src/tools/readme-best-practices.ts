@@ -51,11 +51,9 @@ export async function readmeBestPractices(input: Partial<ReadmeBestPracticesInpu
 
     // Read README content
     let readmeContent = '';
-    let readmeExists = true;
     try {
       readmeContent = await readFile(readme_path, 'utf-8');
     } catch (error) {
-      // readmeExists = false;
       if (!generate_template) {
         return {
           success: false,

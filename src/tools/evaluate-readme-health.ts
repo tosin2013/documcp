@@ -135,7 +135,7 @@ export async function evaluateReadmeHealth(input: EvaluateReadmeHealthInput) {
   }
 }
 
-function evaluateCommunityHealth(content: string, repoContext: any): HealthScoreComponent {
+function evaluateCommunityHealth(content: string, _repoContext: any): HealthScoreComponent {
   const checks: HealthCheckDetail[] = [
     {
       check: 'Code of Conduct linked',
@@ -246,7 +246,7 @@ function evaluateAccessibility(content: string): HealthScoreComponent {
   };
 }
 
-function evaluateOnboarding(content: string, projectType: string): HealthScoreComponent {
+function evaluateOnboarding(content: string, _projectType: string): HealthScoreComponent {
   const checks: HealthCheckDetail[] = [
     {
       check: 'Quick start section',
@@ -375,7 +375,7 @@ function getGrade(percentage: number): 'A' | 'B' | 'C' | 'D' | 'F' {
   return 'F';
 }
 
-function generateHealthRecommendations(analysis: any[], projectType: string): string[] {
+function generateHealthRecommendations(analysis: any[], _projectType: string): string[] {
   const recommendations: string[] = [];
   
   analysis.forEach((component: any) => {
