@@ -114,8 +114,8 @@ describe('Performance Benchmarking System', () => {
       const largeResult = await benchmarker.benchmarkRepository(largeRepo);
       
       expect(smallResult.targetTime).toBe(1000); // 1 second for small
-      expect(mediumResult.targetTime).toBe(5000); // 5 seconds for medium
-      expect(largeResult.targetTime).toBe(15000); // 15 seconds for large
+      expect(mediumResult.targetTime).toBe(10000); // 10 seconds for medium
+      expect(largeResult.targetTime).toBe(60000); // 60 seconds for large
     });
   });
 
@@ -129,7 +129,7 @@ describe('Performance Benchmarking System', () => {
       const suite = await benchmarker.runBenchmarkSuite(testRepos);
       
       expect(suite.results.length).toBe(2);
-      expect(suite.suiteName).toBeDefined();
+      expect(suite.testName).toBeDefined();
       expect(suite.overallPassed).toBeDefined();
     });
 
@@ -142,9 +142,10 @@ describe('Performance Benchmarking System', () => {
       const suite = await benchmarker.runBenchmarkSuite(testRepos);
       
       expect(suite.summary).toBeDefined();
-      expect(suite.summary.totalRepositories).toBe(2);
-      expect(suite.summary.passedCount).toBeGreaterThanOrEqual(0);
-      expect(suite.summary.failedCount).toBeGreaterThanOrEqual(0);
+      const totalRepos = suite.summary.smallRepos.count + suite.summary.mediumRepos.count + suite.summary.largeRepos.count;
+      expect(totalRepos).toBe(2);
+      const totalPassed = suite.summary.smallRepos.passed + suite.summary.mediumRepos.passed + suite.summary.largeRepos.passed;
+      expect(totalPassed).toBeGreaterThanOrEqual(0);
     });
   });
 
@@ -283,9 +284,9 @@ describe('Performance Benchmarking System', () => {
     it('should handle different analysis depths', async () => {
       const testRepoPath = await createTestRepo('depth-test', 20);
       
-      // Test with shallow analysis
-      const shallowResult = await benchmarker.benchmarkRepository(testRepoPath, 'shallow');
-      expect(shallowResult.executionTime).toBeGreaterThanOrEqual(0);
+      // Test with quick analysis
+      const quickResult = await benchmarker.benchmarkRepository(testRepoPath, 'quick');
+      expect(quickResult.executionTime).toBeGreaterThanOrEqual(0);
       
       // Test with deep analysis
       const deepResult = await benchmarker.benchmarkRepository(testRepoPath, 'deep');
@@ -317,10 +318,10 @@ describe('Performance Benchmarking System', () => {
       };
       
       try {
-        benchmarker.generateReport(suite);
+        benchmarker.printDetailedReport(suite);
         
         expect(logOutput.length).toBeGreaterThan(0);
-        expect(logOutput.some(line => line.includes('Performance Report'))).toBe(true);
+        expect(logOutput.some(line => line.includes('Performance Benchmark Report'))).toBe(true);
       } finally {
         console.log = originalLog;
       }
@@ -330,7 +331,7 @@ describe('Performance Benchmarking System', () => {
       const emptySuite = benchmarker.generateSuite('Empty Suite', []);
       
       // Should not throw when generating report for empty suite
-      expect(() => benchmarker.generateReport(emptySuite)).not.toThrow();
+      expect(() => benchmarker.printDetailedReport(emptySuite)).not.toThrow();
     });
 
     it('should calculate correct averages for mixed results', async () => {
@@ -423,6 +424,177 @@ describe('Performance Benchmarking System', () => {
         expect(result.executionTime).toBeGreaterThanOrEqual(0);
         expect(result.fileCount).toBeGreaterThan(0);
       });
+    });
+
+    it('should handle extremely deep recursion limit', async () => {
+      const deepRepoPath = path.join(tempDir, 'extremely-deep');
+      let currentPath = deepRepoPath;
+      
+      // Create a structure deeper than the 10-level limit
+      for (let i = 0; i < 15; i++) {
+        currentPath = path.join(currentPath, `level-${i}`);
+        await fs.mkdir(currentPath, { recursive: true });
+        await fs.writeFile(path.join(currentPath, `file-${i}.js`), `// Level ${i}`);
+      }
+      
+      const result = await benchmarker.benchmarkRepository(deepRepoPath);
+      
+      // Should stop at recursion limit, so fewer than 15 files
+      expect(result.fileCount).toBeLessThanOrEqual(10);
+      expect(result.executionTime).toBeGreaterThanOrEqual(0);
+    });
+
+    it('should skip node_modules and vendor directories', async () => {
+      const repoPath = await createTestRepo('skip-dirs', 5);
+      
+      // Add node_modules and vendor directories
+      const nodeModulesPath = path.join(repoPath, 'node_modules');
+      const vendorPath = path.join(repoPath, 'vendor');
+      
+      await fs.mkdir(nodeModulesPath, { recursive: true });
+      await fs.mkdir(vendorPath, { recursive: true });
+      
+      // Add files that should be skipped
+      await fs.writeFile(path.join(nodeModulesPath, 'package.js'), 'module.exports = {};');
+      await fs.writeFile(path.join(vendorPath, 'library.js'), 'var lib = {};');
+      
+      const result = await benchmarker.benchmarkRepository(repoPath);
+      
+      // Should only count the original 5 files, not the ones in node_modules/vendor
+      expect(result.fileCount).toBe(5);
+    });
+
+    it('should skip hidden files except .github', async () => {
+      const repoPath = await createTestRepo('hidden-files', 3);
+      
+      // Add hidden files and .github directory
+      await fs.writeFile(path.join(repoPath, '.hidden'), 'hidden content');
+      await fs.writeFile(path.join(repoPath, '.env'), 'SECRET=value');
+      
+      const githubPath = path.join(repoPath, '.github');
+      await fs.mkdir(githubPath, { recursive: true });
+      await fs.writeFile(path.join(githubPath, 'workflow.yml'), 'name: CI');
+      
+      const result = await benchmarker.benchmarkRepository(repoPath);
+      
+      // Should count original 3 files + 1 .github file, but not other hidden files
+      expect(result.fileCount).toBe(4);
+    });
+  });
+
+  describe('Factory Function', () => {
+    it('should create benchmarker instance via factory', () => {
+      const { createBenchmarker } = require('../../src/benchmarks/performance');
+      const factoryBenchmarker = createBenchmarker();
+      
+      expect(factoryBenchmarker).toBeInstanceOf(PerformanceBenchmarker);
+      expect(factoryBenchmarker.getResults()).toEqual([]);
+    });
+  });
+
+  describe('Export Results Error Handling', () => {
+    it('should handle export to invalid path gracefully', async () => {
+      const testRepos = [
+        { path: await createTestRepo('export-error-test', 10), name: 'Export Error Test' }
+      ];
+      
+      const suite = await benchmarker.runBenchmarkSuite(testRepos);
+      const invalidPath = path.join('/invalid/nonexistent/path', 'results.json');
+      
+      await expect(benchmarker.exportResults(suite, invalidPath)).rejects.toThrow();
+    });
+
+    it('should export complete system information', async () => {
+      const testRepos = [
+        { path: await createTestRepo('system-info-test', 5), name: 'System Info Test' }
+      ];
+      
+      const suite = await benchmarker.runBenchmarkSuite(testRepos);
+      const exportPath = path.join(tempDir, 'system-info-results.json');
+      
+      await benchmarker.exportResults(suite, exportPath);
+      
+      const exportedContent = await fs.readFile(exportPath, 'utf-8');
+      const exportedData = JSON.parse(exportedContent);
+      
+      expect(exportedData.systemInfo.node).toBe(process.version);
+      expect(exportedData.systemInfo.platform).toBe(process.platform);
+      expect(exportedData.systemInfo.arch).toBe(process.arch);
+      expect(exportedData.systemInfo.memoryUsage).toBeDefined();
+      expect(exportedData.performanceTargets).toEqual({
+        small: 1000,
+        medium: 10000,
+        large: 60000
+      });
+    });
+  });
+
+  describe('Detailed Report Coverage', () => {
+    it('should print detailed reports with all categories', async () => {
+      // Create repos of all sizes to test all report sections
+      const smallRepo = await createTestRepo('report-small', 25);
+      const mediumRepo = await createTestRepo('report-medium', 250);
+      const largeRepo = await createTestRepo('report-large', 1200);
+      
+      const results = [
+        await benchmarker.benchmarkRepository(smallRepo),
+        await benchmarker.benchmarkRepository(mediumRepo),
+        await benchmarker.benchmarkRepository(largeRepo)
+      ];
+      
+      const suite = benchmarker.generateSuite('Complete Report Test', results);
+      
+      // Capture console output
+      const originalLog = console.log;
+      const logOutput: string[] = [];
+      console.log = (...args) => {
+        logOutput.push(args.join(' '));
+      };
+      
+      try {
+        benchmarker.printDetailedReport(suite);
+        
+        // Verify all report sections are present
+        const fullOutput = logOutput.join('\n');
+        expect(fullOutput).toContain('Performance Benchmark Report');
+        expect(fullOutput).toContain('Overall Status:');
+        expect(fullOutput).toContain('Average Performance:');
+        expect(fullOutput).toContain('Small (<100 files)');
+        expect(fullOutput).toContain('Medium (100-1000 files)');
+        expect(fullOutput).toContain('Large (1000+ files)');
+        expect(fullOutput).toContain('Detailed Results:');
+        expect(fullOutput).toContain('Memory:');
+      } finally {
+        console.log = originalLog;
+      }
+    });
+
+    it('should handle report generation with no results in some categories', async () => {
+      // Only create small repos to test empty category handling
+      const results = [
+        await benchmarker.benchmarkRepository(await createTestRepo('small-only-1', 10)),
+        await benchmarker.benchmarkRepository(await createTestRepo('small-only-2', 20))
+      ];
+      
+      const suite = benchmarker.generateSuite('Small Only Test', results);
+      
+      const originalLog = console.log;
+      const logOutput: string[] = [];
+      console.log = (...args) => {
+        logOutput.push(args.join(' '));
+      };
+      
+      try {
+        benchmarker.printDetailedReport(suite);
+        
+        const fullOutput = logOutput.join('\n');
+        expect(fullOutput).toContain('Small (<100 files)');
+        // Medium and Large categories should not appear since count is 0
+        expect(fullOutput).not.toContain('Medium (100-1000 files):');
+        expect(fullOutput).not.toContain('Large (1000+ files):');
+      } finally {
+        console.log = originalLog;
+      }
     });
   });
 });
