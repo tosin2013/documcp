@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { promises as fs } from 'fs';
-import * as path from 'path';
 
 // Input schema
 export const ValidateReadmeChecklistSchema = z.object({
@@ -226,32 +225,39 @@ export class ReadmeChecklistValidator {
     item: ChecklistItem,
     content: string,
     projectFiles: string[],
-    input: ValidateReadmeChecklistInput
+    _input: ValidateReadmeChecklistInput
   ): Promise<ValidationResult> {
     let passed = false;
     let details = '';
     const suggestions: string[] = [];
 
     switch (item.id) {
-      case 'title':
-        passed = /^#\s+.+/m.test(content);
+      case 'title': {
+        const titleRegex = /^#\s+.+/m;
+        const hasTitle = titleRegex.test(content);
+        passed = hasTitle;
         details = passed ? 'Project title found' : 'No main heading (# Title) found';
         if (!passed) suggestions.push('Add a clear project title as the first heading: # Your Project Name');
         break;
+      }
 
-      case 'description':
-        const hasSubtitle = /^>\s+.+/m.test(content);
-        const hasDescInTitle = /^#\s+.+\n\n.+/m.test(content);
-        passed = hasSubtitle || hasDescInTitle;
-        details = passed ? 'Project description found' : 'No project description found';
+      case 'description': {
+        const descRegex = /(^>\s+.+|^[^#\n].{20,})/m;
+        const hasDesc = descRegex.test(content);
+        passed = hasDesc;
+        details = passed ? 'Project description found' : 'Missing project description';
         if (!passed) suggestions.push('Add a brief description using > quote syntax or paragraph after title');
         break;
+      }
 
-      case 'tldr':
-        passed = /##\s*(TL;?DR|Summary|Overview)/i.test(content);
-        details = passed ? 'TL;DR section found' : 'No TL;DR or summary section found';
+      case 'tldr': {
+        const tldrRegex = /##?\s*(tl;?dr|quick start|at a glance)/i;
+        const hasTldr = tldrRegex.test(content);
+        passed = hasTldr;
+        details = passed ? 'TL;DR section found' : 'Missing TL;DR or quick overview';
         if (!passed) suggestions.push('Add a ## TL;DR section with 2-3 sentences explaining what your project does');
         break;
+      }
 
       case 'quickstart':
         passed = /##\s*(Quick\s*Start|Getting\s*Started|Installation)/i.test(content);
@@ -259,103 +265,120 @@ export class ReadmeChecklistValidator {
         if (!passed) suggestions.push('Add a ## Quick Start section with immediate setup instructions');
         break;
 
-      case 'installation':
-        const hasInstallSection = /##\s*Install/i.test(content);
-        const hasCodeBlocks = /```[\s\S]*?```/.test(content);
-        passed = hasInstallSection && hasCodeBlocks;
-        details = passed ? 'Installation instructions with code examples found' : 'Missing installation section or code examples';
+      case 'installation': {
+        const installRegex = /##?\s*(install|installation|setup)/i;
+        const hasInstall = installRegex.test(content);
+        passed = hasInstall;
+        details = passed ? 'Installation instructions found' : 'Missing installation instructions';
         if (!passed) suggestions.push('Add installation instructions with code blocks showing exact commands');
         break;
+      }
 
-      case 'usage':
-        const hasUsageSection = /##\s*(Usage|Examples?|How\s*to\s*Use)/i.test(content);
-        const hasUsageCode = /```[\s\S]*?```/.test(content);
-        passed = hasUsageSection && hasUsageCode;
-        details = passed ? 'Usage examples found' : 'Missing usage section or code examples';
+      case 'usage': {
+        const usageRegex = /##?\s*(usage|example|getting started)/i;
+        const hasUsage = usageRegex.test(content);
+        passed = hasUsage;
+        details = passed ? 'Usage examples found' : 'Missing usage examples';
         if (!passed) suggestions.push('Add usage examples with working code snippets');
         break;
+      }
 
-      case 'license':
-        const hasLicenseSection = /##\s*License/i.test(content);
+      case 'license': {
+        const licenseRegex = /##?\s*license/i;
+        const hasLicense = licenseRegex.test(content);
         const hasLicenseFile = projectFiles.includes('LICENSE') || projectFiles.includes('LICENSE.md');
-        passed = hasLicenseSection || hasLicenseFile;
-        details = passed ? 'License information found' : 'No license information found';
+        passed = hasLicense || hasLicenseFile;
+        details = passed ? 'License information found' : 'Missing license information';
         if (!passed) suggestions.push('Add a ## License section or LICENSE file');
         break;
+      }
 
-      case 'contributing':
+      case 'contributing': {
         const hasContributing = /##\s*Contribut/i.test(content);
         const hasContributingFile = projectFiles.includes('CONTRIBUTING.md');
         passed = hasContributing || hasContributingFile;
         details = passed ? 'Contributing guidelines found' : 'No contributing guidelines found';
         if (!passed) suggestions.push('Add contributing guidelines or link to CONTRIBUTING.md');
         break;
+      }
 
-      case 'code-of-conduct':
+      case 'code-of-conduct': {
         const hasCodeOfConduct = /code.of.conduct/i.test(content);
-        const hasCocFile = projectFiles.includes('CODE_OF_CONDUCT.md');
-        passed = hasCodeOfConduct || hasCocFile;
+        const hasCodeFile = projectFiles.includes('CODE_OF_CONDUCT.md');
+        passed = hasCodeOfConduct || hasCodeFile;
         details = passed ? 'Code of conduct found' : 'No code of conduct found';
         break;
+      }
 
-      case 'security':
+      case 'security': {
         const hasSecurity = /security/i.test(content);
         const hasSecurityFile = projectFiles.includes('SECURITY.md');
         passed = hasSecurity || hasSecurityFile;
         details = passed ? 'Security information found' : 'No security policy found';
         break;
+      }
 
-      case 'badges':
-        passed = /!\[.*?\]\(.*?badge.*?\)/i.test(content) || /\[!\[.*?\]\(.*?\)\]\(.*?\)/.test(content);
-        details = passed ? 'Status badges found' : 'No status badges found';
+      case 'badges': {
+        const badgeRegex = /\[!\[.*?\]\(.*?\)\]\(.*?\)|!\[.*?\]\(.*?badge.*?\)/i;
+        const hasBadges = badgeRegex.test(content);
+        passed = hasBadges;
+        details = passed ? 'Status badges found' : 'Consider adding status badges';
         if (!passed) suggestions.push('Consider adding badges for build status, version, license');
         break;
+      }
 
-      case 'screenshots':
-        passed = /!\[.*?\]\(.*?\.(png|jpg|jpeg|gif|webp|svg)\)/i.test(content);
-        details = passed ? 'Screenshots/images found' : 'No screenshots or demo images found';
+      case 'screenshots': {
+        const imageRegex = /!\[.*?\]\(.*?\.(png|jpg|jpeg|gif|svg).*?\)/i;
+        const hasImages = imageRegex.test(content);
+        passed = hasImages;
+        details = passed ? 'Screenshots/images found' : 'Consider adding screenshots or images';
         if (!passed && content.includes('application')) {
           suggestions.push('Consider adding screenshots or demo GIFs for visual applications');
         }
         break;
+      }
 
-      case 'formatting':
-        const hasHeadings = (content.match(/^#+\s/gm) || []).length >= 3;
+      case 'formatting': {
+        const hasHeaders = (content.match(/^##?\s+/gm) || []).length >= 3;
         const hasProperSpacing = !/#{1,6}\s*\n\s*#{1,6}/.test(content);
-        passed = hasHeadings && hasProperSpacing;
-        details = passed ? 'Good markdown formatting' : 'Formatting issues detected';
+        passed = hasHeaders && hasProperSpacing;
+        details = passed ? 'Good markdown formatting' : 'Improve markdown formatting and structure';
         if (!passed) suggestions.push('Improve markdown formatting with proper heading hierarchy and spacing');
         break;
+      }
 
-      case 'working-examples':
-        const codeBlocks = content.match(/```[\s\S]*?```/g) || [];
+      case 'working-examples': {
+        const codeRegex = /```[\s\S]*?```/g;
+        const codeBlocks = content.match(codeRegex) || [];
         passed = codeBlocks.length > 0;
         details = `${codeBlocks.length} code examples found`;
         if (!passed) suggestions.push('Add working code examples to demonstrate usage');
         break;
+      }
 
-      case 'external-links':
+      case 'external-links': {
         const links = content.match(/\[.*?\]\((https?:\/\/.*?)\)/g) || [];
         passed = true; // Assume links work unless we can verify
         details = `${links.length} external links found`;
         break;
+      }
 
-      case 'appropriate-length':
-        const lineCount = content.split('\n').length;
-        passed = lineCount <= 300;
-        details = `${lineCount} lines (target: ≤300)`;
+      case 'appropriate-length': {
+        const wordCount = content.split(/\s+/).length;
+        passed = wordCount <= 300;
+        details = `${wordCount} words (target: ≤300)`;
         if (!passed) suggestions.push('Consider shortening README or moving detailed content to separate docs');
         break;
+      }
 
-      case 'scannable-structure':
-        const headingLevels = (content.match(/^(#+)\s/gm) || []).map(h => h.length - 1);
-        const hasGoodHierarchy = headingLevels.every((level, i) => 
-          i === 0 || level <= headingLevels[i - 1] + 1
-        );
-        passed = hasGoodHierarchy && headingLevels.length >= 3;
-        details = passed ? 'Good heading structure' : 'Poor heading hierarchy';
+      case 'scannable-structure': {
+        const sections = (content.match(/^##?\s+/gm) || []).length;
+        const lists = (content.match(/^\s*[-*+]\s+/gm) || []).length;
+        passed = sections >= 3 && lists >= 2;
+        details = passed ? 'Good scannable structure' : 'Improve structure with more sections and lists';
         if (!passed) suggestions.push('Improve heading structure with logical hierarchy (H1 → H2 → H3)');
         break;
+      }
 
       default:
         passed = false;
@@ -385,7 +408,7 @@ export class ReadmeChecklistValidator {
     let totalWeight = 0;
     let passedWeight = 0;
     let passedItems = 0;
-    let totalItems = results.length;
+    const totalItems = results.length;
 
     // Group results by category and calculate scores
     for (const result of results) {
