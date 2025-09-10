@@ -30,6 +30,8 @@ import { readmeBestPractices } from './tools/readme-best-practices.js';
 import { checkDocumentationLinks } from './tools/check-documentation-links.js';
 import { generateReadmeTemplate } from './tools/generate-readme-template.js';
 import { validateReadmeChecklist } from './tools/validate-readme-checklist.js';
+import { analyzeReadme } from './tools/analyze-readme.js';
+import { optimizeReadme } from './tools/optimize-readme.js';
 import { formatMCPResponse } from './types/api.js';
 import { DOCUMENTATION_WORKFLOWS, WORKFLOW_EXECUTION_GUIDANCE, WORKFLOW_METADATA } from './workflows/documentation-workflow.js';
 
@@ -224,6 +226,29 @@ const TOOLS = [
       projectPath: z.string().optional().describe('Path to project directory for additional context'),
       strict: z.boolean().optional().default(false).describe('Use strict validation rules'),
       outputFormat: z.enum(['json', 'markdown', 'console']).optional().default('console').describe('Output format for the validation report'),
+    }),
+  },
+  {
+    name: 'analyze_readme',
+    description: 'Comprehensive README analysis with length assessment, structure evaluation, and optimization opportunities',
+    inputSchema: z.object({
+      project_path: z.string().min(1).describe('Path to the project directory containing README'),
+      target_audience: z.enum(['community_contributors', 'enterprise_users', 'developers', 'general']).optional().default('community_contributors').describe('Target audience for analysis'),
+      optimization_level: z.enum(['light', 'moderate', 'aggressive']).optional().default('moderate').describe('Level of optimization suggestions'),
+      max_length_target: z.number().min(50).max(1000).optional().default(300).describe('Target maximum length in lines'),
+    }),
+  },
+  {
+    name: 'optimize_readme',
+    description: 'Optimize README content by restructuring, condensing, and extracting detailed sections to separate documentation',
+    inputSchema: z.object({
+      readme_path: z.string().min(1).describe('Path to the README file to optimize'),
+      strategy: z.enum(['community_focused', 'enterprise_focused', 'developer_focused', 'general']).optional().default('community_focused').describe('Optimization strategy'),
+      max_length: z.number().min(50).max(1000).optional().default(300).describe('Target maximum length in lines'),
+      include_tldr: z.boolean().optional().default(true).describe('Generate and include TL;DR section'),
+      preserve_existing: z.boolean().optional().default(true).describe('Preserve existing content structure where possible'),
+      output_path: z.string().optional().describe('Path to write optimized README (if not specified, returns content only)'),
+      create_docs_directory: z.boolean().optional().default(true).describe('Create docs/ directory for extracted content'),
     }),
   },
 ];
@@ -991,6 +1016,30 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             timestamp: new Date().toISOString()
           }
         });
+      }
+      
+      case 'analyze_readme': {
+        const result = await analyzeReadme(args as any);
+        // Store analysis results as resource
+        const analysisId = `readme-analysis-${Date.now()}`;
+        storeResource(
+          `documcp://analysis/${analysisId}`,
+          JSON.stringify(result, null, 2),
+          'application/json'
+        );
+        return formatMCPResponse(result);
+      }
+      
+      case 'optimize_readme': {
+        const result = await optimizeReadme(args as any);
+        // Store optimization results as resource
+        const optimizationId = `readme-optimization-${Date.now()}`;
+        storeResource(
+          `documcp://analysis/${optimizationId}`,
+          JSON.stringify(result, null, 2),
+          'application/json'
+        );
+        return formatMCPResponse(result);
       }
       
       default:
