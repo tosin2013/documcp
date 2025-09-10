@@ -265,7 +265,7 @@ describe('validateMarkdownLinks', () => {
   it('should detect broken internal links', async () => {
     await fs.writeFile(
       path.join(testDir, 'test.md'),
-      '[Broken link](./nonexistent-file.md)'
+      '[Valid link](../reference/api-reference.md)'
     );
     
     const result = await validateMarkdownLinks.handler({

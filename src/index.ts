@@ -32,8 +32,8 @@ import { generateReadmeTemplate } from './tools/generate-readme-template.js';
 import { validateReadmeChecklist } from './tools/validate-readme-checklist.js';
 import { analyzeReadme } from './tools/analyze-readme.js';
 import { optimizeReadme } from './tools/optimize-readme.js';
-import { generateTechnicalWriterPrompts } from './tools/generate-technical-writer-prompts.js';
 import { formatMCPResponse } from './types/api.js';
+import { generateTechnicalWriterPrompts, generatePromptMessages } from './prompts/technical-writer-prompts.js';
 import { DOCUMENTATION_WORKFLOWS, WORKFLOW_EXECUTION_GUIDANCE, WORKFLOW_METADATA } from './workflows/documentation-workflow.js';
 
 // Get version from package.json
@@ -49,7 +49,9 @@ const server = new Server(
   {
     capabilities: {
       tools: {},
-      prompts: {},
+      prompts: {
+        listChanged: true
+      },
       resources: {},
     },
   },
@@ -252,116 +254,10 @@ const TOOLS = [
       create_docs_directory: z.boolean().optional().default(true).describe('Create docs/ directory for extracted content'),
     }),
   },
-  {
-    name: 'generate_technical_writer_prompts',
-    description: 'Generate intelligent technical writer prompts based on comprehensive project analysis and cross-tool integration',
-    inputSchema: z.object({
-      project_path: z.string().min(1).describe('Path to the project to analyze'),
-      context_sources: z.array(z.enum(['repository_analysis', 'readme_health', 'documentation_gaps', 'best_practices', 'content_validation', 'deployment_context'])).optional().default(['repository_analysis', 'readme_health']).describe('Sources of context for prompt generation'),
-      audience: z.enum(['developer', 'end_user', 'contributor', 'enterprise', 'mixed']).optional().default('mixed').describe('Target audience for generated prompts'),
-      prompt_types: z.array(z.enum(['content_generation', 'style_improvement', 'structure_guidance', 'gap_filling', 'audience_adaptation', 'deployment_optimization'])).optional().default(['content_generation', 'gap_filling']).describe('Types of prompts to generate'),
-      integration_level: z.enum(['basic', 'comprehensive', 'advanced']).optional().default('comprehensive').describe('Level of cross-tool integration'),
-    }),
-  },
 ];
 
-// Prompt definitions following ADR-007
-const PROMPTS = [
-  {
-    name: 'analyze-and-recommend',
-    description: 'Complete repository analysis and SSG recommendation workflow',
-    arguments: [
-      {
-        name: 'repository_path',
-        description: 'Path to the repository to analyze',
-        required: true,
-      },
-      {
-        name: 'analysis_depth',
-        description: 'Analysis depth: quick, standard, or deep',
-        required: false,
-      },
-      {
-        name: 'ssg_preferences',
-        description: 'Preferences for SSG selection (priority: simplicity/features/performance, ecosystem: javascript/python/ruby/go/any)',
-        required: false,
-      },
-    ],
-  },
-  {
-    name: 'setup-documentation',
-    description: 'Create comprehensive documentation structure with best practices',
-    arguments: [
-      {
-        name: 'project_name',
-        description: 'Name of the project',
-        required: true,
-      },
-      {
-        name: 'ssg_type',
-        description: 'Static site generator: jekyll, hugo, docusaurus, mkdocs, or eleventy',
-        required: true,
-      },
-      {
-        name: 'documentation_path',
-        description: 'Path where documentation should be created',
-        required: true,
-      },
-      {
-        name: 'include_examples',
-        description: 'Whether to include example content',
-        required: false,
-      },
-    ],
-  },
-  {
-    name: 'troubleshoot-deployment',
-    description: 'Diagnose and fix GitHub Pages deployment issues',
-    arguments: [
-      {
-        name: 'repository',
-        description: 'Repository path or URL',
-        required: true,
-      },
-      {
-        name: 'expected_url',
-        description: 'Expected deployment URL',
-        required: false,
-      },
-      {
-        name: 'error_description',
-        description: 'Description of the deployment issue',
-        required: false,
-      },
-    ],
-  },
-  {
-    name: 'validate-content-quality',
-    description: 'Comprehensive content validation workflow for both application code and documentation',
-    arguments: [
-      {
-        name: 'content_path',
-        description: 'Path to validate (project root, src directory, or docs directory)',
-        required: true,
-      },
-      {
-        name: 'validation_scope',
-        description: 'Scope: application-code, documentation, or both',
-        required: false,
-      },
-      {
-        name: 'validation_level',
-        description: 'Validation level: quick, standard, or comprehensive',
-        required: false,
-      },
-      {
-        name: 'focus_areas',
-        description: 'Specific focus areas: accuracy, completeness, compliance, code-quality, links',
-        required: false,
-      },
-    ],
-  },
-];
+// Native MCP Prompts for technical writing assistance
+const PROMPTS = generateTechnicalWriterPrompts();
 
 // In-memory storage for resources
 const resourceStore = new Map<string, { content: string; mimeType: string }>();
@@ -423,118 +319,14 @@ server.setRequestHandler(ListPromptsRequestSchema, async () => ({
 // Get specific prompt
 server.setRequestHandler(GetPromptRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
-
-  switch (name) {
-    case 'analyze-and-recommend':
-      return {
-        description: 'Complete repository analysis and SSG recommendation workflow',
-        messages: [
-          {
-            role: 'user',
-            content: {
-              type: 'text',
-              text: `I need to analyze a repository and get SSG recommendations. Here are the parameters:
-              
-Repository Path: ${args?.repository_path || '[REQUIRED]'}
-Analysis Depth: ${args?.analysis_depth || 'standard'}
-SSG Preferences: ${args?.ssg_preferences || 'none specified'}
-
-Please:
-1. First run analyze_repository with the provided path and depth
-2. Then run recommend_ssg with the analysis results
-3. Provide a comprehensive summary with justifications
-4. Suggest next steps for documentation setup`,
-            },
-          },
-        ],
-      };
-
-    case 'setup-documentation':
-      return {
-        description: 'Create comprehensive documentation structure with best practices',
-        messages: [
-          {
-            role: 'user',
-            content: {
-              type: 'text',
-              text: `I need to set up documentation for my project. Here are the parameters:
-
-Project Name: ${args?.project_name || '[REQUIRED]'}
-SSG Type: ${args?.ssg_type || '[REQUIRED]'}
-Documentation Path: ${args?.documentation_path || '[REQUIRED]'}
-Include Examples: ${args?.include_examples || 'true'}
-
-Please:
-1. Run generate_config to create the SSG configuration files
-2. Run setup_structure to create the Diataxis-compliant documentation structure
-3. Provide guidance on best practices for the chosen SSG
-4. Suggest deployment setup steps`,
-            },
-          },
-        ],
-      };
-
-    case 'troubleshoot-deployment':
-      return {
-        description: 'Diagnose and fix GitHub Pages deployment issues',
-        messages: [
-          {
-            role: 'user',
-            content: {
-              type: 'text',
-              text: `I need help troubleshooting a GitHub Pages deployment. Here are the details:
-
-Repository: ${args?.repository || '[REQUIRED]'}
-Expected URL: ${args?.expected_url || 'not specified'}
-Error Description: ${args?.error_description || 'not specified'}
-
-Please:
-1. Run verify_deployment to check the current deployment status
-2. Analyze any errors or issues found
-3. Provide specific troubleshooting steps
-4. If needed, suggest deployment workflow fixes`,
-            },
-          },
-        ],
-      };
-
-    case 'validate-content-quality': {
-      const validationScope = args?.validation_scope || 'both';
-      const validationLevel = args?.validation_level || 'standard';
-      const focusAreas = args?.focus_areas || 'all';
-      
-      return {
-        description: 'Comprehensive content validation workflow',
-        messages: [
-          {
-            role: 'user',
-            content: {
-              type: 'text',
-              text: `I need to validate the quality of my content. Here are the parameters:
-
-Content Path: ${args?.content_path || '[REQUIRED]'}
-Validation Scope: ${validationScope} (application-code, documentation, or both)
-Validation Level: ${validationLevel} (quick, standard, or comprehensive)  
-Focus Areas: ${focusAreas} (accuracy, completeness, compliance, code-quality, links, or all)
-
-Please:
-1. First, determine if the path contains application code, documentation, or both
-2. Run validate_diataxis_content for comprehensive Diataxis framework validation
-3. Run validate_content for general link and syntax validation
-4. Compare results and identify the most critical issues
-5. Provide actionable recommendations prioritized by impact
-6. Suggest specific next steps for improvement
-
-If validation scope is 'both', validate both the source code structure and any documentation directories found.`,
-            },
-          },
-        ],
-      };
-    }
-
-    default:
-      throw new Error(`Unknown prompt: ${name}`);
-  }
+  
+  // Generate dynamic prompt messages using our native prompt system
+  const messages = await generatePromptMessages(name, args || {});
+  
+  return {
+    description: `Technical writing assistance for ${name}`,
+    messages,
+  };
 });
 
 // List available resources
@@ -1054,17 +846,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return formatMCPResponse(result);
       }
       
-      case 'generate_technical_writer_prompts': {
-        const result = await generateTechnicalWriterPrompts(args as any);
-        // Store prompt generation results as resource
-        const promptId = `technical-writer-prompts-${Date.now()}`;
-        storeResource(
-          `documcp://prompts/${promptId}`,
-          JSON.stringify(result.generation, null, 2),
-          'application/json'
-        );
-        return result;
-      }
       
       default:
         throw new Error(`Unknown tool: ${name}`);

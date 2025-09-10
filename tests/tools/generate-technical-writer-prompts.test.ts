@@ -342,6 +342,9 @@ describe('generate-technical-writer-prompts', () => {
     });
 
     it('should recommend README template creation for missing README', async () => {
+      // Ensure no README exists
+      await fs.writeFile(join(testProjectPath, 'package.json'), JSON.stringify({ name: 'test' }));
+      
       const result = await generateTechnicalWriterPrompts({
         project_path: testProjectPath,
         context_sources: ['readme_health']

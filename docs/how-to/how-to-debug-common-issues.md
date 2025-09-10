@@ -351,7 +351,7 @@ cat ~/.config/claude/claude_desktop_config.json  # or appropriate path
 1. **Check Documentation**: [API Reference](../reference/api-reference.md)
 2. **Search Issues**: [GitHub Issues](https://github.com/tosin2013/documcp/issues)
 3. **MCP Protocol**: [MCP Specification](https://modelcontextprotocol.io/docs)
-4. **Community Support**: [Discussions](https://github.com/tosin2013/documcp/discussions)
+4. **Community Support**: [Discussions](https://github.com/tosin2013/documcp/issues)
 
 ### Creating Bug Reports
 

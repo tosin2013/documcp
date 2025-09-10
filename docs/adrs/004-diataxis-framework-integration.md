@@ -351,5 +351,5 @@ function validateDiataxisCompliance(docs: DocumentationStructure): ComplianceRep
 
 ## References
 - [Diataxis Framework Official Documentation](https://diataxis.fr/)
-- [Information Architecture for Technical Documentation](https://www.nngroup.com/articles/information-architecture-documentation/)
-- [Content Strategy for Technical Documentation](https://alistapart.com/article/content-strategy-technical-documentation/)
+- [Information Architecture Principles](https://www.usability.gov/what-and-why/information-architecture.html)
+- [Technical Writing Best Practices](https://developers.google.com/tech-writing)

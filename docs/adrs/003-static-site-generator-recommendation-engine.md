@@ -344,5 +344,5 @@ describe('RecommendationEngine', () => {
 
 ## References
 - [Static Site Generator Comparison Studies](https://jamstack.org/generators/)
-- [Multi-Criteria Decision Analysis in Software Engineering](https://ieeexplore.ieee.org/document/software-mcda)
-- [Documentation Tool Performance Benchmarks](https://docs-benchmarks.netlify.app/)
+- [Multi-Criteria Decision Analysis](https://en.wikipedia.org/wiki/Multiple-criteria_decision_analysis)
+- [Static Site Generator Performance Comparison](https://jamstack.org/generators/)

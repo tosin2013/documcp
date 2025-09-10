@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { readFile, readdir, stat } from 'fs/promises';
-import { join, extname } from 'path';
+import { join, extname, resolve, relative, dirname } from 'path';
 import { MCPToolResponse } from '../types/api.js';
 
 // Input validation schema
@@ -223,7 +223,10 @@ async function extractLinksFromFiles(files: string[], basePath: string): Promise
     try {
       const content = await readFile(file, 'utf-8');
       const lines = content.split('\n');
-      const relativeFile = file.replace(basePath, '').replace(/^\//, '');
+      // Create proper relative file path
+      const absoluteBasePath = resolve(basePath);
+      const absoluteFilePath = resolve(file);
+      const relativeFile = relative(absoluteBasePath, absoluteFilePath).replace(/\\/g, '/');
 
       // Extract markdown links
       lines.forEach((line, index) => {
@@ -395,31 +398,32 @@ async function checkInternalLink(link: {
   const startTime = Date.now();
   
   try {
-    // Handle relative paths
     let targetPath = link.url;
-    if (targetPath.startsWith('./')) {
-      targetPath = targetPath.substring(2);
-    } else if (targetPath.startsWith('../')) {
-      // Handle parent directory references
-      const sourceDir = link.sourceFile.split('/').slice(0, -1);
-      const targetParts = targetPath.split('/');
-      
-      for (const part of targetParts) {
-        if (part === '..') {
-          sourceDir.pop();
-        } else if (part !== '.') {
-          sourceDir.push(part);
-        }
-      }
-      targetPath = sourceDir.join('/');
-    }
     
     // Remove anchor if present
     const [filePath] = targetPath.split('#');
-    const fullPath = join(documentationPath, filePath);
+    
+    // Handle relative paths properly using Node.js path resolution
+    const absoluteDocPath = resolve(documentationPath);
+    const sourceFileAbsolutePath = resolve(absoluteDocPath, link.sourceFile);
+    const sourceDir = dirname(sourceFileAbsolutePath);
+    
+    if (filePath.startsWith('./')) {
+      // Current directory reference - resolve relative to source file directory
+      targetPath = resolve(sourceDir, filePath.substring(2));
+    } else if (filePath.startsWith('../')) {
+      // Parent directory reference - resolve relative to source file directory
+      targetPath = resolve(sourceDir, filePath);
+    } else if (filePath.startsWith('/')) {
+      // Absolute path from documentation root
+      targetPath = resolve(absoluteDocPath, filePath.substring(1));
+    } else {
+      // Relative path - resolve relative to source file directory
+      targetPath = resolve(sourceDir, filePath);
+    }
     
     try {
-      await stat(fullPath);
+      await stat(targetPath);
       return {
         url: link.url,
         status: 'valid',

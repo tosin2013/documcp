@@ -250,7 +250,7 @@ If you encounter issues:
 ### Community
 
 - **[GitHub Repository](https://github.com/tosin2013/documcp)** - Source code and issues
-- **[Discussions](https://github.com/tosin2013/documcp/discussions)** - Community support
+- **[Discussions](https://github.com/tosin2013/documcp/issues)** - Community support
 - **[Contributing Guide](../how-to/how-to-add-a-new-feature.md)** - Help improve documcp
 
 Welcome to the documcp community! 🚀
