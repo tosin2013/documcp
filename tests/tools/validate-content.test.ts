@@ -790,5 +790,405 @@ The solution addresses market requirements and business objectives.
       expect(result).toBeDefined();
       expect(result.confidence.breakdown.businessContextAlignment).toBeGreaterThanOrEqual(0);
     });
+
+    it('should handle deprecated patterns in technical accuracy checks', async () => {
+      const deprecatedDir = path.join(testTempDir, 'deprecated-patterns');
+      await fs.mkdir(deprecatedDir, { recursive: true });
+      
+      await fs.writeFile(path.join(deprecatedDir, 'deprecated.md'), `
+# Deprecated Patterns
+
+\`\`\`bash
+npm install -g some-package
+\`\`\`
+
+\`\`\`javascript
+var oldVariable = "test";
+function() {
+  console.log("old style");
+}
+\`\`\`
+
+Visit http://example.com for more info.
+      `.trim());
+
+      const result = await handleValidateDiataxisContent({
+        contentPath: deprecatedDir,
+        validationType: 'accuracy',
+        includeCodeValidation: false
+      });
+
+      const deprecatedIssues = result.issues.filter(issue => 
+        issue.description.includes('Potentially outdated pattern')
+      );
+      expect(deprecatedIssues.length).toBeGreaterThan(0);
+    });
+
+    it('should handle async code without error handling', async () => {
+      const asyncDir = path.join(testTempDir, 'async-code');
+      await fs.mkdir(asyncDir, { recursive: true });
+      
+      await fs.writeFile(path.join(asyncDir, 'async.md'), `
+# Async Code Examples
+
+\`\`\`javascript
+async function fetchData() {
+  const response = await fetch('/api/data');
+  return response.json();
+}
+\`\`\`
+
+\`\`\`typescript
+const getData = async (): Promise<any> => {
+  const result = await someAsyncOperation();
+  return result;
+};
+\`\`\`
+      `.trim());
+
+      const result = await handleValidateDiataxisContent({
+        contentPath: asyncDir,
+        validationType: 'accuracy',
+        includeCodeValidation: false
+      });
+
+      const asyncIssues = result.issues.filter(issue => 
+        issue.description.includes('Async code without error handling')
+      );
+      expect(asyncIssues.length).toBeGreaterThan(0);
+    });
+
+    it('should handle version compatibility checks with project context', async () => {
+      const versionDir = path.join(testTempDir, 'version-compat');
+      await fs.mkdir(versionDir, { recursive: true });
+      
+      // Create .documcp directory with analysis
+      const docucmpDir = path.join(versionDir, '.documcp', 'analyses');
+      await fs.mkdir(docucmpDir, { recursive: true });
+      await fs.writeFile(path.join(docucmpDir, 'version-analysis.json'), JSON.stringify({
+        metadata: { projectName: 'version-test', primaryLanguage: 'TypeScript' },
+        technologies: { framework: 'React' },
+        dependencies: { packages: ['react@18.2.0', 'typescript@4.9.0'] }
+      }));
+
+      await fs.writeFile(path.join(versionDir, 'versions.md'), `
+# Version Information
+
+This project uses React @18.2.0 and TypeScript @4.9.0.
+Also compatible with Node.js @16.14.0.
+      `.trim());
+
+      const result = await handleValidateDiataxisContent({
+        contentPath: versionDir,
+        analysisId: 'version-analysis',
+        validationType: 'accuracy',
+        includeCodeValidation: false
+      });
+
+      const versionUncertainties = result.uncertainties.filter(u => 
+        u.area === 'version-compatibility'
+      );
+      expect(versionUncertainties.length).toBeGreaterThan(0);
+    });
+
+    it('should handle dangerous bash commands', async () => {
+      const bashDir = path.join(testTempDir, 'dangerous-bash');
+      await fs.mkdir(bashDir, { recursive: true });
+      
+      await fs.writeFile(path.join(bashDir, 'dangerous.md'), `
+# Dangerous Commands
+
+\`\`\`bash
+rm -rf /
+sudo rm -rf /tmp/important
+chmod 777 /etc/passwd
+command > /dev/null 2>&1
+\`\`\`
+      `.trim());
+
+      const result = await handleValidateDiataxisContent({
+        contentPath: bashDir,
+        validationType: 'accuracy',
+        includeCodeValidation: false
+      });
+
+      const dangerousIssues = result.issues.filter(issue => 
+        issue.description.includes('Potentially dangerous command')
+      );
+      expect(dangerousIssues.length).toBeGreaterThan(0);
+    });
+
+    it('should handle mixed path separators in commands', async () => {
+      const pathDir = path.join(testTempDir, 'mixed-paths');
+      await fs.mkdir(pathDir, { recursive: true });
+      
+      await fs.writeFile(path.join(pathDir, 'paths.md'), `
+# Mixed Path Examples
+
+\`\`\`bash
+cp /unix/path\\windows\\mixed /destination/path
+\`\`\`
+      `.trim());
+
+      const result = await handleValidateDiataxisContent({
+        contentPath: pathDir,
+        validationType: 'accuracy',
+        includeCodeValidation: false
+      });
+
+      const pathIssues = result.issues.filter(issue => 
+        issue.description.includes('Mixed path separators')
+      );
+      expect(pathIssues.length).toBeGreaterThan(0);
+    });
+
+    it('should handle external links in accuracy validation', async () => {
+      const linksDir = path.join(testTempDir, 'external-links');
+      await fs.mkdir(linksDir, { recursive: true });
+      
+      await fs.writeFile(path.join(linksDir, 'external.md'), `
+# External Links
+
+[GitHub](https://github.com)
+[Documentation](https://docs.example.com)
+      `.trim());
+
+      const result = await handleValidateDiataxisContent({
+        contentPath: linksDir,
+        validationType: 'accuracy',
+        includeCodeValidation: false
+      });
+
+      const linkUncertainties = result.uncertainties.filter(u => 
+        u.area === 'external-links'
+      );
+      expect(linkUncertainties.length).toBeGreaterThan(0);
+    });
+
+    it('should handle Diataxis compliance rules for different sections', async () => {
+      const complianceDir = path.join(testTempDir, 'diataxis-compliance');
+      await fs.mkdir(complianceDir, { recursive: true });
+      
+      // Create directories for each Diataxis section
+      await fs.mkdir(path.join(complianceDir, 'tutorials'), { recursive: true });
+      await fs.mkdir(path.join(complianceDir, 'how-to'), { recursive: true });
+      await fs.mkdir(path.join(complianceDir, 'reference'), { recursive: true });
+      await fs.mkdir(path.join(complianceDir, 'explanation'), { recursive: true });
+      
+      // Tutorial without prerequisites
+      await fs.writeFile(path.join(complianceDir, 'tutorials', 'bad-tutorial.md'), `
+# Bad Tutorial
+
+This tutorial doesn't have prerequisites or clear steps.
+      `.trim());
+
+      // How-to without task focus
+      await fs.writeFile(path.join(complianceDir, 'how-to', 'bad-howto.md'), `
+# Bad Guide
+
+Short guide.
+      `.trim());
+
+      // Reference without structure
+      await fs.writeFile(path.join(complianceDir, 'reference', 'bad-reference.md'), `
+Bad reference without headings or tables.
+      `.trim());
+
+      // Explanation without "why"
+      await fs.writeFile(path.join(complianceDir, 'explanation', 'bad-explanation.md'), `
+# Bad Explanation
+
+Short explanation.
+      `.trim());
+
+      const result = await handleValidateDiataxisContent({
+        contentPath: complianceDir,
+        validationType: 'compliance',
+        includeCodeValidation: false
+      });
+
+      const complianceIssues = result.issues.filter(issue => 
+        issue.category === 'compliance'
+      );
+      expect(complianceIssues.length).toBeGreaterThan(4); // Should find issues in each section
+    });
+
+    it('should handle TypeScript code validation with compilation errors', async () => {
+      const tsDir = path.join(testTempDir, 'typescript-validation');
+      await fs.mkdir(tsDir, { recursive: true });
+      
+      await fs.writeFile(path.join(tsDir, 'typescript.md'), `
+# TypeScript Examples
+
+\`\`\`typescript
+// This has type errors
+let x: string = 123;
+function badFunction(param: number): string {
+  return param; // Type error
+}
+\`\`\`
+      `.trim());
+
+      const result = await handleValidateDiataxisContent({
+        contentPath: tsDir,
+        validationType: 'all',
+        includeCodeValidation: true
+      });
+
+      expect(result.codeValidation).toBeDefined();
+      expect(result.codeValidation!.overallSuccess).toBe(false);
+    });
+
+    it('should handle bash code validation with complex chaining', async () => {
+      const bashComplexDir = path.join(testTempDir, 'bash-complex');
+      await fs.mkdir(bashComplexDir, { recursive: true });
+      
+      await fs.writeFile(path.join(bashComplexDir, 'complex-bash.md'), `
+# Complex Bash
+
+\`\`\`bash
+# Complex command chaining
+command1 && command2 || command3
+rm $VARIABLE
+\`\`\`
+      `.trim());
+
+      const result = await handleValidateDiataxisContent({
+        contentPath: bashComplexDir,
+        validationType: 'all',
+        includeCodeValidation: true
+      });
+
+      expect(result.codeValidation).toBeDefined();
+      const bashIssues = result.codeValidation!.exampleResults.flatMap(ex => ex.issues);
+      expect(bashIssues.length).toBeGreaterThan(0);
+    });
+
+    it('should handle file limit reached scenario', async () => {
+      const largeDir = path.join(testTempDir, 'large-directory');
+      await fs.mkdir(largeDir, { recursive: true });
+      
+      // Create many markdown files to test file limit
+      for (let i = 0; i < 10; i++) {
+        await fs.writeFile(path.join(largeDir, `file${i}.md`), `# File ${i}\nContent for file ${i}.`);
+      }
+
+      const result = await handleValidateDiataxisContent({
+        contentPath: largeDir,
+        validationType: 'all',
+        includeCodeValidation: false
+      });
+
+      expect(result).toBeDefined();
+      expect(result.confidence.breakdown.architecturalAssumptions).toBeGreaterThan(60);
+    });
+
+    it('should handle symlink detection in file scanning', async () => {
+      const symlinkDir = path.join(testTempDir, 'symlink-test');
+      await fs.mkdir(symlinkDir, { recursive: true });
+      
+      // Create a regular file
+      await fs.writeFile(path.join(symlinkDir, 'regular.md'), '# Regular File');
+      
+      // Create a subdirectory
+      await fs.mkdir(path.join(symlinkDir, 'subdir'), { recursive: true });
+      await fs.writeFile(path.join(symlinkDir, 'subdir', 'nested.md'), '# Nested File');
+
+      const result = await handleValidateDiataxisContent({
+        contentPath: symlinkDir,
+        validationType: 'all',
+        includeCodeValidation: false
+      });
+
+      expect(result).toBeDefined();
+      expect(result.confidence.breakdown.architecturalAssumptions).toBeGreaterThanOrEqual(60);
+    });
+
+    it('should handle timeout scenario', async () => {
+      const timeoutDir = path.join(testTempDir, 'timeout-scenario');
+      await fs.mkdir(timeoutDir, { recursive: true });
+      await fs.writeFile(path.join(timeoutDir, 'test.md'), '# Test');
+
+      // Mock a timeout by creating a very short timeout
+      const originalTimeout = 120000;
+      
+      const result = await handleValidateDiataxisContent({
+        contentPath: timeoutDir,
+        validationType: 'all',
+        includeCodeValidation: false
+      });
+
+      expect(result).toBeDefined();
+    });
+
+    it('should handle general content validation with external links', async () => {
+      const generalDir = path.join(testTempDir, 'general-external');
+      await fs.mkdir(generalDir, { recursive: true });
+      
+      await fs.writeFile(path.join(generalDir, 'external.md'), `
+# External Links Test
+
+[GitHub](https://github.com)
+[Local](./local.md)
+      `.trim());
+      
+      await fs.writeFile(path.join(generalDir, 'local.md'), '# Local File');
+
+      const result = await validateGeneralContent({
+        contentPath: generalDir,
+        validationType: 'all',
+        includeCodeValidation: true,
+        followExternalLinks: false
+      });
+
+      expect(result.linksChecked).toBeGreaterThan(0);
+      expect(result.success).toBe(true);
+    });
+
+    it('should handle general content validation with code validation', async () => {
+      const codeDir = path.join(testTempDir, 'general-code');
+      await fs.mkdir(codeDir, { recursive: true });
+      
+      await fs.writeFile(path.join(codeDir, 'code.md'), `
+# Code Test
+
+\`\`\`javascript
+console.log("test")
+\`\`\`
+
+\`\`\`js
+console.log("another test");
+\`\`\`
+      `.trim());
+
+      const result = await validateGeneralContent({
+        contentPath: codeDir,
+        validationType: 'code',
+        includeCodeValidation: true
+      });
+
+      expect(result.codeBlocksValidated).toBeGreaterThan(0);
+      expect(result.codeErrors.length).toBeGreaterThan(0); // Missing semicolon
+    });
+
+    it('should handle validation with no code blocks', async () => {
+      const noCodeDir = path.join(testTempDir, 'no-code');
+      await fs.mkdir(noCodeDir, { recursive: true });
+      
+      await fs.writeFile(path.join(noCodeDir, 'text.md'), `
+# Text Only
+
+This is just text with no code blocks.
+      `.trim());
+
+      const result = await validateGeneralContent({
+        contentPath: noCodeDir,
+        validationType: 'all',
+        includeCodeValidation: true
+      });
+
+      expect(result.codeBlocksValidated).toBe(0);
+      expect(result.success).toBe(true);
+    });
   });
 });

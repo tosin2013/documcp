@@ -380,7 +380,7 @@ function generateHealthRecommendations(analysis: any[], _projectType: string): s
   
   analysis.forEach((component: any) => {
     component.details.forEach((detail: any) => {
-      if (detail.score < detail.maxScore) {
+      if (detail.points < detail.maxPoints) {
         recommendations.push(`${component.name}: ${detail.recommendation}`);
       }
     });
