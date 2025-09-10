@@ -87,7 +87,7 @@ export interface MCPContentWrapper {
 }
 
 // Helper to convert MCPToolResponse to MCP format
-export function formatMCPResponse<T>(response: MCPToolResponse<T>): MCPContentWrapper | { content: Array<{ type: 'text'; text: string }>; isError: true } {
+export function formatMCPResponse<T>(response: MCPToolResponse<T>): MCPContentWrapper {
   const content: Array<{ type: 'text'; text: string }> = [];
 
   if (response.success) {
@@ -129,6 +129,8 @@ export function formatMCPResponse<T>(response: MCPToolResponse<T>): MCPContentWr
           .join('\n'),
       });
     }
+
+    return { content, isError: false };
   } else if (response.error) {
     // For error cases, include both human-readable and structured data
     content.push({
