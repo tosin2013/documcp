@@ -1,12 +1,12 @@
 import { testLocalDeployment } from '../../src/tools/test-local-deployment.js';
+import * as childProcess from 'child_process';
+import * as fs from 'fs';
+
+// Create simpler mocking approach
 
 describe('testLocalDeployment', () => {
   const testRepoPath = process.cwd();
   
-  beforeEach(() => {
-    jest.spyOn(process, 'chdir').mockImplementation(() => {});
-  });
-
   afterEach(() => {
     jest.restoreAllMocks();
   });
@@ -200,7 +200,8 @@ describe('testLocalDeployment', () => {
 
       const parsedResult = JSON.parse(result.content[0].text);
       // Should still work with skipBuild, but may have warnings
-      expect(parsedResult.buildSuccess).toBeDefined();
+      expect(parsedResult.ssg).toBe('hugo');
+      expect(parsedResult.buildSuccess).toBe(true); // skipBuild = true means assumed success
     });
   });
 
@@ -322,7 +323,8 @@ describe('testLocalDeployment', () => {
 
       const parsedResult = JSON.parse(result.content[0].text);
       // Should handle gracefully and provide recommendations
-      expect(parsedResult.buildSuccess).toBeDefined();
+      expect(parsedResult.ssg).toBe('hugo');
+      expect(parsedResult.buildSuccess).toBe(true); // skipBuild = true means assumed success
       expect(parsedResult.recommendations).toBeDefined();
     });
 
@@ -341,6 +343,123 @@ describe('testLocalDeployment', () => {
         expect(parsedResult.port).toBe(port);
         expect(parsedResult.testScript).toContain(`http://localhost:${port}`);
       }
+    });
+  });
+
+  describe('Advanced coverage scenarios', () => {
+    beforeEach(() => {
+      jest.spyOn(process, 'chdir').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    describe('Configuration file scenarios', () => {
+      it('should detect existing configuration file for hugo', async () => {
+        // Mock fs.access to succeed for hugo config file
+        const mockFsAccess = jest.spyOn(fs.promises, 'access').mockResolvedValueOnce(undefined);
+
+        const result = await testLocalDeployment({
+          repositoryPath: testRepoPath,
+          ssg: 'hugo',
+          skipBuild: true
+        });
+
+        const parsedResult = JSON.parse(result.content[0].text);
+        // Should not recommend missing config since file exists
+        expect(parsedResult.recommendations).not.toEqual(
+          expect.arrayContaining([
+            expect.stringContaining('Missing configuration file')
+          ])
+        );
+
+        mockFsAccess.mockRestore();
+      });
+
+      it('should detect existing configuration file for jekyll', async () => {
+        // Mock fs.access to succeed for jekyll config file
+        const mockFsAccess = jest.spyOn(fs.promises, 'access').mockResolvedValueOnce(undefined);
+
+        const result = await testLocalDeployment({
+          repositoryPath: testRepoPath,
+          ssg: 'jekyll',
+          skipBuild: true
+        });
+
+        const parsedResult = JSON.parse(result.content[0].text);
+        // Should not recommend missing config since file exists
+        expect(parsedResult.recommendations).not.toEqual(
+          expect.arrayContaining([
+            expect.stringContaining('Missing configuration file')
+          ])
+        );
+
+        mockFsAccess.mockRestore();
+      });
+
+      it('should detect existing configuration file for docusaurus', async () => {
+        // Mock fs.access to succeed for docusaurus config file
+        const mockFsAccess = jest.spyOn(fs.promises, 'access').mockResolvedValueOnce(undefined);
+
+        const result = await testLocalDeployment({
+          repositoryPath: testRepoPath,
+          ssg: 'docusaurus',
+          skipBuild: true
+        });
+
+        const parsedResult = JSON.parse(result.content[0].text);
+        // Should not recommend missing config since file exists
+        expect(parsedResult.recommendations).not.toEqual(
+          expect.arrayContaining([
+            expect.stringContaining('Missing configuration file')
+          ])
+        );
+
+        mockFsAccess.mockRestore();
+      });
+
+      it('should detect existing configuration file for mkdocs', async () => {
+        // Mock fs.access to succeed for mkdocs config file
+        const mockFsAccess = jest.spyOn(fs.promises, 'access').mockResolvedValueOnce(undefined);
+
+        const result = await testLocalDeployment({
+          repositoryPath: testRepoPath,
+          ssg: 'mkdocs',
+          skipBuild: true
+        });
+
+        const parsedResult = JSON.parse(result.content[0].text);
+        // Should not recommend missing config since file exists
+        expect(parsedResult.recommendations).not.toEqual(
+          expect.arrayContaining([
+            expect.stringContaining('Missing configuration file')
+          ])
+        );
+
+        mockFsAccess.mockRestore();
+      });
+
+      it('should detect existing configuration file for eleventy', async () => {
+        // Mock fs.access to succeed for eleventy config file
+        const mockFsAccess = jest.spyOn(fs.promises, 'access').mockResolvedValueOnce(undefined);
+
+        const result = await testLocalDeployment({
+          repositoryPath: testRepoPath,
+          ssg: 'eleventy',
+          skipBuild: true
+        });
+
+        const parsedResult = JSON.parse(result.content[0].text);
+        // Should not recommend missing config since file exists
+        expect(parsedResult.recommendations).not.toEqual(
+          expect.arrayContaining([
+            expect.stringContaining('Missing configuration file')
+          ])
+        );
+
+        mockFsAccess.mockRestore();
+      });
     });
   });
 });
