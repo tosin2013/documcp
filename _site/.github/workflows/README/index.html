@@ -1,0 +1,126 @@
+<h1>GitHub Actions CI/CD Pipeline</h1>
+<p>This directory contains the complete CI/CD pipeline for DocuMCP, implementing automated testing, security, and deployment workflows.</p>
+<h2>Workflows Overview</h2>
+<h3>🔄 <strong>ci.yml</strong> - Continuous Integration</h3>
+<p><strong>Triggers</strong>: Push to main/develop, Pull Requests to main
+<strong>Features</strong>:</p>
+<ul>
+<li>Multi-Node.js version testing (20.x, 22.x)</li>
+<li>Type checking with TypeScript</li>
+<li>ESLint code quality checks</li>
+<li>Jest test suite with coverage reporting</li>
+<li>Codecov integration for coverage tracking</li>
+<li>Performance benchmarking (PERF-001 compliance)</li>
+<li>Build verification</li>
+<li>Security auditing with npm audit</li>
+</ul>
+<h3>🚀 <strong>release.yml</strong> - Release Management</h3>
+<p><strong>Triggers</strong>: Git tags (v*.<em>.</em>), Manual workflow dispatch
+<strong>Features</strong>:</p>
+<ul>
+<li>Pre-release testing with 80% coverage enforcement</li>
+<li>Automated GitHub releases with changelog</li>
+<li>npm package publishing</li>
+<li>Documentation deployment to GitHub Pages</li>
+<li>Version bumping (patch/minor/major)</li>
+</ul>
+<h3>🔒 <strong>codeql.yml</strong> - Security Analysis</h3>
+<p><strong>Triggers</strong>: Push to main, Pull Requests, Weekly schedule
+<strong>Features</strong>:</p>
+<ul>
+<li>GitHub CodeQL security scanning</li>
+<li>JavaScript/TypeScript vulnerability detection</li>
+<li>Security-extended query suite</li>
+<li>Automated security alerts</li>
+</ul>
+<h3>🛡️ <strong>dependency-review.yml</strong> - Dependency Security</h3>
+<p><strong>Triggers</strong>: Pull Requests
+<strong>Features</strong>:</p>
+<ul>
+<li>Dependency vulnerability scanning</li>
+<li>License compliance checking</li>
+<li>Blocks PRs with moderate+ vulnerabilities</li>
+<li>Allows MIT, Apache, BSD licenses only</li>
+</ul>
+<h3>🤖 <strong>auto-merge.yml</strong> - Dependabot Integration</h3>
+<p><strong>Triggers</strong>: Dependabot PRs
+<strong>Features</strong>:</p>
+<ul>
+<li>Automatic merging of dependency updates</li>
+<li>Patch and minor version auto-approval</li>
+<li>Maintains security posture</li>
+</ul>
+<h2>Available npm Scripts</h2>
+<h3>Testing &amp; Quality</h3>
+<ul>
+<li><code>npm run test</code> - Run test suite</li>
+<li><code>npm run test:coverage</code> - Run tests with coverage</li>
+<li><code>npm run test:ci</code> - CI-optimized test run</li>
+<li><code>npm run test:performance</code> - Performance benchmarks</li>
+</ul>
+<h3>Code Quality</h3>
+<ul>
+<li><code>npm run lint</code> - ESLint code checking</li>
+<li><code>npm run lint:fix</code> - Auto-fix linting issues</li>
+<li><code>npm run format</code> - Prettier code formatting</li>
+<li><code>npm run format:check</code> - Check code formatting</li>
+<li><code>npm run typecheck</code> - TypeScript type checking</li>
+</ul>
+<h3>Validation &amp; Security</h3>
+<ul>
+<li><code>npm run validate:rules</code> - Full quality check (lint + typecheck + coverage)</li>
+<li><code>npm run security:check</code> - Security audit</li>
+<li><code>npm run ci</code> - Complete CI pipeline locally</li>
+</ul>
+<h3>Build &amp; Release</h3>
+<ul>
+<li><code>npm run build</code> - TypeScript compilation</li>
+<li><code>npm run prepare</code> - Pre-publish preparation</li>
+</ul>
+<h2>Coverage Requirements</h2>
+<ul>
+<li><strong>Minimum Coverage</strong>: 80%</li>
+<li><strong>Current Coverage</strong>: 82%+ (exceeds requirement)</li>
+<li><strong>Enforcement</strong>: Release workflow blocks deployment below threshold</li>
+<li><strong>Reporting</strong>: Codecov integration with badges</li>
+</ul>
+<h2>Security Features</h2>
+<ul>
+<li><strong>Vulnerability Scanning</strong>: npm audit with moderate+ severity blocking</li>
+<li><strong>Code Analysis</strong>: CodeQL security scanning</li>
+<li><strong>Dependency Review</strong>: Automated license and vulnerability checks</li>
+<li><strong>OIDC Authentication</strong>: GitHub Actions use secure OIDC tokens</li>
+<li><strong>Secret Management</strong>: No hardcoded tokens or credentials</li>
+</ul>
+<h2>Performance Compliance</h2>
+<ul>
+<li><strong>PERF-001 Standard</strong>: Repository analysis performance targets</li>
+<li><strong>Small repos</strong> (&lt;100 files): &lt;1 second</li>
+<li><strong>Medium repos</strong> (100-1000 files): &lt;10 seconds</li>
+<li><strong>Large repos</strong> (1000+ files): &lt;60 seconds</li>
+</ul>
+<h2>Branch Protection</h2>
+<p>Recommended branch protection rules for <code>main</code> branch:</p>
+<ul>
+<li>Require status checks (CI workflow)</li>
+<li>Require up-to-date branches</li>
+<li>Require code reviews</li>
+<li>Dismiss stale reviews on push</li>
+<li>Restrict force pushes</li>
+<li>Require linear history</li>
+</ul>
+<h2>Deployment Strategy</h2>
+<ol>
+<li><strong>Development</strong>: Feature branches → Pull Requests</li>
+<li><strong>Testing</strong>: Automated CI on every push/PR</li>
+<li><strong>Security</strong>: CodeQL and dependency scanning</li>
+<li><strong>Release</strong>: Tagged releases trigger automated deployment</li>
+<li><strong>Documentation</strong>: Auto-deployed to GitHub Pages</li>
+</ol>
+<h2>Monitoring</h2>
+<ul>
+<li><strong>Coverage</strong>: Codecov badges and reporting</li>
+<li><strong>Security</strong>: GitHub Security tab for alerts</li>
+<li><strong>Performance</strong>: Benchmark results in CI logs</li>
+<li><strong>Quality</strong>: ESLint and TypeScript error reporting</li>
+</ul>

@@ -1,0 +1,157 @@
+<h1>How to Release DocuMCP</h1>
+<p>This guide walks you through releasing a new version of DocuMCP to npm and creating a GitHub release.</p>
+<h2>Prerequisites</h2>
+<p>Before releasing, ensure you have:</p>
+<ol>
+<li><strong>npm account access</strong>: You need publish permissions for the <code>documcp</code> package</li>
+<li><strong>Clean working directory</strong>: All changes must be committed</li>
+<li><strong>Main branch</strong>: Must be on the <code>main</code> branch</li>
+<li><strong>Tests passing</strong>: All tests and linting must pass</li>
+</ol>
+<h2>Authentication Setup</h2>
+<h3>npm Authentication</h3>
+<p>Login to npm (one-time setup):</p>
+<pre><code class="language-bash">npm login
+</code></pre>
+<p>Verify you're logged in:</p>
+<pre><code class="language-bash">npm whoami
+</code></pre>
+<h3>GitHub Authentication</h3>
+<p>The release workflow uses GitHub Actions with these secrets:</p>
+<ul>
+<li><code>GITHUB_TOKEN</code> (automatic)</li>
+<li><code>NPM_TOKEN</code> (must be configured in repository secrets)</li>
+</ul>
+<h2>Release Methods</h2>
+<h3>Method 1: Using the Release Script (Recommended)</h3>
+<p>The project includes a release script that handles version bumping and tagging:</p>
+<pre><code class="language-bash"># Patch release (0.2.0 → 0.2.1)
+./release.sh patch
+
+# Minor release (0.2.0 → 0.3.0)
+./release.sh minor
+
+# Major release (0.2.0 → 1.0.0)
+./release.sh major
+</code></pre>
+<p>The script will:</p>
+<ol>
+<li>Verify you're on main branch with clean working directory</li>
+<li>Update <code>package.json</code> version</li>
+<li>Run pre-release checks (<code>npm run ci</code>)</li>
+<li>Create commit with version changes</li>
+<li>Create annotated git tag</li>
+<li>Push commit and tag to trigger GitHub Actions</li>
+</ol>
+<h3>Method 2: Manual Release</h3>
+<p>If you prefer manual control:</p>
+<ol>
+<li>
+<p><strong>Update version</strong>:</p>
+<pre><code class="language-bash">npm version patch  # or minor/major
+</code></pre>
+</li>
+<li>
+<p><strong>Run tests</strong>:</p>
+<pre><code class="language-bash">npm run ci
+</code></pre>
+</li>
+<li>
+<p><strong>Commit changes</strong>:</p>
+<pre><code class="language-bash">git add .
+git commit -m &quot;chore(release): bump version to vX.X.X&quot;
+</code></pre>
+</li>
+<li>
+<p><strong>Create and push tag</strong>:</p>
+<pre><code class="language-bash">git tag -a v1.0.0 -m &quot;Release v1.0.0&quot;
+git push origin main
+git push origin v1.0.0
+</code></pre>
+</li>
+</ol>
+<h2>GitHub Actions Workflow</h2>
+<p>Once you push a tag matching <code>v*.*.*</code>, the release workflow automatically:</p>
+<h3>1. Pre-release Tests</h3>
+<ul>
+<li>Runs full test suite with coverage verification (80% minimum)</li>
+<li>Executes performance benchmarks</li>
+<li>Validates build process</li>
+</ul>
+<h3>2. Create Release</h3>
+<ul>
+<li>Builds the project</li>
+<li>Creates GitHub release with changelog</li>
+<li>Publishes to npm registry</li>
+</ul>
+<h3>3. Deploy Documentation</h3>
+<ul>
+<li>Generates documentation site</li>
+<li>Deploys to GitHub Pages</li>
+</ul>
+<h2>Monitoring Release Progress</h2>
+<ol>
+<li>
+<p><strong>GitHub Actions</strong>: Monitor the workflow at:</p>
+<pre><code>https://github.com/tosin2013/documcp/actions
+</code></pre>
+</li>
+<li>
+<p><strong>npm package</strong>: Verify publication at:</p>
+<pre><code>https://www.npmjs.com/package/documcp
+</code></pre>
+</li>
+<li>
+<p><strong>GitHub release</strong>: Check the release page:</p>
+<pre><code>https://github.com/tosin2013/documcp/releases
+</code></pre>
+</li>
+</ol>
+<h2>Release Checklist</h2>
+<p>Before running the release:</p>
+<ul>
+<li>[ ] All changes committed and pushed to main</li>
+<li>[ ] Tests passing locally (<code>npm test</code>)</li>
+<li>[ ] Linting clean (<code>npm run lint</code>)</li>
+<li>[ ] Build succeeds (<code>npm run build</code>)</li>
+<li>[ ] Documentation updated</li>
+<li>[ ] CHANGELOG.md updated (if applicable)</li>
+<li>[ ] npm authentication configured</li>
+<li>[ ] NPM_TOKEN secret configured in GitHub repository</li>
+</ul>
+<h2>Troubleshooting</h2>
+<h3>Release Workflow Fails</h3>
+<p><strong>Test failures</strong>: The workflow requires 80% test coverage and all tests to pass.</p>
+<pre><code class="language-bash">npm run test:coverage
+</code></pre>
+<p><strong>npm publish fails</strong>: Check that <code>NPM_TOKEN</code> is configured in repository secrets.</p>
+<p><strong>Tag already exists</strong>: Delete the tag and try again:</p>
+<pre><code class="language-bash">git tag -d v1.0.0
+git push origin --delete v1.0.0
+</code></pre>
+<h3>Version Conflicts</h3>
+<p>If <code>npm version</code> fails due to uncommitted changes:</p>
+<pre><code class="language-bash">git status
+git add .
+git commit -m &quot;prepare for release&quot;
+</code></pre>
+<h3>Permission Issues</h3>
+<p>Ensure you have publish permissions for the <code>documcp</code> package:</p>
+<pre><code class="language-bash">npm owner ls documcp
+</code></pre>
+<h2>Post-Release Tasks</h2>
+<p>After a successful release:</p>
+<ol>
+<li><strong>Verify npm package</strong>: Install and test the published package</li>
+<li><strong>Update documentation</strong>: Ensure docs reflect the new version</li>
+<li><strong>Announce release</strong>: Update relevant channels/communities</li>
+<li><strong>Monitor issues</strong>: Watch for any post-release issues</li>
+</ol>
+<h2>Version Strategy</h2>
+<p>DocuMCP follows <a href="https://semver.org/">Semantic Versioning</a>:</p>
+<ul>
+<li><strong>Patch</strong> (0.2.0 → 0.2.1): Bug fixes, minor improvements</li>
+<li><strong>Minor</strong> (0.2.0 → 0.3.0): New features, backward compatible</li>
+<li><strong>Major</strong> (0.2.0 → 1.0.0): Breaking changes</li>
+</ul>
+<p>Given the current production-ready status, consider using minor versions for feature additions and reserve major versions for breaking API changes.</p>

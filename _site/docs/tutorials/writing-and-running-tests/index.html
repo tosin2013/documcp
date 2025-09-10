@@ -1,0 +1,129 @@
+<h1>Writing and Running Tests for DocuMCP</h1>
+<p>Learn how to write effective tests for DocuMCP's MCP server, tools, and documentation generation features using Jest and TypeScript.</p>
+<h2>Test Structure</h2>
+<p>Tests should follow the AAA pattern:</p>
+<ul>
+<li><strong>Arrange</strong>: Set up test data and conditions</li>
+<li><strong>Act</strong>: Execute the code being tested</li>
+<li><strong>Assert</strong>: Verify the results</li>
+</ul>
+<h2>DocuMCP Test Structure</h2>
+<p>DocuMCP tests are organized into categories:</p>
+<ul>
+<li><strong><code>tests/api/</code></strong>: MCP protocol and tool integration tests</li>
+<li><strong><code>tests/functional/</code></strong>: End-to-end tool functionality tests</li>
+<li><strong><code>tests/benchmarks/</code></strong>: Performance and compliance tests</li>
+<li><strong><code>tests/edge-cases/</code></strong>: Error handling and edge case tests</li>
+</ul>
+<h2>Writing Your First DocuMCP Test</h2>
+<p>Create a test file for MCP tools with the <code>.test.ts</code> extension:</p>
+<pre><code class="language-typescript">// tests/functional/analyze-repository.test.ts
+import { analyzeRepository } from '../../src/tools/analyze-repository.js';
+
+describe('Repository Analysis Tool', () =&gt; {
+  it('should analyze a TypeScript project correctly', async () =&gt; {
+    // Arrange
+    const testRepoPath = './test-fixtures/typescript-project';
+    const analysisArgs = { 
+      path: testRepoPath, 
+      depth: 'standard' as const 
+    };
+    
+    // Act
+    const result = await analyzeRepository(analysisArgs);
+    
+    // Assert
+    expect(result.content).toBeDefined();
+    expect(result.content[0].text).toContain('TypeScript');
+    expect(result.content[0].text).toContain('analysis completed');
+  });
+
+  it('should handle invalid repository paths gracefully', async () =&gt; {
+    // Arrange
+    const invalidPath = './non-existent-repo';
+    
+    // Act &amp; Assert
+    await expect(analyzeRepository({ path: invalidPath }))
+      .rejects.toThrow('Repository path does not exist');
+  });
+});
+</code></pre>
+<h2>Running DocuMCP Tests</h2>
+<p>Execute all tests:</p>
+<pre><code class="language-bash">npm test
+</code></pre>
+<p>Run specific test categories:</p>
+<pre><code class="language-bash"># Run only functional tests
+npm test tests/functional/
+
+# Run MCP protocol tests
+npm test tests/api/
+
+# Run performance benchmarks
+npm test tests/benchmarks/
+</code></pre>
+<p>Run tests in watch mode during development:</p>
+<pre><code class="language-bash">npm test -- --watch
+</code></pre>
+<h2>Test Coverage Requirements</h2>
+<p>DocuMCP maintains 80% test coverage for release compliance:</p>
+<pre><code class="language-bash"># Generate coverage report
+npm run test:coverage
+
+# Check coverage meets 80% threshold
+npm run test:coverage:check
+</code></pre>
+<h2>Testing MCP Tools</h2>
+<h3>Testing Repository Analysis</h3>
+<pre><code class="language-typescript">// Test with different project types
+describe('Repository Analysis', () =&gt; {
+  it('should detect React projects', async () =&gt; {
+    const result = await analyzeRepository({ 
+      path: './fixtures/react-project' 
+    });
+    expect(result.content[0].text).toContain('React');
+  });
+});
+</code></pre>
+<h3>Testing SSG Recommendations</h3>
+<pre><code class="language-typescript">// Test recommendation logic
+describe('SSG Recommendation Engine', () =&gt; {
+  it('should recommend Docusaurus for React projects', async () =&gt; {
+    const result = await recommendSSG({ 
+      analysisId: 'react-analysis-123' 
+    });
+    expect(result.content[0].text).toContain('Docusaurus');
+  });
+});
+</code></pre>
+<h3>Testing Documentation Generation</h3>
+<pre><code class="language-typescript">// Test content population
+describe('Content Population', () =&gt; {
+  it('should generate project-specific tutorials', async () =&gt; {
+    const result = await handlePopulateDiataxisContent({
+      analysisId: 'test-analysis',
+      docsPath: './test-output'
+    });
+    expect(result.filesCreated).toBeGreaterThan(0);
+  });
+});
+</code></pre>
+<h2>Performance Testing</h2>
+<p>DocuMCP includes performance benchmarks:</p>
+<pre><code class="language-bash"># Run performance tests
+npm run test:performance
+
+# Create benchmark configuration
+npm run benchmark:create-config
+
+# Run current repository benchmark
+npm run benchmark:current
+</code></pre>
+<h2>Best Practices for DocuMCP Tests</h2>
+<ol>
+<li><strong>Test MCP protocol compliance</strong>: Ensure tools return proper MCP response format</li>
+<li><strong>Mock file system operations</strong>: Use test fixtures instead of real file operations</li>
+<li><strong>Test error handling</strong>: Verify graceful handling of invalid inputs</li>
+<li><strong>Validate performance</strong>: Ensure tools meet PERF-001 compliance standards</li>
+<li><strong>Test with real projects</strong>: Include integration tests with actual repository structures</li>
+</ol>

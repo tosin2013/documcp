@@ -1,0 +1,303 @@
+<h1>How to Set Up AI Client Integration</h1>
+<p>This guide covers setting up AI clients to work with the documcp MCP server for seamless documentation workflows.</p>
+<h2>Prerequisites</h2>
+<ul>
+<li>documcp MCP server installed and working</li>
+<li>AI client that supports MCP protocol</li>
+<li>Basic understanding of JSON configuration files</li>
+</ul>
+<h2>Supported AI Clients</h2>
+<h3>Claude Desktop (Recommended)</h3>
+<p>Claude Desktop provides the most mature MCP integration with documcp.</p>
+<h4>Installation</h4>
+<ol>
+<li>
+<p><strong>Download Claude Desktop</strong>:</p>
+<ul>
+<li>Visit <a href="https://claude.ai/download">Claude Desktop</a></li>
+<li>Install for your operating system</li>
+</ul>
+</li>
+<li>
+<p><strong>Locate Configuration File</strong>:</p>
+<ul>
+<li><strong>macOS</strong>: <code>~/Library/Application Support/Claude/claude_desktop_config.json</code></li>
+<li><strong>Windows</strong>: <code>%APPDATA%\Claude\claude_desktop_config.json</code></li>
+<li><strong>Linux</strong>: <code>~/.config/claude/claude_desktop_config.json</code></li>
+</ul>
+</li>
+<li>
+<p><strong>Configure documcp Server</strong>:</p>
+<pre><code class="language-json">{
+  &quot;mcpServers&quot;: {
+    &quot;documcp&quot;: {
+      &quot;command&quot;: &quot;node&quot;,
+      &quot;args&quot;: [&quot;/path/to/documcp/dist/index.js&quot;],
+      &quot;env&quot;: {
+        &quot;NODE_ENV&quot;: &quot;production&quot;
+      }
+    }
+  }
+}
+</code></pre>
+</li>
+<li>
+<p><strong>Find Your documcp Path</strong>:</p>
+<pre><code class="language-bash"># If installed globally
+npm list -g documcp
+
+# If installed locally
+pwd  # Use this path + /dist/index.js
+</code></pre>
+</li>
+<li>
+<p><strong>Restart Claude Desktop</strong> to load the configuration.</p>
+</li>
+</ol>
+<h4>Verification</h4>
+<p>Test the integration by asking Claude:</p>
+<pre><code>Can you analyze my repository using documcp tools?
+</code></pre>
+<p>Claude should respond with available documcp tools and offer to help with documentation setup.</p>
+<h3>GitHub Copilot Integration</h3>
+<p>GitHub Copilot Chat supports MCP through extensions.</p>
+<h4>Setup Steps</h4>
+<ol>
+<li>
+<p><strong>Install MCP Extension</strong>:</p>
+<ul>
+<li>Open VS Code</li>
+<li>Install &quot;MCP for GitHub Copilot&quot; extension</li>
+<li>Restart VS Code</li>
+</ul>
+</li>
+<li>
+<p><strong>Configure MCP Server</strong>:</p>
+<pre><code class="language-json">// settings.json
+{
+  &quot;mcp.servers&quot;: {
+    &quot;documcp&quot;: {
+      &quot;transport&quot;: &quot;stdio&quot;,
+      &quot;command&quot;: &quot;node&quot;,
+      &quot;args&quot;: [&quot;/path/to/documcp/dist/index.js&quot;],
+      &quot;env&quot;: {
+        &quot;NODE_ENV&quot;: &quot;production&quot;
+      }
+    }
+  }
+}
+</code></pre>
+</li>
+<li>
+<p><strong>Enable MCP in Copilot</strong>:</p>
+<ul>
+<li>Open Command Palette (<code>Cmd+Shift+P</code>)</li>
+<li>Run &quot;MCP: Enable Server&quot;</li>
+<li>Select &quot;documcp&quot;</li>
+</ul>
+</li>
+</ol>
+<h4>Usage</h4>
+<p>In GitHub Copilot Chat:</p>
+<pre><code>@mcp documcp analyze this repository and recommend documentation structure
+</code></pre>
+<h3>Other AI Clients</h3>
+<h4>OpenAI ChatGPT (via MCP Bridge)</h4>
+<p>Use community MCP bridges for ChatGPT integration:</p>
+<ol>
+<li>
+<p><strong>Install MCP Bridge</strong>:</p>
+<pre><code class="language-bash">npm install -g mcp-chatgpt-bridge
+</code></pre>
+</li>
+<li>
+<p><strong>Configure Bridge</strong>:</p>
+<pre><code class="language-json">{
+  &quot;servers&quot;: {
+    &quot;documcp&quot;: {
+      &quot;command&quot;: &quot;node&quot;,
+      &quot;args&quot;: [&quot;/path/to/documcp/dist/index.js&quot;]
+    }
+  },
+  &quot;chatgpt&quot;: {
+    &quot;apiKey&quot;: &quot;your-openai-api-key&quot;,
+    &quot;model&quot;: &quot;gpt-4&quot;
+  }
+}
+</code></pre>
+</li>
+</ol>
+<h2>Configuration Best Practices</h2>
+<h3>Security Configuration</h3>
+<ol>
+<li>
+<p><strong>Limit File Access</strong>:</p>
+<pre><code class="language-json">{
+  &quot;mcpServers&quot;: {
+    &quot;documcp&quot;: {
+      &quot;command&quot;: &quot;node&quot;,
+      &quot;args&quot;: [&quot;/path/to/documcp/dist/index.js&quot;],
+      &quot;env&quot;: {
+        &quot;NODE_ENV&quot;: &quot;production&quot;,
+        &quot;ALLOWED_PATHS&quot;: &quot;/home/user/projects,/workspace&quot;
+      }
+    }
+  }
+}
+</code></pre>
+</li>
+<li>
+<p><strong>Resource Limits</strong>:</p>
+<pre><code class="language-json">{
+  &quot;mcpServers&quot;: {
+    &quot;documcp&quot;: {
+      &quot;command&quot;: &quot;node&quot;,
+      &quot;args&quot;: [
+        &quot;--max-old-space-size=2048&quot;,
+        &quot;/path/to/documcp/dist/index.js&quot;
+      ],
+      &quot;timeout&quot;: 30000
+    }
+  }
+}
+</code></pre>
+</li>
+</ol>
+<h3>Performance Optimization</h3>
+<ol>
+<li>
+<p><strong>Memory Management</strong>:</p>
+<pre><code class="language-json">{
+  &quot;mcpServers&quot;: {
+    &quot;documcp&quot;: {
+      &quot;command&quot;: &quot;node&quot;,
+      &quot;args&quot;: [
+        &quot;--max-old-space-size=4096&quot;,
+        &quot;--expose-gc&quot;,
+        &quot;/path/to/documcp/dist/index.js&quot;
+      ]
+    }
+  }
+}
+</code></pre>
+</li>
+<li>
+<p><strong>Concurrent Processing</strong>:</p>
+<pre><code class="language-json">{
+  &quot;mcpServers&quot;: {
+    &quot;documcp&quot;: {
+      &quot;env&quot;: {
+        &quot;UV_THREADPOOL_SIZE&quot;: &quot;8&quot;,
+        &quot;NODE_OPTIONS&quot;: &quot;--max-old-space-size=4096&quot;
+      }
+    }
+  }
+}
+</code></pre>
+</li>
+</ol>
+<h2>Workflow Integration</h2>
+<h3>Complete Documentation Setup</h3>
+<p>Once your AI client is configured, you can run complete documentation workflows:</p>
+<pre><code>I need to set up comprehensive documentation for my TypeScript project. Can you:
+
+1. Analyze my repository structure
+2. Recommend the best static site generator
+3. Create a complete Diataxis documentation structure
+4. Set up GitHub Pages deployment
+5. Populate the documentation with project-specific content
+</code></pre>
+<h3>Automated Documentation Updates</h3>
+<p>Set up automated documentation maintenance:</p>
+<pre><code>Please help me:
+1. Detect gaps in my current documentation
+2. Validate all existing content for accuracy
+3. Update outdated sections
+4. Generate missing how-to guides
+</code></pre>
+<h3>Multi-Project Management</h3>
+<p>For teams managing multiple projects:</p>
+<pre><code>Can you help me standardize documentation across multiple repositories? I want to:
+1. Analyze 5 different projects
+2. Create consistent documentation templates
+3. Set up automated deployment workflows
+4. Establish documentation quality standards
+</code></pre>
+<h2>Troubleshooting Integration</h2>
+<h3>Common Issues</h3>
+<p><strong>AI Client Shows No Tools</strong>:</p>
+<ol>
+<li>Verify MCP server path is correct</li>
+<li>Check that Node.js is in PATH</li>
+<li>Restart the AI client</li>
+<li>Review client-specific logs</li>
+</ol>
+<p><strong>Tool Execution Timeouts</strong>:</p>
+<ol>
+<li>Increase timeout values in configuration</li>
+<li>Add memory limits to prevent crashes</li>
+<li>Test with smaller repositories first</li>
+</ol>
+<p><strong>Permission Errors</strong>:</p>
+<ol>
+<li>Ensure documcp has read access to target repositories</li>
+<li>Check file system permissions</li>
+<li>Verify environment variable configuration</li>
+</ol>
+<h3>Debug Mode</h3>
+<p>Enable debug mode for troubleshooting:</p>
+<pre><code class="language-json">{
+  &quot;mcpServers&quot;: {
+    &quot;documcp&quot;: {
+      &quot;command&quot;: &quot;node&quot;,
+      &quot;args&quot;: [&quot;/path/to/documcp/dist/index.js&quot;],
+      &quot;env&quot;: {
+        &quot;DEBUG&quot;: &quot;documcp:*&quot;,
+        &quot;NODE_ENV&quot;: &quot;development&quot;
+      }
+    }
+  }
+}
+</code></pre>
+<h2>Advanced Integration</h2>
+<h3>Custom Tool Configuration</h3>
+<p>Configure specific tools for your workflow:</p>
+<pre><code class="language-json">{
+  &quot;mcpServers&quot;: {
+    &quot;documcp&quot;: {
+      &quot;command&quot;: &quot;node&quot;,
+      &quot;args&quot;: [&quot;/path/to/documcp/dist/index.js&quot;],
+      &quot;env&quot;: {
+        &quot;DOCUMCP_DEFAULT_SSG&quot;: &quot;docusaurus&quot;,
+        &quot;DOCUMCP_DEFAULT_DEPTH&quot;: &quot;comprehensive&quot;,
+        &quot;DOCUMCP_ENABLE_GITHUB_INTEGRATION&quot;: &quot;true&quot;
+      }
+    }
+  }
+}
+</code></pre>
+<h3>Team Configuration</h3>
+<p>Share configuration across team members:</p>
+<pre><code class="language-bash"># Create team configuration template
+cat &gt; team-mcp-config.json &lt;&lt; EOF
+{
+  &quot;mcpServers&quot;: {
+    &quot;documcp&quot;: {
+      &quot;command&quot;: &quot;node&quot;,
+      &quot;args&quot;: [&quot;$(npm root -g)/documcp/dist/index.js&quot;],
+      &quot;env&quot;: {
+        &quot;NODE_ENV&quot;: &quot;production&quot;,
+        &quot;TEAM_STANDARDS&quot;: &quot;true&quot;
+      }
+    }
+  }
+}
+EOF
+</code></pre>
+<h2>Related Guides</h2>
+<ul>
+<li><a href="./deploy-to-production.md">Deploy documcp MCP Server</a></li>
+<li><a href="./how-to-debug-common-issues.md">Debug MCP Issues</a></li>
+<li><a href="./how-to-add-a-new-feature.md">Create Custom MCP Tools</a></li>
+<li><a href="https://modelcontextprotocol.io/docs">MCP Protocol Documentation</a></li>
+</ul>

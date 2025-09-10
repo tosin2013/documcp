@@ -1,0 +1,132 @@
+<h1>Reference</h1>
+<p>Complete technical reference for DocuMCP tools, APIs, and configuration options.</p>
+<h2>Available Documentation</h2>
+<p>This section contains comprehensive reference documentation following the Diataxis framework.</p>
+<p><strong>Reference</strong> documentation is information-oriented:</p>
+<ul>
+<li>Describe the machinery precisely</li>
+<li>Be accurate and complete</li>
+<li>Focus on describing, not explaining</li>
+<li>Structure content for finding information quickly</li>
+</ul>
+<h2>🔧 MCP Tools Reference</h2>
+<ul>
+<li><strong><a href="./api-reference.md">MCP Tools API Reference</a></strong> - Complete reference for all 10 DocuMCP tools with parameters, examples, and error handling</li>
+<li><strong><a href="./api-documentation.md">API Documentation</a></strong> - Core server API documentation</li>
+<li><strong><a href="./configuration-options.md">Configuration Options</a></strong> - All configuration parameters and settings</li>
+<li><strong><a href="./command-line-interface.md">Command Line Interface</a></strong> - CLI commands and options</li>
+</ul>
+<h2>📋 Quick Reference</h2>
+<h3>Core MCP Tools</h3>
+<table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Purpose</th>
+<th>Key Parameters</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>analyze_repository</code></td>
+<td>Repository analysis</td>
+<td><code>path</code>, <code>depth</code></td>
+</tr>
+<tr>
+<td><code>recommend_ssg</code></td>
+<td>SSG recommendation</td>
+<td><code>analysisId</code>, <code>preferences</code></td>
+</tr>
+<tr>
+<td><code>generate_config</code></td>
+<td>Config generation</td>
+<td><code>ssg</code>, <code>projectName</code>, <code>outputPath</code></td>
+</tr>
+<tr>
+<td><code>setup_structure</code></td>
+<td>Diataxis structure</td>
+<td><code>path</code>, <code>ssg</code>, <code>includeExamples</code></td>
+</tr>
+<tr>
+<td><code>populate_diataxis_content</code></td>
+<td>Content population</td>
+<td><code>analysisId</code>, <code>docsPath</code>, <code>populationLevel</code></td>
+</tr>
+<tr>
+<td><code>validate_diataxis_content</code></td>
+<td>Content validation</td>
+<td><code>contentPath</code>, <code>validationType</code></td>
+</tr>
+<tr>
+<td><code>detect_documentation_gaps</code></td>
+<td>Gap analysis</td>
+<td><code>repositoryPath</code>, <code>documentationPath</code></td>
+</tr>
+<tr>
+<td><code>deploy_pages</code></td>
+<td>GitHub Pages setup</td>
+<td><code>repository</code>, <code>ssg</code>, <code>branch</code></td>
+</tr>
+<tr>
+<td><code>verify_deployment</code></td>
+<td>Deployment verification</td>
+<td><code>repository</code>, <code>url</code></td>
+</tr>
+<tr>
+<td><code>test_local_deployment</code></td>
+<td>Local testing</td>
+<td><code>repositoryPath</code>, <code>ssg</code>, <code>port</code></td>
+</tr>
+</tbody>
+</table>
+<h3>Error Codes Quick Reference</h3>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Meaning</th>
+<th>Resolution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>INVALID_PATH</code></td>
+<td>Path not found</td>
+<td>Check file/directory exists</td>
+</tr>
+<tr>
+<td><code>INVALID_SSG</code></td>
+<td>Unsupported SSG</td>
+<td>Use jekyll, hugo, docusaurus, mkdocs, or eleventy</td>
+</tr>
+<tr>
+<td><code>MISSING_ANALYSIS</code></td>
+<td>Analysis ID required</td>
+<td>Run <code>analyze_repository</code> first</td>
+</tr>
+<tr>
+<td><code>BUILD_FAILED</code></td>
+<td>Build process failed</td>
+<td>Check dependencies and build logs</td>
+</tr>
+<tr>
+<td><code>PERMISSION_DENIED</code></td>
+<td>File access denied</td>
+<td>Verify read/write permissions</td>
+</tr>
+</tbody>
+</table>
+<h3>Supported Static Site Generators</h3>
+<ul>
+<li><strong>Jekyll</strong> - Ruby-based, GitHub Pages native</li>
+<li><strong>Hugo</strong> - Go-based, extremely fast builds</li>
+<li><strong>Docusaurus</strong> - React-based, feature-rich</li>
+<li><strong>MkDocs</strong> - Python-based, simple and clean</li>
+<li><strong>Eleventy</strong> - JavaScript-based, flexible templating</li>
+</ul>
+<h2>🔗 Related Resources</h2>
+<ul>
+<li><a href="../tutorials/getting-started-with-documcp.md">Getting Started Tutorial</a></li>
+<li><a href="../how-to/how-to-debug-common-issues.md">MCP Debugging Guide</a></li>
+<li><a href="../explanation/architecture-overview.md">Architecture Overview</a></li>
+</ul>

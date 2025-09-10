@@ -1,0 +1,188 @@
+<h1>Architectural Decision Records (ADRs)</h1>
+<p>This directory contains the Architectural Decision Records for the DocuMCP project - an intelligent MCP server for GitHub Pages documentation deployment.</p>
+<h2>ADR Index</h2>
+<table>
+<thead>
+<tr>
+<th>ADR</th>
+<th>Title</th>
+<th>Status</th>
+<th>Date</th>
+<th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="001-mcp-server-architecture.md">001</a></td>
+<td>MCP Server Architecture using TypeScript SDK</td>
+<td>Accepted</td>
+<td>2025-01-14</td>
+<td>Core server architecture decision using TypeScript MCP SDK with modular, stateless design</td>
+</tr>
+<tr>
+<td><a href="002-repository-analysis-engine.md">002</a></td>
+<td>Multi-Layered Repository Analysis Engine Design</td>
+<td>Accepted</td>
+<td>2025-01-14</td>
+<td>Comprehensive repository analysis through multiple layers: file system, language ecosystem, content, metadata, and complexity assessment</td>
+</tr>
+<tr>
+<td><a href="003-static-site-generator-recommendation-engine.md">003</a></td>
+<td>Static Site Generator Recommendation Engine Design</td>
+<td>Accepted</td>
+<td>2025-01-14</td>
+<td>Multi-criteria decision analysis framework for intelligent SSG recommendations with confidence scoring</td>
+</tr>
+<tr>
+<td><a href="004-diataxis-framework-integration.md">004</a></td>
+<td>Diataxis Framework Integration for Documentation Structure</td>
+<td>Accepted</td>
+<td>2025-01-14</td>
+<td>Integration of Diataxis framework as foundational information architecture for all generated documentation</td>
+</tr>
+<tr>
+<td><a href="005-github-pages-deployment-automation.md">005</a></td>
+<td>GitHub Pages Deployment Automation Architecture</td>
+<td>Accepted</td>
+<td>2025-01-14</td>
+<td>Comprehensive deployment orchestration with SSG-specific workflows, security best practices, and performance optimization</td>
+</tr>
+<tr>
+<td><a href="006-mcp-tools-api-design.md">006</a></td>
+<td>MCP Tools API Design and Interface Specification</td>
+<td>Accepted</td>
+<td>2025-01-14</td>
+<td>Six core MCP tools providing comprehensive documentation workflow coverage with robust validation and error handling</td>
+</tr>
+<tr>
+<td><a href="007-mcp-prompts-and-resources-integration.md">007</a></td>
+<td>MCP Prompts and Resources Integration for AI Assistance</td>
+<td>Proposed</td>
+<td>2025-01-14</td>
+<td>Native MCP prompts and resources for guided workflows and content access, leveraging built-in protocol capabilities</td>
+</tr>
+<tr>
+<td><a href="008-intelligent-content-population-engine.md">008</a></td>
+<td>Intelligent Content Population Engine for Diataxis Documentation</td>
+<td>Proposed</td>
+<td>2025-01-23</td>
+<td>Project-aware content generation engine that transforms repository analysis into contextually relevant Diataxis documentation</td>
+</tr>
+<tr>
+<td><a href="009-content-accuracy-validation-framework.md">009</a></td>
+<td>Content Accuracy and Validation Framework for Generated Documentation</td>
+<td>Proposed</td>
+<td>2025-01-23</td>
+<td>Comprehensive accuracy assurance system with confidence scoring, reality-check validation, and interactive correction workflows</td>
+</tr>
+</tbody>
+</table>
+<h2>ADR Process</h2>
+<p>This project follows the Architectural Decision Record (ADR) process as defined by Michael Nygard. Each ADR documents a significant architectural decision made during the project's development.</p>
+<h3>ADR Template</h3>
+<p>Each ADR follows a consistent structure:</p>
+<ul>
+<li><strong>Status</strong>: Proposed, Accepted, Deprecated, or Superseded</li>
+<li><strong>Context</strong>: The situation and requirements that led to the decision</li>
+<li><strong>Decision</strong>: The actual architectural decision made</li>
+<li><strong>Alternatives Considered</strong>: Other options that were evaluated</li>
+<li><strong>Consequences</strong>: Positive and negative outcomes of the decision</li>
+<li><strong>Implementation Details</strong>: Technical specifics and code examples where relevant</li>
+</ul>
+<h3>Decision Categories</h3>
+<p>Our ADRs are organized into the following categories:</p>
+<h4>Foundation Architecture (ADRs 001-002)</h4>
+<ul>
+<li>Core server architecture and technology choices</li>
+<li>Repository analysis engine design</li>
+</ul>
+<h4>Intelligence &amp; Recommendation (ADRs 003)</h4>
+<ul>
+<li>Static site generator recommendation algorithms</li>
+<li>Decision-making frameworks</li>
+</ul>
+<h4>Content &amp; Structure (ADRs 004, 008, 009)</h4>
+<ul>
+<li>Documentation framework integration</li>
+<li>Information architecture decisions</li>
+<li>Intelligent content population and generation</li>
+<li>Content accuracy and validation frameworks</li>
+</ul>
+<h4>Deployment &amp; Integration (ADRs 005-006)</h4>
+<ul>
+<li>GitHub Pages deployment automation</li>
+<li>MCP tools API design</li>
+</ul>
+<h4>AI &amp; Assistance (ADR 007)</h4>
+<ul>
+<li>MCP prompts and resources for guided workflows</li>
+</ul>
+<h2>Key Architectural Principles</h2>
+<p>Based on our ADRs, DocuMCP follows these core architectural principles:</p>
+<h3>1. <strong>Methodological Pragmatism</strong></h3>
+<ul>
+<li>Evidence-based decision making with explicit confidence scoring</li>
+<li>Systematic verification processes for all recommendations</li>
+<li>Clear acknowledgment of limitations and uncertainty</li>
+</ul>
+<h3>2. <strong>Standards Compliance</strong></h3>
+<ul>
+<li>Full adherence to MCP specification requirements</li>
+<li>Industry best practices for static site generation</li>
+<li>Proven frameworks like Diataxis for information architecture</li>
+</ul>
+<h3>3. <strong>Modular Design</strong></h3>
+<ul>
+<li>Clear separation of concerns between analysis, recommendation, generation, and deployment</li>
+<li>Extensible architecture supporting future enhancements</li>
+<li>Stateless operation for consistency and reliability</li>
+</ul>
+<h3>4. <strong>Intelligent Automation</strong></h3>
+<ul>
+<li>Deep repository analysis for informed decision making</li>
+<li>Context-aware configuration generation</li>
+<li>Performance-optimized deployment workflows</li>
+</ul>
+<h3>5. <strong>Developer Experience</strong></h3>
+<ul>
+<li>Intuitive MCP tools API with comprehensive validation</li>
+<li>Clear error messages and troubleshooting guidance</li>
+<li>Progressive complexity from simple to advanced use cases</li>
+</ul>
+<h2>Decision Timeline</h2>
+<p>The ADRs were developed during the planning phase of DocuMCP, establishing the architectural foundation before implementation. The decisions build upon each other:</p>
+<ol>
+<li><strong>Foundation</strong> (ADR-001): Established TypeScript/MCP SDK as the core platform</li>
+<li><strong>Analysis</strong> (ADR-002): Defined multi-layered repository analysis approach</li>
+<li><strong>Intelligence</strong> (ADR-003): Specified recommendation engine architecture</li>
+<li><strong>Structure</strong> (ADR-004): Integrated Diataxis framework for quality documentation</li>
+<li><strong>Deployment</strong> (ADR-005): Designed automated GitHub Pages deployment system</li>
+<li><strong>Interface</strong> (ADR-006): Specified comprehensive MCP tools API</li>
+</ol>
+<h2>Confidence and Validation</h2>
+<p>Each ADR includes confidence assessments and validation strategies:</p>
+<ul>
+<li><strong>High Confidence Decisions</strong>: Technology choices with strong ecosystem support (TypeScript/MCP SDK)</li>
+<li><strong>Medium Confidence Decisions</strong>: Framework integrations with proven track records (Diataxis)</li>
+<li><strong>Validated Assumptions</strong>: Architectural patterns tested through prototype development</li>
+<li><strong>Risk Mitigation</strong>: Explicit identification and mitigation strategies for each decision</li>
+</ul>
+<h2>Future Considerations</h2>
+<p>Our ADRs acknowledge areas for future evolution:</p>
+<ul>
+<li><strong>Machine Learning Integration</strong>: Potential for AI-powered content analysis and recommendations</li>
+<li><strong>Performance Optimization</strong>: WebAssembly modules for intensive analysis operations</li>
+<li><strong>Extended SSG Support</strong>: Community-contributed static site generator profiles</li>
+<li><strong>Advanced Deployment</strong>: Multi-environment and blue-green deployment capabilities</li>
+</ul>
+<h2>References</h2>
+<ul>
+<li><a href="https://adr.github.io/">Architectural Decision Records</a></li>
+<li><a href="https://spec.modelcontextprotocol.io/">Model Context Protocol Specification</a></li>
+<li><a href="https://diataxis.fr/">Diataxis Framework</a></li>
+<li><a href="https://jamstack.org/generators/">Static Site Generator Analysis</a></li>
+</ul>
+<hr>
+<p><strong>Last Updated</strong>: January 23, 2025<br>
+<strong>Total ADRs</strong>: 9<br>
+<strong>Status</strong>: ADRs 001-006 Accepted and Implemented, ADRs 007-009 Proposed</p>

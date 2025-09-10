@@ -1,0 +1,255 @@
+<h1>Performance Benchmarking System (PERF-001 Compliance)</h1>
+<p>This document describes DocuMCP's performance benchmarking system, implemented according to PERF-001 development rules.</p>
+<h2>Overview</h2>
+<p>The performance benchmarking system ensures that repository analysis operations meet strict performance targets based on repository size:</p>
+<ul>
+<li><strong>Small repositories</strong> (&lt;100 files): <strong>&lt;1 second</strong></li>
+<li><strong>Medium repositories</strong> (100-1000 files): <strong>&lt;10 seconds</strong></li>
+<li><strong>Large repositories</strong> (1000+ files): <strong>&lt;60 seconds</strong></li>
+</ul>
+<h2>Quick Start</h2>
+<h3>Benchmark Current Repository</h3>
+<pre><code class="language-bash">npm run benchmark:current
+</code></pre>
+<h3>Create Configuration File</h3>
+<pre><code class="language-bash">npm run benchmark:create-config
+</code></pre>
+<h3>Run Full Benchmark Suite</h3>
+<pre><code class="language-bash">npm run benchmark:run [config-file]
+</code></pre>
+<h3>Get Help</h3>
+<pre><code class="language-bash">npm run benchmark:help
+</code></pre>
+<h2>Architecture</h2>
+<h3>Core Components</h3>
+<h4><code>PerformanceBenchmarker</code> Class</h4>
+<ul>
+<li><strong>Location</strong>: <code>src/benchmarks/performance.ts</code></li>
+<li><strong>Purpose</strong>: Main benchmarking engine</li>
+<li><strong>Features</strong>:
+<ul>
+<li>Repository size categorization (small/medium/large)</li>
+<li>Performance ratio calculations</li>
+<li>Memory usage tracking</li>
+<li>Detailed reporting and export</li>
+</ul>
+</li>
+</ul>
+<h4>Benchmark CLI Script</h4>
+<ul>
+<li><strong>Location</strong>: <code>src/scripts/benchmark.ts</code></li>
+<li><strong>Purpose</strong>: Command-line interface for benchmarking</li>
+<li><strong>Commands</strong>:
+<ul>
+<li><code>run</code>: Execute benchmark suite</li>
+<li><code>current</code>: Benchmark current repository only</li>
+<li><code>create-config</code>: Generate default configuration</li>
+<li><code>help</code>: Display usage information</li>
+</ul>
+</li>
+</ul>
+<h3>Performance Optimizations in Core Tools</h3>
+<p>The repository analysis tool (<code>analyze-repository.ts</code>) includes PERF-001 optimizations:</p>
+<pre><code class="language-typescript">// Adaptive depth limiting based on repository size
+function getMaxDepthForRepo(estimatedFiles: number): number {
+  if (estimatedFiles &lt; 100) return 10;   // Small repo: allow deeper analysis
+  if (estimatedFiles &lt; 1000) return 8;   // Medium repo: moderate depth
+  return 6;                              // Large repo: shallow depth for speed
+}
+</code></pre>
+<h2>Configuration</h2>
+<h3>Benchmark Configuration File (<code>benchmark-config.json</code>)</h3>
+<pre><code class="language-json">{
+  &quot;testRepos&quot;: [
+    {
+      &quot;path&quot;: &quot;.&quot;,
+      &quot;name&quot;: &quot;Current Repository&quot;, 
+      &quot;expectedSize&quot;: &quot;small&quot;
+    },
+    {
+      &quot;path&quot;: &quot;/path/to/medium/repo&quot;,
+      &quot;name&quot;: &quot;Medium Test Repo&quot;,
+      &quot;expectedSize&quot;: &quot;medium&quot;
+    }
+  ],
+  &quot;outputDir&quot;: &quot;./benchmark-results&quot;,
+  &quot;verbose&quot;: true
+}
+</code></pre>
+<h3>Configuration Options</h3>
+<ul>
+<li><strong><code>testRepos</code></strong>: Array of repositories to benchmark
+<ul>
+<li><code>path</code>: Repository directory path</li>
+<li><code>name</code>: Human-readable name for reports</li>
+<li><code>expectedSize</code>**: Optional size hint (small/medium/large)</li>
+</ul>
+</li>
+<li><strong><code>outputDir</code></strong>: Directory for JSON result exports</li>
+<li><strong><code>verbose</code></strong>: Enable detailed console output</li>
+</ul>
+<h2>Result Analysis</h2>
+<h3>Benchmark Results Structure</h3>
+<pre><code class="language-typescript">interface BenchmarkResult {
+  repoSize: 'small' | 'medium' | 'large';
+  fileCount: number;
+  executionTime: number;        // Milliseconds
+  targetTime: number;           // Target performance threshold
+  passed: boolean;              // Met performance target
+  performanceRatio: number;     // executionTime / targetTime
+  details: {
+    startTime: number;
+    endTime: number;
+    memoryUsage: NodeJS.MemoryUsage;
+  };
+}
+</code></pre>
+<h3>Performance Metrics</h3>
+<h4>Pass/Fail Criteria</h4>
+<ul>
+<li><strong>✅ PASS</strong>: Execution time ≤ target time</li>
+<li><strong>❌ FAIL</strong>: Execution time &gt; target time</li>
+</ul>
+<h4>Performance Ratio</h4>
+<ul>
+<li><strong>&lt; 1.0</strong>: Better than target (e.g., 0.5 = 50% of target time)</li>
+<li><strong>= 1.0</strong>: Exactly at target performance</li>
+<li><strong>&gt; 1.0</strong>: Slower than target (e.g., 1.5 = 150% of target time)</li>
+</ul>
+<h2>Integration with Testing</h2>
+<h3>Performance Tests</h3>
+<pre><code class="language-bash">npm run test:performance
+</code></pre>
+<p>The performance test suite validates:</p>
+<ul>
+<li>Repository size categorization accuracy</li>
+<li>Execution time measurement precision</li>
+<li>Performance ratio calculations</li>
+<li>Memory usage tracking</li>
+<li>PERF-001 compliance verification</li>
+</ul>
+<h3>Test Coverage</h3>
+<ul>
+<li><strong>Repository Size Categories</strong>: Tests with 50, 500, and 1500 files</li>
+<li><strong>Performance Measurement</strong>: Timing accuracy validation</li>
+<li><strong>Memory Tracking</strong>: Heap usage monitoring</li>
+<li><strong>Benchmark Suite</strong>: Multi-repository testing</li>
+<li><strong>Result Export</strong>: JSON output validation</li>
+</ul>
+<h2>Continuous Integration</h2>
+<h3>GitHub Actions Integration</h3>
+<p>Add performance benchmarking to your CI pipeline:</p>
+<pre><code class="language-yaml">name: Performance Benchmarks
+
+on: [push, pull_request]
+
+jobs:
+  performance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci
+      - run: npm run build
+      - run: npm run benchmark:current
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v3
+        with:
+          name: benchmark-results
+          path: benchmark-*.json
+</code></pre>
+<h3>Performance Regression Detection</h3>
+<p>Set up automated alerts for performance regressions:</p>
+<pre><code class="language-bash"># Fail CI if benchmark doesn't pass
+npm run benchmark:current || exit 1
+</code></pre>
+<h2>Troubleshooting</h2>
+<h3>Common Issues</h3>
+<h4>&quot;No such file or directory&quot; Error</h4>
+<ul>
+<li><strong>Cause</strong>: Invalid repository path in configuration</li>
+<li><strong>Solution</strong>: Verify all paths in <code>benchmark-config.json</code> exist</li>
+</ul>
+<h4>&quot;Module not found&quot; Error</h4>
+<ul>
+<li><strong>Cause</strong>: Missing dependencies or incorrect imports</li>
+<li><strong>Solution</strong>: Run <code>npm install</code> and <code>npm run build</code></li>
+</ul>
+<h4>Performance Targets Not Met</h4>
+<ul>
+<li><strong>Cause</strong>: Repository analysis is slower than expected</li>
+<li><strong>Solution</strong>:
+<ol>
+<li>Check system resources (CPU, memory)</li>
+<li>Optimize repository structure (remove large irrelevant files)</li>
+<li>Use 'quick' depth analysis for initial benchmarking</li>
+</ol>
+</li>
+</ul>
+<h3>Debugging Performance Issues</h3>
+<p>Enable verbose logging:</p>
+<pre><code class="language-bash">DEBUG=* npm run benchmark:current
+</code></pre>
+<p>Export detailed results:</p>
+<pre><code class="language-bash">npm run benchmark:run
+# Check benchmark-results/ directory for detailed JSON reports
+</code></pre>
+<h2>API Reference</h2>
+<h3>Core Functions</h3>
+<h4><code>createBenchmarker()</code></h4>
+<p>Creates a new <code>PerformanceBenchmarker</code> instance.</p>
+<pre><code class="language-typescript">const benchmarker = createBenchmarker();
+</code></pre>
+<h4><code>benchmarkRepository(repoPath, depth?)</code></h4>
+<p>Benchmarks a single repository.</p>
+<pre><code class="language-typescript">const result = await benchmarker.benchmarkRepository('/path/to/repo', 'standard');
+</code></pre>
+<h4><code>runBenchmarkSuite(testRepos)</code></h4>
+<p>Runs benchmarks on multiple repositories.</p>
+<pre><code class="language-typescript">const suite = await benchmarker.runBenchmarkSuite([
+  { path: './repo1', name: 'Test Repo 1' },
+  { path: './repo2', name: 'Test Repo 2' }
+]);
+</code></pre>
+<h4><code>exportResults(suite, outputPath)</code></h4>
+<p>Exports benchmark results to JSON file.</p>
+<pre><code class="language-typescript">await benchmarker.exportResults(suite, './results.json');
+</code></pre>
+<h3>Utility Functions</h3>
+<h4><code>getMaxDepthForRepo(fileCount)</code></h4>
+<p>Returns optimal analysis depth based on repository size.</p>
+<h4><code>categorizeRepoSize(fileCount)</code></h4>
+<p>Categorizes repository as small/medium/large.</p>
+<h2>Performance Targets Rationale</h2>
+<p>The PERF-001 targets are based on:</p>
+<ol>
+<li><strong>User Experience</strong>: Analysis should feel instantaneous for small projects</li>
+<li><strong>CI/CD Integration</strong>: Must not significantly slow down build pipelines</li>
+<li><strong>Large Repository Support</strong>: Must handle enterprise-scale repositories</li>
+<li><strong>Memory Efficiency</strong>: Analysis should use &lt;100MB additional memory</li>
+</ol>
+<h2>Future Enhancements</h2>
+<h3>Planned Features</h3>
+<ol>
+<li><strong>Progressive Analysis</strong>: Stream results for very large repositories</li>
+<li><strong>Parallel Processing</strong>: Multi-threaded analysis for faster processing</li>
+<li><strong>Caching Layer</strong>: Cache analysis results to avoid re-processing</li>
+<li><strong>Custom Metrics</strong>: User-defined performance targets</li>
+<li><strong>Performance Trends</strong>: Historical performance tracking</li>
+</ol>
+<h3>Contributing Performance Improvements</h3>
+<p>When optimizing performance:</p>
+<ol>
+<li>Run benchmarks before and after changes</li>
+<li>Ensure all performance tests pass</li>
+<li>Update performance targets if justified</li>
+<li>Document optimization techniques used</li>
+</ol>
+<h2>Related Documentation</h2>
+<ul>
+<li><a href="../DEVELOPMENT_RULES.md">DEVELOPMENT_RULES.md</a> - PERF-001 specification</li>
+<li><a href="../RULES_QUICK_REFERENCE.md">RULES_QUICK_REFERENCE.md</a> - Performance guidelines</li>
+<li><a href="./adrs/">docs/adrs/</a> - Architecture decisions affecting performance</li>
+</ul>

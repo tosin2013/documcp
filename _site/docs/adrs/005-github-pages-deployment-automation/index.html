@@ -1,0 +1,536 @@
+<h1>ADR-005: GitHub Pages Deployment Automation Architecture</h1>
+<hr>
+<h2>id: 005-github-pages-deployment-automation
+title: 'ADR-005: GitHub Pages Deployment Automation'
+sidebar_label: 'ADR-5: GitHub Pages Deployment Automation'
+sidebar_position: 5</h2>
+<h2>Status</h2>
+<p>Accepted</p>
+<h2>Context</h2>
+<p>DocuMCP must provide seamless, automated deployment of documentation sites to GitHub Pages. This requires sophisticated understanding of GitHub Pages capabilities, limitations, and best practices, along with intelligent generation of CI/CD workflows that adapt to different static site generators and project configurations.</p>
+<p>GitHub Pages deployment complexity factors:</p>
+<ul>
+<li><strong>Multiple deployment methods</strong>: GitHub Actions, branch-based, legacy Jekyll</li>
+<li><strong>SSG-specific requirements</strong>: Different build tools, dependencies, and configurations</li>
+<li><strong>Security considerations</strong>: Secrets management, workflow permissions, dependency vulnerabilities</li>
+<li><strong>Performance optimization</strong>: Build caching, incremental builds, deployment strategies</li>
+<li><strong>Troubleshooting support</strong>: Common failure modes, debugging guidance, health checks</li>
+</ul>
+<p>Key challenges:</p>
+<ul>
+<li>Each SSG has unique deployment requirements and optimal configurations</li>
+<li>GitHub Actions workflows need to be maintainable and debuggable</li>
+<li>Repository settings and branch configurations must be properly managed</li>
+<li>Users need clear guidance for initial deployment and ongoing maintenance</li>
+</ul>
+<h2>Decision</h2>
+<p>We will implement a comprehensive GitHub Pages deployment orchestration system that generates optimized, SSG-specific GitHub Actions workflows with intelligent configuration, error handling, and verification capabilities.</p>
+<h3>Deployment Architecture Components:</h3>
+<h4>1. Workflow Generation Engine</h4>
+<ul>
+<li><strong>SSG-specific workflow templates</strong> optimized for each supported generator</li>
+<li><strong>Intelligent dependency management</strong> with version pinning and security updates</li>
+<li><strong>Build optimization</strong> including caching strategies and incremental builds</li>
+<li><strong>Error handling and debugging</strong> with comprehensive logging and failure analysis</li>
+</ul>
+<h4>2. Repository Configuration Management (Enhanced with Security Research)</h4>
+<ul>
+<li><strong>Automated repository settings</strong> for GitHub Pages configuration</li>
+<li><strong>Branch management guidance</strong> for different deployment strategies</li>
+<li><strong>Security configuration</strong> including workflow permissions and secrets management</li>
+<li><strong>Health check integration</strong> for deployment verification</li>
+</ul>
+<p><strong>Research-Validated Security Enhancements</strong>:</p>
+<ul>
+<li><strong>OIDC Token Authentication</strong>: Implements JWT-based deployment validation with branch protection</li>
+<li><strong>Minimal Permission Principle</strong>: Generates workflows with only required <code>pages: write</code> and <code>id-token: write</code> permissions</li>
+<li><strong>Environment Protection</strong>: Default environment rules with required reviewers for production deployments</li>
+<li><strong>Automated Security Scanning</strong>: Integrated secret scanning and vulnerability assessment</li>
+</ul>
+<h4>3. Deployment Strategy Selection</h4>
+<ul>
+<li><strong>Branch-based deployment</strong> for simple sites with minimal build requirements</li>
+<li><strong>GitHub Actions deployment</strong> for complex builds requiring custom environments</li>
+<li><strong>Hybrid approaches</strong> combining native Jekyll support with custom processing</li>
+</ul>
+<h4>4. Monitoring and Troubleshooting</h4>
+<ul>
+<li><strong>Deployment verification</strong> with automated health checks and accessibility testing</li>
+<li><strong>Common failure diagnosis</strong> with specific remediation guidance</li>
+<li><strong>Performance monitoring</strong> with build time optimization recommendations</li>
+<li><strong>Maintenance guidance</strong> for ongoing workflow and dependency management</li>
+</ul>
+<h2>Alternatives Considered</h2>
+<h3>Manual Deployment Setup</h3>
+<ul>
+<li><strong>Pros</strong>: Full user control, educational value, flexible configuration</li>
+<li><strong>Cons</strong>: High learning curve, error-prone, inconsistent results</li>
+<li><strong>Decision</strong>: Rejected due to complexity and poor user experience</li>
+</ul>
+<h3>Third-Party Deployment Services (Netlify, Vercel)</h3>
+<ul>
+<li><strong>Pros</strong>: Advanced features, excellent performance, minimal configuration</li>
+<li><strong>Cons</strong>: Cost for advanced features, vendor lock-in, less GitHub integration</li>
+<li><strong>Decision</strong>: Rejected to maintain GitHub-native workflow and free hosting</li>
+</ul>
+<h3>Universal Deployment Workflow</h3>
+<ul>
+<li><strong>Pros</strong>: Simpler implementation, consistent user experience</li>
+<li><strong>Cons</strong>: Suboptimal for specific SSGs, limited optimization opportunities</li>
+<li><strong>Decision</strong>: Rejected in favor of SSG-optimized approaches</li>
+</ul>
+<h3>Container-Based Deployment</h3>
+<ul>
+<li><strong>Pros</strong>: Consistent environments, advanced dependency management</li>
+<li><strong>Cons</strong>: Complexity overhead, slower builds, GitHub Actions limitations</li>
+<li><strong>Decision</strong>: Rejected for initial version; consider for advanced scenarios</li>
+</ul>
+<h2>Consequences</h2>
+<h3>Positive</h3>
+<ul>
+<li><strong>Optimized Performance</strong>: SSG-specific workflows provide optimal build times and caching</li>
+<li><strong>Reliable Deployment</strong>: Comprehensive error handling and verification reduce failure rates</li>
+<li><strong>Maintainable Workflows</strong>: Generated workflows follow best practices and include documentation</li>
+<li><strong>Debugging Support</strong>: Clear error messages and troubleshooting guidance reduce support burden</li>
+<li><strong>Security Best Practices</strong>: Automated security configuration and dependency management</li>
+</ul>
+<h3>Negative</h3>
+<ul>
+<li><strong>Implementation Complexity</strong>: Multiple SSG-specific templates require significant maintenance</li>
+<li><strong>GitHub Dependency</strong>: Tight coupling to GitHub Actions and Pages infrastructure</li>
+<li><strong>Template Maintenance</strong>: Regular updates needed as SSGs and GitHub features evolve</li>
+</ul>
+<h3>Risks and Mitigations</h3>
+<ul>
+<li><strong>Workflow Obsolescence</strong>: Regular testing and updates of generated workflows</li>
+<li><strong>GitHub API Changes</strong>: Monitoring of GitHub features and migration planning</li>
+<li><strong>Security Vulnerabilities</strong>: Automated dependency scanning and update recommendations</li>
+</ul>
+<h2>Implementation Details</h2>
+<h3>Workflow Template System</h3>
+<pre><code class="language-typescript">interface WorkflowTemplate {
+  name: string;
+  triggers: WorkflowTrigger[];
+  jobs: WorkflowJob[];
+  permissions: WorkflowPermissions;
+  environment: EnvironmentConfig;
+}
+
+interface SSGWorkflowConfig {
+  buildCommand: string;
+  outputDirectory: string;
+  dependencies: DependencyConfig;
+  caching: CacheConfig;
+  environmentVariables: EnvironmentVariable[];
+}
+
+const WORKFLOW_TEMPLATES: Record&lt;SSGType, WorkflowTemplate&gt; = {
+  hugo: createHugoWorkflow(),
+  jekyll: createJekyllWorkflow(),
+  docusaurus: createDocusaurusWorkflow(),
+  mkdocs: createMkDocsWorkflow(),
+  eleventy: createEleventyWorkflow()
+};
+</code></pre>
+<h3>Hugo Workflow Template</h3>
+<pre><code class="language-yaml">name: Deploy Hugo Documentation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: &quot;pages&quot;
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Setup Hugo
+        uses: peaceiris/actions-hugo@v2
+        with:
+          hugo-version: ''
+          extended: 
+
+      - name: Setup Pages
+        id: pages
+        uses: actions/configure-pages@v3
+
+      - name: Build with Hugo
+        env:
+          HUGO_ENVIRONMENT: production
+          HUGO_ENV: production
+        run: |
+          hugo \
+            --gc \
+            --minify \
+            --baseURL &quot;${{ steps.pages.outputs.base_url }}/&quot;
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: ./public
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
+</code></pre>
+<h3>Docusaurus Workflow Template</h3>
+<pre><code class="language-yaml">name: Deploy Docusaurus Documentation
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: &quot;pages&quot;
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ''
+          cache: 
+
+      - name: Install dependencies
+        run: 
+
+      - name: Build website
+        run: 
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: 
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
+</code></pre>
+<h3>Workflow Generation Logic</h3>
+<pre><code class="language-typescript">interface WorkflowGenerationConfig {
+  ssg: SSGType;
+  projectAnalysis: ProjectAnalysis;
+  deploymentPreferences: DeploymentPreferences;
+  securityRequirements: SecurityConfig;
+}
+
+class WorkflowGenerator {
+  generateWorkflow(config: WorkflowGenerationConfig): WorkflowDefinition {
+    const template = this.getSSGTemplate(config.ssg);
+    const customizations = this.analyzeCustomizations(config.projectAnalysis);
+    const optimizations = this.calculateOptimizations(config);
+    
+    return this.mergeConfiguration(template, customizations, optimizations);
+  }
+
+  private getSSGTemplate(ssg: SSGType): WorkflowTemplate {
+    return WORKFLOW_TEMPLATES[ssg];
+  }
+
+  private analyzeCustomizations(analysis: ProjectAnalysis): WorkflowCustomizations {
+    return {
+      nodeVersion: this.detectNodeVersion(analysis),
+      packageManager: this.detectPackageManager(analysis),
+      buildCommand: this.detectBuildCommand(analysis),
+      outputDirectory: this.detectOutputDirectory(analysis),
+      environmentVariables: this.extractEnvironmentNeeds(analysis)
+    };
+  }
+
+  private calculateOptimizations(config: WorkflowGenerationConfig): WorkflowOptimizations {
+    return {
+      caching: this.calculateCachingStrategy(config),
+      parallelization: this.identifyParallelizationOpportunities(config),
+      incrementalBuild: this.assessIncrementalBuildOptions(config),
+      securityHardening: this.applySecurityBestPractices(config)
+    };
+  }
+}
+</code></pre>
+<h3>Repository Configuration Management</h3>
+<pre><code class="language-typescript">interface RepositoryConfiguration {
+  pagesSource: PagesSourceConfig;
+  branchProtection: BranchProtectionConfig;
+  secrets: SecretsConfig;
+  environmentSettings: EnvironmentSettings;
+}
+
+class RepositoryConfigurationManager {
+  async configureRepository(
+    repoPath: string,
+    config: RepositoryConfiguration
+  ): Promise&lt;ConfigurationResult&gt; {
+    return {
+      pagesConfiguration: await this.configurePagesSettings(config.pagesSource),
+      branchSetup: await this.setupBranchConfiguration(config.branchProtection),
+      secretsManagement: await this.configureSecrets(config.secrets),
+      environmentSetup: await this.setupEnvironments(config.environmentSettings)
+    };
+  }
+
+  private async configurePagesSettings(config: PagesSourceConfig): Promise&lt;void&gt; {
+    // Configure GitHub Pages source (GitHub Actions vs. branch-based)
+    // Set custom domain if specified
+    // Configure HTTPS enforcement
+  }
+
+  private async setupBranchConfiguration(config: BranchProtectionConfig): Promise&lt;void&gt; {
+    // Create gh-pages branch if needed
+    // Configure branch protection rules
+    // Set up required status checks
+  }
+}
+</code></pre>
+<h3>Deployment Verification System</h3>
+<pre><code class="language-typescript">interface DeploymentVerification {
+  healthChecks: HealthCheck[];
+  performanceTests: PerformanceTest[];
+  accessibilityTests: AccessibilityTest[];
+  linkValidation: LinkValidationConfig;
+}
+
+class DeploymentVerifier {
+  async verifyDeployment(siteUrl: string, config: DeploymentVerification): Promise&lt;VerificationReport&gt; {
+    try {
+      const results = await Promise.allSettled([
+        this.runHealthChecks(siteUrl, config.healthChecks),
+        this.runPerformanceTests(siteUrl, config.performanceTests),
+        this.runAccessibilityTests(siteUrl, config.accessibilityTests),
+        this.validateLinks(siteUrl, config.linkValidation)
+      ]);
+
+      // Handle partial failures gracefully
+      const processedResults = results.map((result, index) =&gt; {
+        if (result.status === 'fulfilled') {
+          return result.value;
+        } else {
+          console.warn(`Verification step ${index} failed:`, result.reason);
+          return null;
+        }
+      }).filter(result =&gt; result !== null);
+
+      return this.generateVerificationReport(processedResults);
+    } catch (error) {
+      throw new Error(`Deployment verification failed: ${error.message}`);
+    }
+  }
+
+  private async runHealthChecks(siteUrl: string, checks: HealthCheck[]): Promise&lt;HealthCheckResult[]&gt; {
+    try {
+      const results = await Promise.allSettled(
+        checks.map(check =&gt; this.executeHealthCheck(siteUrl, check))
+      );
+      
+      return results
+        .filter((result): result is PromiseFulfilledResult&lt;HealthCheckResult&gt; =&gt; result.status === 'fulfilled')
+        .map(result =&gt; result.value);
+    } catch (error) {
+      throw new Error(`Health checks failed: ${error.message}`);
+    }
+  }
+
+  private async executeHealthCheck(siteUrl: string, check: HealthCheck): Promise&lt;HealthCheckResult&gt; {
+    // Verify site accessibility
+    // Check for broken links
+    // Validate content rendering
+    // Test mobile responsiveness
+    // Verify search functionality if applicable
+  }
+}
+</code></pre>
+<h3>Error Handling and Troubleshooting</h3>
+<pre><code class="language-typescript">interface TroubleshootingGuide {
+  commonErrors: ErrorPattern[];
+  diagnosticSteps: DiagnosticStep[];
+  resolutionGuides: ResolutionGuide[];
+  escalationPaths: EscalationPath[];
+}
+
+const COMMON_DEPLOYMENT_ERRORS: ErrorPattern[] = [
+  {
+    pattern: /ENOENT.*package\.json/,
+    category: 'dependency',
+    description: 'Package.json not found or missing dependencies',
+    resolution: 'Verify package.json exists and run npm install',
+    preventionTips: ['Always commit package.json', 'Use package-lock.json for version consistency']
+  },
+  {
+    pattern: /Permission denied.*write/,
+    category: 'permissions',
+    description: 'Insufficient permissions for GitHub Pages deployment',
+    resolution: 'Check workflow permissions and repository settings',
+    preventionTips: ['Use recommended workflow permissions', 'Verify Pages deployment source']
+  }
+  // ... additional error patterns
+];
+
+class DeploymentTroubleshooter {
+  analyzeBuildFailure(buildLog: string): TroubleshootingReport {
+    const detectedErrors = this.detectErrorPatterns(buildLog);
+    const diagnosticResults = this.runDiagnostics(detectedErrors);
+    const resolutionSteps = this.generateResolutionSteps(detectedErrors);
+
+    return {
+      detectedIssues: detectedErrors,
+      diagnostics: diagnosticResults,
+      recommendedActions: resolutionSteps,
+      escalationGuidance: this.getEscalationGuidance(detectedErrors)
+    };
+  }
+}
+</code></pre>
+<h2>Security Considerations</h2>
+<h3>Workflow Security Best Practices</h3>
+<ul>
+<li><strong>Minimal Permissions</strong>: Use least privilege principle for workflow permissions</li>
+<li><strong>Dependency Scanning</strong>: Automated vulnerability detection in build dependencies</li>
+<li><strong>Secrets Management</strong>: Proper handling of sensitive configuration data</li>
+<li><strong>Supply Chain Security</strong>: Pin action versions and verify checksums</li>
+</ul>
+<h3>Security Configuration Template</h3>
+<pre><code class="language-yaml">permissions:
+  contents: read    # Read repository contents
+  pages: write      # Deploy to GitHub Pages
+  id-token: write   # Use OIDC token for authentication
+
+security:
+  dependency-scanning:
+    enabled: true
+    auto-update: true
+  
+  workflow-hardening:
+    pin-actions: true
+    verify-checksums: true
+    minimal-permissions: true
+</code></pre>
+<h2>Performance Optimization</h2>
+<h3>Build Optimization Strategies</h3>
+<ul>
+<li><strong>Intelligent Caching</strong>: Cache dependencies, build artifacts, and intermediate files</li>
+<li><strong>Incremental Builds</strong>: Build only changed content when possible</li>
+<li><strong>Parallel Processing</strong>: Utilize available CPU cores for build tasks</li>
+<li><strong>Resource Optimization</strong>: Optimize memory usage and disk I/O</li>
+</ul>
+<h3>Performance Monitoring</h3>
+<pre><code class="language-typescript">interface BuildPerformanceMetrics {
+  totalBuildTime: number;
+  dependencyInstallTime: number;
+  compilationTime: number;
+  deploymentTime: number;
+  cacheHitRate: number;
+  resourceUsage: ResourceUsageMetrics;
+}
+
+class PerformanceMonitor {
+  trackBuildPerformance(buildLog: string): BuildPerformanceMetrics {
+    return {
+      totalBuildTime: this.extractTotalTime(buildLog),
+      dependencyInstallTime: this.extractDependencyTime(buildLog),
+      compilationTime: this.extractCompilationTime(buildLog),
+      deploymentTime: this.extractDeploymentTime(buildLog),
+      cacheHitRate: this.calculateCacheEfficiency(buildLog),
+      resourceUsage: this.analyzeResourceUsage(buildLog)
+    };
+  }
+
+  generateOptimizationRecommendations(metrics: BuildPerformanceMetrics): OptimizationRecommendation[] {
+    const recommendations: OptimizationRecommendation[] = [];
+    
+    if (metrics.cacheHitRate &lt; 0.8) {
+      recommendations.push({
+        type: 'caching',
+        priority: 'high',
+        description: 'Improve caching strategy to reduce build times',
+        implementation: 'Configure additional cache paths and improve cache keys'
+      });
+    }
+    
+    return recommendations;
+  }
+}
+</code></pre>
+<h2>Future Enhancements</h2>
+<h3>Advanced Deployment Features</h3>
+<ul>
+<li><strong>Multi-environment deployment</strong>: Staging and production environment management</li>
+<li><strong>Blue-green deployments</strong>: Zero-downtime deployment strategies</li>
+<li><strong>Rollback capabilities</strong>: Automated rollback on deployment failures</li>
+<li><strong>A/B testing support</strong>: Deploy multiple versions for testing</li>
+</ul>
+<h3>Integration Enhancements</h3>
+<ul>
+<li><strong>CDN integration</strong>: Automatic CDN configuration for improved performance</li>
+<li><strong>Analytics integration</strong>: Built-in analytics and monitoring setup</li>
+<li><strong>Search integration</strong>: Automated search index generation and deployment</li>
+<li><strong>Monitoring integration</strong>: Health monitoring and alerting setup</li>
+</ul>
+<h2>Testing Strategy</h2>
+<h3>Workflow Testing</h3>
+<ul>
+<li><strong>Unit tests</strong>: Individual workflow components and template generation</li>
+<li><strong>Integration tests</strong>: Full deployment workflows across different SSGs</li>
+<li><strong>End-to-end tests</strong>: Complete documentation site deployment and verification</li>
+<li><strong>Performance tests</strong>: Build time and resource usage benchmarks</li>
+</ul>
+<h3>Validation Framework</h3>
+<pre><code class="language-typescript">describe('DeploymentWorkflows', () =&gt; {
+  it('should generate valid Hugo workflow for typical project');
+  it('should handle complex Docusaurus configuration');
+  it('should optimize caching for large MkDocs sites');
+  it('should provide meaningful error messages for common failures');
+  it('should verify successful deployment and site accessibility');
+});
+</code></pre>
+<h2>References</h2>
+<ul>
+<li><a href="https://docs.github.com/en/pages">GitHub Pages Documentation</a></li>
+<li><a href="https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions">GitHub Actions Best Practices</a></li>
+<li><a href="https://jamstack.org/best-practices/">Static Site Deployment Strategies</a></li>
+<li><a href="https://jamstack.org/what-is-jamstack/">JAMstack Architecture Guide</a></li>
+</ul>

@@ -1,0 +1,345 @@
+<h1>ADR-004: Diataxis Framework Integration for Documentation Structure</h1>
+<hr>
+<h2>id: 004-diataxis-framework-integration
+title: 'ADR-004: Diataxis Framework Integration'
+sidebar_label: 'ADR-4: Diataxis Framework Integration'
+sidebar_position: 4</h2>
+<h2>Status</h2>
+<p>Accepted</p>
+<h2>Context</h2>
+<p>DocuMCP aims to improve the quality and effectiveness of technical documentation by implementing proven information architecture principles. The Diataxis framework provides a systematic approach to organizing technical documentation into four distinct categories that serve different user needs and learning contexts.</p>
+<p>Diataxis Framework Components:</p>
+<ul>
+<li><strong>Tutorials</strong>: Learning-oriented content for skill acquisition</li>
+<li><strong>How-to Guides</strong>: Problem-solving oriented content for specific tasks</li>
+<li><strong>Technical Reference</strong>: Information-oriented content for lookup and verification</li>
+<li><strong>Explanation</strong>: Understanding-oriented content for context and background</li>
+</ul>
+<p>Current documentation challenges:</p>
+<ul>
+<li>Most projects mix different content types without clear organization</li>
+<li>Users struggle to find appropriate content for their current needs</li>
+<li>Documentation often fails to serve different user contexts effectively</li>
+<li>Information architecture is typically ad-hoc and inconsistent</li>
+</ul>
+<p>The framework addresses fundamental differences in user intent:</p>
+<ul>
+<li><strong>Study vs. Work</strong>: Different contexts require different content approaches</li>
+<li><strong>Acquisition vs. Application</strong>: Learning new skills vs. applying existing knowledge</li>
+<li><strong>Practical vs. Theoretical</strong>: Task completion vs. understanding concepts</li>
+</ul>
+<h2>Decision</h2>
+<p>We will integrate the Diataxis framework as the foundational information architecture for all DocuMCP-generated documentation structures, with intelligent content planning and navigation generation adapted to each static site generator's capabilities.</p>
+<h3>Integration Approach:</h3>
+<h4>1. Automated Structure Generation</h4>
+<ul>
+<li><strong>Directory organization</strong> that clearly separates Diataxis content types</li>
+<li><strong>Navigation systems</strong> that help users understand content categorization</li>
+<li><strong>Template generation</strong> for each content type with appropriate guidance</li>
+<li><strong>Cross-reference systems</strong> that maintain logical relationships between content types</li>
+</ul>
+<h4>2. Content Type Templates</h4>
+<ul>
+<li><strong>Tutorial templates</strong> with learning objectives, prerequisites, step-by-step instructions</li>
+<li><strong>How-to guide templates</strong> focused on problem-solution patterns</li>
+<li><strong>Reference templates</strong> for systematic information organization</li>
+<li><strong>Explanation templates</strong> for conceptual and architectural content</li>
+</ul>
+<h4>3. Content Planning Intelligence</h4>
+<ul>
+<li><strong>Automated content suggestions</strong> based on project analysis</li>
+<li><strong>Gap identification</strong> for missing content types</li>
+<li><strong>User journey mapping</strong> to appropriate content categories</li>
+<li><strong>Content relationship mapping</strong> to ensure comprehensive coverage</li>
+</ul>
+<h4>4. SSG-Specific Implementation</h4>
+<ul>
+<li><strong>Adaptation to SSG capabilities</strong> while maintaining Diataxis principles</li>
+<li><strong>Theme and plugin recommendations</strong> that support Diataxis organization</li>
+<li><strong>Navigation configuration</strong> optimized for each SSG's features</li>
+</ul>
+<h2>Alternatives Considered</h2>
+<h3>Generic Documentation Templates</h3>
+<ul>
+<li><strong>Pros</strong>: Simpler implementation, fewer constraints on content organization</li>
+<li><strong>Cons</strong>: Perpetuates existing documentation quality problems, no systematic improvement</li>
+<li><strong>Decision</strong>: Rejected due to missed opportunity for significant quality improvement</li>
+</ul>
+<h3>Custom Documentation Framework</h3>
+<ul>
+<li><strong>Pros</strong>: Full control over documentation approach and features</li>
+<li><strong>Cons</strong>: Reinventing proven methodology, reduced credibility, maintenance burden</li>
+<li><strong>Decision</strong>: Rejected in favor of proven, established framework</li>
+</ul>
+<h3>Multiple Framework Options</h3>
+<ul>
+<li><strong>Pros</strong>: Could accommodate different project preferences and approaches</li>
+<li><strong>Cons</strong>: Choice paralysis, inconsistent quality, complex implementation</li>
+<li><strong>Decision</strong>: Rejected to maintain focus and ensure consistent quality outcomes</li>
+</ul>
+<h3>Optional Diataxis Integration</h3>
+<ul>
+<li><strong>Pros</strong>: Gives users choice, accommodates existing documentation structures</li>
+<li><strong>Cons</strong>: Reduces value proposition, complicates implementation, inconsistent results</li>
+<li><strong>Decision</strong>: Rejected to ensure consistent quality and educational value</li>
+</ul>
+<h2>Consequences</h2>
+<h3>Positive</h3>
+<ul>
+<li><strong>Improved Documentation Quality</strong>: Systematic application of proven principles</li>
+<li><strong>Better User Experience</strong>: Users can find appropriate content for their context</li>
+<li><strong>Educational Value</strong>: Projects learn proper documentation organization</li>
+<li><strong>Consistency</strong>: All DocuMCP projects benefit from same high-quality structure</li>
+<li><strong>Maintenance Benefits</strong>: Clear content types simplify ongoing documentation work</li>
+</ul>
+<h3>Negative</h3>
+<ul>
+<li><strong>Learning Curve</strong>: Teams need to understand Diataxis principles for optimal results</li>
+<li><strong>Initial Overhead</strong>: More structure requires more initial planning and content creation</li>
+<li><strong>Rigidity</strong>: Some projects might prefer different organizational approaches</li>
+</ul>
+<h3>Risks and Mitigations</h3>
+<ul>
+<li><strong>User Resistance</strong>: Provide clear education about benefits and implementation guidance</li>
+<li><strong>Implementation Complexity</strong>: Start with basic structure, enhance over time</li>
+<li><strong>Content Quality</strong>: Provide high-quality templates and examples</li>
+</ul>
+<h2>Implementation Details</h2>
+<h3>Directory Structure Generation</h3>
+<pre><code class="language-typescript">interface DiataxisStructure {
+  tutorials: DirectoryConfig;
+  howToGuides: DirectoryConfig;
+  reference: DirectoryConfig;
+  explanation: DirectoryConfig;
+  navigation: NavigationConfig;
+}
+
+const DIATAXIS_TEMPLATES: Record&lt;SSGType, DiataxisStructure&gt; = {
+  hugo: {
+    tutorials: { path: 'content/tutorials', layout: 'tutorial' },
+    howToGuides: { path: 'content/how-to', layout: 'guide' },
+    reference: { path: 'content/reference', layout: 'reference' },
+    explanation: { path: 'content/explanation', layout: 'explanation' },
+    navigation: { menu: 'diataxis', weight: 'category-based' }
+  },
+  // ... other SSG configurations
+};
+</code></pre>
+<h3>Content Template System</h3>
+<pre><code class="language-typescript">interface ContentTemplate {
+  frontmatter: Record&lt;string, any&gt;;
+  structure: ContentSection[];
+  guidance: string[];
+  examples: string[];
+}
+
+const TUTORIAL_TEMPLATE: ContentTemplate = {
+  frontmatter: {
+    title: '',
+    description: '',
+    difficulty: '',
+    prerequisites: '',
+    estimated_time: ''
+  },
+  structure: [
+    { section: 'learning_objectives', required: true },
+    { section: 'prerequisites', required: true },
+    { section: 'step_by_step_instructions', required: true },
+    { section: 'verification', required: true },
+    { section: 'next_steps', required: false }
+  ],
+  guidance: [
+    'Focus on learning and skill acquisition',
+    'Provide complete, working examples',
+    'Include verification steps for each major milestone',
+    'Assume minimal prior knowledge'
+  ]
+};
+</code></pre>
+<h3>Content Planning Algorithm</h3>
+<pre><code class="language-typescript">interface ContentPlan {
+  tutorials: TutorialSuggestion[];
+  howToGuides: HowToSuggestion[];
+  reference: ReferenceSuggestion[];
+  explanation: ExplanationSuggestion[];
+}
+
+function generateContentPlan(projectAnalysis: ProjectAnalysis): ContentPlan {
+  return {
+    tutorials: suggestTutorials(projectAnalysis),
+    howToGuides: suggestHowToGuides(projectAnalysis),
+    reference: suggestReference(projectAnalysis),
+    explanation: suggestExplanation(projectAnalysis)
+  };
+}
+
+function suggestTutorials(analysis: ProjectAnalysis): TutorialSuggestion[] {
+  const suggestions: TutorialSuggestion[] = [];
+  
+  // Getting started tutorial (always recommended)
+  suggestions.push({
+    title: 'Getting Started',
+    description: 'First steps with ',
+    priority: 'high',
+    estimated_effort: 'medium'
+  });
+  
+  // Feature-specific tutorials based on project complexity
+  if (analysis.complexity.apiSurface &gt; 5) {
+    suggestions.push({
+      title: 'API Integration Tutorial',
+      description: 'Complete guide to integrating with the API',
+      priority: 'high',
+      estimated_effort: 'large'
+    });
+  }
+  
+  return suggestions;
+}
+</code></pre>
+<h3>Navigation Generation</h3>
+<pre><code class="language-typescript">interface DiataxisNavigation {
+  structure: NavigationItem[];
+  labels: NavigationLabels;
+  descriptions: CategoryDescriptions;
+}
+
+const NAVIGATION_STRUCTURE: DiataxisNavigation = {
+  structure: [
+    {
+      category: 'tutorials',
+      label: 'Tutorials',
+      description: 'Learning-oriented guides',
+      icon: 'graduation-cap',
+      order: 1
+    },
+    {
+      category: 'how-to',
+      label: 'How-to Guides',
+      description: 'Problem-solving recipes',
+      icon: 'tools',
+      order: 2
+    },
+    {
+      category: 'reference',
+      label: 'Reference',
+      description: 'Technical information',
+      icon: 'book',
+      order: 3
+    },
+    {
+      category: 'explanation',
+      label: 'Explanation',
+      description: 'Understanding and context',
+      icon: 'lightbulb',
+      order: 4
+    }
+  ],
+  labels: {
+    tutorials: 'Learn',
+    howToGuides: 'Solve',
+    reference: 'Lookup',
+    explanation: 'Understand'
+  },
+  descriptions: {
+    tutorials: 'Step-by-step learning paths',
+    howToGuides: 'Solutions to specific problems',
+    reference: 'Complete technical details',
+    explanation: 'Background and concepts'
+  }
+};
+</code></pre>
+<h3>SSG-Specific Adaptations</h3>
+<pre><code class="language-typescript">interface SSGDiataxisAdapter {
+  generateStructure(ssg: SSGType, project: ProjectAnalysis): DiataxisImplementation;
+  createNavigation(ssg: SSGType, structure: DiataxisStructure): NavigationConfig;
+  generateTemplates(ssg: SSGType, contentTypes: ContentType[]): TemplateSet;
+}
+
+class HugoDiataxisAdapter implements SSGDiataxisAdapter {
+  generateStructure(ssg: SSGType, project: ProjectAnalysis): DiataxisImplementation {
+    return {
+      contentDirectories: this.createHugoContentStructure(),
+      frontmatterSchemas: this.createHugoFrontmatter(),
+      taxonomies: this.createDiataxisTaxonomies(),
+      menuConfiguration: this.createHugoMenus()
+    };
+  }
+  
+  createHugoContentStructure(): ContentStructure {
+    return {
+      'content/tutorials/': { weight: 10, section: 'tutorials' },
+      'content/how-to/': { weight: 20, section: 'guides' },
+      'content/reference/': { weight: 30, section: 'reference' },
+      'content/explanation/': { weight: 40, section: 'explanation' }
+    };
+  }
+}
+</code></pre>
+<h2>Quality Assurance</h2>
+<h3>Diataxis Compliance Validation</h3>
+<pre><code class="language-typescript">interface DiataxisValidator {
+  validateStructure(documentation: DocumentationStructure): ValidationResult;
+  checkContentTypeAlignment(content: Content, declaredType: ContentType): AlignmentResult;
+  identifyMissingCategories(structure: DocumentationStructure): Gap[];
+}
+
+function validateDiataxisCompliance(docs: DocumentationStructure): ComplianceReport {
+  return {
+    structureCompliance: checkDirectoryOrganization(docs),
+    contentTypeAccuracy: validateContentCategorization(docs),
+    navigationClarity: assessNavigationEffectiveness(docs),
+    crossReferenceCompleteness: checkContentRelationships(docs)
+  };
+}
+</code></pre>
+<h3>Content Quality Guidelines</h3>
+<ul>
+<li><strong>Tutorial Content</strong>: Must include learning objectives, prerequisites, and verification steps</li>
+<li><strong>How-to Content</strong>: Must focus on specific problems with clear solution steps</li>
+<li><strong>Reference Content</strong>: Must be comprehensive, accurate, and systematically organized</li>
+<li><strong>Explanation Content</strong>: Must provide context, background, and conceptual understanding</li>
+</ul>
+<h3>Testing Strategy</h3>
+<ul>
+<li><strong>Structure Tests</strong>: Validate directory organization and navigation generation</li>
+<li><strong>Template Tests</strong>: Ensure all content type templates are properly formatted</li>
+<li><strong>Integration Tests</strong>: Test complete Diataxis implementation across different SSGs</li>
+<li><strong>User Experience Tests</strong>: Validate that users can effectively navigate and find content</li>
+</ul>
+<h2>Educational Integration</h2>
+<h3>User Guidance</h3>
+<ul>
+<li><strong>Diataxis Explanation</strong>: Clear documentation of framework benefits and principles</li>
+<li><strong>Content Type Guidelines</strong>: Detailed guidance for creating each type of content</li>
+<li><strong>Migration Assistance</strong>: Help converting existing documentation to Diataxis structure</li>
+<li><strong>Best Practice Examples</strong>: Templates and examples demonstrating effective implementation</li>
+</ul>
+<h3>Community Building</h3>
+<ul>
+<li><strong>Diataxis Advocacy</strong>: Promote framework adoption across open-source community</li>
+<li><strong>Success Story Sharing</strong>: Highlight projects benefiting from Diataxis implementation</li>
+<li><strong>Training Resources</strong>: Develop educational materials for technical writers and maintainers</li>
+<li><strong>Feedback Collection</strong>: Gather community input for framework implementation improvements</li>
+</ul>
+<h2>Future Enhancements</h2>
+<h3>Advanced Features</h3>
+<ul>
+<li><strong>Content Gap Analysis</strong>: AI-powered identification of missing content areas</li>
+<li><strong>User Journey Optimization</strong>: Intelligent linking between content types based on user flows</li>
+<li><strong>Content Quality Scoring</strong>: Automated assessment of content quality within each category</li>
+<li><strong>Personalized Navigation</strong>: Adaptive navigation based on user role and experience level</li>
+</ul>
+<h3>Tool Integration</h3>
+<ul>
+<li><strong>Analytics Integration</strong>: Track how users navigate between different content types</li>
+<li><strong>Content Management</strong>: Tools for maintaining Diataxis compliance over time</li>
+<li><strong>Translation Support</strong>: Multi-language implementations of Diataxis structure</li>
+<li><strong>Accessibility Features</strong>: Ensure Diataxis implementation supports accessibility standards</li>
+</ul>
+<h2>References</h2>
+<ul>
+<li><a href="https://diataxis.fr/">Diataxis Framework Official Documentation</a></li>
+<li><a href="https://www.usability.gov/what-and-why/information-architecture.html">Information Architecture Principles</a></li>
+<li><a href="https://developers.google.com/tech-writing">Technical Writing Best Practices</a></li>
+</ul>

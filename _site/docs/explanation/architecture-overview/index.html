@@ -1,0 +1,110 @@
+<h1>Architecture Overview</h1>
+<p>Understanding the MCP server architecture of documcp.</p>
+<h2>System Architecture</h2>
+<p>documcp is a Model Context Protocol (MCP) server that provides intelligent documentation deployment tools for AI assistants like Claude Desktop and GitHub Copilot.</p>
+<h3>Core Components</h3>
+<ol>
+<li><strong>MCP Server Foundation</strong>: TypeScript-based MCP protocol implementation</li>
+<li><strong>Repository Analysis Engine</strong>: Multi-layered project analysis and characterization</li>
+<li><strong>SSG Recommendation Engine</strong>: Intelligent static site generator selection</li>
+<li><strong>Configuration Generation System</strong>: Template-based SSG configuration creation</li>
+<li><strong>Deployment Orchestration</strong>: GitHub Pages workflow automation</li>
+<li><strong>Content Intelligence</strong>: Diataxis-compliant documentation structure generation</li>
+</ol>
+<h2>MCP Protocol Integration</h2>
+<h3>Tool-Based Architecture</h3>
+<p>documcp exposes functionality through MCP tools:</p>
+<ul>
+<li><strong>analyzeRepository</strong>: Comprehensive project analysis</li>
+<li><strong>recommendSSG</strong>: Intelligent SSG recommendations</li>
+<li><strong>generateConfiguration</strong>: SSG-specific configuration creation</li>
+<li><strong>createDiataxisStructure</strong>: Documentation framework generation</li>
+<li><strong>generateWorkflow</strong>: GitHub Actions deployment workflows</li>
+<li><strong>generateGitCommands</strong>: Git integration commands</li>
+</ul>
+<h3>Stateless Design</h3>
+<p>Each tool call is independent and idempotent:</p>
+<ul>
+<li>No session state maintained between calls</li>
+<li>Analysis results passed between tools via parameters</li>
+<li>Consistent behavior across different AI clients</li>
+</ul>
+<h2>Directory Structure</h2>
+<pre><code>documcp/
+├── src/
+│   ├── index.ts           # MCP server entry point
+│   ├── tools/             # MCP tool implementations
+│   │   ├── analyze-repository.ts
+│   │   ├── recommend-ssg.ts
+│   │   ├── generate-config.ts
+│   │   └── ...
+│   ├── types/             # TypeScript type definitions
+│   └── scripts/           # Utility scripts
+├── tests/                 # Jest test suites
+├── docs/                  # Documentation (Diataxis structure)
+└── mcp.json              # MCP server configuration
+</code></pre>
+<h2>Tool Execution Flow</h2>
+<ol>
+<li><strong>Tool Invocation</strong>: AI client calls MCP tool with parameters</li>
+<li><strong>Parameter Validation</strong>: Zod schema validation and sanitization</li>
+<li><strong>Analysis/Processing</strong>: Tool-specific logic execution</li>
+<li><strong>Result Generation</strong>: Structured response with metadata</li>
+<li><strong>Resource Storage</strong>: Generated files stored as MCP resources</li>
+<li><strong>Response Return</strong>: JSON response with next steps guidance</li>
+</ol>
+<h2>Intelligence Architecture</h2>
+<h3>Repository Analysis Engine</h3>
+<p>Multi-dimensional project analysis:</p>
+<ul>
+<li><strong>Language Ecosystem Detection</strong>: Primary languages and frameworks</li>
+<li><strong>Project Complexity Assessment</strong>: Size, structure, and sophistication metrics</li>
+<li><strong>Documentation State Analysis</strong>: Existing docs, gaps, and quality</li>
+<li><strong>Deployment Context</strong>: GitHub integration, Pages compatibility</li>
+</ul>
+<h3>SSG Recommendation Engine</h3>
+<p>Decision framework based on:</p>
+<ul>
+<li><strong>Project Characteristics</strong>: Language, size, complexity</li>
+<li><strong>Team Capabilities</strong>: Technical skills, maintenance capacity</li>
+<li><strong>Performance Requirements</strong>: Build speed, site performance needs</li>
+<li><strong>Integration Needs</strong>: GitHub Pages, existing tooling compatibility</li>
+</ul>
+<h3>Content Intelligence</h3>
+<p>Automated documentation structure:</p>
+<ul>
+<li><strong>Diataxis Framework Compliance</strong>: Tutorials, How-To, Reference, Explanation</li>
+<li><strong>Project-Specific Content</strong>: Tailored to detected technologies</li>
+<li><strong>Navigation Generation</strong>: Logical information architecture</li>
+<li><strong>Template Population</strong>: SSG-specific content formatting</li>
+</ul>
+<h2>Performance Considerations</h2>
+<h3>Efficient Analysis</h3>
+<ul>
+<li><strong>Streaming File Processing</strong>: Memory-efficient large repository handling</li>
+<li><strong>Parallel Processing</strong>: Concurrent analysis of multiple components</li>
+<li><strong>Intelligent Caching</strong>: Result memoization for repeated operations</li>
+<li><strong>Incremental Analysis</strong>: Focus on changed components when possible</li>
+</ul>
+<h3>Resource Management</h3>
+<ul>
+<li><strong>Memory Optimization</strong>: Streaming and chunked processing</li>
+<li><strong>File System Efficiency</strong>: Minimal disk I/O operations</li>
+<li><strong>Network Optimization</strong>: Efficient GitHub API usage</li>
+<li><strong>Process Isolation</strong>: Clean separation between tool executions</li>
+</ul>
+<h2>Integration Architecture</h2>
+<h3>GitHub Integration</h3>
+<ul>
+<li><strong>Repository Analysis</strong>: Direct filesystem and Git history access</li>
+<li><strong>Pages Configuration</strong>: Automated repository settings management</li>
+<li><strong>Workflow Generation</strong>: GitHub Actions YAML creation</li>
+<li><strong>Deployment Verification</strong>: Post-deployment health checks</li>
+</ul>
+<h3>AI Assistant Integration</h3>
+<ul>
+<li><strong>Natural Language Interface</strong>: Intent understanding and tool orchestration</li>
+<li><strong>Context Preservation</strong>: Analysis results flow between tool calls</li>
+<li><strong>Error Recovery</strong>: Intelligent failure handling and retry logic</li>
+<li><strong>Workflow Guidance</strong>: Next steps recommendations and user guidance</li>
+</ul>

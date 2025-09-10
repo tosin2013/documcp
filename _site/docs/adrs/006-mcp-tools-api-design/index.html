@@ -1,0 +1,629 @@
+<h1>ADR-006: MCP Tools API Design and Interface Specification</h1>
+<h2>Status</h2>
+<p>Accepted</p>
+<h2>Context</h2>
+<p>DocuMCP must expose its functionality through a carefully designed set of MCP tools that provide comprehensive coverage of the documentation deployment workflow while maintaining clear separation of concerns, appropriate granularity, and excellent developer experience for MCP-enabled clients.</p>
+<p>The MCP Tools API serves as the primary interface between DocuMCP's intelligence and client applications like GitHub Copilot, Claude Desktop, and other MCP-enabled development environments. This API must balance several competing concerns:</p>
+<p><strong>Functional Requirements:</strong></p>
+<ul>
+<li>Comprehensive repository analysis capabilities</li>
+<li>Intelligent SSG recommendation with detailed justifications</li>
+<li>Automated configuration generation for multiple SSGs</li>
+<li>Diataxis-compliant documentation structure creation</li>
+<li>GitHub Pages deployment workflow generation</li>
+<li>Git integration for seamless deployment</li>
+</ul>
+<p><strong>Usability Requirements:</strong></p>
+<ul>
+<li>Intuitive tool names and parameter structures</li>
+<li>Comprehensive input validation with clear error messages</li>
+<li>Consistent response formats across all tools</li>
+<li>Rich metadata for client presentation and user guidance</li>
+<li>Progressive disclosure of complexity (simple to advanced use cases)</li>
+</ul>
+<p><strong>Technical Requirements:</strong></p>
+<ul>
+<li>Full MCP specification compliance</li>
+<li>Robust error handling and recovery</li>
+<li>Efficient parameter validation and sanitization</li>
+<li>Scalable architecture supporting complex multi-step workflows</li>
+<li>Extensible design for future functionality additions</li>
+</ul>
+<h2>Decision</h2>
+<p>We will implement a comprehensive MCP Tools API consisting of six core tools that cover the complete documentation deployment workflow, with additional utility tools for advanced scenarios and troubleshooting.</p>
+<h3>Core MCP Tools Architecture:</h3>
+<h4>1. Repository Analysis Tool (<code>analyzeRepository</code>)</h4>
+<p><strong>Purpose</strong>: Comprehensive repository analysis and project characterization
+<strong>Scope</strong>: Deep analysis of project structure, language ecosystems, existing documentation, and complexity assessment</p>
+<h4>2. SSG Recommendation Tool (<code>recommendSSG</code>)</h4>
+<p><strong>Purpose</strong>: Intelligent static site generator recommendation with detailed justifications
+<strong>Scope</strong>: Multi-criteria decision analysis with confidence scoring and alternative options</p>
+<h4>3. Configuration Generation Tool (<code>generateConfiguration</code>)</h4>
+<p><strong>Purpose</strong>: Create customized SSG configuration files and directory structures
+<strong>Scope</strong>: Template-based generation with project-specific customizations and validation</p>
+<h4>4. Diataxis Structure Tool (<code>createDiataxisStructure</code>)</h4>
+<p><strong>Purpose</strong>: Generate comprehensive Diataxis-compliant documentation frameworks
+<strong>Scope</strong>: Information architecture generation with content planning and navigation design</p>
+<h4>5. Deployment Workflow Tool (<code>generateWorkflow</code>)</h4>
+<p><strong>Purpose</strong>: Create optimized GitHub Actions workflows for automated deployment
+<strong>Scope</strong>: SSG-specific workflow generation with security best practices and performance optimization</p>
+<h4>6. Git Integration Tool (<code>generateGitCommands</code>)</h4>
+<p><strong>Purpose</strong>: Provide ready-to-execute Git commands for deployment and maintenance
+<strong>Scope</strong>: Context-aware command generation with branch management and deployment verification</p>
+<h3>Supporting Tools:</h3>
+<ul>
+<li><code>validateConfiguration</code>: Validate generated configurations and identify issues</li>
+<li><code>troubleshootDeployment</code>: Analyze deployment failures and provide remediation guidance</li>
+<li><code>optimizePerformance</code>: Analyze and optimize existing documentation site performance</li>
+<li><code>migrateDocumentation</code>: Assist with migration between different SSGs or frameworks</li>
+</ul>
+<h2>Alternatives Considered</h2>
+<h3>Monolithic Single Tool Approach</h3>
+<ul>
+<li><strong>Pros</strong>: Simpler API surface, single entry point, easier client integration</li>
+<li><strong>Cons</strong>: Complex parameter structures, poor separation of concerns, difficult error handling</li>
+<li><strong>Decision</strong>: Rejected due to poor usability and maintainability</li>
+</ul>
+<h3>Micro-Tool Architecture (15+ Small Tools)</h3>
+<ul>
+<li><strong>Pros</strong>: Maximum granularity, precise control, composable workflows</li>
+<li><strong>Cons</strong>: Complex orchestration, cognitive overhead, fragmented user experience</li>
+<li><strong>Decision</strong>: Rejected due to complexity and poor user experience</li>
+</ul>
+<h3>Stateful Session-Based API</h3>
+<ul>
+<li><strong>Pros</strong>: Could maintain context across tool calls, simplified parameter passing</li>
+<li><strong>Cons</strong>: Session management complexity, state synchronization issues, harder client integration</li>
+<li><strong>Decision</strong>: Rejected to maintain MCP stateless principles</li>
+</ul>
+<h3>External API Integration (REST/GraphQL)</h3>
+<ul>
+<li><strong>Pros</strong>: Standard web technologies, extensive tooling ecosystem</li>
+<li><strong>Cons</strong>: Not MCP-compliant, additional infrastructure requirements, authentication complexity</li>
+<li><strong>Decision</strong>: Rejected due to MCP specification requirements</li>
+</ul>
+<h2>Consequences</h2>
+<h3>Positive</h3>
+<ul>
+<li><strong>Clear Separation of Concerns</strong>: Each tool has well-defined responsibility and scope</li>
+<li><strong>Progressive Complexity</strong>: Users can start simple and add sophistication as needed</li>
+<li><strong>Excellent Error Handling</strong>: Tool-specific validation and error reporting</li>
+<li><strong>Client-Friendly</strong>: Rich metadata and consistent response formats enhance client UX</li>
+<li><strong>Extensible Architecture</strong>: Easy to add new tools without breaking existing functionality</li>
+</ul>
+<h3>Negative</h3>
+<ul>
+<li><strong>API Surface Complexity</strong>: Six core tools plus supporting tools require comprehensive documentation</li>
+<li><strong>Inter-Tool Coordination</strong>: Some workflows require multiple tool calls with parameter passing</li>
+<li><strong>Validation Overhead</strong>: Each tool requires comprehensive input validation and error handling</li>
+</ul>
+<h3>Risks and Mitigations</h3>
+<ul>
+<li><strong>API Complexity</strong>: Provide comprehensive documentation and usage examples</li>
+<li><strong>Parameter Evolution</strong>: Use versioned schemas with backward compatibility</li>
+<li><strong>Client Integration</strong>: Offer reference implementations and integration guides</li>
+</ul>
+<h2>Implementation Details</h2>
+<h3>Tool Parameter Schemas</h3>
+<pre><code class="language-typescript">// Core tool parameter interfaces
+interface AnalyzeRepositoryParams {
+  repositoryPath: string;
+  analysisDepth?: 'basic' | 'comprehensive' | 'deep';
+  focusAreas?: ('structure' | 'languages' | 'documentation' | 'complexity')[];
+  excludePatterns?: string[];
+}
+
+interface RecommendSSGParams {
+  projectAnalysis: ProjectAnalysis;
+  teamCapabilities?: TeamCapabilities;
+  performanceRequirements?: PerformanceRequirements;
+  customizationNeeds?: CustomizationNeeds;
+  existingConstraints?: ProjectConstraints;
+}
+
+interface GenerateConfigurationParams {
+  selectedSSG: SSGType;
+  projectAnalysis: ProjectAnalysis;
+  customizations?: SSGCustomizations;
+  deploymentTarget?: DeploymentTarget;
+  advancedOptions?: AdvancedConfigOptions;
+}
+
+interface CreateDiataxisStructureParams {
+  selectedSSG: SSGType;
+  projectType: ProjectType;
+  existingContent?: ExistingContentAnalysis;
+  contentComplexity?: 'minimal' | 'standard' | 'comprehensive';
+  navigationPreferences?: NavigationPreferences;
+}
+
+interface GenerateWorkflowParams {
+  ssgType: SSGType;
+  deploymentStrategy: 'github-actions' | 'branch-based' | 'hybrid';
+  securityRequirements?: SecurityRequirements;
+  performanceOptimizations?: PerformanceOptions;
+  environmentConfiguration?: EnvironmentConfig;
+}
+
+interface GenerateGitCommandsParams {
+  deploymentStrategy: DeploymentStrategy;
+  repositoryState: RepositoryState;
+  branchConfiguration: BranchConfiguration;
+  commitPreferences?: CommitPreferences;
+}
+</code></pre>
+<h3>Response Format Standardization</h3>
+<pre><code class="language-typescript">// Standardized response structure for all tools
+interface MCPToolResponse&lt;T&gt; {
+  success: boolean;
+  data?: T;
+  error?: ErrorDetails;
+  metadata: ResponseMetadata;
+  recommendations?: Recommendation[];
+  nextSteps?: NextStep[];
+}
+
+interface ResponseMetadata {
+  toolVersion: string;
+  executionTime: number;
+  confidenceScore?: number;
+  analysisDepth: string;
+  timestamp: string;
+  correlationId: string;
+}
+
+interface ErrorDetails {
+  code: string;
+  message: string;
+  details: string;
+  resolution?: string;
+  documentation?: string;
+}
+
+interface Recommendation {
+  type: 'optimization' | 'alternative' | 'enhancement';
+  priority: 'low' | 'medium' | 'high';
+  description: string;
+  implementation?: string;
+  resources?: string[];
+}
+
+interface NextStep {
+  action: string;
+  description: string;
+  toolRequired?: string;
+  parameters?: Record&lt;string, any&gt;;
+  estimated_time?: string;
+}
+</code></pre>
+<h3>analyzeRepository Tool Implementation</h3>
+<pre><code class="language-typescript">const analyzeRepositoryTool: MCPTool = {
+  name: 'analyzeRepository',
+  description: 'Comprehensive repository analysis for documentation planning',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      repositoryPath: {
+        type: 'string',
+        description: 'Path to the repository to analyze'
+      },
+      analysisDepth: {
+        type: 'string',
+        enum: ['basic', 'comprehensive', 'deep'],
+        default: 'comprehensive',
+        description: 'Depth of analysis to perform'
+      },
+      focusAreas: {
+        type: 'array',
+        items: {
+          type: 'string',
+          enum: ['structure', 'languages', 'documentation', 'complexity']
+        },
+        description: 'Specific areas to focus analysis on'
+      },
+      excludePatterns: {
+        type: 'array',
+        items: { type: 'string' },
+        description: 'File patterns to exclude from analysis'
+      }
+    },
+    required: ['repositoryPath']
+  }
+};
+
+async function handleAnalyzeRepository(params: AnalyzeRepositoryParams): Promise&lt;MCPToolResponse&lt;RepositoryAnalysis&gt;&gt; {
+  try {
+    const analysis = await repositoryAnalyzer.analyze(params);
+    
+    return {
+      success: true,
+      data: analysis,
+      metadata: {
+        toolVersion: '1.0.0',
+        executionTime: analysis.executionTime,
+        analysisDepth: params.analysisDepth || 'comprehensive',
+        timestamp: new Date().toISOString(),
+        correlationId: generateCorrelationId()
+      },
+      recommendations: generateAnalysisRecommendations(analysis),
+      nextSteps: [
+        {
+          action: 'Get SSG Recommendation',
+          description: 'Use analysis results to get intelligent SSG recommendations',
+          toolRequired: 'recommendSSG',
+          parameters: { projectAnalysis: analysis },
+          estimated_time: '&lt; 1 minute'
+        }
+      ]
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: {
+        code: 'ANALYSIS_FAILED',
+        message: 'Repository analysis failed',
+        details: error.message,
+        resolution: 'Verify repository path and permissions',
+        documentation: 'https://documcp.dev/troubleshooting#analysis-errors'
+      },
+      metadata: {
+        toolVersion: '1.0.0',
+        executionTime: 0,
+        analysisDepth: params.analysisDepth || 'comprehensive',
+        timestamp: new Date().toISOString(),
+        correlationId: generateCorrelationId()
+      }
+    };
+  }
+}
+</code></pre>
+<h3>recommendSSG Tool Implementation</h3>
+<pre><code class="language-typescript">const recommendSSGTool: MCPTool = {
+  name: 'recommendSSG',
+  description: 'Intelligent static site generator recommendation with detailed justifications',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      projectAnalysis: {
+        type: 'object',
+        description: 'Repository analysis results from analyzeRepository tool'
+      },
+      teamCapabilities: {
+        type: 'object',
+        properties: {
+          technicalSkills: { type: 'array', items: { type: 'string' } },
+          maintenanceCapacity: { type: 'string', enum: ['minimal', 'moderate', 'extensive'] },
+          learningAppetite: { type: 'string', enum: ['low', 'medium', 'high'] }
+        }
+      },
+      performanceRequirements: {
+        type: 'object',
+        properties: {
+          buildTimeImportance: { type: 'string', enum: ['low', 'medium', 'high'] },
+          siteSpeedPriority: { type: 'string', enum: ['standard', 'fast', 'ultra-fast'] },
+          scalabilityNeeds: { type: 'string', enum: ['small', 'medium', 'large', 'enterprise'] }
+        }
+      }
+    },
+    required: ['projectAnalysis']
+  }
+};
+
+async function handleRecommendSSG(params: RecommendSSGParams): Promise&lt;MCPToolResponse&lt;SSGRecommendation&gt;&gt; {
+  const recommendation = await ssgRecommendationEngine.analyze(params);
+  
+  return {
+    success: true,
+    data: recommendation,
+    metadata: {
+      toolVersion: '1.0.0',
+      executionTime: recommendation.analysisTime,
+      confidenceScore: recommendation.confidence,
+      analysisDepth: 'comprehensive',
+      timestamp: new Date().toISOString(),
+      correlationId: generateCorrelationId()
+    },
+    recommendations: [
+      {
+        type: 'optimization',
+        priority: 'medium',
+        description: 'Consider performance optimization strategies',
+        implementation: 'Review build caching and incremental build options'
+      }
+    ],
+    nextSteps: [
+      {
+        action: 'Generate Configuration',
+        description: 'Create customized configuration for recommended SSG',
+        toolRequired: 'generateConfiguration',
+        parameters: { 
+          selectedSSG: recommendation.primaryRecommendation.ssg,
+          projectAnalysis: params.projectAnalysis 
+        },
+        estimated_time: '2-3 minutes'
+      }
+    ]
+  };
+}
+</code></pre>
+<h3>Input Validation System</h3>
+<pre><code class="language-typescript">interface ValidationRule {
+  field: string;
+  validator: (value: any) =&gt; ValidationResult;
+  required: boolean;
+  errorMessage: string;
+}
+
+class MCPToolValidator {
+  validateParameters&lt;T&gt;(params: T, schema: JSONSchema): ValidationResult {
+    const results = this.runSchemaValidation(params, schema);
+    const semanticResults = this.runSemanticValidation(params);
+    
+    return this.combineValidationResults(results, semanticResults);
+  }
+
+  private runSemanticValidation(params: any): ValidationResult {
+    const issues: ValidationIssue[] = [];
+    
+    // Repository path validation
+    if (params.repositoryPath &amp;&amp; !this.isValidRepositoryPath(params.repositoryPath)) {
+      issues.push({
+        field: 'repositoryPath',
+        message: 'Repository path does not exist or is not accessible',
+        severity: 'error',
+        resolution: 'Verify the path exists and you have read permissions'
+      });
+    }
+    
+    // Cross-parameter validation
+    if (params.analysisDepth === 'deep' &amp;&amp; params.focusAreas?.length &gt; 2) {
+      issues.push({
+        field: 'analysisDepth',
+        message: 'Deep analysis with multiple focus areas may be slow',
+        severity: 'warning',
+        resolution: 'Consider using comprehensive analysis or fewer focus areas'
+      });
+    }
+    
+    return { valid: issues.length === 0, issues };
+  }
+}
+</code></pre>
+<h2>Tool Orchestration Patterns</h2>
+<h3>Sequential Workflow Pattern</h3>
+<pre><code class="language-typescript">// Common workflow: Analysis → Recommendation → Configuration → Deployment
+class DocumentationWorkflow {
+  async executeCompleteWorkflow(repositoryPath: string): Promise&lt;WorkflowResult&gt; {
+    try {
+      // Step 1: Analyze repository
+      const analysisResult = await this.callTool('analyzeRepository', { repositoryPath });
+      if (!analysisResult.success) {
+        throw new Error(`Analysis failed: ${analysisResult.error?.message}`);
+      }
+      
+      // Step 2: Get SSG recommendation
+      const recommendationResult = await this.callTool('recommendSSG', {
+        projectAnalysis: analysisResult.data
+      });
+      if (!recommendationResult.success) {
+        throw new Error(`Recommendation failed: ${recommendationResult.error?.message}`);
+      }
+      
+      // Step 3: Generate configuration
+      const configResult = await this.callTool('generateConfiguration', {
+        selectedSSG: recommendationResult.data.primaryRecommendation.ssg,
+        projectAnalysis: analysisResult.data
+      });
+      if (!configResult.success) {
+        throw new Error(`Configuration generation failed: ${configResult.error?.message}`);
+      }
+      
+      // Step 4: Create Diataxis structure
+      const structureResult = await this.callTool('createDiataxisStructure', {
+        selectedSSG: recommendationResult.data.primaryRecommendation.ssg,
+        projectType: analysisResult.data.projectType
+      });
+      if (!structureResult.success) {
+        console.warn(`Diataxis structure creation failed: ${structureResult.error?.message}`);
+      }
+      
+      // Step 5: Generate deployment workflow
+      const workflowResult = await this.callTool('generateWorkflow', {
+        ssgType: recommendationResult.data.primaryRecommendation.ssg,
+        deploymentStrategy: 'github-actions'
+      });
+      if (!workflowResult.success) {
+        console.warn(`Workflow generation failed: ${workflowResult.error?.message}`);
+      }
+      
+      return this.combineResults([
+        analysisResult, recommendationResult, configResult, structureResult, workflowResult
+      ]);
+    } catch (error) {
+      throw new Error(`Complete workflow failed: ${error.message}`);
+    }
+  }
+}
+</code></pre>
+<h2>Error Handling and Recovery</h2>
+<h3>Comprehensive Error Classification</h3>
+<pre><code class="language-typescript">enum ErrorCategory {
+  VALIDATION = 'validation',
+  FILESYSTEM = 'filesystem',
+  ANALYSIS = 'analysis',
+  GENERATION = 'generation',
+  CONFIGURATION = 'configuration',
+  DEPLOYMENT = 'deployment',
+  NETWORK = 'network',
+  PERMISSION = 'permission'
+}
+
+interface ErrorContext {
+  tool: string;
+  operation: string;
+  parameters: Record&lt;string, any&gt;;
+  environment: EnvironmentInfo;
+}
+
+class MCPErrorHandler {
+  handleError(error: Error, context: ErrorContext): MCPToolResponse&lt;null&gt; {
+    const classification = this.classifyError(error);
+    const resolution = this.generateResolution(classification, context);
+    
+    return {
+      success: false,
+      error: {
+        code: this.generateErrorCode(classification),
+        message: this.formatUserMessage(error, classification),
+        details: error.message,
+        resolution: resolution.guidance,
+        documentation: resolution.documentationUrl
+      },
+      metadata: this.generateErrorMetadata(context),
+      nextSteps: resolution.suggestedActions
+    };
+  }
+
+  private generateResolution(classification: ErrorClassification, context: ErrorContext): ErrorResolution {
+    switch (classification.category) {
+      case ErrorCategory.FILESYSTEM:
+        return {
+          guidance: 'Verify file paths and permissions',
+          documentationUrl: 'https://documcp.dev/troubleshooting#filesystem-errors',
+          suggestedActions: [
+            { action: 'Check file exists', description: `Verify ${context.parameters.repositoryPath} exists` },
+            { action: 'Check permissions', description: 'Ensure read access to repository directory' }
+          ]
+        };
+      // ... other error categories
+    }
+  }
+}
+</code></pre>
+<h2>Performance Optimization</h2>
+<h3>Response Caching Strategy</h3>
+<pre><code class="language-typescript">interface CacheConfiguration {
+  analyzeRepository: { ttl: 300, keyFields: ['repositoryPath', 'analysisDepth'] };
+  recommendSSG: { ttl: 3600, keyFields: ['projectAnalysis.signature'] };
+  generateConfiguration: { ttl: 1800, keyFields: ['selectedSSG', 'projectAnalysis.signature'] };
+}
+
+class MCPToolCache {
+  async getCachedResponse&lt;T&gt;(
+    toolName: string, 
+    parameters: any
+  ): Promise&lt;MCPToolResponse&lt;T&gt; | null&gt; {
+    const cacheKey = this.generateCacheKey(toolName, parameters);
+    const cached = await this.cache.get(cacheKey);
+    
+    if (cached &amp;&amp; !this.isExpired(cached)) {
+      return {
+        ...cached,
+        metadata: {
+          ...cached.metadata,
+          fromCache: true,
+          cacheAge: Date.now() - cached.metadata.timestamp
+        }
+      };
+    }
+    
+    return null;
+  }
+}
+</code></pre>
+<h2>Testing Strategy</h2>
+<h3>Tool Testing Framework</h3>
+<pre><code class="language-typescript">describe('MCP Tools API', () =&gt; {
+  describe('analyzeRepository', () =&gt; {
+    it('should analyze JavaScript project correctly');
+    it('should handle missing repository gracefully');
+    it('should respect analysis depth parameters');
+    it('should exclude specified patterns');
+  });
+
+  describe('recommendSSG', () =&gt; {
+    it('should recommend Hugo for large documentation sites');
+    it('should recommend Jekyll for GitHub Pages simple sites');
+    it('should provide confidence scores for all recommendations');
+    it('should handle incomplete project analysis');
+  });
+
+  describe('Tool Integration', () =&gt; {
+    it('should support complete workflow from analysis to deployment');
+    it('should maintain parameter consistency across tool calls');
+    it('should provide appropriate next steps guidance');
+  });
+});
+</code></pre>
+<h3>Integration Testing</h3>
+<pre><code class="language-typescript">class MCPToolIntegrationTests {
+  async testCompleteWorkflow(): Promise&lt;void&gt; {
+    const testRepo = await this.createTestRepository();
+    
+    // Test full workflow
+    const analysis = await this.callTool('analyzeRepository', { repositoryPath: testRepo });
+    expect(analysis.success).toBe(true);
+    
+    const recommendation = await this.callTool('recommendSSG', { projectAnalysis: analysis.data });
+    expect(recommendation.success).toBe(true);
+    expect(recommendation.data.primaryRecommendation).toBeDefined();
+    
+    const config = await this.callTool('generateConfiguration', {
+      selectedSSG: recommendation.data.primaryRecommendation.ssg,
+      projectAnalysis: analysis.data
+    });
+    expect(config.success).toBe(true);
+    
+    // Validate generated configuration
+    await this.validateGeneratedFiles(config.data.files);
+  }
+}
+</code></pre>
+<h2>Documentation and Examples</h2>
+<h3>Tool Usage Examples</h3>
+<pre><code class="language-typescript">// Example: Complete documentation setup workflow
+const examples = {
+  basicSetup: {
+    description: 'Basic documentation setup for a JavaScript project',
+    steps: [
+      {
+        tool: 'analyzeRepository',
+        parameters: { repositoryPath: './my-project' },
+        expectedResult: 'Project analysis with language ecosystem detection'
+      },
+      {
+        tool: 'recommendSSG',
+        parameters: { projectAnalysis: '${analysis_result}' },
+        expectedResult: 'SSG recommendation with justification'
+      }
+    ]
+  },
+  advancedSetup: {
+    description: 'Advanced setup with custom requirements',
+    steps: [
+      // ... detailed workflow steps
+    ]
+  }
+};
+</code></pre>
+<h2>Future Enhancements</h2>
+<h3>Planned Tool Additions</h3>
+<ul>
+<li><code>analyzeExistingDocs</code>: Deep analysis of existing documentation quality and structure</li>
+<li><code>generateMigrationPlan</code>: Create migration plans between different documentation systems</li>
+<li><code>optimizeContent</code>: AI-powered content optimization and gap analysis</li>
+<li><code>validateAccessibility</code>: Comprehensive accessibility testing and recommendations</li>
+</ul>
+<h3>API Evolution Strategy</h3>
+<ul>
+<li>Versioned tool schemas with backward compatibility</li>
+<li>Deprecation notices and migration guidance</li>
+<li>Feature flags for experimental functionality</li>
+<li>Community feedback integration for API improvements</li>
+</ul>
+<h2>References</h2>
+<ul>
+<li><a href="https://spec.modelcontextprotocol.io/">Model Context Protocol Specification</a></li>
+<li><a href="https://json-schema.org/">JSON Schema Validation</a></li>
+<li><a href="https://swagger.io/resources/articles/best-practices-in-api-design/">API Design Best Practices</a></li>
+</ul>

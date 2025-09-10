@@ -1,0 +1,397 @@
+<h1>MCP Server Configuration Reference</h1>
+<p>Complete guide to configuring the documcp MCP server for optimal performance and integration.</p>
+<h2>Configuration Overview</h2>
+<p>documcp MCP server configuration is managed through:</p>
+<ol>
+<li>Environment variables (recommended)</li>
+<li>AI client configuration files</li>
+<li>Runtime parameters</li>
+</ol>
+<h2>MCP Server Configuration</h2>
+<h3>Core Server Settings</h3>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>NODE_ENV</code></td>
+<td>string</td>
+<td>'development'</td>
+<td>Runtime environment</td>
+</tr>
+<tr>
+<td><code>DEBUG</code></td>
+<td>string</td>
+<td>''</td>
+<td>Debug logging namespaces</td>
+</tr>
+<tr>
+<td><code>LOG_LEVEL</code></td>
+<td>string</td>
+<td>'info'</td>
+<td>Logging level (debug, info, warn, error)</td>
+</tr>
+<tr>
+<td><code>MCP_SERVER_TIMEOUT</code></td>
+<td>number</td>
+<td>30000</td>
+<td>Tool execution timeout (ms)</td>
+</tr>
+</tbody>
+</table>
+<h3>Performance Configuration</h3>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>NODE_OPTIONS</code></td>
+<td>string</td>
+<td>''</td>
+<td>Node.js runtime options</td>
+</tr>
+<tr>
+<td><code>UV_THREADPOOL_SIZE</code></td>
+<td>number</td>
+<td>4</td>
+<td>Thread pool size for I/O operations</td>
+</tr>
+<tr>
+<td><code>MAX_OLD_SPACE_SIZE</code></td>
+<td>number</td>
+<td>2048</td>
+<td>Maximum heap size (MB)</td>
+</tr>
+</tbody>
+</table>
+<h3>Analysis Configuration</h3>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DOCUMCP_MAX_FILE_SIZE</code></td>
+<td>string</td>
+<td>'10MB'</td>
+<td>Maximum file size for analysis</td>
+</tr>
+<tr>
+<td><code>DOCUMCP_MAX_ANALYSIS_TIME</code></td>
+<td>number</td>
+<td>300</td>
+<td>Maximum analysis time (seconds)</td>
+</tr>
+<tr>
+<td><code>DOCUMCP_CACHE_ENABLED</code></td>
+<td>boolean</td>
+<td>true</td>
+<td>Enable analysis result caching</td>
+</tr>
+<tr>
+<td><code>DOCUMCP_CACHE_TTL</code></td>
+<td>number</td>
+<td>3600</td>
+<td>Cache time-to-live (seconds)</td>
+</tr>
+</tbody>
+</table>
+<h2>AI Client Configuration</h2>
+<h3>Claude Desktop Configuration</h3>
+<p><strong>Location</strong>: <code>~/Library/Application Support/Claude/claude_desktop_config.json</code> (macOS)</p>
+<pre><code class="language-json">{
+  &quot;mcpServers&quot;: {
+    &quot;documcp&quot;: {
+      &quot;command&quot;: &quot;node&quot;,
+      &quot;args&quot;: [&quot;/path/to/documcp/dist/index.js&quot;],
+      &quot;env&quot;: {
+        &quot;NODE_ENV&quot;: &quot;production&quot;,
+        &quot;DEBUG&quot;: &quot;documcp:*&quot;,
+        &quot;LOG_LEVEL&quot;: &quot;info&quot;,
+        &quot;UV_THREADPOOL_SIZE&quot;: &quot;8&quot;,
+        &quot;NODE_OPTIONS&quot;: &quot;--max-old-space-size=4096&quot;
+      }
+    }
+  }
+}
+</code></pre>
+<h3>GitHub Copilot Configuration</h3>
+<p><strong>Location</strong>: VS Code <code>settings.json</code></p>
+<pre><code class="language-json">{
+  &quot;mcp.servers&quot;: {
+    &quot;documcp&quot;: {
+      &quot;transport&quot;: &quot;stdio&quot;,
+      &quot;command&quot;: &quot;node&quot;,
+      &quot;args&quot;: [
+        &quot;--max-old-space-size=4096&quot;,
+        &quot;/path/to/documcp/dist/index.js&quot;
+      ],
+      &quot;env&quot;: {
+        &quot;NODE_ENV&quot;: &quot;production&quot;,
+        &quot;DEBUG&quot;: &quot;documcp:tools&quot;,
+        &quot;DOCUMCP_MAX_ANALYSIS_TIME&quot;: &quot;600&quot;
+      }
+    }
+  }
+}
+</code></pre>
+<h2>Environment Variables Reference</h2>
+<h3>Development Environment</h3>
+<pre><code class="language-bash"># Basic development setup
+export NODE_ENV=development
+export DEBUG=documcp:*
+export LOG_LEVEL=debug
+
+# Performance tuning for large repositories
+export UV_THREADPOOL_SIZE=8
+export NODE_OPTIONS=&quot;--max-old-space-size=4096&quot;
+
+# Analysis configuration
+export DOCUMCP_MAX_FILE_SIZE=50MB
+export DOCUMCP_MAX_ANALYSIS_TIME=600
+</code></pre>
+<h3>Production Environment</h3>
+<pre><code class="language-bash"># Production setup
+export NODE_ENV=production
+export LOG_LEVEL=info
+export DEBUG=documcp:errors
+
+# Performance optimization
+export UV_THREADPOOL_SIZE=16
+export NODE_OPTIONS=&quot;--max-old-space-size=8192 --expose-gc&quot;
+
+# Security and limits
+export DOCUMCP_MAX_FILE_SIZE=100MB
+export DOCUMCP_MAX_ANALYSIS_TIME=300
+export DOCUMCP_ALLOWED_PATHS=&quot;/workspace,/projects&quot;
+</code></pre>
+<h3>Debugging Configuration</h3>
+<pre><code class="language-bash"># Comprehensive debugging
+export DEBUG=documcp:*,mcp:*
+export LOG_LEVEL=debug
+export NODE_ENV=development
+
+# Specific component debugging
+export DEBUG=documcp:tools          # Tool execution
+export DEBUG=documcp:analysis       # Repository analysis
+export DEBUG=documcp:validation     # Input validation
+export DEBUG=mcp:protocol          # MCP protocol messages
+</code></pre>
+<h2>Tool-Specific Configuration</h2>
+<h3>Repository Analysis</h3>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DOCUMCP_ANALYSIS_DEPTH</code></td>
+<td>string</td>
+<td>'standard'</td>
+<td>Default analysis depth</td>
+</tr>
+<tr>
+<td><code>DOCUMCP_IGNORE_PATTERNS</code></td>
+<td>string</td>
+<td>'node_modules,dist,.git'</td>
+<td>Comma-separated ignore patterns</td>
+</tr>
+<tr>
+<td><code>DOCUMCP_MAX_FILES</code></td>
+<td>number</td>
+<td>10000</td>
+<td>Maximum files to analyze</td>
+</tr>
+</tbody>
+</table>
+<h3>SSG Configuration</h3>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DOCUMCP_DEFAULT_SSG</code></td>
+<td>string</td>
+<td>''</td>
+<td>Default SSG recommendation</td>
+</tr>
+<tr>
+<td><code>DOCUMCP_SSG_PREFERENCES</code></td>
+<td>string</td>
+<td>'simplicity'</td>
+<td>Default preference (simplicity, features, performance)</td>
+</tr>
+</tbody>
+</table>
+<h3>Content Generation</h3>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DOCUMCP_CONTENT_LEVEL</code></td>
+<td>string</td>
+<td>'comprehensive'</td>
+<td>Default content population level</td>
+</tr>
+<tr>
+<td><code>DOCUMCP_PRESERVE_EXISTING</code></td>
+<td>boolean</td>
+<td>true</td>
+<td>Preserve existing content by default</td>
+</tr>
+<tr>
+<td><code>DOCUMCP_INCLUDE_EXAMPLES</code></td>
+<td>boolean</td>
+<td>true</td>
+<td>Include example content</td>
+</tr>
+</tbody>
+</table>
+<h2>Security Configuration</h2>
+<h3>File System Access</h3>
+<pre><code class="language-bash"># Restrict file system access
+export DOCUMCP_ALLOWED_PATHS=&quot;/home/user/projects,/workspace&quot;
+export DOCUMCP_DENIED_PATHS=&quot;/etc,/var,/usr&quot;
+export DOCUMCP_MAX_PATH_DEPTH=10
+</code></pre>
+<h3>Network Security</h3>
+<pre><code class="language-bash"># Disable external network access
+export DOCUMCP_ALLOW_NETWORK=false
+export DOCUMCP_ALLOW_EXTERNAL_URLS=false
+
+# Configure proxy if needed
+export HTTP_PROXY=http://proxy.company.com:8080
+export HTTPS_PROXY=http://proxy.company.com:8080
+</code></pre>
+<h2>Performance Tuning</h2>
+<h3>Memory Management</h3>
+<pre><code class="language-bash"># Large repository optimization
+export NODE_OPTIONS=&quot;--max-old-space-size=8192 --expose-gc&quot;
+export UV_THREADPOOL_SIZE=16
+
+# Memory monitoring
+export NODE_OPTIONS=&quot;--trace-gc --trace-gc-verbose&quot;
+</code></pre>
+<h3>I/O Optimization</h3>
+<pre><code class="language-bash"># File system optimization
+export UV_THREADPOOL_SIZE=32
+export DOCUMCP_CONCURRENT_FILES=50
+export DOCUMCP_BUFFER_SIZE=65536
+</code></pre>
+<h3>Caching Configuration</h3>
+<pre><code class="language-bash"># Analysis result caching
+export DOCUMCP_CACHE_ENABLED=true
+export DOCUMCP_CACHE_TTL=7200
+export DOCUMCP_CACHE_MAX_SIZE=1000
+export DOCUMCP_CACHE_DIRECTORY=/tmp/documcp-cache
+</code></pre>
+<h2>Configuration Validation</h2>
+<h3>Validate Configuration</h3>
+<p>Test your configuration:</p>
+<pre><code class="language-bash"># Test MCP server startup
+NODE_ENV=production DEBUG=documcp:config node dist/index.js
+
+# Validate environment variables
+node -e &quot;console.log(process.env)&quot; | grep DOCUMCP
+</code></pre>
+<h3>Configuration Health Check</h3>
+<pre><code class="language-bash"># Check memory limits
+node -e &quot;console.log('Max memory:', process.memoryUsage())&quot;
+
+# Check thread pool size
+node -e &quot;console.log('Thread pool size:', process.env.UV_THREADPOOL_SIZE || 4)&quot;
+
+# Test file system access
+node -e &quot;console.log('CWD:', process.cwd()); console.log('Access:', require('fs').accessSync('.'))&quot;
+</code></pre>
+<h2>Troubleshooting Configuration</h2>
+<h3>Common Issues</h3>
+<p><strong>Memory Errors</strong>:</p>
+<pre><code class="language-bash"># Increase memory limit
+export NODE_OPTIONS=&quot;--max-old-space-size=8192&quot;
+</code></pre>
+<p><strong>Timeout Issues</strong>:</p>
+<pre><code class="language-bash"># Increase timeouts
+export DOCUMCP_MAX_ANALYSIS_TIME=900
+export MCP_SERVER_TIMEOUT=60000
+</code></pre>
+<p><strong>Permission Errors</strong>:</p>
+<pre><code class="language-bash"># Check allowed paths
+export DOCUMCP_ALLOWED_PATHS=&quot;/correct/path&quot;
+chmod -R 755 /path/to/repositories
+</code></pre>
+<h3>Debug Configuration</h3>
+<pre><code class="language-bash"># Enable configuration debugging
+export DEBUG=documcp:config,documcp:env
+node dist/index.js
+</code></pre>
+<h2>Configuration Templates</h2>
+<h3>Team Development Template</h3>
+<pre><code class="language-bash">#!/bin/bash
+# team-config.sh
+export NODE_ENV=development
+export DEBUG=documcp:tools,documcp:analysis
+export LOG_LEVEL=info
+export UV_THREADPOOL_SIZE=8
+export NODE_OPTIONS=&quot;--max-old-space-size=4096&quot;
+export DOCUMCP_MAX_ANALYSIS_TIME=600
+export DOCUMCP_PRESERVE_EXISTING=true
+</code></pre>
+<h3>CI/CD Template</h3>
+<pre><code class="language-bash">#!/bin/bash
+# ci-config.sh
+export NODE_ENV=production
+export LOG_LEVEL=warn
+export DEBUG=documcp:errors
+export UV_THREADPOOL_SIZE=4
+export NODE_OPTIONS=&quot;--max-old-space-size=2048&quot;
+export DOCUMCP_MAX_ANALYSIS_TIME=300
+export DOCUMCP_CACHE_ENABLED=false
+</code></pre>
+<h3>Enterprise Template</h3>
+<pre><code class="language-bash">#!/bin/bash
+# enterprise-config.sh
+export NODE_ENV=production
+export LOG_LEVEL=info
+export DEBUG=documcp:audit
+export UV_THREADPOOL_SIZE=16
+export NODE_OPTIONS=&quot;--max-old-space-size=8192&quot;
+export DOCUMCP_ALLOWED_PATHS=&quot;/enterprise/projects&quot;
+export DOCUMCP_AUDIT_ENABLED=true
+export DOCUMCP_SECURITY_STRICT=true
+</code></pre>

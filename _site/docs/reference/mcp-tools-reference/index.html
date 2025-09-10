@@ -1,0 +1,237 @@
+<h1>MCP Tools Reference</h1>
+<p>Complete technical reference for all DocuMCP MCP server tools.</p>
+<h2>Tool Overview</h2>
+<p>DocuMCP provides 11 MCP tools for intelligent documentation deployment:</p>
+<table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Purpose</th>
+<th>Input Schema</th>
+<th>Output</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>analyze_repository</code></td>
+<td>Repository analysis and structure detection</td>
+<td><code>{path, depth?}</code></td>
+<td>Analysis results</td>
+</tr>
+<tr>
+<td><code>recommend_ssg</code></td>
+<td>Static site generator recommendations</td>
+<td><code>{analysisId, preferences?}</code></td>
+<td>SSG recommendation</td>
+</tr>
+<tr>
+<td><code>generate_config</code></td>
+<td>Configuration file generation</td>
+<td><code>{ssg, projectName, outputPath}</code></td>
+<td>Config files</td>
+</tr>
+<tr>
+<td><code>setup_structure</code></td>
+<td>Diataxis documentation structure</td>
+<td><code>{path, ssg, includeExamples?}</code></td>
+<td>Directory structure</td>
+</tr>
+<tr>
+<td><code>deploy_pages</code></td>
+<td>GitHub Pages deployment setup</td>
+<td><code>{repository, ssg, branch?, customDomain?}</code></td>
+<td>Deployment workflow</td>
+</tr>
+<tr>
+<td><code>verify_deployment</code></td>
+<td>Deployment verification and troubleshooting</td>
+<td><code>{repository, url?}</code></td>
+<td>Verification results</td>
+</tr>
+<tr>
+<td><code>populate_diataxis_content</code></td>
+<td>Intelligent content population</td>
+<td><code>{analysisId, docsPath, populationLevel?}</code></td>
+<td>Generated content</td>
+</tr>
+<tr>
+<td><code>validate_diataxis_content</code></td>
+<td>Content validation and compliance</td>
+<td><code>{contentPath, analysisId?, validationType?}</code></td>
+<td>Validation report</td>
+</tr>
+<tr>
+<td><code>validate_content</code></td>
+<td>General content quality validation</td>
+<td><code>{contentPath, validationType?, includeCodeValidation?}</code></td>
+<td>Quality report</td>
+</tr>
+<tr>
+<td><code>detect_documentation_gaps</code></td>
+<td>Documentation gap analysis</td>
+<td><code>{repositoryPath, documentationPath?, analysisId?}</code></td>
+<td>Gap analysis</td>
+</tr>
+<tr>
+<td><code>test_local_deployment</code></td>
+<td>Local deployment testing</td>
+<td><code>{repositoryPath, ssg, port?, timeout?}</code></td>
+<td>Test results</td>
+</tr>
+</tbody>
+</table>
+<h2>Tool Schemas</h2>
+<h3>analyze_repository</h3>
+<p>Analyzes repository structure, dependencies, and documentation needs.</p>
+<p><strong>Input Schema:</strong></p>
+<pre><code class="language-typescript">{
+  path: string;           // Path to repository
+  depth?: 'quick' | 'standard' | 'deep';  // Analysis depth (default: 'standard')
+}
+</code></pre>
+<p><strong>Output:</strong> Repository analysis with technology detection, file structure, and recommendations.</p>
+<h3>recommend_ssg</h3>
+<p>Recommends optimal static site generator based on project analysis.</p>
+<p><strong>Input Schema:</strong></p>
+<pre><code class="language-typescript">{
+  analysisId: string;     // ID from analyze_repository
+  preferences?: {
+    priority?: 'simplicity' | 'features' | 'performance';
+    ecosystem?: 'javascript' | 'python' | 'ruby' | 'go' | 'any';
+  };
+}
+</code></pre>
+<p><strong>Output:</strong> SSG recommendation with scoring and justification.</p>
+<h3>generate_config</h3>
+<p>Generates configuration files for selected static site generator.</p>
+<p><strong>Input Schema:</strong></p>
+<pre><code class="language-typescript">{
+  ssg: 'jekyll' | 'hugo' | 'docusaurus' | 'mkdocs' | 'eleventy';
+  projectName: string;
+  projectDescription?: string;
+  outputPath: string;     // Where to generate config files
+}
+</code></pre>
+<p><strong>Output:</strong> Generated configuration files and setup instructions.</p>
+<h3>setup_structure</h3>
+<p>Creates Diataxis-compliant documentation structure.</p>
+<p><strong>Input Schema:</strong></p>
+<pre><code class="language-typescript">{
+  path: string;           // Root path for documentation
+  ssg: 'jekyll' | 'hugo' | 'docusaurus' | 'mkdocs' | 'eleventy';
+  includeExamples?: boolean;  // Include example content (default: true)
+}
+</code></pre>
+<p><strong>Output:</strong> Created directory structure and template files.</p>
+<h3>deploy_pages</h3>
+<p>Sets up GitHub Pages deployment workflow.</p>
+<p><strong>Input Schema:</strong></p>
+<pre><code class="language-typescript">{
+  repository: string;     // Repository path or URL
+  ssg: 'jekyll' | 'hugo' | 'docusaurus' | 'mkdocs' | 'eleventy';
+  branch?: string;        // Target branch (default: 'gh-pages')
+  customDomain?: string;  // Custom domain configuration
+}
+</code></pre>
+<p><strong>Output:</strong> GitHub Actions workflow and deployment configuration.</p>
+<h3>verify_deployment</h3>
+<p>Verifies and troubleshoots GitHub Pages deployment.</p>
+<p><strong>Input Schema:</strong></p>
+<pre><code class="language-typescript">{
+  repository: string;     // Repository path or URL
+  url?: string;          // Expected deployment URL
+}
+</code></pre>
+<p><strong>Output:</strong> Deployment status, issues found, and troubleshooting recommendations.</p>
+<h3>populate_diataxis_content</h3>
+<p>Intelligently populates Diataxis documentation with project-specific content.</p>
+<p><strong>Input Schema:</strong></p>
+<pre><code class="language-typescript">{
+  analysisId: string;     // Repository analysis ID
+  docsPath: string;       // Path to documentation directory
+  populationLevel?: 'basic' | 'comprehensive' | 'intelligent';  // Default: 'comprehensive'
+  includeProjectSpecific?: boolean;  // Default: true
+  preserveExisting?: boolean;        // Default: true
+  technologyFocus?: string[];        // Specific technologies to emphasize
+}
+</code></pre>
+<p><strong>Output:</strong> Generated content files with coverage metrics.</p>
+<h3>validate_diataxis_content</h3>
+<p>Validates accuracy, completeness, and compliance of Diataxis documentation.</p>
+<p><strong>Input Schema:</strong></p>
+<pre><code class="language-typescript">{
+  contentPath: string;    // Path to documentation directory
+  analysisId?: string;    // Optional repository analysis ID
+  validationType?: 'accuracy' | 'completeness' | 'compliance' | 'all';  // Default: 'all'
+  includeCodeValidation?: boolean;  // Default: true
+  confidence?: 'strict' | 'moderate' | 'permissive';  // Default: 'moderate'
+}
+</code></pre>
+<p><strong>Output:</strong> Validation results with confidence scores and recommendations.</p>
+<h3>validate_content</h3>
+<p>Validates general content quality: broken links, code syntax, references.</p>
+<p><strong>Input Schema:</strong></p>
+<pre><code class="language-typescript">{
+  contentPath: string;    // Path to content directory
+  validationType?: 'links' | 'code' | 'references' | 'all';  // Default: 'all'
+  includeCodeValidation?: boolean;  // Default: true
+  followExternalLinks?: boolean;     // Default: false (slower)
+}
+</code></pre>
+<p><strong>Output:</strong> Content quality report with issues and recommendations.</p>
+<h3>detect_documentation_gaps</h3>
+<p>Analyzes repository and existing documentation to identify missing content.</p>
+<p><strong>Input Schema:</strong></p>
+<pre><code class="language-typescript">{
+  repositoryPath: string;      // Path to repository
+  documentationPath?: string;  // Path to existing documentation
+  analysisId?: string;         // Optional existing analysis ID
+  depth?: 'quick' | 'standard' | 'comprehensive';  // Default: 'standard'
+}
+</code></pre>
+<p><strong>Output:</strong> Gap analysis with missing content identification and priorities.</p>
+<h3>test_local_deployment</h3>
+<p>Tests documentation build and local server before deploying.</p>
+<p><strong>Input Schema:</strong></p>
+<pre><code class="language-typescript">{
+  repositoryPath: string;  // Path to repository
+  ssg: 'jekyll' | 'hugo' | 'docusaurus' | 'mkdocs' | 'eleventy';
+  port?: number;          // Port for local server (default: 3000)
+  timeout?: number;       // Timeout in seconds (default: 60)
+  skipBuild?: boolean;    // Skip build step (default: false)
+}
+</code></pre>
+<p><strong>Output:</strong> Test results with build status and server information.</p>
+<h2>Tool Chaining Workflows</h2>
+<h3>Complete Documentation Setup</h3>
+<pre><code>1. analyze_repository → 2. recommend_ssg → 3. generate_config → 4. setup_structure → 5. populate_diataxis_content → 6. validate_diataxis_content → 7. deploy_pages
+</code></pre>
+<h3>Quality Assurance Workflow</h3>
+<pre><code>1. validate_content → 2. validate_diataxis_content → 3. detect_documentation_gaps → 4. test_local_deployment
+</code></pre>
+<h3>Deployment Workflow</h3>
+<pre><code>1. test_local_deployment → 2. deploy_pages → 3. verify_deployment
+</code></pre>
+<h2>Error Handling</h2>
+<p>All tools return standardized MCP responses with:</p>
+<ul>
+<li><code>success</code>: Boolean indicating operation success</li>
+<li><code>error</code>: Error details if operation failed</li>
+<li><code>metadata</code>: Tool version, execution time, timestamp</li>
+<li><code>recommendations</code>: Actionable next steps</li>
+</ul>
+<p>Common error codes:</p>
+<ul>
+<li><code>INVALID_PATH</code>: Invalid file or directory path</li>
+<li><code>ANALYSIS_FAILED</code>: Repository analysis failed</li>
+<li><code>CONFIG_GENERATION_FAILED</code>: Configuration generation failed</li>
+<li><code>DEPLOYMENT_SETUP_FAILED</code>: Deployment setup failed</li>
+<li><code>VALIDATION_FAILED</code>: Content validation failed</li>
+</ul>
+<h2>Performance Requirements</h2>
+<p>Tools must meet PERF-001 compliance standards:</p>
+<ul>
+<li>Small repositories (&lt;100 files): &lt;1 second</li>
+<li>Medium repositories (100-1000 files): &lt;10 seconds</li>
+<li>Large repositories (1000+ files): &lt;60 seconds</li>
+</ul>

@@ -1,0 +1,254 @@
+<h1>Deploy documcp MCP Server</h1>
+<p>This guide shows you how to deploy and configure the documcp MCP server for production use with AI clients.</p>
+<h2>Prerequisites</h2>
+<ul>
+<li>Node.js 20 or higher installed</li>
+<li>npm package manager</li>
+<li>AI client that supports MCP (Claude Desktop, GitHub Copilot, etc.)</li>
+<li>Git repository access for documentation projects</li>
+</ul>
+<h2>Installation Methods</h2>
+<h3>Method 1: NPM Installation (Recommended)</h3>
+<ol>
+<li>Install documcp globally:</li>
+</ol>
+<pre><code class="language-bash">npm install -g documcp
+</code></pre>
+<ol start="2">
+<li>Verify installation:</li>
+</ol>
+<pre><code class="language-bash">documcp --version
+</code></pre>
+<h3>Method 2: Local Development Setup</h3>
+<ol>
+<li>Clone the repository:</li>
+</ol>
+<pre><code class="language-bash">git clone https://github.com/tosin2013/documcp.git
+cd documcp
+</code></pre>
+<ol start="2">
+<li>Install dependencies:</li>
+</ol>
+<pre><code class="language-bash">npm install
+</code></pre>
+<ol start="3">
+<li>Build the project:</li>
+</ol>
+<pre><code class="language-bash">npm run build
+</code></pre>
+<ol start="4">
+<li>Start the MCP server:</li>
+</ol>
+<pre><code class="language-bash">npm run dev
+</code></pre>
+<h2>MCP Client Configuration</h2>
+<h3>Claude Desktop Configuration</h3>
+<ol>
+<li>
+<p>Locate Claude Desktop's configuration file:</p>
+<ul>
+<li><strong>macOS</strong>: <code>~/Library/Application Support/Claude/claude_desktop_config.json</code></li>
+<li><strong>Windows</strong>: <code>%APPDATA%\Claude\claude_desktop_config.json</code></li>
+</ul>
+</li>
+<li>
+<p>Add documcp server configuration:</p>
+</li>
+</ol>
+<pre><code class="language-json">{
+  &quot;mcpServers&quot;: {
+    &quot;documcp&quot;: {
+      &quot;command&quot;: &quot;npx&quot;,
+      &quot;args&quot;: [&quot;documcp&quot;]
+    }
+  }
+}
+</code></pre>
+<p><strong>Optional: Set default target repository</strong>:</p>
+<pre><code class="language-json">{
+  &quot;mcpServers&quot;: {
+    &quot;documcp&quot;: {
+      &quot;command&quot;: &quot;npx&quot;,
+      &quot;args&quot;: [&quot;documcp&quot;],
+      &quot;env&quot;: {
+        &quot;DOCUMCP_TARGET_REPO&quot;: &quot;/path/to/your/project&quot;
+      }
+    }
+  }
+}
+</code></pre>
+<p><strong>Alternative configuration</strong> (if npx doesn't work):</p>
+<pre><code class="language-json">{
+  &quot;mcpServers&quot;: {
+    &quot;documcp&quot;: {
+      &quot;command&quot;: &quot;node&quot;,
+      &quot;args&quot;: [&quot;/usr/local/lib/node_modules/documcp/dist/index.js&quot;]
+    }
+  }
+}
+</code></pre>
+<ol start="3">
+<li>Restart Claude Desktop to load the configuration.</li>
+</ol>
+<h3>GitHub Copilot Configuration</h3>
+<ol>
+<li>Install the MCP extension for your IDE</li>
+<li>Configure the MCP server endpoint:</li>
+</ol>
+<pre><code class="language-json">{
+  &quot;mcp.servers&quot;: {
+    &quot;documcp&quot;: {
+      &quot;transport&quot;: &quot;stdio&quot;,
+      &quot;command&quot;: &quot;npx&quot;,
+      &quot;args&quot;: [&quot;documcp&quot;]
+    }
+  }
+}
+</code></pre>
+<p><strong>Optional: Set default target repository</strong>:</p>
+<pre><code class="language-json">{
+  &quot;mcp.servers&quot;: {
+    &quot;documcp&quot;: {
+      &quot;transport&quot;: &quot;stdio&quot;,
+      &quot;command&quot;: &quot;npx&quot;,
+      &quot;args&quot;: [&quot;documcp&quot;],
+      &quot;env&quot;: {
+        &quot;DOCUMCP_TARGET_REPO&quot;: &quot;/path/to/your/project&quot;
+      }
+    }
+  }
+}
+</code></pre>
+<p><strong>Alternative configuration</strong> (if npx doesn't work):</p>
+<pre><code class="language-json">{
+  &quot;mcp.servers&quot;: {
+    &quot;documcp&quot;: {
+      &quot;transport&quot;: &quot;stdio&quot;,
+      &quot;command&quot;: &quot;node&quot;,
+      &quot;args&quot;: [&quot;/usr/local/lib/node_modules/documcp/dist/index.js&quot;]
+    }
+  }
+}
+</code></pre>
+<h2>Verification Steps</h2>
+<h3>1. Test MCP Server Connection</h3>
+<p>In your AI client, try a basic command:</p>
+<pre><code>Can you analyze this repository using documcp?
+</code></pre>
+<p>The AI should respond with available documcp tools.</p>
+<h3>2. Verify Tool Availability</h3>
+<p>Check that all core tools are accessible:</p>
+<ul>
+<li><code>analyzeRepository</code></li>
+<li><code>recommendSSG</code></li>
+<li><code>generateConfiguration</code></li>
+<li><code>createDiataxisStructure</code></li>
+<li><code>generateWorkflow</code></li>
+</ul>
+<h3>3. Test Complete Workflow</h3>
+<p>Run a full documentation setup:</p>
+<pre><code>Use documcp to analyze my project and set up complete documentation with GitHub Pages deployment.
+</code></pre>
+<h2>Production Configuration</h2>
+<h3>Environment Variables</h3>
+<p>Set these environment variables for production:</p>
+<pre><code class="language-bash">export NODE_ENV=production
+export LOG_LEVEL=info
+export MCP_SERVER_PORT=3000
+</code></pre>
+<h3>Performance Optimization</h3>
+<ol>
+<li><strong>Memory Limits</strong>: Set Node.js memory limits for large repositories:</li>
+</ol>
+<pre><code class="language-bash">node --max-old-space-size=4096 dist/index.js
+</code></pre>
+<ol start="2">
+<li><strong>Concurrent Processing</strong>: Configure worker thread limits:</li>
+</ol>
+<pre><code class="language-bash">export UV_THREADPOOL_SIZE=8
+</code></pre>
+<h3>Security Configuration</h3>
+<ol>
+<li><strong>File System Access</strong>: Limit repository access paths:</li>
+</ol>
+<pre><code class="language-json">{
+  &quot;security&quot;: {
+    &quot;allowedPaths&quot;: [&quot;/home/user/projects&quot;, &quot;/workspace&quot;],
+    &quot;maxFileSize&quot;: &quot;100MB&quot;,
+    &quot;maxAnalysisTime&quot;: &quot;300s&quot;
+  }
+}
+</code></pre>
+<ol start="2">
+<li><strong>Network Security</strong>: Configure firewall rules if needed:</li>
+</ol>
+<pre><code class="language-bash"># Allow only local connections
+iptables -A INPUT -p tcp --dport 3000 -s 127.0.0.1 -j ACCEPT
+</code></pre>
+<h2>Monitoring and Logging</h2>
+<h3>Enable Detailed Logging</h3>
+<pre><code class="language-bash">export DEBUG=documcp:*
+npm start
+</code></pre>
+<h3>Log File Configuration</h3>
+<pre><code class="language-json">{
+  &quot;logging&quot;: {
+    &quot;level&quot;: &quot;info&quot;,
+    &quot;file&quot;: &quot;/var/log/documcp/server.log&quot;,
+    &quot;maxSize&quot;: &quot;10MB&quot;,
+    &quot;maxFiles&quot;: 5
+  }
+}
+</code></pre>
+<h3>Health Check Endpoint</h3>
+<p>Test server health:</p>
+<pre><code class="language-bash">curl http://localhost:3000/health
+</code></pre>
+<h2>Troubleshooting</h2>
+<h3>Common Issues</h3>
+<p><strong>MCP Server Not Found</strong></p>
+<ul>
+<li>Verify the path in your AI client configuration</li>
+<li>Check that Node.js and npm are in your PATH</li>
+<li>Ensure the server process is running</li>
+</ul>
+<p><strong>Tool Execution Failures</strong></p>
+<ul>
+<li>Check file permissions for repository access</li>
+<li>Verify Node.js version compatibility (20+)</li>
+<li>Review server logs for detailed error messages</li>
+</ul>
+<p><strong>Performance Issues</strong></p>
+<ul>
+<li>Increase memory limits for large repositories</li>
+<li>Configure appropriate worker thread counts</li>
+<li>Monitor disk I/O for repository analysis</li>
+</ul>
+<h3>Debug Mode</h3>
+<p>Enable debug mode for troubleshooting:</p>
+<pre><code class="language-bash">NODE_ENV=development DEBUG=* npm run dev
+</code></pre>
+<h2>Maintenance</h2>
+<h3>Regular Updates</h3>
+<ol>
+<li>Check for updates:</li>
+</ol>
+<pre><code class="language-bash">npm outdated -g documcp
+</code></pre>
+<ol start="2">
+<li>Update to latest version:</li>
+</ol>
+<pre><code class="language-bash">npm update -g documcp
+</code></pre>
+<h3>Dependency Security</h3>
+<p>Run security audits regularly:</p>
+<pre><code class="language-bash">npm audit
+npm audit fix
+</code></pre>
+<h2>Related Guides</h2>
+<ul>
+<li><a href="./how-to-debug-common-issues.md">How to Debug MCP Issues</a></li>
+<li><a href="./how-to-add-a-new-feature.md">How to Create Custom MCP Tools</a></li>
+<li><a href="./how-to-deploy-your-application.md">AI Client Integration Setup</a></li>
+<li><a href="../reference/">Reference Documentation</a></li>
+</ul>

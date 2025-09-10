@@ -1,0 +1,136 @@
+<h1>DocuMCP - Intelligent Documentation Deployment MCP Server</h1>
+<p><a href="https://github.com/tosin2013/documcp/actions/workflows/ci.yml"><img src="https://github.com/tosin2013/documcp/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+<a href="https://github.com/tosin2013/documcp/actions/workflows/codeql.yml"><img src="https://github.com/tosin2013/documcp/actions/workflows/codeql.yml/badge.svg" alt="CodeQL"></a>
+<a href="https://codecov.io/gh/tosin2013/documcp"><img src="https://codecov.io/gh/tosin2013/documcp/branch/main/graph/badge.svg" alt="Coverage"></a>
+<a href="https://badge.fury.io/js/documcp"><img src="https://badge.fury.io/js/documcp.svg" alt="npm version"></a></p>
+<p>DocuMCP is an intelligent Model Context Protocol (MCP) server that revolutionizes documentation deployment for open-source projects. It provides deep repository analysis, intelligent static site generator recommendations, and automated GitHub Pages deployment workflows.</p>
+<h2>Features</h2>
+<ul>
+<li>🔍 <strong>Repository Analysis</strong>: Deep multi-layered analysis of project structure, dependencies, and documentation needs</li>
+<li>🎯 <strong>SSG Recommendations</strong>: Data-driven recommendations for Jekyll, Hugo, Docusaurus, MkDocs, or Eleventy</li>
+<li>📚 <strong>Diataxis Framework</strong>: Automatic creation of well-structured documentation following proven principles</li>
+<li>🚀 <strong>GitHub Pages Deployment</strong>: Automated workflow generation with SSG-specific optimizations</li>
+<li>✅ <strong>Deployment Verification</strong>: Comprehensive checks and troubleshooting for successful deployments</li>
+</ul>
+<h2>Requirements</h2>
+<ul>
+<li><strong>Node.js</strong>: 20.0.0 or higher</li>
+<li><strong>npm</strong>: Latest stable version</li>
+</ul>
+<h2>Installation</h2>
+<pre><code class="language-bash"># Clone the repository
+git clone https://github.com/tosin2013/documcp.git
+cd documcp
+
+# Install dependencies
+npm install
+
+# Build the project
+npm run build
+</code></pre>
+<h2>Usage</h2>
+<p>DocuMCP provides six core MCP tools:</p>
+<h3>1. Analyze Repository</h3>
+<p>Performs deep analysis of your project to understand its characteristics and documentation needs.</p>
+<pre><code class="language-json">{
+  &quot;tool&quot;: &quot;analyze_repository&quot;,
+  &quot;arguments&quot;: {
+    &quot;path&quot;: &quot;/path/to/your/repo&quot;,
+    &quot;depth&quot;: &quot;standard&quot;
+  }
+}
+</code></pre>
+<h3>2. Recommend SSG</h3>
+<p>Provides intelligent recommendations for the best static site generator based on your project.</p>
+<pre><code class="language-json">{
+  &quot;tool&quot;: &quot;recommend_ssg&quot;,
+  &quot;arguments&quot;: {
+    &quot;analysisId&quot;: &quot;analysis_12345&quot;,
+    &quot;preferences&quot;: {
+      &quot;priority&quot;: &quot;simplicity&quot;
+    }
+  }
+}
+</code></pre>
+<h3>3. Generate Config</h3>
+<p>Creates all necessary configuration files for your chosen static site generator.</p>
+<pre><code class="language-json">{
+  &quot;tool&quot;: &quot;generate_config&quot;,
+  &quot;arguments&quot;: {
+    &quot;ssg&quot;: &quot;docusaurus&quot;,
+    &quot;projectName&quot;: &quot;My Project&quot;,
+    &quot;outputPath&quot;: &quot;./docs&quot;
+  }
+}
+</code></pre>
+<h3>4. Setup Structure</h3>
+<p>Creates a Diataxis-compliant documentation structure with proper categorization.</p>
+<pre><code class="language-json">{
+  &quot;tool&quot;: &quot;setup_structure&quot;,
+  &quot;arguments&quot;: {
+    &quot;path&quot;: &quot;./docs&quot;,
+    &quot;ssg&quot;: &quot;docusaurus&quot;,
+    &quot;includeExamples&quot;: true
+  }
+}
+</code></pre>
+<h3>5. Deploy Pages</h3>
+<p>Sets up GitHub Actions workflows for automated deployment to GitHub Pages.</p>
+<pre><code class="language-json">{
+  &quot;tool&quot;: &quot;deploy_pages&quot;,
+  &quot;arguments&quot;: {
+    &quot;repository&quot;: &quot;.&quot;,
+    &quot;ssg&quot;: &quot;docusaurus&quot;,
+    &quot;branch&quot;: &quot;gh-pages&quot;
+  }
+}
+</code></pre>
+<h3>6. Verify Deployment</h3>
+<p>Checks your setup and provides troubleshooting guidance for successful deployment.</p>
+<pre><code class="language-json">{
+  &quot;tool&quot;: &quot;verify_deployment&quot;,
+  &quot;arguments&quot;: {
+    &quot;repository&quot;: &quot;.&quot;,
+    &quot;url&quot;: &quot;https://yourusername.github.io/yourproject&quot;
+  }
+}
+</code></pre>
+<h2>Development</h2>
+<pre><code class="language-bash"># Run in development mode
+npm run dev
+
+# Run tests
+npm test
+
+# Lint code
+npm run lint
+
+# Type check
+npm run typecheck
+</code></pre>
+<h2>Architecture</h2>
+<p>DocuMCP follows a modular, stateless architecture:</p>
+<ul>
+<li><strong>TypeScript-based</strong> implementation using the official MCP SDK</li>
+<li><strong>Stateless operation</strong> for consistency and reliability</li>
+<li><strong>Modular design</strong> with clear separation of concerns</li>
+<li><strong>Progressive complexity</strong> allowing users to start simple</li>
+</ul>
+<h2>Documentation Structure (Diataxis)</h2>
+<p>DocuMCP automatically creates documentation following the Diataxis framework:</p>
+<ul>
+<li><strong>Tutorials</strong>: Learning-oriented guides for newcomers</li>
+<li><strong>How-To Guides</strong>: Task-oriented recipes for specific goals</li>
+<li><strong>Reference</strong>: Information-oriented technical descriptions</li>
+<li><strong>Explanation</strong>: Understanding-oriented conceptual discussions</li>
+</ul>
+<h2>Contributing</h2>
+<p>We welcome contributions! Please see our <a href="./CONTRIBUTING.md">Contributing Guide</a> for details.</p>
+<h2>License</h2>
+<p>MIT License - see <a href="./LICENSE">LICENSE</a> for details.</p>
+<h2>Acknowledgments</h2>
+<ul>
+<li>Built on the <a href="https://modelcontextprotocol.io/">Model Context Protocol</a></li>
+<li>Follows the <a href="https://diataxis.fr/">Diataxis Framework</a></li>
+<li>Inspired by the need for better documentation in open-source projects</li>
+</ul>

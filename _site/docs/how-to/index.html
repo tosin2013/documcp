@@ -1,0 +1,91 @@
+<h1>How-To Guides</h1>
+<p>Practical, task-oriented guides for accomplishing specific goals with DocuMCP.</p>
+<h2>Available Guides</h2>
+<p>This section contains comprehensive how-to documentation following the Diataxis framework.</p>
+<p><strong>How-To Guides</strong> are task-oriented and help users accomplish specific goals:</p>
+<ul>
+<li>Solve specific problems step-by-step</li>
+<li>Assume some knowledge and experience with MCP</li>
+<li>Provide a clear series of actions</li>
+<li>Focus on practical results</li>
+</ul>
+<h2>🚀 Getting Started</h2>
+<ul>
+<li><strong><a href="./deploy-to-production.md">Deploy to Production</a></strong> - Production deployment checklist and best practices</li>
+<li><strong><a href="./how-to-deploy-your-application.md">Deploy Your Application</a></strong> - Complete deployment workflows for different platforms</li>
+</ul>
+<h2>🔧 Development &amp; Integration</h2>
+<ul>
+<li><strong><a href="./how-to-add-a-new-feature.md">Develop Custom MCP Tools</a></strong> - Complete guide to extending DocuMCP with custom tools</li>
+<li><strong><a href="./how-to-debug-common-issues.md">Debug MCP Server Issues</a></strong> - Comprehensive troubleshooting for MCP integration problems</li>
+</ul>
+<h2>📋 Common Tasks</h2>
+<h3>MCP Tool Development</h3>
+<p>Learn how to create custom tools that integrate seamlessly with DocuMCP's workflow.</p>
+<h3>Troubleshooting MCP Integration</h3>
+<p>Step-by-step debugging guide for common MCP server and client issues.</p>
+<h3>Production Deployment</h3>
+<p>Best practices for deploying documentation sites with automated workflows.</p>
+<h3>Multi-Platform Deployment</h3>
+<p>Deploy to GitHub Pages, Vercel, Netlify, and other platforms.</p>
+<h2>🔄 Workflow Examples</h2>
+<h3>Complete Documentation Setup</h3>
+<pre><code class="language-bash"># 1. Analyze your project
+analyze_repository --path ./my-project
+
+# 2. Get SSG recommendation  
+recommend_ssg --analysis-id &lt;id&gt;
+
+# 3. Generate configuration
+generate_config --ssg docusaurus --project &quot;My Project&quot;
+
+# 4. Create structure
+setup_structure --path ./docs --ssg docusaurus
+
+# 5. Populate content
+populate_diataxis_content --analysis-id &lt;id&gt; --docs-path ./docs
+
+# 6. Deploy to GitHub Pages
+deploy_pages --repository . --ssg docusaurus
+</code></pre>
+<h3>Debugging Failed Deployments</h3>
+<pre><code class="language-bash"># 1. Test local build
+test_local_deployment --repository-path . --ssg docusaurus
+
+# 2. Verify deployment configuration
+verify_deployment --repository . --url https://myuser.github.io/myproject
+
+# 3. Check for common issues
+# See debugging guide for detailed steps
+</code></pre>
+<h3>Gap Analysis and Improvement</h3>
+<pre><code class="language-bash"># 1. Detect documentation gaps
+detect_documentation_gaps --repository-path . --documentation-path ./docs
+
+# 2. Validate existing content
+validate_diataxis_content --content-path ./docs --validation-type all
+
+# 3. Populate missing content
+populate_diataxis_content --analysis-id &lt;id&gt; --docs-path ./docs
+</code></pre>
+<h2>🎯 By Use Case</h2>
+<h3>For MCP Tool Developers</h3>
+<ul>
+<li><a href="./how-to-add-a-new-feature.md">Develop Custom MCP Tools</a> - Complete development workflow</li>
+<li><a href="./how-to-debug-common-issues.md">Debug MCP Server Issues</a> - Tool-specific debugging</li>
+</ul>
+<h3>For Documentation Teams</h3>
+<ul>
+<li><a href="./deploy-to-production.md">Deploy to Production</a> - Production deployment</li>
+<li><a href="./how-to-deploy-your-application.md">Deploy Your Application</a> - Platform-specific deployment</li>
+</ul>
+<h3>For Project Maintainers</h3>
+<ul>
+<li>All guides above - DocuMCP covers the complete documentation lifecycle</li>
+</ul>
+<h2>🔗 Related Resources</h2>
+<ul>
+<li><a href="../reference/api-reference.md">MCP Tools API Reference</a> - Complete tool documentation</li>
+<li><a href="../tutorials/getting-started-with-documcp.md">Getting Started Tutorial</a> - New user onboarding</li>
+<li><a href="../explanation/architecture-overview.md">Architecture Overview</a> - Understanding DocuMCP design</li>
+</ul>

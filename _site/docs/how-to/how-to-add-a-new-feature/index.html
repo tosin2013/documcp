@@ -1,0 +1,397 @@
+<h1>How to Create Custom MCP Tools</h1>
+<p>This guide shows you how to develop custom MCP tools for documcp to extend its documentation capabilities.</p>
+<h2>Prerequisites</h2>
+<ul>
+<li>Node.js 20+ and TypeScript knowledge</li>
+<li>Understanding of MCP protocol basics</li>
+<li>documcp development environment set up</li>
+<li>Familiarity with Zod schema validation</li>
+</ul>
+<h2>MCP Tool Architecture</h2>
+<p>documcp tools follow the MCP (Model Context Protocol) specification:</p>
+<pre><code class="language-typescript">interface MCPTool {
+  name: string;
+  description: string;
+  inputSchema: ZodSchema;
+  handler: (args: any) =&gt; Promise&lt;ToolResult&gt;;
+}
+</code></pre>
+<h2>Step 1: Plan Your Tool</h2>
+<h3>Define Tool Purpose</h3>
+<ol>
+<li>
+<p><strong>Identify the Documentation Need</strong>:</p>
+<ul>
+<li>What documentation task will this tool solve?</li>
+<li>How does it fit into the Diataxis framework?</li>
+<li>What inputs and outputs are required?</li>
+</ul>
+</li>
+<li>
+<p><strong>Create Feature Branch</strong>:</p>
+<pre><code class="language-bash">git checkout -b feature/tool-your-tool-name
+</code></pre>
+</li>
+</ol>
+<h3>Example Tool Concept</h3>
+<p>Let's create a <code>validate_markdown_links</code> tool that checks for broken links in documentation.</p>
+<h2>Step 2: Create Tool Structure</h2>
+<h3>Tool File Structure</h3>
+<p>Create your tool in <code>src/tools/</code>:</p>
+<pre><code class="language-bash">touch src/tools/validate-markdown-links.ts
+</code></pre>
+<h3>Basic Tool Template</h3>
+<pre><code class="language-typescript">import { z } from 'zod';
+import { Tool } from '@modelcontextprotocol/sdk/types.js';
+
+// Input validation schema
+const ValidateMarkdownLinksSchema = z.object({
+  path: z.string().describe('Path to markdown files or directory'),
+  recursive: z.boolean().optional().default(true).describe('Check subdirectories'),
+  external: z.boolean().optional().default(false).describe('Validate external URLs'),
+  timeout: z.number().optional().default(5000).describe('Timeout for external links (ms)')
+});
+
+export type ValidateMarkdownLinksArgs = z.infer&lt;typeof ValidateMarkdownLinksSchema&gt;;
+
+export const validateMarkdownLinks: Tool = {
+  name: 'validate_markdown_links',
+  description: 'Validate internal and external links in markdown documentation files',
+  inputSchema: ValidateMarkdownLinksSchema.describe('Validate markdown links tool parameters'),
+  
+  async handler(args: ValidateMarkdownLinksArgs) {
+    // Implementation goes here
+    return {
+      content: [
+        {
+          type: 'text',
+          text: 'Link validation results...'
+        }
+      ]
+    };
+  }
+};
+</code></pre>
+<h2>Step 3: Implement Tool Logic</h2>
+<h3>Core Implementation</h3>
+<pre><code class="language-typescript">import fs from 'fs/promises';
+import path from 'path';
+import { glob } from 'glob';
+
+export const validateMarkdownLinks: Tool = {
+  name: 'validate_markdown_links',
+  description: 'Validate internal and external links in markdown documentation files',
+  inputSchema: ValidateMarkdownLinksSchema,
+  
+  async handler(args: ValidateMarkdownLinksArgs) {
+    try {
+      // Validate input
+      const validatedArgs = ValidateMarkdownLinksSchema.parse(args);
+      
+      // Find markdown files
+      const pattern = path.join(validatedArgs.path, validatedArgs.recursive ? '**/*.md' : '*.md');
+      const files = await glob(pattern);
+      
+      const results = {
+        totalFiles: files.length,
+        brokenLinks: [] as Array&lt;{
+          file: string;
+          link: string;
+          error: string;
+        }&gt;,
+        validLinks: 0
+      };
+      
+      // Process each file
+      for (const file of files) {
+        const content = await fs.readFile(file, 'utf-8');
+        const links = extractLinks(content);
+        
+        for (const link of links) {
+          try {
+            await validateLink(link, file, validatedArgs);
+            results.validLinks++;
+          } catch (error) {
+            results.brokenLinks.push({
+              file: path.relative(process.cwd(), file),
+              link,
+              error: error instanceof Error ? error.message : 'Unknown error'
+            });
+          }
+        }
+      }
+      
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(results, null, 2)
+          }
+        ]
+      };
+      
+    } catch (error) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Error validating links: ${error instanceof Error ? error.message : 'Unknown error'}`
+          }
+        ],
+        isError: true
+      };
+    }
+  }
+};
+
+// Helper functions
+function extractLinks(content: string): string[] {
+  const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+  const links: string[] = [];
+  let match;
+  
+  while ((match = linkRegex.exec(content)) !== null) {
+    links.push(match[2]);
+  }
+  
+  return links;
+}
+
+async function validateLink(link: string, sourceFile: string, args: ValidateMarkdownLinksArgs): Promise&lt;void&gt; {
+  if (link.startsWith('http')) {
+    if (args.external) {
+      // Validate external URL
+      const response = await fetch(link, { 
+        method: 'HEAD',
+        signal: AbortSignal.timeout(args.timeout || 5000)
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+    }
+  } else {
+    // Validate internal link
+    const targetPath = path.resolve(path.dirname(sourceFile), link);
+    try {
+      await fs.access(targetPath);
+    } catch {
+      throw new Error(`File not found: ${link}`);
+    }
+  }
+}
+</code></pre>
+<h2>Step 4: Register Your Tool</h2>
+<h3>Add to Tool Registry</h3>
+<p>Update <code>src/index.ts</code> to include your new tool:</p>
+<pre><code class="language-typescript">import { validateMarkdownLinks } from './tools/validate-markdown-links.js';
+
+// Add to tools array
+const tools = [
+  analyzeRepository,
+  recommendSSG,
+  generateConfig,
+  setupStructure,
+  populateDiataxisContent,
+  detectGaps,
+  validateContent,
+  validateDiataxisContent,
+  deployPages,
+  testLocalDeployment,
+  verifyDeployment,
+  validateMarkdownLinks, // Your new tool
+];
+</code></pre>
+<h2>Step 5: Add Comprehensive Tests</h2>
+<h3>Create Test File</h3>
+<pre><code class="language-typescript">// tests/tools/validate-markdown-links.test.ts
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { validateMarkdownLinks } from '../../src/tools/validate-markdown-links.js';
+import fs from 'fs/promises';
+import path from 'path';
+
+describe('validateMarkdownLinks', () =&gt; {
+  const testDir = path.join(__dirname, 'test-markdown');
+  
+  beforeEach(async () =&gt; {
+    await fs.mkdir(testDir, { recursive: true });
+  });
+  
+  afterEach(async () =&gt; {
+    await fs.rm(testDir, { recursive: true, force: true });
+  });
+  
+  it('should validate internal links correctly', async () =&gt; {
+    // Create test files
+    await fs.writeFile(
+      path.join(testDir, 'test.md'),
+      '[Link to reference](../reference/api-reference.md)'
+    );
+    
+    const result = await validateMarkdownLinks.handler({
+      path: testDir,
+      recursive: false,
+      external: false
+    });
+    
+    const parsed = JSON.parse(result.content[0].text);
+    expect(parsed.brokenLinks).toHaveLength(0);
+    expect(parsed.validLinks).toBe(1);
+  });
+  
+  it('should detect broken internal links', async () =&gt; {
+    await fs.writeFile(
+      path.join(testDir, 'test.md'),
+      '[Valid link](../reference/api-reference.md)'
+    );
+    
+    const result = await validateMarkdownLinks.handler({
+      path: testDir,
+      recursive: false,
+      external: false
+    });
+    
+    const parsed = JSON.parse(result.content[0].text);
+    expect(parsed.brokenLinks).toHaveLength(1);
+    expect(parsed.brokenLinks[0].link).toBe('./nonexistent-file.md');
+  });
+});
+</code></pre>
+<h3>Run Tests</h3>
+<pre><code class="language-bash">npm test -- validate-markdown-links
+</code></pre>
+<h2>Step 6: Add Documentation</h2>
+<h3>Tool Documentation</h3>
+<p>Create documentation in <code>docs/reference/tools/</code>:</p>
+<pre><code class="language-markdown"># validate_markdown_links
+
+Validates internal and external links in markdown documentation files.
+
+## Parameters
+
+- `path` (string): Path to markdown files or directory
+- `recursive` (boolean, optional): Check subdirectories (default: true)
+- `external` (boolean, optional): Validate external URLs (default: false)
+- `timeout` (number, optional): Timeout for external links in ms (default: 5000)
+
+## Example Usage
+
+```json
+{
+  &quot;name&quot;: &quot;validate_markdown_links&quot;,
+  &quot;arguments&quot;: {
+    &quot;path&quot;: &quot;./docs&quot;,
+    &quot;recursive&quot;: true,
+    &quot;external&quot;: true,
+    &quot;timeout&quot;: 10000
+  }
+}
+</code></pre>
+<h2>Return Format</h2>
+<p>Returns JSON with validation results:</p>
+<ul>
+<li><code>totalFiles</code>: Number of files processed</li>
+<li><code>brokenLinks</code>: Array of broken link details</li>
+<li><code>validLinks</code>: Count of valid links found</li>
+</ul>
+<pre><code>
+### Update API Reference
+
+Add your tool to `docs/reference/api-reference.md`:
+
+```markdown
+### validate_markdown_links
+
+**Purpose**: Validate internal and external links in markdown files
+
+**Use Cases**:
+- Documentation quality assurance
+- Pre-deployment link validation
+- Maintenance of large documentation sites
+
+**Integration**: Works with all SSGs and documentation frameworks
+</code></pre>
+<h2>Step 7: Integration Testing</h2>
+<h3>Test with AI Client</h3>
+<p>Test your tool with Claude Desktop or other MCP clients:</p>
+<pre><code>Can you validate all the links in my documentation using the validate_markdown_links tool?
+</code></pre>
+<h3>Performance Testing</h3>
+<p>Test with large documentation sets:</p>
+<pre><code class="language-bash"># Create performance test
+DEBUG=documcp:performance npm run dev
+</code></pre>
+<h2>Best Practices</h2>
+<h3>Code Quality</h3>
+<ol>
+<li><strong>Input Validation</strong>: Always use Zod schemas for type safety</li>
+<li><strong>Error Handling</strong>: Provide clear, actionable error messages</li>
+<li><strong>Performance</strong>: Consider memory usage for large repositories</li>
+<li><strong>Security</strong>: Validate file paths and prevent directory traversal</li>
+</ol>
+<h3>Tool Design</h3>
+<ol>
+<li><strong>Single Responsibility</strong>: Each tool should have one clear purpose</li>
+<li><strong>Composability</strong>: Tools should work well together</li>
+<li><strong>Consistency</strong>: Follow existing tool patterns and naming</li>
+<li><strong>Documentation</strong>: Provide comprehensive usage examples</li>
+</ol>
+<h3>Testing Strategy</h3>
+<ol>
+<li><strong>Unit Tests</strong>: Test core logic in isolation</li>
+<li><strong>Integration Tests</strong>: Test with real file systems</li>
+<li><strong>Error Cases</strong>: Test all failure scenarios</li>
+<li><strong>Performance Tests</strong>: Validate with large datasets</li>
+</ol>
+<h2>Advanced Features</h2>
+<h3>Tool Chaining</h3>
+<p>Design tools to work together:</p>
+<pre><code class="language-typescript">// Tool that uses results from other tools
+export const generateQualityReport: Tool = {
+  name: 'generate_quality_report',
+  description: 'Generate comprehensive documentation quality report',
+  
+  async handler(args) {
+    // Use multiple tools together
+    const gapAnalysis = await detectGaps.handler(args);
+    const linkValidation = await validateMarkdownLinks.handler(args);
+    const contentValidation = await validateContent.handler(args);
+    
+    // Combine results
+    return combineReports(gapAnalysis, linkValidation, contentValidation);
+  }
+};
+</code></pre>
+<h3>Configuration Support</h3>
+<p>Add tool-specific configuration:</p>
+<pre><code class="language-typescript">const config = {
+  linkValidation: {
+    timeout: process.env.LINK_TIMEOUT || 5000,
+    retries: process.env.LINK_RETRIES || 3,
+    userAgent: process.env.USER_AGENT || 'documcp-validator'
+  }
+};
+</code></pre>
+<h2>Deployment and Distribution</h2>
+<h3>Build and Test</h3>
+<pre><code class="language-bash">npm run build
+npm test
+npm run lint
+</code></pre>
+<h3>Create Pull Request</h3>
+<pre><code class="language-bash">git add .
+git commit -m &quot;feat: add validate_markdown_links tool
+
+- Validates internal and external markdown links
+- Supports recursive directory scanning
+- Configurable timeout for external URLs
+- Comprehensive test coverage&quot;
+
+git push origin feature/tool-validate-markdown-links
+</code></pre>
+<h2>Related Resources</h2>
+<ul>
+<li><a href="https://modelcontextprotocol.io/docs">MCP Protocol Specification</a></li>
+<li><a href="https://zod.dev/">Zod Validation Library</a></li>
+<li><a href="../explanation/architecture-overview.md">documcp Architecture</a></li>
+<li><a href="../tutorials/writing-and-running-tests.md">Testing Guide</a></li>
+</ul>

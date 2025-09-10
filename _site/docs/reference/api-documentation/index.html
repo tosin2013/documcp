@@ -1,0 +1,298 @@
+<h1>MCP Tools Reference</h1>
+<p>Complete technical reference for all documcp MCP tools with parameter schemas and examples.</p>
+<h2>Overview</h2>
+<p>documcp provides 11 core MCP tools for comprehensive documentation workflows. Each tool follows the MCP protocol specification with Zod schema validation.</p>
+<h2>Core Analysis Tools</h2>
+<h3>analyze_repository</h3>
+<p>Analyzes repository structure, dependencies, and documentation needs.</p>
+<p><strong>Parameters:</strong></p>
+<pre><code class="language-typescript">{
+  path: string;              // Repository path to analyze
+  depth?: 'quick' | 'standard' | 'deep'; // Analysis depth (default: 'standard')
+}
+</code></pre>
+<p><strong>Example:</strong></p>
+<pre><code class="language-json">{
+  &quot;name&quot;: &quot;analyze_repository&quot;,
+  &quot;arguments&quot;: {
+    &quot;path&quot;: &quot;./my-project&quot;,
+    &quot;depth&quot;: &quot;comprehensive&quot;
+  }
+}
+</code></pre>
+<p><strong>Returns:</strong></p>
+<ul>
+<li>Repository structure analysis</li>
+<li>Technology stack detection</li>
+<li>Documentation gaps identification</li>
+<li>SSG recommendations</li>
+</ul>
+<h3>detect_documentation_gaps</h3>
+<p>Identifies missing documentation and content gaps.</p>
+<p><strong>Parameters:</strong></p>
+<pre><code class="language-typescript">{
+  repositoryPath: string;     // Path to repository
+  documentationPath?: string; // Path to existing docs
+  analysisId?: string;        // Reuse previous analysis
+  depth?: 'quick' | 'standard' | 'comprehensive';
+}
+</code></pre>
+<p><strong>Returns:</strong></p>
+<ul>
+<li>Gap analysis report</li>
+<li>Missing documentation sections</li>
+<li>Content quality assessment</li>
+<li>Improvement recommendations</li>
+</ul>
+<h2>SSG and Configuration Tools</h2>
+<h3>recommend_ssg</h3>
+<p>Recommends optimal static site generator based on project analysis.</p>
+<p><strong>Parameters:</strong></p>
+<pre><code class="language-typescript">{
+  analysisId?: string;        // Previous analysis ID
+  preferences?: {
+    ecosystem?: 'javascript' | 'python' | 'ruby' | 'go' | 'any';
+    priority?: 'simplicity' | 'features' | 'performance';
+  };
+}
+</code></pre>
+<p><strong>Returns:</strong></p>
+<ul>
+<li>Recommended SSG with rationale</li>
+<li>Alternative options</li>
+<li>Setup complexity assessment</li>
+<li>Feature comparison</li>
+</ul>
+<h3>generate_config</h3>
+<p>Generates configuration files for selected static site generator.</p>
+<p><strong>Parameters:</strong></p>
+<pre><code class="language-typescript">{
+  ssg: 'jekyll' | 'hugo' | 'docusaurus' | 'mkdocs' | 'eleventy';
+  projectName: string;
+  projectDescription?: string;
+  outputPath: string;
+}
+</code></pre>
+<p><strong>Returns:</strong></p>
+<ul>
+<li>Generated configuration files</li>
+<li>Setup instructions</li>
+<li>Customization options</li>
+</ul>
+<h2>Structure and Content Tools</h2>
+<h3>setup_structure</h3>
+<p>Creates Diataxis-compliant documentation structure.</p>
+<p><strong>Parameters:</strong></p>
+<pre><code class="language-typescript">{
+  path: string;               // Documentation root path
+  ssg: 'jekyll' | 'hugo' | 'docusaurus' | 'mkdocs' | 'eleventy';
+  includeExamples?: boolean;  // Include example content (default: true)
+}
+</code></pre>
+<p><strong>Returns:</strong></p>
+<ul>
+<li>Created directory structure</li>
+<li>Template files</li>
+<li>Navigation configuration</li>
+</ul>
+<h3>populate_diataxis_content</h3>
+<p>Intelligently populates documentation with project-specific content.</p>
+<p><strong>Parameters:</strong></p>
+<pre><code class="language-typescript">{
+  docsPath: string;           // Documentation directory
+  analysisId?: string;        // Repository analysis ID
+  populationLevel?: 'basic' | 'comprehensive' | 'intelligent';
+  preserveExisting?: boolean; // Preserve existing content (default: true)
+  includeProjectSpecific?: boolean; // Include project-specific content
+  technologyFocus?: string[]; // Specific technologies to emphasize
+}
+</code></pre>
+<p><strong>Returns:</strong></p>
+<ul>
+<li>Generated content files</li>
+<li>Population report</li>
+<li>Content quality metrics</li>
+</ul>
+<h2>Validation Tools</h2>
+<h3>validate_content</h3>
+<p>Validates general content quality including links and code syntax.</p>
+<p><strong>Parameters:</strong></p>
+<pre><code class="language-typescript">{
+  contentPath: string;        // Content directory to validate
+  validationType?: 'links' | 'code' | 'references' | 'all';
+  includeCodeValidation?: boolean; // Validate code blocks (default: true)
+  followExternalLinks?: boolean;   // Check external URLs (default: false)
+}
+</code></pre>
+<p><strong>Returns:</strong></p>
+<ul>
+<li>Validation results</li>
+<li>Broken links report</li>
+<li>Code syntax errors</li>
+<li>Fix recommendations</li>
+</ul>
+<h3>validate_diataxis_content</h3>
+<p>Validates Diataxis documentation compliance and accuracy.</p>
+<p><strong>Parameters:</strong></p>
+<pre><code class="language-typescript">{
+  contentPath: string;        // Documentation directory
+  validationType?: 'accuracy' | 'completeness' | 'compliance' | 'all';
+  confidence?: 'strict' | 'moderate' | 'permissive';
+  analysisId?: string;        // Repository analysis for context
+  includeCodeValidation?: boolean;
+}
+</code></pre>
+<p><strong>Returns:</strong></p>
+<ul>
+<li>Diataxis compliance report</li>
+<li>Content accuracy assessment</li>
+<li>Completeness analysis</li>
+<li>Improvement suggestions</li>
+</ul>
+<h2>Deployment Tools</h2>
+<h3>deploy_pages</h3>
+<p>Sets up GitHub Pages deployment workflow.</p>
+<p><strong>Parameters:</strong></p>
+<pre><code class="language-typescript">{
+  repository: string;         // Repository path or URL
+  ssg: 'jekyll' | 'hugo' | 'docusaurus' | 'mkdocs' | 'eleventy';
+  branch?: string;           // Deployment branch (default: 'gh-pages')
+  customDomain?: string;     // Custom domain configuration
+}
+</code></pre>
+<p><strong>Returns:</strong></p>
+<ul>
+<li>GitHub Actions workflow</li>
+<li>Deployment configuration</li>
+<li>Setup instructions</li>
+</ul>
+<h3>test_local_deployment</h3>
+<p>Tests documentation build and local server.</p>
+<p><strong>Parameters:</strong></p>
+<pre><code class="language-typescript">{
+  repositoryPath: string;     // Repository path
+  ssg: 'jekyll' | 'hugo' | 'docusaurus' | 'mkdocs' | 'eleventy';
+  port?: number;             // Local server port (default: 3000)
+  timeout?: number;          // Build timeout in seconds (default: 60)
+  skipBuild?: boolean;       // Skip build, only start server
+}
+</code></pre>
+<p><strong>Returns:</strong></p>
+<ul>
+<li>Build results</li>
+<li>Local server status</li>
+<li>Error diagnostics</li>
+</ul>
+<h3>verify_deployment</h3>
+<p>Verifies and troubleshoots GitHub Pages deployment.</p>
+<p><strong>Parameters:</strong></p>
+<pre><code class="language-typescript">{
+  repository: string;         // Repository path or URL
+  url: string;               // Expected deployment URL
+}
+</code></pre>
+<p><strong>Returns:</strong></p>
+<ul>
+<li>Deployment status</li>
+<li>Accessibility verification</li>
+<li>Troubleshooting guidance</li>
+</ul>
+<h2>Tool Chaining Examples</h2>
+<h3>Complete Documentation Setup</h3>
+<pre><code class="language-json">[
+  {
+    &quot;name&quot;: &quot;analyze_repository&quot;,
+    &quot;arguments&quot;: { &quot;path&quot;: &quot;./project&quot;, &quot;depth&quot;: &quot;comprehensive&quot; }
+  },
+  {
+    &quot;name&quot;: &quot;recommend_ssg&quot;,
+    &quot;arguments&quot;: { &quot;analysisId&quot;: &quot;&lt;from-previous&gt;&quot; }
+  },
+  {
+    &quot;name&quot;: &quot;generate_config&quot;,
+    &quot;arguments&quot;: { &quot;ssg&quot;: &quot;docusaurus&quot;, &quot;projectName&quot;: &quot;My Project&quot; }
+  },
+  {
+    &quot;name&quot;: &quot;setup_structure&quot;,
+    &quot;arguments&quot;: { &quot;path&quot;: &quot;./docs&quot;, &quot;ssg&quot;: &quot;docusaurus&quot; }
+  },
+  {
+    &quot;name&quot;: &quot;populate_diataxis_content&quot;,
+    &quot;arguments&quot;: { &quot;docsPath&quot;: &quot;./docs&quot;, &quot;analysisId&quot;: &quot;&lt;from-analysis&gt;&quot; }
+  },
+  {
+    &quot;name&quot;: &quot;deploy_pages&quot;,
+    &quot;arguments&quot;: { &quot;repository&quot;: &quot;.&quot;, &quot;ssg&quot;: &quot;docusaurus&quot; }
+  }
+]
+</code></pre>
+<h3>Quality Assurance Workflow</h3>
+<pre><code class="language-json">[
+  {
+    &quot;name&quot;: &quot;detect_documentation_gaps&quot;,
+    &quot;arguments&quot;: { &quot;repositoryPath&quot;: &quot;.&quot;, &quot;documentationPath&quot;: &quot;./docs&quot; }
+  },
+  {
+    &quot;name&quot;: &quot;validate_content&quot;,
+    &quot;arguments&quot;: { &quot;contentPath&quot;: &quot;./docs&quot;, &quot;validationType&quot;: &quot;all&quot; }
+  },
+  {
+    &quot;name&quot;: &quot;validate_diataxis_content&quot;,
+    &quot;arguments&quot;: { &quot;contentPath&quot;: &quot;./docs&quot;, &quot;validationType&quot;: &quot;all&quot; }
+  }
+]
+</code></pre>
+<h2>Error Handling</h2>
+<p>All tools return standardized error responses:</p>
+<pre><code class="language-typescript">interface ToolError {
+  content: [{
+    type: 'text';
+    text: string; // Error message
+  }];
+  isError: true;
+}
+</code></pre>
+<h2>Common Error Codes</h2>
+<table>
+<thead>
+<tr>
+<th>Error Type</th>
+<th>Description</th>
+<th>Resolution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ValidationError</td>
+<td>Invalid input parameters</td>
+<td>Check parameter types and required fields</td>
+</tr>
+<tr>
+<td>FileSystemError</td>
+<td>File/directory access issues</td>
+<td>Verify paths and permissions</td>
+</tr>
+<tr>
+<td>NetworkError</td>
+<td>External service failures</td>
+<td>Check network connectivity and retry</td>
+</tr>
+<tr>
+<td>ConfigurationError</td>
+<td>Invalid SSG or tool configuration</td>
+<td>Review configuration syntax</td>
+</tr>
+<tr>
+<td>ContentError</td>
+<td>Malformed content or parsing issues</td>
+<td>Validate content format and structure</td>
+</tr>
+</tbody>
+</table>
+<h2>Performance Considerations</h2>
+<ul>
+<li><strong>Memory Usage</strong>: Large repositories may require increased Node.js memory limits</li>
+<li><strong>Timeout Settings</strong>: Adjust timeouts for comprehensive analysis of large codebases</li>
+<li><strong>Concurrent Operations</strong>: Tools can be chained but avoid parallel file system operations</li>
+<li><strong>Cache Management</strong>: Analysis results are cached to improve performance</li>
+</ul>

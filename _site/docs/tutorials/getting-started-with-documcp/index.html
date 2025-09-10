@@ -1,0 +1,237 @@
+<h1>Getting Started with documcp</h1>
+<p>Welcome to documcp! This tutorial will guide you through installing and setting up the documcp MCP server for AI-powered documentation workflows.</p>
+<h2>What is documcp?</h2>
+<p>documcp is an MCP (Model Context Protocol) server that provides AI clients with powerful tools for:</p>
+<ul>
+<li>Repository analysis and documentation gap detection</li>
+<li>Static site generator recommendations</li>
+<li>Diataxis-compliant documentation structure creation</li>
+<li>Automated content population and validation</li>
+<li>GitHub Pages deployment automation</li>
+</ul>
+<h2>Prerequisites</h2>
+<p>Before you begin, ensure you have:</p>
+<ul>
+<li>Node.js (version 20 or higher)</li>
+<li>npm package manager</li>
+<li>AI client that supports MCP (Claude Desktop, GitHub Copilot, etc.)</li>
+<li>Git repository access for documentation projects</li>
+</ul>
+<h2>Installation</h2>
+<h3>Method 1: NPM Installation (Recommended)</h3>
+<p>Install documcp globally from npm:</p>
+<pre><code class="language-bash">npm install -g documcp
+</code></pre>
+<p>Verify the installation:</p>
+<pre><code class="language-bash">documcp --version
+</code></pre>
+<h3>Method 2: Development Installation</h3>
+<p>For contributing to documcp or local development:</p>
+<ol>
+<li>
+<p>Clone the repository:</p>
+<pre><code class="language-bash">git clone https://github.com/tosin2013/documcp.git
+cd documcp
+</code></pre>
+</li>
+<li>
+<p>Install dependencies:</p>
+<pre><code class="language-bash">npm install
+</code></pre>
+</li>
+<li>
+<p>Build the project:</p>
+<pre><code class="language-bash">npm run build
+</code></pre>
+</li>
+</ol>
+<h2>AI Client Setup</h2>
+<h3>Claude Desktop Configuration</h3>
+<ol>
+<li>
+<p><strong>Locate Claude Desktop's configuration file</strong>:</p>
+<ul>
+<li><strong>macOS</strong>: <code>~/Library/Application Support/Claude/claude_desktop_config.json</code></li>
+<li><strong>Windows</strong>: <code>%APPDATA%\Claude\claude_desktop_config.json</code></li>
+<li><strong>Linux</strong>: <code>~/.config/claude/claude_desktop_config.json</code></li>
+</ul>
+</li>
+<li>
+<p><strong>Add documcp server configuration</strong>:</p>
+<pre><code class="language-json">{
+  &quot;mcpServers&quot;: {
+    &quot;documcp&quot;: {
+      &quot;command&quot;: &quot;npx&quot;,
+      &quot;args&quot;: [&quot;documcp&quot;]
+    }
+  }
+}
+</code></pre>
+<p><strong>Optional: Set default target repository</strong>:</p>
+<pre><code class="language-json">{
+  &quot;mcpServers&quot;: {
+    &quot;documcp&quot;: {
+      &quot;command&quot;: &quot;npx&quot;,
+      &quot;args&quot;: [&quot;documcp&quot;],
+      &quot;env&quot;: {
+        &quot;DOCUMCP_TARGET_REPO&quot;: &quot;/path/to/your/project&quot;
+      }
+    }
+  }
+}
+</code></pre>
+<p><strong>Alternative configuration</strong> (if npx doesn't work):</p>
+<pre><code class="language-json">{
+  &quot;mcpServers&quot;: {
+    &quot;documcp&quot;: {
+      &quot;command&quot;: &quot;node&quot;,
+      &quot;args&quot;: [&quot;/usr/local/lib/node_modules/documcp/dist/index.js&quot;],
+      &quot;env&quot;: {
+        &quot;NODE_ENV&quot;: &quot;production&quot;
+      }
+    }
+  }
+}
+</code></pre>
+</li>
+<li>
+<p><strong>Find your installation path</strong> (if using node command):</p>
+<pre><code class="language-bash">npm list -g documcp
+</code></pre>
+</li>
+<li>
+<p><strong>Restart Claude Desktop</strong> to load the configuration.</p>
+</li>
+</ol>
+<h3>GitHub Copilot Configuration</h3>
+<ol>
+<li>
+<p><strong>Install MCP extension</strong> for VS Code</p>
+</li>
+<li>
+<p><strong>Configure in VS Code settings.json</strong>:</p>
+<pre><code class="language-json">{
+  &quot;mcp.servers&quot;: {
+    &quot;documcp&quot;: {
+      &quot;transport&quot;: &quot;stdio&quot;,
+      &quot;command&quot;: &quot;npx&quot;,
+      &quot;args&quot;: [&quot;documcp&quot;],
+      &quot;env&quot;: {
+        &quot;NODE_ENV&quot;: &quot;production&quot;
+      }
+    }
+  }
+}
+</code></pre>
+<p><strong>Alternative configuration</strong> (if npx doesn't work):</p>
+<pre><code class="language-json">{
+  &quot;mcp.servers&quot;: {
+    &quot;documcp&quot;: {
+      &quot;transport&quot;: &quot;stdio&quot;,
+      &quot;command&quot;: &quot;node&quot;,
+      &quot;args&quot;: [&quot;/usr/local/lib/node_modules/documcp/dist/index.js&quot;],
+      &quot;env&quot;: {
+        &quot;NODE_ENV&quot;: &quot;production&quot;
+      }
+    }
+  }
+}
+</code></pre>
+</li>
+</ol>
+<h2>Verifying Your Setup</h2>
+<h3>Test MCP Server Connection</h3>
+<p>In your AI client (Claude Desktop), try:</p>
+<pre><code>Can you analyze my repository using documcp tools?
+</code></pre>
+<p>The AI should respond with available documcp tools and offer to help with documentation setup.</p>
+<h3>Test Complete Workflow</h3>
+<p>Run a full documentation setup:</p>
+<pre><code>I need to set up comprehensive documentation for my TypeScript project. Can you:
+
+1. Analyze my repository structure
+2. Recommend the best static site generator
+3. Create a complete Diataxis documentation structure
+4. Set up GitHub Pages deployment
+5. Populate the documentation with project-specific content
+</code></pre>
+<h2>First Documentation Project</h2>
+<h3>Quick Start Example</h3>
+<ol>
+<li>
+<p><strong>Navigate to your project</strong>:</p>
+<pre><code class="language-bash">cd /path/to/your/project
+</code></pre>
+</li>
+<li>
+<p><strong>Ask your AI client to analyze the project</strong>:</p>
+<pre><code>Please analyze this repository and set up complete documentation using documcp.
+</code></pre>
+</li>
+<li>
+<p><strong>Follow the AI's recommendations</strong> for:</p>
+<ul>
+<li>Static site generator selection</li>
+<li>Documentation structure creation</li>
+<li>Content population</li>
+<li>Deployment setup</li>
+</ul>
+</li>
+</ol>
+<h3>Expected Results</h3>
+<p>After setup, you should have:</p>
+<ul>
+<li><strong>Diataxis-compliant documentation structure</strong></li>
+<li><strong>Project-specific content</strong> (tutorials, how-to guides, explanations, reference)</li>
+<li><strong>GitHub Pages deployment</strong> workflow</li>
+<li><strong>Validation and quality checks</strong></li>
+</ul>
+<h2>Troubleshooting</h2>
+<h3>Common Issues</h3>
+<p><strong>MCP Server Not Found</strong>:</p>
+<ul>
+<li>Verify the path in your AI client configuration</li>
+<li>Check that Node.js and npm are in your PATH</li>
+<li>Ensure the server process can start</li>
+</ul>
+<p><strong>Tool Execution Failures</strong>:</p>
+<ul>
+<li>Check file permissions for repository access</li>
+<li>Verify Node.js version compatibility (20+)</li>
+<li>Review server logs for detailed error messages</li>
+</ul>
+<h3>Debug Mode</h3>
+<p>Enable debug logging:</p>
+<pre><code class="language-bash"># For global installation
+DEBUG=documcp:* documcp
+
+# For development installation
+DEBUG=documcp:* npm run dev
+</code></pre>
+<h3>Getting Help</h3>
+<p>If you encounter issues:</p>
+<ul>
+<li>Check the <a href="../how-to/how-to-debug-common-issues.md">Debugging Guide</a></li>
+<li>Review <a href="../reference/configuration-options.md">MCP Server Configuration</a></li>
+<li>Search <a href="https://github.com/tosin2013/documcp/issues">GitHub Issues</a></li>
+</ul>
+<h2>Next Steps</h2>
+<h3>Learn More</h3>
+<ul>
+<li><strong><a href="../explanation/architecture-overview.md">Architecture Overview</a></strong> - Understand documcp's design</li>
+<li><strong><a href="../reference/mcp-tools-reference.md">MCP Tools Reference</a></strong> - Complete tool documentation</li>
+<li><strong><a href="../how-to/how-to-deploy-your-application.md">AI Client Integration</a></strong> - Advanced setup options</li>
+</ul>
+<h3>Advanced Usage</h3>
+<ul>
+<li><strong><a href="../how-to/how-to-add-a-new-feature.md">Create Custom MCP Tools</a></strong> - Extend documcp functionality</li>
+<li><strong><a href="../how-to/deploy-to-production.md">Production Deployment</a></strong> - Enterprise setup guide</li>
+<li><strong><a href="../reference/configuration-options.md">Performance Tuning</a></strong> - Optimize for large repositories</li>
+</ul>
+<h3>Community</h3>
+<ul>
+<li><strong><a href="https://github.com/tosin2013/documcp">GitHub Repository</a></strong> - Source code and issues</li>
+<li><strong><a href="https://github.com/tosin2013/documcp/issues">Discussions</a></strong> - Community support</li>
+<li><strong><a href="../how-to/how-to-add-a-new-feature.md">Contributing Guide</a></strong> - Help improve documcp</li>
+</ul>
+<p>Welcome to the documcp community! 🚀</p>

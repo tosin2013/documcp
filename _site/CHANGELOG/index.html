@@ -1,0 +1,73 @@
+<h1>Changelog</h1>
+<p>All notable changes to DocuMCP will be documented in this file.</p>
+<p>The format is based on <a href="https://keepachangelog.com/en/1.0.0/">Keep a Changelog</a>,
+and this project adheres to <a href="https://semver.org/spec/v2.0.0.html">Semantic Versioning</a>.</p>
+<h2>[Unreleased]</h2>
+<h2>[0.2.3] - 2025-08-24</h2>
+<h3>Fixed</h3>
+<ul>
+<li>Added missing <code>bin</code> field to package.json to enable npx execution (Fixes #3)</li>
+<li>Made dist/index.js executable with proper permissions</li>
+</ul>
+<h3>Added</h3>
+<ul>
+<li>CLI executable support via <code>npx documcp</code> command</li>
+<li>Direct command-line invocation capability</li>
+</ul>
+<h2>[0.2.2] - 2025-08-24</h2>
+<h3>Added</h3>
+<ul>
+<li>Version display and badges to documentation pages</li>
+<li>Enhanced documentation structure</li>
+</ul>
+<h2>[0.2.1] - 2025-08-24</h2>
+<h3>Changed</h3>
+<ul>
+<li>Minor documentation updates</li>
+</ul>
+<h2>[0.2.0] - 2025-08-24</h2>
+<h3>Changed</h3>
+<ul>
+<li><strong>BREAKING</strong>: Updated Node.js requirements from &gt;=18.0.0 to &gt;=20.0.0</li>
+<li>Updated CI/CD pipeline to test Node.js 20.x and 22.x (removed 18.x)</li>
+<li>Updated all generated GitHub Actions workflows to use Node.js 20</li>
+<li>Updated Docker base images from node:18 to node:20 in test fixtures</li>
+<li>Updated @types/node references from ^18.0.0 to ^20.0.0</li>
+<li>Enhanced content validation capabilities and improved documentation structure</li>
+<li>Improved Docusaurus deployment build path configuration</li>
+<li>Refactored local deployment tests with better input validation and response structure</li>
+</ul>
+<h3>Added</h3>
+<ul>
+<li>Created .nvmrc file specifying Node.js 22 for development</li>
+<li>Added Node.js version requirements to README.md</li>
+<li>Comprehensive test suite additions with improved coverage</li>
+<li>Enhanced error handling and response structure improvements</li>
+<li>Content generation methods with consistent parameter naming</li>
+</ul>
+<h3>Fixed</h3>
+<ul>
+<li>Critical linting errors resolved (lexical declarations in case blocks)</li>
+<li>Unused variable cleanup in validation tools</li>
+<li>Correct build path for Docusaurus deployment</li>
+</ul>
+<h3>Technical Details</h3>
+<ul>
+<li>CI/CD pipeline now tests compatibility with Node.js 20.x and 22.x</li>
+<li>All generated deployment workflows use Node.js 20 by default</li>
+<li>Test coverage maintained at 82.76% (exceeds 80% requirement)</li>
+<li>All builds and tests pass with updated Node.js requirements</li>
+<li>161 tests passing across 13 test suites</li>
+<li>Enhanced documentation gap detection and content validation</li>
+</ul>
+<h2>[0.1.0] - 2025-08-22</h2>
+<h3>Added</h3>
+<ul>
+<li>Initial release of DocuMCP</li>
+<li>Complete MCP Server implementation with 6 core tools</li>
+<li>Comprehensive CI/CD pipeline with GitHub Actions</li>
+<li>82% test coverage (exceeds 80% requirement)</li>
+<li>Performance benchmarking system (PERF-001 compliant)</li>
+<li>Security scanning and dependency review</li>
+<li>Automated release and deployment workflows</li>
+</ul>
