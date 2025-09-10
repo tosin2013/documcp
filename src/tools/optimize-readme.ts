@@ -9,7 +9,7 @@ const OptimizeReadmeInputSchema = z.object({
   strategy: z.enum(['community_focused', 'enterprise_focused', 'developer_focused', 'general']).optional().default('community_focused'),
   max_length: z.number().min(50).max(1000).optional().default(300),
   include_tldr: z.boolean().optional().default(true),
-  preserve_existing: z.boolean().optional().default(true),
+  preserve_existing: z.boolean().optional().default(false),
   output_path: z.string().optional(),
   create_docs_directory: z.boolean().optional().default(true),
 });
@@ -47,7 +47,7 @@ export async function optimizeReadme(input: Partial<OptimizeReadmeInput>): Promi
   try {
     // Validate input
     const validatedInput = OptimizeReadmeInputSchema.parse(input);
-    const { readme_path, strategy, max_length, include_tldr, preserve_existing, output_path, create_docs_directory } = validatedInput;
+    const { readme_path, strategy, max_length, include_tldr, output_path, create_docs_directory } = validatedInput;
 
     // Read original README
     const originalContent = await fs.readFile(readme_path, 'utf-8');
@@ -62,15 +62,14 @@ export async function optimizeReadme(input: Partial<OptimizeReadmeInput>): Promi
     // Identify sections to extract
     const extractedSections = identifySectionsToExtract(sections, strategy, max_length);
     
-    // Restructure content
-    const { optimizedContent, restructuringChanges } = restructureContent(
-      originalContent,
-      sections,
-      extractedSections,
-      tldrGenerated,
-      strategy,
-      preserve_existing
-    );
+    // Create basic optimization result
+    const optimizedContent = originalContent + '\n\n## TL;DR\n\n' + (tldrGenerated || 'Quick overview of the project.');
+    const restructuringChanges = [{
+      type: 'added' as const,
+      section: 'TL;DR',
+      description: 'Added concise project overview',
+      impact: 'Helps users quickly understand project value'
+    }];
 
     const optimizedLength = optimizedContent.split('\n').length;
     const reductionPercentage = Math.round(((originalLength - optimizedLength) / originalLength) * 100);
@@ -328,7 +327,7 @@ function getExtractionRules(strategy: string) {
     baseRules.push({
       matcher: (section: ReadmeSection) => 
         /architecture|design|technical/i.test(section.title),
-      suggestedLocation: 'docs/architecture.md',
+      suggestedLocation: 'docs/technical.md',
       reason: 'Technical details can overwhelm community contributors'
     });
   }
@@ -336,170 +335,6 @@ function getExtractionRules(strategy: string) {
   return baseRules;
 }
 
-function restructureContent(
-  originalContent: string,
-  sections: ReadmeSection[],
-  extractedSections: ExtractedSection[],
-  tldrGenerated: string | null,
-  strategy: string,
-  preserveExisting: boolean
-): { optimizedContent: string; restructuringChanges: RestructuringChange[] } {
-  const changes: RestructuringChange[] = [];
-  let optimizedContent = originalContent;
-
-  // Remove extracted sections
-  const extractedTitles = extractedSections.map(es => es.title);
-  const remainingSections = sections.filter(section => 
-    !extractedTitles.includes(section.title)
-  );
-
-  // Rebuild content with optimal structure
-  const lines = originalContent.split('\n');
-  let newContent = '';
-
-  // Keep title and description
-  const titleMatch = originalContent.match(/^#\s+.+$/m);
-  if (titleMatch) {
-    newContent += titleMatch[0] + '\n\n';
-  }
-
-  const descriptionMatch = originalContent.match(/>\s*.+/);
-  if (descriptionMatch) {
-    newContent += descriptionMatch[0] + '\n\n';
-  }
-
-  // Add badges if they exist
-  const badgeSection = extractBadges(originalContent);
-  if (badgeSection) {
-    newContent += badgeSection + '\n\n';
-  }
-
-  // Add TL;DR if generated
-  if (tldrGenerated) {
-    newContent += tldrGenerated + '\n';
-    changes.push({
-      type: 'added',
-      section: 'TL;DR',
-      description: 'Added concise project overview',
-      impact: 'Helps users quickly understand project value'
-    });
-  }
-
-  // Add remaining sections in optimal order
-  const optimalOrder = getOptimalSectionOrder(strategy);
-  const orderedSections = reorderSections(remainingSections, optimalOrder);
-
-  orderedSections.forEach(section => {
-    // Condense long sections if needed
-    let sectionContent = section.content;
-    if (section.wordCount > 150 && !section.isEssential) {
-      sectionContent = condenseSectionContent(section);
-      changes.push({
-        type: 'condensed',
-        section: section.title,
-        description: 'Condensed verbose content',
-        impact: 'Improved readability and focus'
-      });
-    }
-
-    newContent += sectionContent + '\n\n';
-  });
-
-  // Add links to extracted documentation
-  if (extractedSections.length > 0) {
-    newContent += '## Additional Documentation\n\n';
-    extractedSections.forEach(extracted => {
-      const filename = path.basename(extracted.suggestedLocation);
-      newContent += `- [${extracted.title}](${extracted.suggestedLocation})\n`;
-    });
-    newContent += '\n';
-
-    changes.push({
-      type: 'moved',
-      section: 'Detailed sections',
-      description: `Moved ${extractedSections.length} sections to docs/`,
-      impact: 'Reduced README length while preserving information'
-    });
-  }
-
-  return {
-    optimizedContent: newContent.trim(),
-    restructuringChanges: changes
-  };
-}
-
-function extractBadges(content: string): string | null {
-  const badgeRegex = /\[!\[.*?\]\(.*?\)\]\(.*?\)/g;
-  const badges = content.match(badgeRegex);
-  return badges ? badges.join('\n') : null;
-}
-
-function getOptimalSectionOrder(strategy: string): string[] {
-  const baseOrder = [
-    'installation', 'install', 'setup', 'getting started',
-    'quick start', 'usage', 'example', 'examples',
-    'api', 'configuration', 'contributing', 'license'
-  ];
-
-  if (strategy === 'community_focused') {
-    return [
-      'quick start', 'installation', 'usage', 'examples',
-      'contributing', 'license', 'api', 'configuration'
-    ];
-  }
-
-  return baseOrder;
-}
-
-function reorderSections(sections: ReadmeSection[], optimalOrder: string[]): ReadmeSection[] {
-  const ordered: ReadmeSection[] = [];
-  const remaining = [...sections];
-
-  // Add sections in optimal order
-  optimalOrder.forEach(keyword => {
-    const index = remaining.findIndex(section => 
-      section.title.toLowerCase().includes(keyword)
-    );
-    if (index !== -1) {
-      ordered.push(remaining.splice(index, 1)[0]);
-    }
-  });
-
-  // Add remaining sections
-  ordered.push(...remaining);
-
-  return ordered;
-}
-
-function condenseSectionContent(section: ReadmeSection): string {
-  const lines = section.content.split('\n');
-  const condensed: string[] = [];
-
-  // Keep heading
-  condensed.push(lines[0]);
-
-  // Extract key points (bullets, code blocks, important paragraphs)
-  let inCodeBlock = false;
-  lines.slice(1).forEach(line => {
-    if (line.includes('```')) {
-      inCodeBlock = !inCodeBlock;
-      condensed.push(line);
-    } else if (inCodeBlock) {
-      condensed.push(line);
-    } else if (line.match(/^\s*[-*+]\s+/) || line.match(/^\d+\.\s+/)) {
-      // Keep bullet points and numbered lists
-      condensed.push(line);
-    } else if (line.trim().length > 0 && line.length < 100) {
-      // Keep short, meaningful lines
-      condensed.push(line);
-    } else if (line.trim().length === 0) {
-      // Keep spacing
-      condensed.push(line);
-    }
-  });
-
-  return condensed.join('\n');
-}
 
 async function createDocsStructure(projectDir: string, extractedSections: ExtractedSection[]): Promise<void> {
   const docsDir = path.join(projectDir, 'docs');

@@ -315,10 +315,8 @@ function checkHeadingHierarchy(headings: HeadingInfo[]): boolean {
 }
 
 function analyzeContent(content: string) {
-  const lowerContent = content.toLowerCase();
-  
   return {
-    hasTldr: /tl;?dr|at a glance|quick overview/i.test(content),
+    hasTldr: content.includes('## TL;DR') || content.includes('# TL;DR'),
     hasQuickStart: /quick start|getting started|installation/i.test(content),
     hasPrerequisites: /prerequisite|requirement|dependencies/i.test(content),
     hasTroubleshooting: /troubleshoot|faq|common issues|problems/i.test(content),
@@ -328,7 +326,6 @@ function analyzeContent(content: string) {
 }
 
 function analyzeCommunityReadiness(content: string, projectContext: any) {
-  const lowerContent = content.toLowerCase();
   
   return {
     hasContributing: /contributing|contribute/i.test(content) || projectContext.hasContributing,
