@@ -28,6 +28,8 @@ import { testLocalDeployment } from './tools/test-local-deployment.js';
 import { evaluateReadmeHealth } from './tools/evaluate-readme-health.js';
 import { readmeBestPractices } from './tools/readme-best-practices.js';
 import { checkDocumentationLinks } from './tools/check-documentation-links.js';
+import { generateReadmeTemplate } from './tools/generate-readme-template.js';
+import { validateReadmeChecklist } from './tools/validate-readme-checklist.js';
 import { formatMCPResponse } from './types/api.js';
 import { DOCUMENTATION_WORKFLOWS, WORKFLOW_EXECUTION_GUIDANCE, WORKFLOW_METADATA } from './workflows/documentation-workflow.js';
 
@@ -197,6 +199,31 @@ const TOOLS = [
       ignore_patterns: z.array(z.string()).optional().default([]).describe('URL patterns to ignore during checking'),
       fail_on_broken_links: z.boolean().optional().default(false).describe('Fail the check if broken links are found'),
       output_format: z.enum(['summary', 'detailed', 'json']).optional().default('detailed').describe('Output format for results'),
+    }),
+  },
+  {
+    name: 'generate_readme_template',
+    description: 'Generate standardized README templates for different project types with best practices',
+    inputSchema: z.object({
+      projectName: z.string().min(1).describe('Name of the project'),
+      description: z.string().min(1).describe('Brief description of what the project does'),
+      templateType: z.enum(['library', 'application', 'cli-tool', 'api', 'documentation']).describe('Type of project template to generate'),
+      author: z.string().optional().describe('Project author/organization name'),
+      license: z.string().optional().default('MIT').describe('Project license'),
+      includeScreenshots: z.boolean().optional().default(false).describe('Include screenshot placeholders for applications'),
+      includeBadges: z.boolean().optional().default(true).describe('Include status badges'),
+      includeContributing: z.boolean().optional().default(true).describe('Include contributing section'),
+      outputPath: z.string().optional().describe('Path to write the generated README.md file'),
+    }),
+  },
+  {
+    name: 'validate_readme_checklist',
+    description: 'Validate README files against community best practices checklist with detailed scoring',
+    inputSchema: z.object({
+      readmePath: z.string().min(1).describe('Path to the README file to validate'),
+      projectPath: z.string().optional().describe('Path to project directory for additional context'),
+      strict: z.boolean().optional().default(false).describe('Use strict validation rules'),
+      outputFormat: z.enum(['json', 'markdown', 'console']).optional().default('console').describe('Output format for the validation report'),
     }),
   },
 ];
@@ -924,6 +951,46 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           'application/json'
         );
         return formatMCPResponse(result);
+      }
+      
+      case 'generate_readme_template': {
+        const result = await generateReadmeTemplate(args as any);
+        // Store generated template as resource
+        const templateId = `readme-template-${Date.now()}`;
+        storeResource(
+          `documcp://template/${templateId}`,
+          result.content,
+          'text/markdown'
+        );
+        return formatMCPResponse({
+          success: true,
+          data: result,
+          metadata: {
+            toolVersion: packageJson.version,
+            executionTime: Date.now(),
+            timestamp: new Date().toISOString()
+          }
+        });
+      }
+      
+      case 'validate_readme_checklist': {
+        const result = await validateReadmeChecklist(args as any);
+        // Store validation report as resource
+        const validationId = `readme-validation-${Date.now()}`;
+        storeResource(
+          `documcp://analysis/${validationId}`,
+          JSON.stringify(result, null, 2),
+          'application/json'
+        );
+        return formatMCPResponse({
+          success: true,
+          data: result,
+          metadata: {
+            toolVersion: packageJson.version,
+            executionTime: Date.now(),
+            timestamp: new Date().toISOString()
+          }
+        });
       }
       
       default:
