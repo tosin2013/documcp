@@ -33,7 +33,7 @@ import { validateReadmeChecklist } from './tools/validate-readme-checklist.js';
 import { analyzeReadme } from './tools/analyze-readme.js';
 import { optimizeReadme } from './tools/optimize-readme.js';
 import { formatMCPResponse } from './types/api.js';
-import { generateTechnicalWriterPrompts, generatePromptMessages } from './prompts/technical-writer-prompts.js';
+import { generateTechnicalWriterPrompts } from './prompts/technical-writer-prompts.js';
 import { DOCUMENTATION_WORKFLOWS, WORKFLOW_EXECUTION_GUIDANCE, WORKFLOW_METADATA } from './workflows/documentation-workflow.js';
 
 // Get version from package.json
@@ -257,7 +257,61 @@ const TOOLS = [
 ];
 
 // Native MCP Prompts for technical writing assistance
-const PROMPTS = generateTechnicalWriterPrompts();
+const PROMPTS = [
+  {
+    name: 'tutorial-writer',
+    description: 'Generate learning-oriented tutorial content following Diataxis principles',
+    arguments: [
+      { name: 'project_path', description: 'Path to the project directory', required: true },
+      { name: 'target_audience', description: 'Target audience for the tutorial', required: false },
+      { name: 'learning_goal', description: 'What users should learn', required: false }
+    ]
+  },
+  {
+    name: 'howto-guide-writer',
+    description: 'Generate problem-oriented how-to guide content following Diataxis principles',
+    arguments: [
+      { name: 'project_path', description: 'Path to the project directory', required: true },
+      { name: 'problem', description: 'Problem to solve', required: false },
+      { name: 'user_experience', description: 'User experience level', required: false }
+    ]
+  },
+  {
+    name: 'reference-writer',
+    description: 'Generate information-oriented reference documentation following Diataxis principles',
+    arguments: [
+      { name: 'project_path', description: 'Path to the project directory', required: true },
+      { name: 'reference_type', description: 'Type of reference (API, CLI, etc.)', required: false },
+      { name: 'completeness', description: 'Level of completeness required', required: false }
+    ]
+  },
+  {
+    name: 'explanation-writer',
+    description: 'Generate understanding-oriented explanation content following Diataxis principles',
+    arguments: [
+      { name: 'project_path', description: 'Path to the project directory', required: true },
+      { name: 'concept', description: 'Concept to explain', required: false },
+      { name: 'depth', description: 'Depth of explanation', required: false }
+    ]
+  },
+  {
+    name: 'diataxis-organizer',
+    description: 'Organize existing documentation using Diataxis framework principles',
+    arguments: [
+      { name: 'project_path', description: 'Path to the project directory', required: true },
+      { name: 'current_docs', description: 'Description of current documentation', required: false },
+      { name: 'priority', description: 'Organization priority', required: false }
+    ]
+  },
+  {
+    name: 'readme-optimizer',
+    description: 'Optimize README content using Diataxis-aware principles',
+    arguments: [
+      { name: 'project_path', description: 'Path to the project directory', required: true },
+      { name: 'optimization_focus', description: 'Focus area for optimization', required: false }
+    ]
+  }
+];
 
 // In-memory storage for resources
 const resourceStore = new Map<string, { content: string; mimeType: string }>();
@@ -320,8 +374,9 @@ server.setRequestHandler(ListPromptsRequestSchema, async () => ({
 server.setRequestHandler(GetPromptRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
   
-  // Generate dynamic prompt messages using our native prompt system
-  const messages = await generatePromptMessages(name, args || {});
+  // Generate dynamic prompt messages using our Diataxis-aligned prompt system
+  const projectPath = args?.project_path || process.cwd();
+  const messages = await generateTechnicalWriterPrompts(name, projectPath, args || {});
   
   return {
     description: `Technical writing assistance for ${name}`,
