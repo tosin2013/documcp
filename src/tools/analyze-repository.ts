@@ -48,8 +48,18 @@ export async function analyzeRepository(args: unknown): Promise<{ content: any[]
   const { path: repoPath, depth } = inputSchema.parse(args);
 
   try {
-    // Verify path exists
-    await fs.access(repoPath);
+    // Verify path exists and is accessible
+    await fs.access(repoPath, fs.constants.R_OK);
+    
+    // Try to read the directory to catch permission issues early
+    try {
+      await fs.readdir(repoPath);
+    } catch (error: any) {
+      if (error.code === 'EACCES' || error.code === 'EPERM') {
+        throw new Error(`Permission denied: Cannot read directory ${repoPath}`);
+      }
+      throw error;
+    }
     
     const analysis: RepositoryAnalysis = {
       id: generateAnalysisId(),
@@ -209,22 +219,25 @@ async function analyzeStructure(repoPath: string, depth: 'quick' | 'standard' | 
             await walkDirectory(fullPath, currentDepth + 1);
           }
         } else if (entry.isFile()) {
-          stats.totalFiles++;
-          
-          // Track languages by file extension
-          const ext = path.extname(entry.name).toLowerCase();
-          if (ext && getLanguageFromExtension(ext)) {
-            stats.languages[ext] = (stats.languages[ext] || 0) + 1;
-          }
-          
-          // Check for CI files
-          if (entry.name.match(/\.(yml|yaml)$/) && entry.name.includes('ci')) {
-            stats.hasCI = true;
-          }
-          
-          // Check for test files
-          if (entry.name.includes('test') || entry.name.includes('spec')) {
-            stats.hasTests = true;
+          // Skip hidden files (starting with .)
+          if (!entry.name.startsWith('.')) {
+            stats.totalFiles++;
+            
+            // Track languages by file extension
+            const ext = path.extname(entry.name).toLowerCase();
+            if (ext && getLanguageFromExtension(ext)) {
+              stats.languages[ext] = (stats.languages[ext] || 0) + 1;
+            }
+            
+            // Check for CI files
+            if (entry.name.match(/\.(yml|yaml)$/) && entry.name.includes('ci')) {
+              stats.hasCI = true;
+            }
+            
+            // Check for test files
+            if (entry.name.includes('test') || entry.name.includes('spec')) {
+              stats.hasTests = true;
+            }
           }
         }
       }
