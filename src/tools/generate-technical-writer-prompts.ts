@@ -179,8 +179,8 @@ async function buildProjectContext(projectPath: string): Promise<ProjectContext>
   try {
     const packageJsonPath = join(projectPath, 'package.json');
     let projectType = 'unknown';
-    let languages: string[] = [];
-    let frameworks: string[] = [];
+    const languages: string[] = [];
+    const frameworks: string[] = [];
     let packageManager = undefined;
 
     // Analyze package.json if it exists
@@ -385,7 +385,7 @@ async function generateContextualPrompts(
 function generateIntegrationRecommendations(
   projectContext: ProjectContext,
   documentationContext: DocumentationContext,
-  prompts: TechnicalWriterPrompt[]
+  _prompts: TechnicalWriterPrompt[]
 ): string[] {
   const recommendations: string[] = [];
 
