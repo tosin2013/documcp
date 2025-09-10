@@ -2,12 +2,15 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 import os from 'os';
+import tmp from 'tmp';
 import { analyzeRepository } from '../../src/tools/analyze-repository';
 import { recommendSSG } from '../../src/tools/recommend-ssg';
 import { generateConfig } from '../../src/tools/generate-config';
 import { setupStructure } from '../../src/tools/setup-structure';
 import { deployPages } from '../../src/tools/deploy-pages';
 import { verifyDeployment } from '../../src/tools/verify-deployment';
+import { evaluateReadmeHealth } from '../../src/tools/evaluate-readme-health';
+import { readmeBestPractices } from '../../src/tools/readme-best-practices';
 
 describe('All MCP Tools Coverage Tests', () => {
   let tempDir: string;
@@ -348,6 +351,113 @@ describe('All MCP Tools Coverage Tests', () => {
     });
   });
 
+  describe('evaluate_readme_health', () => {
+    it('should evaluate README health with minimal input', async () => {
+      const readmePath = await createReadmeFile('Basic project README');
+      const result = await evaluateReadmeHealth({
+        readme_path: readmePath
+      });
+
+      expect(result.content).toBeDefined();
+      expect(result.isError).toBe(false);
+      
+      const healthData = result.content.find(c => c.text.includes('healthReport'));
+      expect(healthData).toBeDefined();
+    });
+
+    it('should handle different project types', async () => {
+      const readmePath = await createReadmeFile('Enterprise tool documentation');
+      const result = await evaluateReadmeHealth({
+        readme_path: readmePath,
+        project_type: 'enterprise_tool'
+      });
+
+      expect(result.content).toBeDefined();
+      expect(result.isError).toBe(false);
+    });
+
+    it('should provide health components and scoring', async () => {
+      const readmePath = await createReadmeFile(`# Complete Project
+
+## Description
+Detailed description
+
+## Installation
+Installation steps
+
+## Usage
+Usage examples
+
+## Contributing
+Contributing guidelines
+
+## License
+MIT License`);
+
+      const result = await evaluateReadmeHealth({
+        readme_path: readmePath
+      });
+
+      const dataContent = result.content.find(c => c.text.includes('healthReport'));
+      const data = JSON.parse(dataContent!.text);
+      
+      expect(data.healthReport.overallScore).toBeGreaterThanOrEqual(0);
+      expect(data.healthReport.grade).toBeDefined();
+      expect(data.healthReport.components).toBeDefined();
+    });
+  });
+
+  describe('readme_best_practices', () => {
+    it('should analyze README best practices', async () => {
+      const readmePath = await createReadmeFile('Basic library README');
+      const result = await readmeBestPractices({
+        readme_path: readmePath,
+        project_type: 'library'
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      expect(result.data!.bestPracticesReport).toBeDefined();
+    });
+
+    it('should handle template generation', async () => {
+      const outputDir = await createTempDir('best-practices-template');
+      const result = await readmeBestPractices({
+        readme_path: path.join(outputDir, 'missing.md'),
+        generate_template: true,
+        output_directory: outputDir,
+        project_type: 'application'
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+    });
+
+    it('should provide checklist and recommendations', async () => {
+      const readmePath = await createReadmeFile(`# Library Project
+
+## Installation
+npm install my-lib
+
+## Usage
+Basic usage here
+
+## API
+API documentation
+`);
+
+      const result = await readmeBestPractices({
+        readme_path: readmePath
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.data!.bestPracticesReport.checklist).toBeDefined();
+      expect(Array.isArray(result.data!.bestPracticesReport.checklist)).toBe(true);
+      expect(result.data!.recommendations).toBeDefined();
+      expect(result.data!.nextSteps).toBeDefined();
+    });
+  });
+
   // Helper functions
   async function createJSRepo(): Promise<string> {
     const repoPath = path.join(tempDir, `js-repo-${Date.now()}`);
@@ -434,5 +544,11 @@ describe('All MCP Tools Coverage Tests', () => {
     } catch {
       return false;
     }
+  }
+
+  async function createReadmeFile(content: string): Promise<string> {
+    const file = tmp.fileSync({ postfix: '.md', keep: false });
+    await fs.writeFile(file.name, content);
+    return file.name;
   }
 });
