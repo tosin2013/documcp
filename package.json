@@ -28,9 +28,14 @@
     "benchmark:current": "tsx src/scripts/benchmark.ts current",
     "benchmark:create-config": "tsx src/scripts/benchmark.ts create-config",
     "benchmark:help": "tsx src/scripts/benchmark.ts help",
-    "docs:check-links": "tsx src/tools/check-documentation-links.ts",
+    "docs:check-links": "tsx src/scripts/link-checker.ts",
+    "docs:check-links:markdown": "markdown-link-check docs/**/*.md --config .markdown-link-check.json",
+    "docs:check-links:external": "tsx src/scripts/link-checker.ts --external true --internal false",
+    "docs:check-links:internal": "tsx src/scripts/link-checker.ts --external false --internal true",
+    "docs:check-links:ci": "tsx src/scripts/link-checker.ts --env ci",
+    "docs:check-links:all": "npm run docs:check-links:markdown && npm run docs:check-links",
     "docs:validate": "./test-docs.sh",
-    "docs:test": "npm run docs:check-links && npm run docs:validate"
+    "docs:test": "npm run docs:check-links:all && npm run docs:validate"
   },
   "keywords": [
     "mcp",
@@ -61,6 +66,7 @@
     "@typescript-eslint/parser": "^6.19.0",
     "eslint": "^8.56.0",
     "jest": "^29.7.0",
+    "markdown-link-check": "^3.12.2",
     "prettier": "^3.2.4",
     "ts-jest": "^29.1.1",
     "tsx": "^4.7.0",
