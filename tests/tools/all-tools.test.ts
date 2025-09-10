@@ -2,6 +2,7 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 import os from 'os';
+import tmp from 'tmp';
 import { analyzeRepository } from '../../src/tools/analyze-repository';
 import { recommendSSG } from '../../src/tools/recommend-ssg';
 import { generateConfig } from '../../src/tools/generate-config';
@@ -546,8 +547,8 @@ API documentation
   }
 
   async function createReadmeFile(content: string): Promise<string> {
-    const readmePath = path.join(tempDir, `README-${Date.now()}.md`);
-    await fs.writeFile(readmePath, content);
-    return readmePath;
+    const file = tmp.fileSync({ postfix: '.md' });
+    await fs.writeFile(file.name, content);
+    return file.name;
   }
 });
