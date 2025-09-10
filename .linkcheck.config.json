@@ -1,0 +1,57 @@
+{
+  "documentation_path": "./docs",
+  "check_external_links": true,
+  "check_internal_links": true,
+  "check_anchor_links": true,
+  "timeout_ms": 10000,
+  "max_concurrent_checks": 5,
+  "allowed_domains": [
+    "github.com",
+    "api.github.com",
+    "docs.github.com",
+    "nodejs.org",
+    "npmjs.com",
+    "typescript-eslang.io",
+    "jestjs.io",
+    "prettier.io",
+    "eslint.org",
+    "docusaurus.io",
+    "facebook.github.io"
+  ],
+  "ignore_patterns": [
+    "localhost",
+    "127.0.0.1",
+    "example.com",
+    "your-domain.com",
+    "placeholder"
+  ],
+  "fail_on_broken_links": false,
+  "output_format": "detailed",
+  "retry_config": {
+    "max_retries": 3,
+    "retry_delay_ms": 1000,
+    "retry_on_status_codes": [429, 502, 503, 504]
+  },
+  "rate_limiting": {
+    "requests_per_second": 2,
+    "burst_limit": 10
+  },
+  "environments": {
+    "ci": {
+      "fail_on_broken_links": true,
+      "timeout_ms": 15000,
+      "max_concurrent_checks": 3
+    },
+    "local": {
+      "fail_on_broken_links": false,
+      "timeout_ms": 5000,
+      "max_concurrent_checks": 8
+    },
+    "production": {
+      "fail_on_broken_links": true,
+      "timeout_ms": 20000,
+      "check_external_links": true,
+      "max_concurrent_checks": 2
+    }
+  }
+}
