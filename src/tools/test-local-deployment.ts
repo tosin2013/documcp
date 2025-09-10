@@ -251,8 +251,40 @@ async function checkBuildOutput(repoPath: string, buildDir: string): Promise<boo
 
 async function startLocalServer(config: SSGConfig, port: number, repoPath: string, timeout: number): Promise<{ started: boolean; url?: string }> {
   return new Promise((resolve) => {
+    let serverProcess: any = null;
+    let resolved = false;
+    
+    const cleanup = () => {
+      if (serverProcess && !serverProcess.killed) {
+        try {
+          serverProcess.kill('SIGTERM');
+          // Force kill if SIGTERM doesn't work after 1 second
+          const forceKillTimeout = setTimeout(() => {
+            if (serverProcess && !serverProcess.killed) {
+              serverProcess.kill('SIGKILL');
+            }
+          }, 1000);
+          
+          // Clear the timeout if process exits normally
+          serverProcess.on('exit', () => {
+            clearTimeout(forceKillTimeout);
+          });
+        } catch (error) {
+          // Process may already be dead
+        }
+      }
+    };
+
+    const safeResolve = (result: { started: boolean; url?: string }) => {
+      if (!resolved) {
+        resolved = true;
+        cleanup();
+        resolve(result);
+      }
+    };
+
     const serverTimeout = setTimeout(() => {
-      resolve({ started: false });
+      safeResolve({ started: false });
     }, timeout * 1000);
 
     try {
@@ -269,7 +301,7 @@ async function startLocalServer(config: SSGConfig, port: number, repoPath: strin
         command = `${config.serveCommand} --port ${port}`;
       }
 
-      const serverProcess = spawn('sh', ['-c', command], {
+      serverProcess = spawn('sh', ['-c', command], {
         cwd: repoPath,
         detached: false,
         stdio: 'pipe',
@@ -277,7 +309,7 @@ async function startLocalServer(config: SSGConfig, port: number, repoPath: strin
 
       let serverStarted = false;
 
-      serverProcess.stdout?.on('data', (data) => {
+      serverProcess.stdout?.on('data', (data: Buffer) => {
         const output = data.toString();
         
         // Check for server start indicators
@@ -292,17 +324,14 @@ async function startLocalServer(config: SSGConfig, port: number, repoPath: strin
           serverStarted = true;
           clearTimeout(serverTimeout);
           
-          // Kill the process after confirming it started
-          serverProcess.kill('SIGTERM');
-          
-          resolve({ 
+          safeResolve({ 
             started: true, 
             url: `http://localhost:${port}` 
           });
         }
       });
 
-      serverProcess.stderr?.on('data', (data) => {
+      serverProcess.stderr?.on('data', (data: Buffer) => {
         const error = data.toString();
         
         // Some servers output startup info to stderr
@@ -314,23 +343,28 @@ async function startLocalServer(config: SSGConfig, port: number, repoPath: strin
           serverStarted = true;
           clearTimeout(serverTimeout);
           
-          serverProcess.kill('SIGTERM');
-          
-          resolve({ 
+          safeResolve({ 
             started: true, 
             url: `http://localhost:${port}` 
           });
         }
       });
 
-      serverProcess.on('error', (_error) => {
+      serverProcess.on('error', (_error: Error) => {
         clearTimeout(serverTimeout);
-        resolve({ started: false });
+        safeResolve({ started: false });
+      });
+
+      serverProcess.on('exit', () => {
+        clearTimeout(serverTimeout);
+        if (!resolved) {
+          safeResolve({ started: false });
+        }
       });
 
     } catch (_error) {
       clearTimeout(serverTimeout);
-      resolve({ started: false });
+      safeResolve({ started: false });
     }
   });
 }

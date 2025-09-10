@@ -547,7 +547,7 @@ API documentation
   }
 
   async function createReadmeFile(content: string): Promise<string> {
-    const file = tmp.fileSync({ postfix: '.md' });
+    const file = tmp.fileSync({ postfix: '.md', keep: false });
     await fs.writeFile(file.name, content);
     return file.name;
   }
