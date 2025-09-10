@@ -32,6 +32,7 @@ import { generateReadmeTemplate } from './tools/generate-readme-template.js';
 import { validateReadmeChecklist } from './tools/validate-readme-checklist.js';
 import { analyzeReadme } from './tools/analyze-readme.js';
 import { optimizeReadme } from './tools/optimize-readme.js';
+import { generateTechnicalWriterPrompts } from './tools/generate-technical-writer-prompts.js';
 import { formatMCPResponse } from './types/api.js';
 import { DOCUMENTATION_WORKFLOWS, WORKFLOW_EXECUTION_GUIDANCE, WORKFLOW_METADATA } from './workflows/documentation-workflow.js';
 
@@ -249,6 +250,17 @@ const TOOLS = [
       preserve_existing: z.boolean().optional().default(true).describe('Preserve existing content structure where possible'),
       output_path: z.string().optional().describe('Path to write optimized README (if not specified, returns content only)'),
       create_docs_directory: z.boolean().optional().default(true).describe('Create docs/ directory for extracted content'),
+    }),
+  },
+  {
+    name: 'generate_technical_writer_prompts',
+    description: 'Generate intelligent technical writer prompts based on comprehensive project analysis and cross-tool integration',
+    inputSchema: z.object({
+      project_path: z.string().min(1).describe('Path to the project to analyze'),
+      context_sources: z.array(z.enum(['repository_analysis', 'readme_health', 'documentation_gaps', 'best_practices', 'content_validation', 'deployment_context'])).optional().default(['repository_analysis', 'readme_health']).describe('Sources of context for prompt generation'),
+      audience: z.enum(['developer', 'end_user', 'contributor', 'enterprise', 'mixed']).optional().default('mixed').describe('Target audience for generated prompts'),
+      prompt_types: z.array(z.enum(['content_generation', 'style_improvement', 'structure_guidance', 'gap_filling', 'audience_adaptation', 'deployment_optimization'])).optional().default(['content_generation', 'gap_filling']).describe('Types of prompts to generate'),
+      integration_level: z.enum(['basic', 'comprehensive', 'advanced']).optional().default('comprehensive').describe('Level of cross-tool integration'),
     }),
   },
 ];
@@ -1040,6 +1052,18 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           'application/json'
         );
         return formatMCPResponse(result);
+      }
+      
+      case 'generate_technical_writer_prompts': {
+        const result = await generateTechnicalWriterPrompts(args as any);
+        // Store prompt generation results as resource
+        const promptId = `technical-writer-prompts-${Date.now()}`;
+        storeResource(
+          `documcp://prompts/${promptId}`,
+          JSON.stringify(result.generation, null, 2),
+          'application/json'
+        );
+        return result;
       }
       
       default:
