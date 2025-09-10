@@ -1,5 +1,4 @@
 import { evaluateReadmeHealth } from '../../src/tools/evaluate-readme-health.js';
-import { formatMCPResponse } from '../../src/types/api.js';
 import { writeFile, mkdir, rm } from 'fs/promises';
 import { join } from 'path';
 
