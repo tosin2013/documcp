@@ -37,29 +37,34 @@ export async function analyzeProjectContext(projectPath: string): Promise<Projec
   // Analyze package.json for Node.js projects
   const packageJsonPath = join(projectPath, 'package.json');
   if (await fileExists(packageJsonPath)) {
-    const packageJson = JSON.parse(await fs.readFile(packageJsonPath, 'utf-8'));
-    const deps = { ...packageJson.dependencies, ...packageJson.devDependencies };
-    
-    context.projectType = 'node_application';
-    context.languages.push('JavaScript');
-    
-    // Detect frameworks
-    if (deps['react']) context.frameworks.push('React');
-    if (deps['vue']) context.frameworks.push('Vue');
-    if (deps['angular']) context.frameworks.push('Angular');
-    if (deps['express']) context.frameworks.push('Express');
-    if (deps['next']) context.frameworks.push('Next.js');
-    if (deps['nuxt']) context.frameworks.push('Nuxt.js');
-    if (deps['svelte']) context.frameworks.push('Svelte');
-    if (deps['typescript']) context.languages.push('TypeScript');
-    
-    // Detect package manager
-    if (await fileExists(join(projectPath, 'yarn.lock'))) {
-      context.packageManager = 'yarn';
-    } else if (await fileExists(join(projectPath, 'pnpm-lock.yaml'))) {
-      context.packageManager = 'pnpm';
-    } else {
-      context.packageManager = 'npm';
+    try {
+      const packageJson = JSON.parse(await fs.readFile(packageJsonPath, 'utf-8'));
+      const deps = { ...packageJson.dependencies, ...packageJson.devDependencies };
+      
+      context.projectType = 'node_application';
+      context.languages.push('JavaScript');
+      
+      // Detect frameworks
+      if (deps['react']) context.frameworks.push('React');
+      if (deps['vue']) context.frameworks.push('Vue');
+      if (deps['angular']) context.frameworks.push('Angular');
+      if (deps['express']) context.frameworks.push('Express');
+      if (deps['next']) context.frameworks.push('Next.js');
+      if (deps['nuxt']) context.frameworks.push('Nuxt.js');
+      if (deps['svelte']) context.frameworks.push('Svelte');
+      if (deps['typescript']) context.languages.push('TypeScript');
+      
+      // Detect package manager
+      if (await fileExists(join(projectPath, 'yarn.lock'))) {
+        context.packageManager = 'yarn';
+      } else if (await fileExists(join(projectPath, 'pnpm-lock.yaml'))) {
+        context.packageManager = 'pnpm';
+      } else {
+        context.packageManager = 'npm';
+      }
+    } catch (error) {
+      // If package.json exists but can't be parsed, continue with other detections
+      console.warn('Failed to parse package.json:', error);
     }
   }
 
