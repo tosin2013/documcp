@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+### [0.3.2](https://github.com/tosin2013/documcp/compare/v0.3.1...v0.3.2) (2025-09-11)
+
+
+### 🐛 Bug Fixes
+
+* resolve documentation inconsistencies and improve type safety ([eeb5dde](https://github.com/tosin2013/documcp/commit/eeb5dde09885fdf94dd5fd91a31e7aa6dc157084))
+* update deploy-docs workflow from Jekyll to Docusaurus ([26b4a30](https://github.com/tosin2013/documcp/commit/26b4a307dc2c558d15008e0f2624645b7d4b1a08))
+* update deprecated GitHub Actions to latest versions ([e219410](https://github.com/tosin2013/documcp/commit/e2194109170fbb6d56513bbe8b4d93e950b98da9))
+
 ### [0.3.1](https://github.com/tosin2013/documcp/compare/v0.3.0...v0.3.1) (2025-09-11)
 
 ## [0.3.0](https://github.com/tosin2013/documcp/compare/v0.2.4...v0.3.0) (2025-09-11)
