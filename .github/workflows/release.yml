@@ -79,42 +79,68 @@ jobs:
     - name: Build project
       run: npm run build
       
-    - name: Generate changelog
-      id: changelog
+    - name: Generate changelog and release
+      id: release
       run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        
         if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-          echo "Manual release triggered"
-          echo "changelog=Manual release - version bump: ${{ github.event.inputs.version_type }}" >> $GITHUB_OUTPUT
+          echo "Manual release triggered with version type: ${{ github.event.inputs.version_type }}"
+          npm run release:${{ github.event.inputs.version_type }}
+          
+          # Get the new version and changelog
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          echo "new_version=v$NEW_VERSION" >> $GITHUB_OUTPUT
+          
+          # Extract changelog for this version
+          if [ -f "CHANGELOG.md" ]; then
+            # Get changelog section for current version
+            CHANGELOG_CONTENT=$(awk "/## \[$NEW_VERSION\]/{flag=1; next} /## \[/{flag=0} flag" CHANGELOG.md || echo "## Changes\n\nAutomated release $NEW_VERSION")
+            echo "changelog_content<<EOF" >> $GITHUB_OUTPUT
+            echo "$CHANGELOG_CONTENT" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "changelog_content=Automated release v$NEW_VERSION" >> $GITHUB_OUTPUT
+          fi
+          
+          # Push the changes
+          git push --follow-tags origin main
         else
           echo "Tag-based release"
           tag=${GITHUB_REF#refs/tags/}
-          echo "changelog=Release $tag" >> $GITHUB_OUTPUT
+          echo "new_version=$tag" >> $GITHUB_OUTPUT
+          echo "changelog_content=Release $tag" >> $GITHUB_OUTPUT
         fi
         
     - name: Create GitHub Release
-      if: github.event_name == 'push'
       uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ github.ref_name }}
-        release_name: Release ${{ github.ref_name }}
+        tag_name: ${{ steps.release.outputs.new_version }}
+        release_name: Release ${{ steps.release.outputs.new_version }}
         body: |
-          ## DocuMCP Release ${{ github.ref_name }}
+          ## DocuMCP Release ${{ steps.release.outputs.new_version }}
           
-          ### Features
-          - MCP Server for intelligent documentation deployment
-          - Repository analysis and SSG recommendations
-          - Automated GitHub Pages deployment workflows
-          
-          ### Coverage
-          - Test Coverage: 80%+ (requirement met)
-          - Performance: PERF-001 compliant
-          - Security: Automated dependency scanning
+          ${{ steps.release.outputs.changelog_content }}
           
           ### Installation
           ```bash
-          npm install -g documcp@${{ github.ref_name }}
+          npm install -g documcp@${{ steps.release.outputs.new_version }}
+          ```
+          
+          ### System Requirements
+          - Node.js 20.x or higher
+          - npm 9.x or higher
+          
+          ### Quick Start
+          ```bash
+          # Install globally
+          npm install -g documcp
+          
+          # Use with MCP client
+          documcp analyze-repository --path ./my-project
           ```
         draft: false
         prerelease: false
