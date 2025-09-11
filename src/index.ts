@@ -122,9 +122,9 @@ const TOOLS = [
     inputSchema: z.object({
       contentPath: z.string().describe('Path to the documentation directory to validate'),
       analysisId: z.string().optional().describe('Optional repository analysis ID for context-aware validation'),
-      validationType: z.string().optional().default('all').describe('Type of validation: accuracy, completeness, compliance, or all'),
+      validationType: z.enum(['accuracy', 'completeness', 'compliance', 'all']).optional().default('all').describe('Type of validation: accuracy, completeness, compliance, or all'),
       includeCodeValidation: z.boolean().optional().default(true).describe('Whether to validate code examples'),
-      confidence: z.string().optional().default('moderate').describe('Validation confidence level: strict, moderate, or permissive'),
+      confidence: z.enum(['strict', 'moderate', 'permissive']).optional().default('moderate').describe('Validation confidence level: strict, moderate, or permissive'),
     }),
   },
   {

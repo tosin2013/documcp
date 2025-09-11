@@ -34,9 +34,80 @@ npm install
 npm run build
 ```
 
+## MCP Client Setup
+
+DocuMCP works with various MCP-enabled clients. Here's how to configure it:
+
+### Claude Desktop
+
+1. **Locate Claude Desktop's configuration file**:
+   - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+   - **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+   - **Linux**: `~/.config/claude/claude_desktop_config.json`
+
+2. **Add documcp server configuration**:
+   ```json
+   {
+     "mcpServers": {
+       "documcp": {
+         "command": "npx",
+         "args": ["documcp"]
+       }
+     }
+   }
+   ```
+
+3. **Restart Claude Desktop** to load the configuration.
+
+### VS Code with GitHub Copilot
+
+1. **Install MCP extension** for VS Code
+2. **Configure in VS Code settings.json**:
+   ```json
+   {
+     "mcp.servers": {
+       "documcp": {
+         "command": "npx",
+         "args": ["documcp"]
+       }
+     }
+   }
+   ```
+
+### Cursor Editor
+
+1. **Configure in Cursor settings**:
+   ```json
+   {
+     "mcpServers": {
+       "documcp": {
+         "command": "npx",
+         "args": ["documcp"]
+       }
+     }
+   }
+   ```
+
+### Gemini Code Assist
+
+1. **Check Gemini documentation** for MCP server configuration
+2. **Add similar configuration** as above
+
+### Troubleshooting
+
+- Ensure `npx` is available in your PATH
+- For global installations, use the full path:
+  ```json
+  {
+    "command": "node",
+    "args": ["/usr/local/lib/node_modules/documcp/dist/index.js"]
+  }
+  ```
+- Find installation path: `npm list -g documcp`
+
 ## Usage
 
-DocuMCP provides six core MCP tools:
+Once configured with your MCP client, DocuMCP provides eleven comprehensive MCP tools:
 
 ### 1. Analyze Repository
 Performs deep analysis of your project to understand its characteristics and documentation needs.
@@ -121,6 +192,73 @@ Checks your setup and provides troubleshooting guidance for successful deploymen
 }
 ```
 
+### 7. Populate Diataxis Content
+Intelligently populates documentation with project-specific content.
+
+```json
+{
+  "tool": "populate_diataxis_content",
+  "arguments": {
+    "analysisId": "analysis_12345",
+    "docsPath": "./docs",
+    "populationLevel": "comprehensive"
+  }
+}
+```
+
+### 8. Validate Diataxis Content
+Validates accuracy, completeness, and compliance of documentation.
+
+```json
+{
+  "tool": "validate_diataxis_content",
+  "arguments": {
+    "contentPath": "./docs",
+    "validationType": "all"
+  }
+}
+```
+
+### 9. Validate Content
+Checks general content quality including links and code syntax.
+
+```json
+{
+  "tool": "validate_content",
+  "arguments": {
+    "contentPath": "./docs",
+    "validationType": "links"
+  }
+}
+```
+
+### 10. Detect Documentation Gaps
+Analyzes repository to identify missing documentation content.
+
+```json
+{
+  "tool": "detect_documentation_gaps",
+  "arguments": {
+    "repositoryPath": ".",
+    "documentationPath": "./docs"
+  }
+}
+```
+
+### 11. Test Local Deployment
+Tests documentation build and local server before deployment.
+
+```json
+{
+  "tool": "test_local_deployment",
+  "arguments": {
+    "repositoryPath": ".",
+    "ssg": "docusaurus",
+    "port": 3000
+  }
+}
+```
+
 ## Development
 
 ```bash
@@ -158,6 +296,22 @@ DocuMCP automatically creates documentation following the Diataxis framework:
 ## Contributing
 
 We welcome contributions! Please see our [Contributing Guide](./CONTRIBUTING.md) for details.
+
+### First Time Contributors
+
+Look for issues labeled "good first issue" to get started with the project. We welcome contributions from developers of all experience levels.
+
+### Reporting Issues
+
+Please use our [issue templates](.github/ISSUE_TEMPLATE/) when reporting bugs or requesting features.
+
+## Code of Conduct
+
+This project adheres to the [Contributor Covenant Code of Conduct](./CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code.
+
+## Security
+
+Please see our [Security Policy](./SECURITY.md) for reporting vulnerabilities and security-related issues.
 
 ## License
 
