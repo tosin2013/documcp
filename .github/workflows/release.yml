@@ -114,12 +114,11 @@ jobs:
         fi
         
     - name: Create GitHub Release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: ncipollo/release-action@v1
       with:
-        tag_name: ${{ steps.release.outputs.new_version }}
-        release_name: Release ${{ steps.release.outputs.new_version }}
+        token: ${{ secrets.GITHUB_TOKEN }}
+        tag: ${{ steps.release.outputs.new_version }}
+        name: Release ${{ steps.release.outputs.new_version }}
         body: |
           ## DocuMCP Release ${{ steps.release.outputs.new_version }}
           
