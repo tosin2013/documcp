@@ -31,6 +31,39 @@ updates:
     reviewers:
       - "tosinakinosho"
     
+  # Documentation site dependencies (Docusaurus in /docs)
+  - package-ecosystem: "npm"
+    directory: "/docs"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "04:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "tosinakinosho"
+    assignees:
+      - "tosinakinosho"
+    commit-message:
+      prefix: "deps(docs)"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "npm"
+      - "documentation"
+    
+  # Documentation site security updates
+  - package-ecosystem: "npm"
+    directory: "/docs"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 10
+    labels:
+      - "security"
+      - "dependencies"
+      - "documentation"
+    reviewers:
+      - "tosinakinosho"
+    
   # GitHub Actions dependencies
   - package-ecosystem: "github-actions"
     directory: "/"
