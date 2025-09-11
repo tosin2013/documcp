@@ -257,6 +257,54 @@ strace -e trace=file node dist/index.js
    npm install
    ```
 
+### npm ci Failures
+
+**Symptoms**: 
+- `npm ci` fails with "Missing: package@version from lock file"
+- Package-lock.json and package.json out of sync errors
+- CI/CD pipeline failures on dependency installation
+
+**Solutions**:
+1. **Regenerate package-lock.json**:
+   ```bash
+   # Remove existing lock file and node_modules
+   rm package-lock.json
+   rm -rf node_modules
+   
+   # Reinstall dependencies
+   npm install
+   
+   # Test that npm ci works
+   rm -rf node_modules
+   npm ci
+   ```
+
+2. **Fix package-lock.json sync issues**:
+   ```bash
+   # Update lock file to match package.json
+   npm install --package-lock-only
+   
+   # Verify the fix
+   npm ci
+   ```
+
+3. **Clear npm cache** (if persistent issues):
+   ```bash
+   npm cache clean --force
+   npm install
+   ```
+
+4. **Ensure consistent Node.js/npm versions**:
+   ```bash
+   # Check versions match .nvmrc
+   node --version  # Should be >=20.0.0
+   npm --version
+   
+   # Use exact Node.js version
+   nvm use $(cat .nvmrc)
+   npm ci
+   ```
+
 ## AI Client Specific Issues
 
 ### Claude Desktop Integration
@@ -303,7 +351,7 @@ cat ~/.config/claude/claude_desktop_config.json  # or appropriate path
 1. **Check Documentation**: [API Reference](../reference/api-reference.md)
 2. **Search Issues**: [GitHub Issues](https://github.com/tosin2013/documcp/issues)
 3. **MCP Protocol**: [MCP Specification](https://modelcontextprotocol.io/docs)
-4. **Community Support**: [Discussions](https://github.com/tosin2013/documcp/discussions)
+4. **Community Support**: [Discussions](https://github.com/tosin2013/documcp/issues)
 
 ### Creating Bug Reports
 

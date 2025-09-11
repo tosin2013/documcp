@@ -1,0 +1,28 @@
+{
+  "types": [
+    {"type": "feat", "section": "🚀 Features"},
+    {"type": "fix", "section": "🐛 Bug Fixes"},
+    {"type": "perf", "section": "⚡ Performance Improvements"},
+    {"type": "revert", "section": "⏪ Reverts"},
+    {"type": "docs", "section": "📚 Documentation", "hidden": false},
+    {"type": "style", "section": "💄 Styles", "hidden": true},
+    {"type": "chore", "section": "🔧 Chores", "hidden": true},
+    {"type": "refactor", "section": "♻️ Code Refactoring", "hidden": false},
+    {"type": "test", "section": "✅ Tests", "hidden": true},
+    {"type": "build", "section": "👷 Build System", "hidden": true},
+    {"type": "ci", "section": "🔄 CI/CD", "hidden": true}
+  ],
+  "commitUrlFormat": "https://github.com/tosin2013/documcp/commit/{{hash}}",
+  "compareUrlFormat": "https://github.com/tosin2013/documcp/compare/{{previousTag}}...{{currentTag}}",
+  "issueUrlFormat": "https://github.com/tosin2013/documcp/issues/{{id}}",
+  "userUrlFormat": "https://github.com/{{user}}",
+  "releaseCommitMessageFormat": "chore(release): {{currentTag}}",
+  "issuePrefixes": ["#"],
+  "header": "# Changelog\n\nAll notable changes to this project will be documented in this file.\n\nThe format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),\nand this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).\n\n",
+  "skip": {
+    "bump": false,
+    "changelog": false,
+    "commit": false,
+    "tag": false
+  }
+}

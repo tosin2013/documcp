@@ -509,7 +509,6 @@ describe('ContentAccuracyFramework', () => {
 ## References
 - [ADR-002: Multi-Layered Repository Analysis Engine Design](002-repository-analysis-engine.md)
 - [ADR-008: Intelligent Content Population Engine](008-intelligent-content-population-engine.md)
-- [Software Verification and Validation Best Practices](https://ieeexplore.ieee.org/document/software-verification)
-- [Human-Computer Interaction in AI Systems](https://www.interaction-design.org/literature/topics/ai-interaction)
-- [Content Quality Assessment Frameworks](https://www.contentqualityinstitute.org/frameworks)
-- [Trust in AI Systems Research](https://www.partnershiponai.org/tenets/)
+- [Software Verification and Validation](https://en.wikipedia.org/wiki/Software_verification_and_validation)
+- [Web Content Accessibility Guidelines](https://www.w3.org/WAI/WCAG21/quickref/)
+- [AI Documentation Best Practices](https://developers.google.com/machine-learning/guides/rules-of-ml)

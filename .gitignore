@@ -9,6 +9,9 @@ dist/
 build/
 *.tsbuildinfo
 docs/.docusaurus
+_site/
+public/
+site/
 
 # Coverage reports
 coverage/

@@ -25,6 +25,15 @@ import { handlePopulateDiataxisContent } from './tools/populate-content.js';
 import { handleValidateDiataxisContent, validateGeneralContent } from './tools/validate-content.js';
 import { detectDocumentationGaps } from './tools/detect-gaps.js';
 import { testLocalDeployment } from './tools/test-local-deployment.js';
+import { evaluateReadmeHealth } from './tools/evaluate-readme-health.js';
+import { readmeBestPractices } from './tools/readme-best-practices.js';
+import { checkDocumentationLinks } from './tools/check-documentation-links.js';
+import { generateReadmeTemplate } from './tools/generate-readme-template.js';
+import { validateReadmeChecklist } from './tools/validate-readme-checklist.js';
+import { analyzeReadme } from './tools/analyze-readme.js';
+import { optimizeReadme } from './tools/optimize-readme.js';
+import { formatMCPResponse } from './types/api.js';
+import { generateTechnicalWriterPrompts } from './prompts/technical-writer-prompts.js';
 import { DOCUMENTATION_WORKFLOWS, WORKFLOW_EXECUTION_GUIDANCE, WORKFLOW_METADATA } from './workflows/documentation-workflow.js';
 
 // Get version from package.json
@@ -40,7 +49,9 @@ const server = new Server(
   {
     capabilities: {
       tools: {},
-      prompts: {},
+      prompts: {
+        listChanged: true
+      },
       resources: {},
     },
   },
@@ -158,104 +169,148 @@ const TOOLS = [
       skipBuild: z.boolean().optional().default(false).describe('Skip build step and only start server'),
     }),
   },
+  {
+    name: 'evaluate_readme_health',
+    description: 'Evaluate README files for community health, accessibility, and onboarding effectiveness',
+    inputSchema: z.object({
+      readme_path: z.string().describe('Path to the README file to evaluate'),
+      project_type: z.enum(['community_library', 'enterprise_tool', 'personal_project', 'documentation']).optional().default('community_library').describe('Type of project for tailored evaluation'),
+      repository_path: z.string().optional().describe('Optional path to repository for additional context'),
+    }),
+  },
+  {
+    name: 'readme_best_practices',
+    description: 'Analyze README files against best practices checklist and generate templates for improvement',
+    inputSchema: z.object({
+      readme_path: z.string().describe('Path to the README file to analyze'),
+      project_type: z.enum(['library', 'application', 'tool', 'documentation', 'framework']).optional().default('library').describe('Type of project for tailored analysis'),
+      generate_template: z.boolean().optional().default(false).describe('Generate README templates and community files'),
+      output_directory: z.string().optional().describe('Directory to write generated templates and community files'),
+      include_community_files: z.boolean().optional().default(true).describe('Generate community health files (CONTRIBUTING.md, CODE_OF_CONDUCT.md, etc.)'),
+      target_audience: z.enum(['beginner', 'intermediate', 'advanced', 'mixed']).optional().default('mixed').describe('Target audience for recommendations'),
+    }),
+  },
+  {
+    name: 'check_documentation_links',
+    description: 'Comprehensive link checking for documentation deployment with external, internal, and anchor link validation',
+    inputSchema: z.object({
+      documentation_path: z.string().optional().default('./docs').describe('Path to the documentation directory to check'),
+      check_external_links: z.boolean().optional().default(true).describe('Validate external URLs (slower but comprehensive)'),
+      check_internal_links: z.boolean().optional().default(true).describe('Validate internal file references'),
+      check_anchor_links: z.boolean().optional().default(true).describe('Validate anchor links within documents'),
+      timeout_ms: z.number().min(1000).max(30000).optional().default(5000).describe('Timeout for external link requests in milliseconds'),
+      max_concurrent_checks: z.number().min(1).max(20).optional().default(5).describe('Maximum concurrent link checks'),
+      allowed_domains: z.array(z.string()).optional().default([]).describe('Whitelist of allowed external domains (empty = all allowed)'),
+      ignore_patterns: z.array(z.string()).optional().default([]).describe('URL patterns to ignore during checking'),
+      fail_on_broken_links: z.boolean().optional().default(false).describe('Fail the check if broken links are found'),
+      output_format: z.enum(['summary', 'detailed', 'json']).optional().default('detailed').describe('Output format for results'),
+    }),
+  },
+  {
+    name: 'generate_readme_template',
+    description: 'Generate standardized README templates for different project types with best practices',
+    inputSchema: z.object({
+      projectName: z.string().min(1).describe('Name of the project'),
+      description: z.string().min(1).describe('Brief description of what the project does'),
+      templateType: z.enum(['library', 'application', 'cli-tool', 'api', 'documentation']).describe('Type of project template to generate'),
+      author: z.string().optional().describe('Project author/organization name'),
+      license: z.string().optional().default('MIT').describe('Project license'),
+      includeScreenshots: z.boolean().optional().default(false).describe('Include screenshot placeholders for applications'),
+      includeBadges: z.boolean().optional().default(true).describe('Include status badges'),
+      includeContributing: z.boolean().optional().default(true).describe('Include contributing section'),
+      outputPath: z.string().optional().describe('Path to write the generated README.md file'),
+    }),
+  },
+  {
+    name: 'validate_readme_checklist',
+    description: 'Validate README files against community best practices checklist with detailed scoring',
+    inputSchema: z.object({
+      readmePath: z.string().min(1).describe('Path to the README file to validate'),
+      projectPath: z.string().optional().describe('Path to project directory for additional context'),
+      strict: z.boolean().optional().default(false).describe('Use strict validation rules'),
+      outputFormat: z.enum(['json', 'markdown', 'console']).optional().default('console').describe('Output format for the validation report'),
+    }),
+  },
+  {
+    name: 'analyze_readme',
+    description: 'Comprehensive README analysis with length assessment, structure evaluation, and optimization opportunities',
+    inputSchema: z.object({
+      project_path: z.string().min(1).describe('Path to the project directory containing README'),
+      target_audience: z.enum(['community_contributors', 'enterprise_users', 'developers', 'general']).optional().default('community_contributors').describe('Target audience for analysis'),
+      optimization_level: z.enum(['light', 'moderate', 'aggressive']).optional().default('moderate').describe('Level of optimization suggestions'),
+      max_length_target: z.number().min(50).max(1000).optional().default(300).describe('Target maximum length in lines'),
+    }),
+  },
+  {
+    name: 'optimize_readme',
+    description: 'Optimize README content by restructuring, condensing, and extracting detailed sections to separate documentation',
+    inputSchema: z.object({
+      readme_path: z.string().min(1).describe('Path to the README file to optimize'),
+      strategy: z.enum(['community_focused', 'enterprise_focused', 'developer_focused', 'general']).optional().default('community_focused').describe('Optimization strategy'),
+      max_length: z.number().min(50).max(1000).optional().default(300).describe('Target maximum length in lines'),
+      include_tldr: z.boolean().optional().default(true).describe('Generate and include TL;DR section'),
+      preserve_existing: z.boolean().optional().default(true).describe('Preserve existing content structure where possible'),
+      output_path: z.string().optional().describe('Path to write optimized README (if not specified, returns content only)'),
+      create_docs_directory: z.boolean().optional().default(true).describe('Create docs/ directory for extracted content'),
+    }),
+  },
 ];
 
-// Prompt definitions following ADR-007
+// Native MCP Prompts for technical writing assistance
 const PROMPTS = [
   {
-    name: 'analyze-and-recommend',
-    description: 'Complete repository analysis and SSG recommendation workflow',
+    name: 'tutorial-writer',
+    description: 'Generate learning-oriented tutorial content following Diataxis principles',
     arguments: [
-      {
-        name: 'repository_path',
-        description: 'Path to the repository to analyze',
-        required: true,
-      },
-      {
-        name: 'analysis_depth',
-        description: 'Analysis depth: quick, standard, or deep',
-        required: false,
-      },
-      {
-        name: 'ssg_preferences',
-        description: 'Preferences for SSG selection (priority: simplicity/features/performance, ecosystem: javascript/python/ruby/go/any)',
-        required: false,
-      },
-    ],
+      { name: 'project_path', description: 'Path to the project directory', required: true },
+      { name: 'target_audience', description: 'Target audience for the tutorial', required: false },
+      { name: 'learning_goal', description: 'What users should learn', required: false }
+    ]
   },
   {
-    name: 'setup-documentation',
-    description: 'Create comprehensive documentation structure with best practices',
+    name: 'howto-guide-writer',
+    description: 'Generate problem-oriented how-to guide content following Diataxis principles',
     arguments: [
-      {
-        name: 'project_name',
-        description: 'Name of the project',
-        required: true,
-      },
-      {
-        name: 'ssg_type',
-        description: 'Static site generator: jekyll, hugo, docusaurus, mkdocs, or eleventy',
-        required: true,
-      },
-      {
-        name: 'documentation_path',
-        description: 'Path where documentation should be created',
-        required: true,
-      },
-      {
-        name: 'include_examples',
-        description: 'Whether to include example content',
-        required: false,
-      },
-    ],
+      { name: 'project_path', description: 'Path to the project directory', required: true },
+      { name: 'problem', description: 'Problem to solve', required: false },
+      { name: 'user_experience', description: 'User experience level', required: false }
+    ]
   },
   {
-    name: 'troubleshoot-deployment',
-    description: 'Diagnose and fix GitHub Pages deployment issues',
+    name: 'reference-writer',
+    description: 'Generate information-oriented reference documentation following Diataxis principles',
     arguments: [
-      {
-        name: 'repository',
-        description: 'Repository path or URL',
-        required: true,
-      },
-      {
-        name: 'expected_url',
-        description: 'Expected deployment URL',
-        required: false,
-      },
-      {
-        name: 'error_description',
-        description: 'Description of the deployment issue',
-        required: false,
-      },
-    ],
+      { name: 'project_path', description: 'Path to the project directory', required: true },
+      { name: 'reference_type', description: 'Type of reference (API, CLI, etc.)', required: false },
+      { name: 'completeness', description: 'Level of completeness required', required: false }
+    ]
   },
   {
-    name: 'validate-content-quality',
-    description: 'Comprehensive content validation workflow for both application code and documentation',
+    name: 'explanation-writer',
+    description: 'Generate understanding-oriented explanation content following Diataxis principles',
     arguments: [
-      {
-        name: 'content_path',
-        description: 'Path to validate (project root, src directory, or docs directory)',
-        required: true,
-      },
-      {
-        name: 'validation_scope',
-        description: 'Scope: application-code, documentation, or both',
-        required: false,
-      },
-      {
-        name: 'validation_level',
-        description: 'Validation level: quick, standard, or comprehensive',
-        required: false,
-      },
-      {
-        name: 'focus_areas',
-        description: 'Specific focus areas: accuracy, completeness, compliance, code-quality, links',
-        required: false,
-      },
-    ],
+      { name: 'project_path', description: 'Path to the project directory', required: true },
+      { name: 'concept', description: 'Concept to explain', required: false },
+      { name: 'depth', description: 'Depth of explanation', required: false }
+    ]
   },
+  {
+    name: 'diataxis-organizer',
+    description: 'Organize existing documentation using Diataxis framework principles',
+    arguments: [
+      { name: 'project_path', description: 'Path to the project directory', required: true },
+      { name: 'current_docs', description: 'Description of current documentation', required: false },
+      { name: 'priority', description: 'Organization priority', required: false }
+    ]
+  },
+  {
+    name: 'readme-optimizer',
+    description: 'Optimize README content using Diataxis-aware principles',
+    arguments: [
+      { name: 'project_path', description: 'Path to the project directory', required: true },
+      { name: 'optimization_focus', description: 'Focus area for optimization', required: false }
+    ]
+  }
 ];
 
 // In-memory storage for resources
@@ -318,118 +373,15 @@ server.setRequestHandler(ListPromptsRequestSchema, async () => ({
 // Get specific prompt
 server.setRequestHandler(GetPromptRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
-
-  switch (name) {
-    case 'analyze-and-recommend':
-      return {
-        description: 'Complete repository analysis and SSG recommendation workflow',
-        messages: [
-          {
-            role: 'user',
-            content: {
-              type: 'text',
-              text: `I need to analyze a repository and get SSG recommendations. Here are the parameters:
-              
-Repository Path: ${args?.repository_path || '[REQUIRED]'}
-Analysis Depth: ${args?.analysis_depth || 'standard'}
-SSG Preferences: ${args?.ssg_preferences || 'none specified'}
-
-Please:
-1. First run analyze_repository with the provided path and depth
-2. Then run recommend_ssg with the analysis results
-3. Provide a comprehensive summary with justifications
-4. Suggest next steps for documentation setup`,
-            },
-          },
-        ],
-      };
-
-    case 'setup-documentation':
-      return {
-        description: 'Create comprehensive documentation structure with best practices',
-        messages: [
-          {
-            role: 'user',
-            content: {
-              type: 'text',
-              text: `I need to set up documentation for my project. Here are the parameters:
-
-Project Name: ${args?.project_name || '[REQUIRED]'}
-SSG Type: ${args?.ssg_type || '[REQUIRED]'}
-Documentation Path: ${args?.documentation_path || '[REQUIRED]'}
-Include Examples: ${args?.include_examples || 'true'}
-
-Please:
-1. Run generate_config to create the SSG configuration files
-2. Run setup_structure to create the Diataxis-compliant documentation structure
-3. Provide guidance on best practices for the chosen SSG
-4. Suggest deployment setup steps`,
-            },
-          },
-        ],
-      };
-
-    case 'troubleshoot-deployment':
-      return {
-        description: 'Diagnose and fix GitHub Pages deployment issues',
-        messages: [
-          {
-            role: 'user',
-            content: {
-              type: 'text',
-              text: `I need help troubleshooting a GitHub Pages deployment. Here are the details:
-
-Repository: ${args?.repository || '[REQUIRED]'}
-Expected URL: ${args?.expected_url || 'not specified'}
-Error Description: ${args?.error_description || 'not specified'}
-
-Please:
-1. Run verify_deployment to check the current deployment status
-2. Analyze any errors or issues found
-3. Provide specific troubleshooting steps
-4. If needed, suggest deployment workflow fixes`,
-            },
-          },
-        ],
-      };
-
-    case 'validate-content-quality': {
-      const validationScope = args?.validation_scope || 'both';
-      const validationLevel = args?.validation_level || 'standard';
-      const focusAreas = args?.focus_areas || 'all';
-      
-      return {
-        description: 'Comprehensive content validation workflow',
-        messages: [
-          {
-            role: 'user',
-            content: {
-              type: 'text',
-              text: `I need to validate the quality of my content. Here are the parameters:
-
-Content Path: ${args?.content_path || '[REQUIRED]'}
-Validation Scope: ${validationScope} (application-code, documentation, or both)
-Validation Level: ${validationLevel} (quick, standard, or comprehensive)  
-Focus Areas: ${focusAreas} (accuracy, completeness, compliance, code-quality, links, or all)
-
-Please:
-1. First, determine if the path contains application code, documentation, or both
-2. Run validate_diataxis_content for comprehensive Diataxis framework validation
-3. Run validate_content for general link and syntax validation
-4. Compare results and identify the most critical issues
-5. Provide actionable recommendations prioritized by impact
-6. Suggest specific next steps for improvement
-
-If validation scope is 'both', validate both the source code structure and any documentation directories found.`,
-            },
-          },
-        ],
-      };
-    }
-
-    default:
-      throw new Error(`Unknown prompt: ${name}`);
-  }
+  
+  // Generate dynamic prompt messages using our Diataxis-aligned prompt system
+  const projectPath = args?.project_path || process.cwd();
+  const messages = await generateTechnicalWriterPrompts(name, projectPath, args || {});
+  
+  return {
+    description: `Technical writing assistance for ${name}`,
+    messages,
+  };
 });
 
 // List available resources
@@ -702,8 +654,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return result;
       }
       
-      case 'verify_deployment':
-        return await verifyDeployment(args);
+      case 'verify_deployment': {
+        const result = await verifyDeployment(args);
+        return result;
+      }
       
       case 'populate_diataxis_content': {
         const result = await handlePopulateDiataxisContent(args);
@@ -845,6 +799,108 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         );
         return result;
       }
+      
+      case 'evaluate_readme_health': {
+        const result = await evaluateReadmeHealth(args as any);
+        // Store health evaluation as resource
+        const healthId = `readme-health-${Date.now()}`;
+        storeResource(
+          `documcp://analysis/${healthId}`,
+          JSON.stringify(result, null, 2),
+          'application/json'
+        );
+        return result;
+      }
+      
+      
+      case 'readme_best_practices': {
+        const result = await readmeBestPractices(args as any);
+        // Store best practices analysis as resource
+        const analysisId = `readme-best-practices-${Date.now()}`;
+        storeResource(
+          `documcp://analysis/${analysisId}`,
+          JSON.stringify(result, null, 2),
+          'application/json'
+        );
+        return formatMCPResponse(result);
+      }
+      
+      case 'check_documentation_links': {
+        const result = await checkDocumentationLinks(args as any);
+        // Store link check results as resource
+        const linkCheckId = `link-check-${Date.now()}`;
+        storeResource(
+          `documcp://analysis/${linkCheckId}`,
+          JSON.stringify(result, null, 2),
+          'application/json'
+        );
+        return formatMCPResponse(result);
+      }
+      
+      case 'generate_readme_template': {
+        const result = await generateReadmeTemplate(args as any);
+        // Store generated template as resource
+        const templateId = `readme-template-${Date.now()}`;
+        storeResource(
+          `documcp://template/${templateId}`,
+          result.content,
+          'text/markdown'
+        );
+        return formatMCPResponse({
+          success: true,
+          data: result,
+          metadata: {
+            toolVersion: packageJson.version,
+            executionTime: Date.now(),
+            timestamp: new Date().toISOString()
+          }
+        });
+      }
+      
+      case 'validate_readme_checklist': {
+        const result = await validateReadmeChecklist(args as any);
+        // Store validation report as resource
+        const validationId = `readme-validation-${Date.now()}`;
+        storeResource(
+          `documcp://analysis/${validationId}`,
+          JSON.stringify(result, null, 2),
+          'application/json'
+        );
+        return formatMCPResponse({
+          success: true,
+          data: result,
+          metadata: {
+            toolVersion: packageJson.version,
+            executionTime: Date.now(),
+            timestamp: new Date().toISOString()
+          }
+        });
+      }
+      
+      case 'analyze_readme': {
+        const result = await analyzeReadme(args as any);
+        // Store analysis results as resource
+        const analysisId = `readme-analysis-${Date.now()}`;
+        storeResource(
+          `documcp://analysis/${analysisId}`,
+          JSON.stringify(result, null, 2),
+          'application/json'
+        );
+        return formatMCPResponse(result);
+      }
+      
+      case 'optimize_readme': {
+        const result = await optimizeReadme(args as any);
+        // Store optimization results as resource
+        const optimizationId = `readme-optimization-${Date.now()}`;
+        storeResource(
+          `documcp://analysis/${optimizationId}`,
+          JSON.stringify(result, null, 2),
+          'application/json'
+        );
+        return formatMCPResponse(result);
+      }
+      
       
       default:
         throw new Error(`Unknown tool: ${name}`);

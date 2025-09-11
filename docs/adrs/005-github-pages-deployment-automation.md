@@ -552,4 +552,5 @@ describe('DeploymentWorkflows', () => {
 ## References
 - [GitHub Pages Documentation](https://docs.github.com/en/pages)
 - [GitHub Actions Best Practices](https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions)
-- [Static Site Deployment Strategies](https://jamstack.org/deployment/)
+- [Static Site Deployment Strategies](https://jamstack.org/best-practices/)
+- [JAMstack Architecture Guide](https://jamstack.org/what-is-jamstack/)

@@ -95,6 +95,58 @@ install_dependencies() {
     print_success "Dependencies installed"
 }
 
+# Check documentation links
+check_documentation_links() {
+    print_status "Checking documentation links..."
+    
+    # Navigate back to project root to run link checker
+    cd "$PROJECT_ROOT"
+    
+    if [ -f "dist/tools/check-documentation-links.js" ]; then
+        print_status "Running comprehensive link check..."
+        if node -e "
+            import('./dist/tools/check-documentation-links.js').then(module => {
+                return module.checkDocumentationLinks({
+                    documentation_path: './docs',
+                    check_external_links: true,
+                    check_internal_links: true,
+                    timeout_ms: 10000,
+                    max_concurrent_checks: 3,
+                    fail_on_broken_links: false
+                });
+            }).then(result => {
+                if (result.success) {
+                    const data = result.data;
+                    console.log('✓ Link check completed');
+                    console.log(\`  Total links: \${data.summary.totalLinks}\`);
+                    console.log(\`  Valid links: \${data.summary.validLinks}\`);
+                    console.log(\`  Broken links: \${data.summary.brokenLinks}\`);
+                    console.log(\`  Files scanned: \${data.summary.filesScanned}\`);
+                    if (data.summary.brokenLinks > 0) {
+                        console.log('⚠ Warning: Found broken links - check output for details');
+                        process.exit(1);
+                    }
+                } else {
+                    console.log('✗ Link check failed:', result.error?.message);
+                    process.exit(1);
+                }
+            }).catch(err => {
+                console.log('✗ Link check error:', err.message);
+                process.exit(1);
+            });
+        "; then
+            print_success "✓ Documentation links verified"
+        else
+            print_warning "⚠ Link check found issues - continuing with build test"
+        fi
+    else
+        print_warning "⚠ Link checker not built - run 'npm run build' first"
+    fi
+    
+    # Navigate back to docs directory
+    cd "$DOCS_DIR"
+}
+
 # Verify ADR integration
 verify_adr_integration() {
     print_status "Verifying ADR integration..."
@@ -253,6 +305,7 @@ main() {
     # Run all checks and tests
     check_prerequisites
     setup_environment
+    check_documentation_links
     verify_adr_integration
     install_dependencies
     

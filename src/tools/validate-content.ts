@@ -1275,8 +1275,9 @@ export async function handleValidateDiataxisContent(args: any): Promise<Validati
   
   // Add timeout protection to prevent infinite hangs
   const timeoutMs = 120000; // 2 minutes
+  let timeoutHandle: NodeJS.Timeout;
   const timeoutPromise = new Promise<ValidationResult>((_, reject) => {
-    setTimeout(() => {
+    timeoutHandle = setTimeout(() => {
       reject(new Error(`Validation timed out after ${timeoutMs / 1000} seconds. This may be due to a large directory structure. Try validating a smaller subset or specific directory.`));
     }, timeoutMs);
   });
@@ -1284,8 +1285,11 @@ export async function handleValidateDiataxisContent(args: any): Promise<Validati
   const validationPromise = validator.validateContent(args);
   
   try {
-    return await Promise.race([validationPromise, timeoutPromise]);
+    const result = await Promise.race([validationPromise, timeoutPromise]);
+    clearTimeout(timeoutHandle!);
+    return result;
   } catch (error: any) {
+    clearTimeout(timeoutHandle!);
     // Return a partial result with error information
     return {
       success: false,
