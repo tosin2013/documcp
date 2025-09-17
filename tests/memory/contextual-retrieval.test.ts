@@ -33,6 +33,7 @@ describe('ContextualRetrievalSystem', () => {
     knowledgeGraph = {
       findRelatedNodes: jest.fn().mockResolvedValue([]),
       getConnectionStrength: jest.fn().mockResolvedValue(0.5),
+      query: jest.fn().mockReturnValue({ nodes: [], edges: [] }),
     };
 
     contextualRetrieval = new ContextualRetrievalSystem(memoryManager, knowledgeGraph);
@@ -61,7 +62,7 @@ describe('ContextualRetrievalSystem', () => {
   describe('Basic Contextual Retrieval', () => {
     beforeEach(async () => {
       // Set up test memories for retrieval tests
-      await memoryManager.storeMemory('analysis', {
+      await memoryManager.remember('analysis', {
         projectPath: '/test/typescript-project',
         language: 'typescript',
         framework: 'react',
@@ -69,7 +70,7 @@ describe('ContextualRetrievalSystem', () => {
         recommendation: 'Use TypeScript for better type safety',
       });
 
-      await memoryManager.storeMemory('deployment', {
+      await memoryManager.remember('deployment', {
         projectPath: '/test/node-project',
         language: 'javascript',
         framework: 'express',
@@ -77,7 +78,7 @@ describe('ContextualRetrievalSystem', () => {
         recommendation: 'Deploy with Docker for consistency',
       });
 
-      await memoryManager.storeMemory('recommendation', {
+      await memoryManager.remember('recommendation', {
         projectPath: '/test/python-project',
         language: 'python',
         framework: 'django',
