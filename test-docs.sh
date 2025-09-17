@@ -38,46 +38,46 @@ command_exists() {
 # Check prerequisites
 check_prerequisites() {
     print_status "Checking prerequisites..."
-    
+
     if ! command_exists node; then
         print_error "Node.js is not installed. Please install Node.js 18+ and try again."
         exit 1
     fi
-    
+
     if ! command_exists npm; then
         print_error "npm is not installed. Please install npm and try again."
         exit 1
     fi
-    
+
     # Check Node.js version
     NODE_VERSION=$(node --version | cut -d'v' -f2)
     REQUIRED_VERSION="18.0.0"
-    
+
     if ! command_exists npx; then
         print_error "npx is not available. Please update npm and try again."
         exit 1
     fi
-    
+
     print_success "Prerequisites check passed"
 }
 
 # Navigate to project directory
 setup_environment() {
     print_status "Setting up environment..."
-    
+
     # Get the script directory
     SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     PROJECT_ROOT="$SCRIPT_DIR"
     DOCS_DIR="$PROJECT_ROOT/docs"
-    
+
     print_status "Project root: $PROJECT_ROOT"
     print_status "Docs directory: $DOCS_DIR"
-    
+
     if [ ! -d "$DOCS_DIR" ]; then
         print_error "Docs directory not found at $DOCS_DIR"
         exit 1
     fi
-    
+
     cd "$DOCS_DIR"
     print_success "Environment setup complete"
 }
@@ -85,12 +85,12 @@ setup_environment() {
 # Install dependencies
 install_dependencies() {
     print_status "Installing Docusaurus dependencies..."
-    
+
     if [ ! -f "package.json" ]; then
         print_error "package.json not found in docs directory"
         exit 1
     fi
-    
+
     npm install --silent
     print_success "Dependencies installed"
 }
@@ -98,10 +98,10 @@ install_dependencies() {
 # Check documentation links
 check_documentation_links() {
     print_status "Checking documentation links..."
-    
+
     # Navigate back to project root to run link checker
     cd "$PROJECT_ROOT"
-    
+
     if [ -f "dist/tools/check-documentation-links.js" ]; then
         print_status "Running comprehensive link check..."
         if node -e "
@@ -142,7 +142,7 @@ check_documentation_links() {
     else
         print_warning "⚠ Link checker not built - run 'npm run build' first"
     fi
-    
+
     # Navigate back to docs directory
     cd "$DOCS_DIR"
 }
@@ -150,11 +150,11 @@ check_documentation_links() {
 # Verify ADR integration
 verify_adr_integration() {
     print_status "Verifying ADR integration..."
-    
+
     # Check if ADR files exist
     ADR_COUNT=$(find adrs -name "*.md" -not -name "README.md" | wc -l)
     print_status "Found $ADR_COUNT ADR files"
-    
+
     # Check if front matter exists in ADR files
     for adr_file in adrs/[0-9]*.md; do
         if [ -f "$adr_file" ]; then
@@ -165,7 +165,7 @@ verify_adr_integration() {
             fi
         fi
     done
-    
+
     # Check sidebars.js
     if [ -f "sidebars.js" ]; then
         print_success "✓ sidebars.js exists"
@@ -173,7 +173,7 @@ verify_adr_integration() {
         print_error "✗ sidebars.js missing"
         exit 1
     fi
-    
+
     # Check docusaurus.config.js
     if [ -f "docusaurus.config.js" ]; then
         print_success "✓ docusaurus.config.js exists"
@@ -186,17 +186,17 @@ verify_adr_integration() {
 # Test build process
 test_build() {
     print_status "Testing Docusaurus build..."
-    
+
     # Clean any previous builds
     if [ -d "build" ]; then
         rm -rf build
         print_status "Cleaned previous build"
     fi
-    
+
     # Attempt to build
     if npm run build; then
         print_success "✓ Build successful"
-        
+
         # Check if build directory was created
         if [ -d "build" ]; then
             BUILD_SIZE=$(du -sh build | cut -f1)
@@ -214,18 +214,18 @@ test_build() {
 # Start development server
 start_dev_server() {
     print_status "Starting development server..."
-    
+
     # Kill any existing processes on port 3000
     if lsof -ti:3000 >/dev/null 2>&1; then
         print_warning "Port 3000 is in use. Attempting to kill existing process..."
         lsof -ti:3000 | xargs kill -9 2>/dev/null || true
         sleep 2
     fi
-    
+
     print_status "Starting server in background..."
     npm start > dev-server.log 2>&1 &
     SERVER_PID=$!
-    
+
     # Wait for server to start
     print_status "Waiting for server to start..."
     for i in {1..30}; do
@@ -238,7 +238,7 @@ start_dev_server() {
         sleep 1
         echo -n "."
     done
-    
+
     print_error "✗ Server failed to start within 30 seconds"
     kill $SERVER_PID 2>/dev/null || true
     return 1
@@ -247,21 +247,21 @@ start_dev_server() {
 # Test key pages
 test_pages() {
     print_status "Testing key documentation pages..."
-    
+
     # Test main page
     if curl -s "http://localhost:3000" | grep -q "DocuMCP"; then
         print_success "✓ Main page loads correctly"
     else
         print_warning "⚠ Main page may have issues"
     fi
-    
+
     # Test ADR section (assuming it's at /adrs/)
     if curl -s "http://localhost:3000/adrs/" >/dev/null 2>&1; then
         print_success "✓ ADR section accessible"
     else
         print_warning "⚠ ADR section may not be accessible"
     fi
-    
+
     # Test specific ADR
     if curl -s "http://localhost:3000/adrs/001-mcp-server-architecture" >/dev/null 2>&1; then
         print_success "✓ Individual ADR pages accessible"
@@ -273,7 +273,7 @@ test_pages() {
 # Cleanup function
 cleanup() {
     print_status "Cleaning up..."
-    
+
     # Stop development server if running
     if [ -f ".dev-server.pid" ]; then
         SERVER_PID=$(cat .dev-server.pid)
@@ -285,10 +285,10 @@ cleanup() {
         fi
         rm -f .dev-server.pid
     fi
-    
+
     # Clean up log files
     rm -f dev-server.log
-    
+
     print_success "Cleanup complete"
 }
 
@@ -298,17 +298,17 @@ main() {
     echo "🚀 DocuMCP Documentation Testing Script"
     echo "================================================"
     echo ""
-    
+
     # Set up trap for cleanup
     trap cleanup EXIT
-    
+
     # Run all checks and tests
     check_prerequisites
     setup_environment
     check_documentation_links
     verify_adr_integration
     install_dependencies
-    
+
     # Test build first
     if test_build; then
         print_success "Build test passed!"
@@ -316,17 +316,17 @@ main() {
         print_error "Build test failed. Please check the errors above."
         exit 1
     fi
-    
+
     # Ask user if they want to start the dev server
     echo ""
     read -p "Do you want to start the development server for manual testing? (y/n): " -n 1 -r
     echo ""
-    
+
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         if start_dev_server; then
             sleep 3  # Give server time to fully start
             test_pages
-            
+
             echo ""
             echo "================================================"
             print_success "🎉 Documentation site is ready!"
@@ -348,7 +348,7 @@ main() {
             echo ""
             echo "⏹️  Press Ctrl+C when done testing to stop the server"
             echo ""
-            
+
             # Wait for user to stop the server
             wait
         else
@@ -368,4 +368,3 @@ main() {
 
 # Run main function
 main "$@"
-

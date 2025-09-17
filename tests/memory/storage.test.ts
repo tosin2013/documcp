@@ -15,7 +15,10 @@ describe('JSONLStorage', () => {
 
   beforeEach(async () => {
     // Create unique temp directory for each test
-    tempDir = path.join(os.tmpdir(), `memory-storage-test-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
+    tempDir = path.join(
+      os.tmpdir(),
+      `memory-storage-test-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    );
     await fs.mkdir(tempDir, { recursive: true });
     storage = new JSONLStorage(tempDir);
     await storage.initialize();
@@ -45,7 +48,7 @@ describe('JSONLStorage', () => {
         timestamp: new Date().toISOString(),
         type: 'analysis' as const,
         data: { project: 'test-project', result: 'success' },
-        metadata: { projectId: 'test-proj', tags: ['test'] }
+        metadata: { projectId: 'test-proj', tags: ['test'] },
       };
 
       const stored = await storage.append(entry);
@@ -61,7 +64,7 @@ describe('JSONLStorage', () => {
         'recommendation',
         'deployment',
         'configuration',
-        'interaction'
+        'interaction',
       ];
 
       for (const type of entryTypes) {
@@ -69,7 +72,7 @@ describe('JSONLStorage', () => {
           timestamp: new Date().toISOString(),
           type,
           data: { testType: type },
-          metadata: { projectId: 'test-types' }
+          metadata: { projectId: 'test-types' },
         };
 
         const stored = await storage.append(entry);
@@ -83,14 +86,14 @@ describe('JSONLStorage', () => {
         timestamp: new Date().toISOString(),
         type: 'analysis' as const,
         data: { project: 'test-1' },
-        metadata: { projectId: 'test-1' }
+        metadata: { projectId: 'test-1' },
       };
 
       const entry2 = {
         timestamp: new Date().toISOString(),
         type: 'analysis' as const,
         data: { project: 'test-2' },
-        metadata: { projectId: 'test-2' }
+        metadata: { projectId: 'test-2' },
       };
 
       const stored1 = await storage.append(entry1);
@@ -105,7 +108,7 @@ describe('JSONLStorage', () => {
         timestamp: new Date().toISOString(),
         type: 'analysis' as const,
         data: { project: 'identical-test' },
-        metadata: { projectId: 'identical' }
+        metadata: { projectId: 'identical' },
       };
 
       const stored1 = await storage.append(entry);
@@ -122,14 +125,14 @@ describe('JSONLStorage', () => {
         timestamp: '2024-01-15T10:30:00.000Z',
         type: 'analysis' as const,
         data: { fileTest: true },
-        metadata: { projectId: 'file-proj' }
+        metadata: { projectId: 'file-proj' },
       };
 
       await storage.append(entry);
 
       // Check that file was created with expected name pattern
       const files = await fs.readdir(tempDir);
-      const jsonlFiles = files.filter(f => f.endsWith('.jsonl'));
+      const jsonlFiles = files.filter((f) => f.endsWith('.jsonl'));
       expect(jsonlFiles.length).toBeGreaterThan(0);
 
       // Should have analysis_2024_01.jsonl
@@ -152,20 +155,20 @@ describe('JSONLStorage', () => {
           timestamp: '2024-01-15T10:30:00.000Z',
           type: 'analysis' as const,
           data: { test: 'analysis-jan' },
-          metadata: { projectId: 'date-test' }
+          metadata: { projectId: 'date-test' },
         },
         {
           timestamp: '2024-02-15T10:30:00.000Z',
           type: 'analysis' as const,
           data: { test: 'analysis-feb' },
-          metadata: { projectId: 'date-test' }
+          metadata: { projectId: 'date-test' },
         },
         {
           timestamp: '2024-01-15T10:30:00.000Z',
           type: 'recommendation' as const,
           data: { test: 'recommendation-jan' },
-          metadata: { projectId: 'date-test' }
-        }
+          metadata: { projectId: 'date-test' },
+        },
       ];
 
       for (const entry of entries) {
@@ -173,7 +176,7 @@ describe('JSONLStorage', () => {
       }
 
       const files = await fs.readdir(tempDir);
-      const jsonlFiles = files.filter(f => f.endsWith('.jsonl'));
+      const jsonlFiles = files.filter((f) => f.endsWith('.jsonl'));
 
       expect(jsonlFiles).toContain('analysis_2024_01.jsonl');
       expect(jsonlFiles).toContain('analysis_2024_02.jsonl');
@@ -185,14 +188,17 @@ describe('JSONLStorage', () => {
         timestamp: new Date().toISOString(),
         type: 'configuration' as const,
         data: { indexTest: true },
-        metadata: { projectId: 'index-test' }
+        metadata: { projectId: 'index-test' },
       };
 
       await storage.append(entry);
 
       // Check that index file was created
       const indexPath = path.join(tempDir, '.index.json');
-      const indexExists = await fs.access(indexPath).then(() => true).catch(() => false);
+      const indexExists = await fs
+        .access(indexPath)
+        .then(() => true)
+        .catch(() => false);
       expect(indexExists).toBe(true);
 
       // Index should contain entry information
@@ -209,7 +215,7 @@ describe('JSONLStorage', () => {
         timestamp: new Date().toISOString(),
         type: 'deployment' as const,
         data: { integrity: 'test', checkData: 'important' },
-        metadata: { projectId: 'integrity-test' }
+        metadata: { projectId: 'integrity-test' },
       };
 
       const stored = await storage.append(entry);
@@ -224,7 +230,7 @@ describe('JSONLStorage', () => {
         timestamp: customTimestamp,
         type: 'interaction' as const,
         data: { timestampTest: true },
-        metadata: { projectId: 'timestamp-test' }
+        metadata: { projectId: 'timestamp-test' },
       };
 
       const stored = await storage.append(entry);
@@ -236,7 +242,7 @@ describe('JSONLStorage', () => {
         timestamp: '', // Will be auto-generated
         type: 'analysis' as const,
         data: { autoTimestamp: true },
-        metadata: { projectId: 'auto-timestamp-test' }
+        metadata: { projectId: 'auto-timestamp-test' },
       };
 
       const beforeTime = new Date().toISOString();
@@ -256,14 +262,14 @@ describe('JSONLStorage', () => {
         repository: 'github.com/test/repo',
         ssg: 'docusaurus',
         tags: ['frontend', 'typescript'],
-        version: '1.0.0'
+        version: '1.0.0',
       };
 
       const entry = {
         timestamp: new Date().toISOString(),
         type: 'recommendation' as const,
         data: { recommendation: 'use-docusaurus' },
-        metadata
+        metadata,
       };
 
       const stored = await storage.append(entry);
@@ -277,7 +283,7 @@ describe('JSONLStorage', () => {
         timestamp: new Date().toISOString(),
         type: 'analysis' as const,
         data: { minimal: true },
-        metadata: { projectId: 'minimal-test' }
+        metadata: { projectId: 'minimal-test' },
       };
 
       const stored = await storage.append(entry);
@@ -292,14 +298,14 @@ describe('JSONLStorage', () => {
         compressed: true,
         compressionType: 'gzip',
         compressedAt: new Date().toISOString(),
-        originalSize: 1024
+        originalSize: 1024,
       };
 
       const entry = {
         timestamp: new Date().toISOString(),
         type: 'configuration' as const,
         data: { compressed: 'data' },
-        metadata
+        metadata,
       };
 
       const stored = await storage.append(entry);
@@ -320,7 +326,7 @@ describe('JSONLStorage', () => {
           timestamp: new Date().toISOString(),
           type: 'analysis',
           data: { index: i, concurrent: true },
-          metadata: { projectId: 'concurrent-test' }
+          metadata: { projectId: 'concurrent-test' },
         });
         promises.push(promise);
       }
@@ -329,7 +335,7 @@ describe('JSONLStorage', () => {
       expect(results).toHaveLength(concurrentWrites);
 
       // All IDs should be unique (since data is different)
-      const ids = results.map(r => r.id);
+      const ids = results.map((r) => r.id);
       expect(new Set(ids).size).toBe(concurrentWrites);
 
       // All should have correct structure
@@ -350,8 +356,8 @@ describe('JSONLStorage', () => {
           type: i % 2 === 0 ? 'analysis' : 'recommendation',
           data: { index: i, bulk: true },
           metadata: {
-            projectId: 'bulk-test'
-          }
+            projectId: 'bulk-test',
+          },
         });
       }
 
@@ -360,7 +366,7 @@ describe('JSONLStorage', () => {
 
       // Verify files were created
       const files = await fs.readdir(tempDir);
-      const jsonlFiles = files.filter(f => f.endsWith('.jsonl'));
+      const jsonlFiles = files.filter((f) => f.endsWith('.jsonl'));
       expect(jsonlFiles.length).toBeGreaterThan(0);
     });
 
@@ -370,15 +376,15 @@ describe('JSONLStorage', () => {
         array: new Array(1000).fill(0).map((_, i) => ({
           id: i,
           data: `large-item-${i}`,
-          metadata: { processed: true }
-        }))
+          metadata: { processed: true },
+        })),
       };
 
       const entry = {
         timestamp: new Date().toISOString(),
         type: 'analysis' as const,
         data: largeData,
-        metadata: { projectId: 'large-test' }
+        metadata: { projectId: 'large-test' },
       };
 
       const startTime = Date.now();
@@ -400,12 +406,12 @@ describe('JSONLStorage', () => {
           message: 'Special chars: äöü 🚀 @#$%^&*()[]{}|\\:";\'<>?,./`~',
           unicode: '测试中文字符',
           emoji: '🎉🔥💯⚡🚀',
-          json: { nested: { deeply: { value: 'test' } } }
+          json: { nested: { deeply: { value: 'test' } } },
         },
         metadata: {
           projectId: 'special-chars-项目-🏗️',
-          tags: ['special', 'unicode', '特殊字符']
-        }
+          tags: ['special', 'unicode', '特殊字符'],
+        },
       };
 
       const stored = await storage.append(entry);
@@ -420,7 +426,7 @@ describe('JSONLStorage', () => {
         timestamp: new Date().toISOString(),
         type: 'configuration' as const,
         data: {},
-        metadata: { projectId: 'empty-test' }
+        metadata: { projectId: 'empty-test' },
       };
 
       const stored = await storage.append(entry);
@@ -444,7 +450,7 @@ describe('JSONLStorage', () => {
         timestamp: new Date().toISOString(),
         type: 'analysis' as const,
         data: { recovery: true },
-        metadata: { projectId: 'recovery-test' }
+        metadata: { projectId: 'recovery-test' },
       };
 
       const stored = await newStorage.append(entry);
@@ -457,20 +463,20 @@ describe('JSONLStorage', () => {
           timestamp: new Date().toISOString(),
           type: 'analysis' as const,
           data: { step: 1, consistency: 'test' },
-          metadata: { projectId: 'consistency-test' }
+          metadata: { projectId: 'consistency-test' },
         },
         {
           timestamp: new Date().toISOString(),
           type: 'recommendation' as const,
           data: { step: 2, consistency: 'test' },
-          metadata: { projectId: 'consistency-test' }
+          metadata: { projectId: 'consistency-test' },
         },
         {
           timestamp: new Date().toISOString(),
           type: 'deployment' as const,
           data: { step: 3, consistency: 'test' },
-          metadata: { projectId: 'consistency-test' }
-        }
+          metadata: { projectId: 'consistency-test' },
+        },
       ];
 
       const storedEntries = [];
@@ -489,7 +495,7 @@ describe('JSONLStorage', () => {
       });
 
       // All IDs should be unique
-      const ids = storedEntries.map(s => s.id);
+      const ids = storedEntries.map((s) => s.id);
       expect(new Set(ids).size).toBe(3);
     });
   });

@@ -24,7 +24,7 @@ describe('Functional Testing - MCP Tools', () => {
   beforeAll(async () => {
     tempDir = path.join(os.tmpdir(), 'documcp-functional-tests');
     await fs.mkdir(tempDir, { recursive: true });
-    
+
     testRepos = {
       javascript: await createJavaScriptRepo(),
       python: await createPythonRepo(),
@@ -48,16 +48,16 @@ describe('Functional Testing - MCP Tools', () => {
     it('should analyze JavaScript/TypeScript repository correctly', async () => {
       const result = await analyzeRepository({
         path: testRepos.javascript,
-        depth: 'standard'
+        depth: 'standard',
       });
 
       expect(result.content).toBeDefined();
       expect(result.content.length).toBeGreaterThan(0);
-      
+
       // Parse the JSON response to validate structure
-      const analysisText = result.content.find(c => c.text.includes('"id"'));
+      const analysisText = result.content.find((c) => c.text.includes('"id"'));
       expect(analysisText).toBeDefined();
-      
+
       const analysis = JSON.parse(analysisText!.text);
       expect(analysis.dependencies.ecosystem).toBe('javascript');
       expect(analysis.structure.languages['.js']).toBeGreaterThan(0);
@@ -68,12 +68,12 @@ describe('Functional Testing - MCP Tools', () => {
     it('should analyze Python repository correctly', async () => {
       const result = await analyzeRepository({
         path: testRepos.python,
-        depth: 'standard'
+        depth: 'standard',
       });
 
-      const analysisText = result.content.find(c => c.text.includes('"ecosystem"'));
+      const analysisText = result.content.find((c) => c.text.includes('"ecosystem"'));
       const analysis = JSON.parse(analysisText!.text);
-      
+
       expect(analysis.dependencies.ecosystem).toBe('python');
       expect(analysis.structure.languages['.py']).toBeGreaterThan(0);
       expect(analysis.dependencies.packages.length).toBeGreaterThan(0);
@@ -82,12 +82,12 @@ describe('Functional Testing - MCP Tools', () => {
     it('should analyze Ruby repository correctly', async () => {
       const result = await analyzeRepository({
         path: testRepos.ruby,
-        depth: 'standard'
+        depth: 'standard',
       });
 
-      const analysisText = result.content.find(c => c.text.includes('"ecosystem"'));
+      const analysisText = result.content.find((c) => c.text.includes('"ecosystem"'));
       const analysis = JSON.parse(analysisText!.text);
-      
+
       expect(analysis.dependencies.ecosystem).toBe('ruby');
       expect(analysis.structure.languages['.rb']).toBeGreaterThan(0);
     });
@@ -95,12 +95,12 @@ describe('Functional Testing - MCP Tools', () => {
     it('should analyze Go repository correctly', async () => {
       const result = await analyzeRepository({
         path: testRepos.go,
-        depth: 'standard'
+        depth: 'standard',
       });
 
-      const analysisText = result.content.find(c => c.text.includes('"ecosystem"'));
+      const analysisText = result.content.find((c) => c.text.includes('"ecosystem"'));
       const analysis = JSON.parse(analysisText!.text);
-      
+
       expect(analysis.dependencies.ecosystem).toBe('go');
       expect(analysis.structure.languages['.go']).toBeGreaterThan(0);
     });
@@ -108,21 +108,25 @@ describe('Functional Testing - MCP Tools', () => {
     it('should handle different analysis depths', async () => {
       const quickResult = await analyzeRepository({
         path: testRepos.javascript,
-        depth: 'quick'
+        depth: 'quick',
       });
-      
+
       const deepResult = await analyzeRepository({
         path: testRepos.javascript,
-        depth: 'deep'
+        depth: 'deep',
       });
 
       expect(quickResult.content).toBeDefined();
       expect(deepResult.content).toBeDefined();
-      
+
       // Both should return valid results but potentially different detail levels
-      const quickAnalysis = JSON.parse(quickResult.content.find(c => c.text.includes('"id"'))!.text);
-      const deepAnalysis = JSON.parse(deepResult.content.find(c => c.text.includes('"id"'))!.text);
-      
+      const quickAnalysis = JSON.parse(
+        quickResult.content.find((c) => c.text.includes('"id"'))!.text,
+      );
+      const deepAnalysis = JSON.parse(
+        deepResult.content.find((c) => c.text.includes('"id"'))!.text,
+      );
+
       expect(quickAnalysis.id).toBeDefined();
       expect(deepAnalysis.id).toBeDefined();
     });
@@ -130,22 +134,22 @@ describe('Functional Testing - MCP Tools', () => {
     it('should handle empty repository gracefully', async () => {
       const result = await analyzeRepository({
         path: testRepos.empty,
-        depth: 'standard'
+        depth: 'standard',
       });
 
-      const analysisText = result.content.find(c => c.text.includes('"totalFiles"'));
+      const analysisText = result.content.find((c) => c.text.includes('"totalFiles"'));
       const analysis = JSON.parse(analysisText!.text);
-      
+
       expect(analysis.structure.totalFiles).toBe(1); // Only README.md
       expect(analysis.dependencies.ecosystem).toBe('unknown');
     });
 
     it('should handle non-existent repository path', async () => {
       const nonExistentPath = path.join(tempDir, 'does-not-exist');
-      
+
       const result = await analyzeRepository({
         path: nonExistentPath,
-        depth: 'standard'
+        depth: 'standard',
       });
 
       expect((result as any).isError).toBe(true);
@@ -156,16 +160,16 @@ describe('Functional Testing - MCP Tools', () => {
   describe('recommend_ssg Tool', () => {
     it('should recommend SSG based on analysis', async () => {
       const result = await recommendSSG({
-        analysisId: 'test-analysis-123'
+        analysisId: 'test-analysis-123',
       });
 
       expect(result.content).toBeDefined();
       expect(result.content.length).toBeGreaterThan(0);
-      
+
       // Should contain recommendation data
-      const recommendationText = result.content.find(c => c.text.includes('"recommended"'));
+      const recommendationText = result.content.find((c) => c.text.includes('"recommended"'));
       expect(recommendationText).toBeDefined();
-      
+
       const recommendation = JSON.parse(recommendationText!.text);
       expect(recommendation.recommended).toBeDefined();
       expect(recommendation.confidence).toBeGreaterThan(0);
@@ -178,15 +182,17 @@ describe('Functional Testing - MCP Tools', () => {
         analysisId: 'test-analysis-456',
         preferences: {
           priority: 'simplicity',
-          ecosystem: 'javascript'
-        }
+          ecosystem: 'javascript',
+        },
       });
 
       expect(result.content).toBeDefined();
-      const recommendationText = result.content.find(c => c.text.includes('"recommended"'));
+      const recommendationText = result.content.find((c) => c.text.includes('"recommended"'));
       const recommendation = JSON.parse(recommendationText!.text);
-      
-      expect(['jekyll', 'hugo', 'docusaurus', 'mkdocs', 'eleventy']).toContain(recommendation.recommended);
+
+      expect(['jekyll', 'hugo', 'docusaurus', 'mkdocs', 'eleventy']).toContain(
+        recommendation.recommended,
+      );
     });
   });
 
@@ -203,18 +209,28 @@ describe('Functional Testing - MCP Tools', () => {
         ssg: 'docusaurus',
         projectName: 'Test Docusaurus Project',
         projectDescription: 'A test project for Docusaurus',
-        outputPath: configOutputDir
+        outputPath: configOutputDir,
       });
 
       expect(result.content).toBeDefined();
-      
+
       // Verify files were created
       const docusaurusConfig = path.join(configOutputDir, 'docusaurus.config.js');
       const packageJson = path.join(configOutputDir, 'package.json');
-      
-      expect(await fs.access(docusaurusConfig).then(() => true).catch(() => false)).toBe(true);
-      expect(await fs.access(packageJson).then(() => true).catch(() => false)).toBe(true);
-      
+
+      expect(
+        await fs
+          .access(docusaurusConfig)
+          .then(() => true)
+          .catch(() => false),
+      ).toBe(true);
+      expect(
+        await fs
+          .access(packageJson)
+          .then(() => true)
+          .catch(() => false),
+      ).toBe(true);
+
       // Verify file contents
       const configContent = await fs.readFile(docusaurusConfig, 'utf-8');
       expect(configContent).toContain('Test Docusaurus Project');
@@ -225,17 +241,27 @@ describe('Functional Testing - MCP Tools', () => {
       const result = await generateConfig({
         ssg: 'mkdocs',
         projectName: 'Test MkDocs Project',
-        outputPath: configOutputDir
+        outputPath: configOutputDir,
       });
 
       expect(result.content).toBeDefined();
-      
+
       const mkdocsConfig = path.join(configOutputDir, 'mkdocs.yml');
       const requirements = path.join(configOutputDir, 'requirements.txt');
-      
-      expect(await fs.access(mkdocsConfig).then(() => true).catch(() => false)).toBe(true);
-      expect(await fs.access(requirements).then(() => true).catch(() => false)).toBe(true);
-      
+
+      expect(
+        await fs
+          .access(mkdocsConfig)
+          .then(() => true)
+          .catch(() => false),
+      ).toBe(true);
+      expect(
+        await fs
+          .access(requirements)
+          .then(() => true)
+          .catch(() => false),
+      ).toBe(true);
+
       const configContent = await fs.readFile(mkdocsConfig, 'utf-8');
       expect(configContent).toContain('Test MkDocs Project');
       expect(configContent).toContain('material');
@@ -245,12 +271,17 @@ describe('Functional Testing - MCP Tools', () => {
       const result = await generateConfig({
         ssg: 'hugo',
         projectName: 'Test Hugo Project',
-        outputPath: configOutputDir
+        outputPath: configOutputDir,
       });
 
       const hugoConfig = path.join(configOutputDir, 'hugo.toml');
-      expect(await fs.access(hugoConfig).then(() => true).catch(() => false)).toBe(true);
-      
+      expect(
+        await fs
+          .access(hugoConfig)
+          .then(() => true)
+          .catch(() => false),
+      ).toBe(true);
+
       const configContent = await fs.readFile(hugoConfig, 'utf-8');
       expect(configContent).toContain('Test Hugo Project');
     });
@@ -259,28 +290,48 @@ describe('Functional Testing - MCP Tools', () => {
       const result = await generateConfig({
         ssg: 'jekyll',
         projectName: 'Test Jekyll Project',
-        outputPath: configOutputDir
+        outputPath: configOutputDir,
       });
 
       const jekyllConfig = path.join(configOutputDir, '_config.yml');
       const gemfile = path.join(configOutputDir, 'Gemfile');
-      
-      expect(await fs.access(jekyllConfig).then(() => true).catch(() => false)).toBe(true);
-      expect(await fs.access(gemfile).then(() => true).catch(() => false)).toBe(true);
+
+      expect(
+        await fs
+          .access(jekyllConfig)
+          .then(() => true)
+          .catch(() => false),
+      ).toBe(true);
+      expect(
+        await fs
+          .access(gemfile)
+          .then(() => true)
+          .catch(() => false),
+      ).toBe(true);
     });
 
     it('should generate Eleventy configuration', async () => {
       const result = await generateConfig({
         ssg: 'eleventy',
         projectName: 'Test Eleventy Project',
-        outputPath: configOutputDir
+        outputPath: configOutputDir,
       });
 
       const eleventyConfig = path.join(configOutputDir, '.eleventy.js');
       const packageJson = path.join(configOutputDir, 'package.json');
-      
-      expect(await fs.access(eleventyConfig).then(() => true).catch(() => false)).toBe(true);
-      expect(await fs.access(packageJson).then(() => true).catch(() => false)).toBe(true);
+
+      expect(
+        await fs
+          .access(eleventyConfig)
+          .then(() => true)
+          .catch(() => false),
+      ).toBe(true);
+      expect(
+        await fs
+          .access(packageJson)
+          .then(() => true)
+          .catch(() => false),
+      ).toBe(true);
     });
   });
 
@@ -295,30 +346,45 @@ describe('Functional Testing - MCP Tools', () => {
       const result = await setupStructure({
         path: structureOutputDir,
         ssg: 'docusaurus',
-        includeExamples: true
+        includeExamples: true,
       });
 
       expect(result.content).toBeDefined();
-      
+
       // Verify directory structure
       const categories = ['tutorials', 'how-to', 'reference', 'explanation'];
       for (const category of categories) {
         const categoryDir = path.join(structureOutputDir, category);
-        expect(await fs.access(categoryDir).then(() => true).catch(() => false)).toBe(true);
-        
+        expect(
+          await fs
+            .access(categoryDir)
+            .then(() => true)
+            .catch(() => false),
+        ).toBe(true);
+
         // Check for index.md
         const indexFile = path.join(categoryDir, 'index.md');
-        expect(await fs.access(indexFile).then(() => true).catch(() => false)).toBe(true);
-        
+        expect(
+          await fs
+            .access(indexFile)
+            .then(() => true)
+            .catch(() => false),
+        ).toBe(true);
+
         // Check for example file
         const files = await fs.readdir(categoryDir);
         expect(files.length).toBeGreaterThan(1); // index.md + example file
       }
-      
+
       // Check root index
       const rootIndex = path.join(structureOutputDir, 'index.md');
-      expect(await fs.access(rootIndex).then(() => true).catch(() => false)).toBe(true);
-      
+      expect(
+        await fs
+          .access(rootIndex)
+          .then(() => true)
+          .catch(() => false),
+      ).toBe(true);
+
       const rootContent = await fs.readFile(rootIndex, 'utf-8');
       expect(rootContent).toContain('Diataxis');
       expect(rootContent).toContain('Tutorials');
@@ -329,11 +395,11 @@ describe('Functional Testing - MCP Tools', () => {
       const result = await setupStructure({
         path: structureOutputDir,
         ssg: 'mkdocs',
-        includeExamples: false
+        includeExamples: false,
       });
 
       expect(result.content).toBeDefined();
-      
+
       // Verify only index files exist (no examples)
       const tutorialsDir = path.join(structureOutputDir, 'tutorials');
       const files = await fs.readdir(tutorialsDir);
@@ -345,19 +411,19 @@ describe('Functional Testing - MCP Tools', () => {
       await setupStructure({
         path: path.join(structureOutputDir, 'docusaurus'),
         ssg: 'docusaurus',
-        includeExamples: true
+        includeExamples: true,
       });
 
       const docusaurusFile = path.join(structureOutputDir, 'docusaurus', 'tutorials', 'index.md');
       const docusaurusContent = await fs.readFile(docusaurusFile, 'utf-8');
       expect(docusaurusContent).toContain('id: tutorials-index');
       expect(docusaurusContent).toContain('sidebar_label:');
-      
+
       // Test Jekyll format
       await setupStructure({
         path: path.join(structureOutputDir, 'jekyll'),
         ssg: 'jekyll',
-        includeExamples: true
+        includeExamples: true,
       });
 
       const jekyllFile = path.join(structureOutputDir, 'jekyll', 'tutorials', 'index.md');
@@ -379,20 +445,25 @@ describe('Functional Testing - MCP Tools', () => {
       const result = await deployPages({
         repository: deploymentRepoDir,
         ssg: 'docusaurus',
-        branch: 'gh-pages'
+        branch: 'gh-pages',
       });
 
       expect(result.content).toBeDefined();
-      
+
       const workflowPath = path.join(deploymentRepoDir, '.github', 'workflows', 'deploy-docs.yml');
-      expect(await fs.access(workflowPath).then(() => true).catch(() => false)).toBe(true);
-      
+      expect(
+        await fs
+          .access(workflowPath)
+          .then(() => true)
+          .catch(() => false),
+      ).toBe(true);
+
       const workflowContent = await fs.readFile(workflowPath, 'utf-8');
       expect(workflowContent).toContain('Deploy Docusaurus');
       expect(workflowContent).toContain('npm run build');
       expect(workflowContent).toContain('actions/upload-pages-artifact');
       expect(workflowContent).toContain('actions/deploy-pages');
-      
+
       // Verify security compliance (OIDC tokens)
       expect(workflowContent).toContain('id-token: write');
       expect(workflowContent).toContain('pages: write');
@@ -402,12 +473,12 @@ describe('Functional Testing - MCP Tools', () => {
     it('should create workflow for MkDocs', async () => {
       const result = await deployPages({
         repository: deploymentRepoDir,
-        ssg: 'mkdocs'
+        ssg: 'mkdocs',
       });
 
       const workflowPath = path.join(deploymentRepoDir, '.github', 'workflows', 'deploy-docs.yml');
       const workflowContent = await fs.readFile(workflowPath, 'utf-8');
-      
+
       expect(workflowContent).toContain('Deploy MkDocs');
       expect(workflowContent).toContain('mkdocs gh-deploy');
       expect(workflowContent).toContain('python');
@@ -416,14 +487,14 @@ describe('Functional Testing - MCP Tools', () => {
     it('should create workflow for Hugo', async () => {
       const result = await deployPages({
         repository: deploymentRepoDir,
-        ssg: 'hugo'
+        ssg: 'hugo',
       });
 
       const workflowContent = await fs.readFile(
         path.join(deploymentRepoDir, '.github', 'workflows', 'deploy-docs.yml'),
-        'utf-8'
+        'utf-8',
       );
-      
+
       expect(workflowContent).toContain('Deploy Hugo');
       expect(workflowContent).toContain('peaceiris/actions-hugo');
       expect(workflowContent).toContain('hugo --minify');
@@ -433,18 +504,23 @@ describe('Functional Testing - MCP Tools', () => {
       const result = await deployPages({
         repository: deploymentRepoDir,
         ssg: 'jekyll',
-        customDomain: 'docs.example.com'
+        customDomain: 'docs.example.com',
       });
 
       // Check CNAME file creation
       const cnamePath = path.join(deploymentRepoDir, 'CNAME');
-      expect(await fs.access(cnamePath).then(() => true).catch(() => false)).toBe(true);
-      
+      expect(
+        await fs
+          .access(cnamePath)
+          .then(() => true)
+          .catch(() => false),
+      ).toBe(true);
+
       const cnameContent = await fs.readFile(cnamePath, 'utf-8');
       expect(cnameContent.trim()).toBe('docs.example.com');
-      
+
       // Verify result indicates custom domain was configured
-      const resultText = result.content.map(c => c.text).join(' ');
+      const resultText = result.content.map((c) => c.text).join(' ');
       expect(resultText).toContain('docs.example.com');
     });
   });
@@ -462,40 +538,51 @@ describe('Functional Testing - MCP Tools', () => {
       await fs.mkdir(path.join(verificationRepoDir, '.github', 'workflows'), { recursive: true });
       await fs.mkdir(path.join(verificationRepoDir, 'docs'), { recursive: true });
       await fs.mkdir(path.join(verificationRepoDir, 'build'), { recursive: true });
-      
+
       // Create workflow file
       await fs.writeFile(
         path.join(verificationRepoDir, '.github', 'workflows', 'deploy-docs.yml'),
-        'name: Deploy Docs\non: push\njobs:\n  deploy:\n    runs-on: ubuntu-latest'
+        'name: Deploy Docs\non: push\njobs:\n  deploy:\n    runs-on: ubuntu-latest',
       );
-      
+
       // Create documentation files
       await fs.writeFile(path.join(verificationRepoDir, 'docs', 'index.md'), '# Documentation');
       await fs.writeFile(path.join(verificationRepoDir, 'docs', 'guide.md'), '# Guide');
-      
+
       // Create config file
       await fs.writeFile(
         path.join(verificationRepoDir, 'docusaurus.config.js'),
-        'module.exports = { title: "Test" };'
+        'module.exports = { title: "Test" };',
       );
-      
+
       // Create build directory
-      await fs.writeFile(path.join(verificationRepoDir, 'build', 'index.html'), '<h1>Built Site</h1>');
+      await fs.writeFile(
+        path.join(verificationRepoDir, 'build', 'index.html'),
+        '<h1>Built Site</h1>',
+      );
 
       const result = await verifyDeployment({
         repository: verificationRepoDir,
-        url: 'https://example.github.io/test-repo'
+        url: 'https://example.github.io/test-repo',
       });
 
       expect(result.content).toBeDefined();
-      
+
       // Parse the verification result
       const verification = JSON.parse(result.content[0].text);
       expect(verification.summary.passed).toBeGreaterThan(0); // Should have passing checks
-      expect(verification.checks.some((check: any) => check.message.includes('deployment workflow'))).toBe(true);
-      expect(verification.checks.some((check: any) => check.message.includes('documentation files'))).toBe(true);
-      expect(verification.checks.some((check: any) => check.message.includes('configuration'))).toBe(true);
-      expect(verification.checks.some((check: any) => check.message.includes('build output'))).toBe(true);
+      expect(
+        verification.checks.some((check: any) => check.message.includes('deployment workflow')),
+      ).toBe(true);
+      expect(
+        verification.checks.some((check: any) => check.message.includes('documentation files')),
+      ).toBe(true);
+      expect(
+        verification.checks.some((check: any) => check.message.includes('configuration')),
+      ).toBe(true);
+      expect(verification.checks.some((check: any) => check.message.includes('build output'))).toBe(
+        true,
+      );
     });
 
     it('should identify missing components', async () => {
@@ -503,22 +590,30 @@ describe('Functional Testing - MCP Tools', () => {
       await fs.writeFile(path.join(verificationRepoDir, 'README.md'), '# Test Repo');
 
       const result = await verifyDeployment({
-        repository: verificationRepoDir
+        repository: verificationRepoDir,
       });
 
       const verification = JSON.parse(result.content[0].text);
       expect(verification.summary.failed).toBeGreaterThan(0); // Should have failing checks
-      expect(verification.checks.some((check: any) => check.message.includes('No .github/workflows'))).toBe(true);
-      expect(verification.checks.some((check: any) => check.message.includes('No documentation files'))).toBe(true);
-      expect(verification.checks.some((check: any) => check.message.includes('No static site generator configuration'))).toBe(true);
+      expect(
+        verification.checks.some((check: any) => check.message.includes('No .github/workflows')),
+      ).toBe(true);
+      expect(
+        verification.checks.some((check: any) => check.message.includes('No documentation files')),
+      ).toBe(true);
+      expect(
+        verification.checks.some((check: any) =>
+          check.message.includes('No static site generator configuration'),
+        ),
+      ).toBe(true);
     });
 
     it('should provide actionable recommendations', async () => {
       const result = await verifyDeployment({
-        repository: verificationRepoDir
+        repository: verificationRepoDir,
       });
 
-      const resultText = result.content.map(c => c.text).join('\n');
+      const resultText = result.content.map((c) => c.text).join('\n');
       expect(resultText).toContain('→'); // Should contain recommendation arrows
       expect(resultText).toContain('deploy_pages tool');
       expect(resultText).toContain('setup_structure tool');
@@ -528,19 +623,19 @@ describe('Functional Testing - MCP Tools', () => {
     it('should handle repository path variations', async () => {
       // Test with relative path
       const relativeResult = await verifyDeployment({
-        repository: '.'
+        repository: '.',
       });
       expect(relativeResult.content).toBeDefined();
-      
+
       // Test with absolute path
       const absoluteResult = await verifyDeployment({
-        repository: verificationRepoDir
+        repository: verificationRepoDir,
       });
       expect(absoluteResult.content).toBeDefined();
-      
+
       // Test with HTTP URL (should default to current directory)
       const urlResult = await verifyDeployment({
-        repository: 'https://github.com/user/repo'
+        repository: 'https://github.com/user/repo',
       });
       expect(urlResult.content).toBeDefined();
     });
@@ -550,7 +645,7 @@ describe('Functional Testing - MCP Tools', () => {
   async function createJavaScriptRepo(): Promise<string> {
     const repoPath = path.join(tempDir, 'javascript-repo');
     await fs.mkdir(repoPath, { recursive: true });
-    
+
     // package.json
     const packageJson = {
       name: 'test-js-project',
@@ -558,147 +653,165 @@ describe('Functional Testing - MCP Tools', () => {
       description: 'Test JavaScript project',
       scripts: {
         start: 'node index.js',
-        test: 'jest'
+        test: 'jest',
       },
       dependencies: {
         express: '^4.18.0',
-        lodash: '^4.17.21'
+        lodash: '^4.17.21',
       },
       devDependencies: {
         jest: '^29.0.0',
-        '@types/node': '^20.0.0'
-      }
+        '@types/node': '^20.0.0',
+      },
     };
     await fs.writeFile(path.join(repoPath, 'package.json'), JSON.stringify(packageJson, null, 2));
-    
+
     // Source files
     await fs.writeFile(path.join(repoPath, 'index.js'), 'console.log("Hello World");');
     await fs.writeFile(path.join(repoPath, 'utils.js'), 'module.exports = { helper: () => {} };');
     await fs.writeFile(path.join(repoPath, 'app.ts'), 'const app: string = "TypeScript";');
-    
+
     // Test directory
     await fs.mkdir(path.join(repoPath, 'test'), { recursive: true });
     await fs.writeFile(path.join(repoPath, 'test', 'app.test.js'), 'test("example", () => {});');
-    
+
     // Documentation
-    await fs.writeFile(path.join(repoPath, 'README.md'), '# JavaScript Test Project\nA test project for JavaScript analysis.');
-    await fs.writeFile(path.join(repoPath, 'CONTRIBUTING.md'), '# Contributing\nHow to contribute.');
+    await fs.writeFile(
+      path.join(repoPath, 'README.md'),
+      '# JavaScript Test Project\nA test project for JavaScript analysis.',
+    );
+    await fs.writeFile(
+      path.join(repoPath, 'CONTRIBUTING.md'),
+      '# Contributing\nHow to contribute.',
+    );
     await fs.writeFile(path.join(repoPath, 'LICENSE'), 'MIT License');
-    
+
     // CI/CD
     await fs.mkdir(path.join(repoPath, '.github', 'workflows'), { recursive: true });
     await fs.writeFile(
       path.join(repoPath, '.github', 'workflows', 'ci.yml'),
-      'name: CI\non: push\njobs:\n  test:\n    runs-on: ubuntu-latest'
+      'name: CI\non: push\njobs:\n  test:\n    runs-on: ubuntu-latest',
     );
-    
+
     return repoPath;
   }
 
   async function createPythonRepo(): Promise<string> {
     const repoPath = path.join(tempDir, 'python-repo');
     await fs.mkdir(repoPath, { recursive: true });
-    
+
     // requirements.txt
-    await fs.writeFile(path.join(repoPath, 'requirements.txt'), 'flask>=2.0.0\nrequests>=2.25.0\nnumpy>=1.21.0');
-    
+    await fs.writeFile(
+      path.join(repoPath, 'requirements.txt'),
+      'flask>=2.0.0\nrequests>=2.25.0\nnumpy>=1.21.0',
+    );
+
     // Python files
     await fs.writeFile(path.join(repoPath, 'main.py'), 'import flask\napp = flask.Flask(__name__)');
     await fs.writeFile(path.join(repoPath, 'utils.py'), 'def helper():\n    pass');
-    
+
     // Tests
     await fs.mkdir(path.join(repoPath, 'tests'), { recursive: true });
-    await fs.writeFile(path.join(repoPath, 'tests', 'test_main.py'), 'def test_app():\n    assert True');
-    
+    await fs.writeFile(
+      path.join(repoPath, 'tests', 'test_main.py'),
+      'def test_app():\n    assert True',
+    );
+
     await fs.writeFile(path.join(repoPath, 'README.md'), '# Python Test Project');
-    
+
     return repoPath;
   }
 
   async function createRubyRepo(): Promise<string> {
     const repoPath = path.join(tempDir, 'ruby-repo');
     await fs.mkdir(repoPath, { recursive: true });
-    
+
     // Gemfile
-    await fs.writeFile(path.join(repoPath, 'Gemfile'), 'source "https://rubygems.org"\ngem "rails"');
-    
+    await fs.writeFile(
+      path.join(repoPath, 'Gemfile'),
+      'source "https://rubygems.org"\ngem "rails"',
+    );
+
     // Ruby files
     await fs.writeFile(path.join(repoPath, 'app.rb'), 'class App\nend');
     await fs.writeFile(path.join(repoPath, 'helper.rb'), 'module Helper\nend');
-    
+
     await fs.writeFile(path.join(repoPath, 'README.md'), '# Ruby Test Project');
-    
+
     return repoPath;
   }
 
   async function createGoRepo(): Promise<string> {
     const repoPath = path.join(tempDir, 'go-repo');
     await fs.mkdir(repoPath, { recursive: true });
-    
+
     // go.mod
     await fs.writeFile(path.join(repoPath, 'go.mod'), 'module test-go-project\ngo 1.19');
-    
+
     // Go files
     await fs.writeFile(path.join(repoPath, 'main.go'), 'package main\nfunc main() {}');
     await fs.writeFile(path.join(repoPath, 'utils.go'), 'package main\nfunc helper() {}');
-    
+
     await fs.writeFile(path.join(repoPath, 'README.md'), '# Go Test Project');
-    
+
     return repoPath;
   }
 
   async function createMixedLanguageRepo(): Promise<string> {
     const repoPath = path.join(tempDir, 'mixed-repo');
     await fs.mkdir(repoPath, { recursive: true });
-    
+
     // Multiple language files
     await fs.writeFile(path.join(repoPath, 'package.json'), '{"name": "mixed-project"}');
     await fs.writeFile(path.join(repoPath, 'requirements.txt'), 'flask>=2.0.0');
     await fs.writeFile(path.join(repoPath, 'Gemfile'), 'gem "rails"');
-    
+
     await fs.writeFile(path.join(repoPath, 'app.js'), 'console.log("JS");');
     await fs.writeFile(path.join(repoPath, 'script.py'), 'print("Python")');
     await fs.writeFile(path.join(repoPath, 'server.rb'), 'puts "Ruby"');
-    
+
     await fs.writeFile(path.join(repoPath, 'README.md'), '# Mixed Language Project');
-    
+
     return repoPath;
   }
 
   async function createLargeRepo(): Promise<string> {
     const repoPath = path.join(tempDir, 'large-repo');
     await fs.mkdir(repoPath, { recursive: true });
-    
+
     // Create many files to simulate a large repository
     for (let i = 0; i < 150; i++) {
       const fileName = `file-${i.toString().padStart(3, '0')}.js`;
       await fs.writeFile(path.join(repoPath, fileName), `// File ${i}\nconsole.log(${i});`);
     }
-    
+
     // Create nested directories
     for (let i = 0; i < 10; i++) {
       const dirPath = path.join(repoPath, `dir-${i}`);
       await fs.mkdir(dirPath, { recursive: true });
-      
+
       for (let j = 0; j < 20; j++) {
         const fileName = `nested-${j}.js`;
         await fs.writeFile(path.join(dirPath, fileName), `// Nested file ${i}-${j}`);
       }
     }
-    
+
     await fs.writeFile(path.join(repoPath, 'package.json'), '{"name": "large-project"}');
     await fs.writeFile(path.join(repoPath, 'README.md'), '# Large Test Project');
-    
+
     return repoPath;
   }
 
   async function createEmptyRepo(): Promise<string> {
     const repoPath = path.join(tempDir, 'empty-repo');
     await fs.mkdir(repoPath, { recursive: true });
-    
+
     // Only a README file
-    await fs.writeFile(path.join(repoPath, 'README.md'), '# Empty Project\nMinimal repository for testing.');
-    
+    await fs.writeFile(
+      path.join(repoPath, 'README.md'),
+      '# Empty Project\nMinimal repository for testing.',
+    );
+
     return repoPath;
   }
 });

@@ -108,7 +108,7 @@ export class MultiAgentMemorySharing extends EventEmitter {
       capabilities: agentIdentity.capabilities || ['analysis', 'recommendation', 'deployment'],
       lastSeen: new Date().toISOString(),
       trustLevel: 'trusted',
-      specializations: agentIdentity.specializations || []
+      specializations: agentIdentity.specializations || [],
     });
   }
 
@@ -132,7 +132,7 @@ export class MultiAgentMemorySharing extends EventEmitter {
   async registerAgent(agent: AgentIdentity): Promise<void> {
     this.knownAgents.set(agent.id, {
       ...agent,
-      lastSeen: new Date().toISOString()
+      lastSeen: new Date().toISOString(),
     });
 
     await this.persistAgentRegistry();
@@ -149,7 +149,7 @@ export class MultiAgentMemorySharing extends EventEmitter {
       anonymize?: boolean;
       requireValidation?: boolean;
       trustLevel?: number;
-    }
+    },
   ): Promise<SharedMemory> {
     const memory = await this.memoryManager.recall(memoryId);
     if (!memory) {
@@ -165,9 +165,9 @@ export class MultiAgentMemorySharing extends EventEmitter {
         accessCount: 0,
         trustScore: this.calculateInitialTrustScore(memory),
         validatedBy: [],
-        conflicts: []
+        conflicts: [],
       },
-      transformations: []
+      transformations: [],
     };
 
     // Apply anonymization transformation if required
@@ -176,7 +176,7 @@ export class MultiAgentMemorySharing extends EventEmitter {
         agentId: this.agentId,
         transformationType: 'anonymization',
         appliedAt: new Date().toISOString(),
-        details: { level: 'standard', preserveStructure: true }
+        details: { level: 'standard', preserveStructure: true },
       });
     }
 
@@ -186,7 +186,7 @@ export class MultiAgentMemorySharing extends EventEmitter {
     if (targetAgents) {
       for (const targetAgent of targetAgents) {
         await this.createSyncRequest(targetAgent, 'selective', {
-          memoryIds: [memoryId]
+          memoryIds: [memoryId],
         });
       }
     } else {
@@ -205,7 +205,7 @@ export class MultiAgentMemorySharing extends EventEmitter {
    */
   async receiveSharedMemory(
     sharedMemory: SharedMemory,
-    sourceAgent: string
+    sourceAgent: string,
   ): Promise<{
     accepted: boolean;
     conflicts?: ConflictResolution[];
@@ -241,7 +241,7 @@ export class MultiAgentMemorySharing extends EventEmitter {
     return {
       accepted: true,
       conflicts: conflicts.length > 0 ? conflicts : undefined,
-      integrationResult
+      integrationResult,
     };
   }
 
@@ -251,7 +251,7 @@ export class MultiAgentMemorySharing extends EventEmitter {
   async requestSync(
     targetAgent: string,
     syncType: SyncRequest['requestType'] = 'incremental',
-    criteria?: SyncRequest['criteria']
+    criteria?: SyncRequest['criteria'],
   ): Promise<SyncRequest> {
     const syncRequest: SyncRequest = {
       id: this.generateSyncId(),
@@ -260,7 +260,7 @@ export class MultiAgentMemorySharing extends EventEmitter {
       requestType: syncType,
       criteria,
       requestedAt: new Date().toISOString(),
-      status: 'pending'
+      status: 'pending',
     };
 
     this.syncRequests.set(syncRequest.id, syncRequest);
@@ -340,9 +340,7 @@ export class MultiAgentMemorySharing extends EventEmitter {
   /**
    * Validate shared memory against local knowledge
    */
-  async validateSharedMemory(
-    sharedMemory: SharedMemory
-  ): Promise<{
+  async validateSharedMemory(sharedMemory: SharedMemory): Promise<{
     isValid: boolean;
     confidence: number;
     issues: string[];
@@ -361,7 +359,10 @@ export class MultiAgentMemorySharing extends EventEmitter {
     // Cross-validate with local memories
     const similarMemories = await this.findSimilarLocalMemories(sharedMemory.originalEntry);
     if (similarMemories.length > 0) {
-      const consistencyScore = this.calculateConsistency(sharedMemory.originalEntry, similarMemories);
+      const consistencyScore = this.calculateConsistency(
+        sharedMemory.originalEntry,
+        similarMemories,
+      );
       if (consistencyScore < 0.8) {
         issues.push('Inconsistent with local knowledge');
         confidence *= consistencyScore;
@@ -394,7 +395,7 @@ export class MultiAgentMemorySharing extends EventEmitter {
       isValid: issues.length === 0 || confidence > 0.6,
       confidence: Math.min(confidence, 1.0),
       issues,
-      recommendations
+      recommendations,
     };
   }
 
@@ -415,15 +416,18 @@ export class MultiAgentMemorySharing extends EventEmitter {
       trustDistribution[agent.trustLevel] = (trustDistribution[agent.trustLevel] || 0) + 1;
     }
 
-    const activeSyncs = Array.from(this.syncRequests.values())
-      .filter(req => req.status === 'pending' || req.status === 'in_progress').length;
+    const activeSyncs = Array.from(this.syncRequests.values()).filter(
+      (req) => req.status === 'pending' || req.status === 'in_progress',
+    ).length;
 
-    const resolvedConflicts = Array.from(this.conflicts.values())
-      .filter(conflict => conflict.resolvedAt).length;
+    const resolvedConflicts = Array.from(this.conflicts.values()).filter(
+      (conflict) => conflict.resolvedAt,
+    ).length;
 
     // Calculate network health (0-1)
-    const trustedAgents = Array.from(this.knownAgents.values())
-      .filter(agent => agent.trustLevel === 'high' || agent.trustLevel === 'trusted').length;
+    const trustedAgents = Array.from(this.knownAgents.values()).filter(
+      (agent) => agent.trustLevel === 'high' || agent.trustLevel === 'trusted',
+    ).length;
     const totalAgents = this.knownAgents.size;
     const networkHealth = totalAgents > 0 ? trustedAgents / totalAgents : 0;
 
@@ -434,7 +438,7 @@ export class MultiAgentMemorySharing extends EventEmitter {
       resolvedConflicts,
       trustDistribution,
       collaborativeInsights: this.collaborativeInsights.size,
-      networkHealth
+      networkHealth,
     };
   }
 
@@ -506,7 +510,7 @@ export class MultiAgentMemorySharing extends EventEmitter {
           conflictType: 'duplicate',
           involvedEntries: [sharedMemory.originalEntry.id, similar.id],
           involvedAgents: [sharedMemory.sharingMetadata.sourceAgent, this.agentId],
-          resolutionStrategy: 'merge'
+          resolutionStrategy: 'merge',
         });
       }
     }
@@ -535,13 +539,16 @@ export class MultiAgentMemorySharing extends EventEmitter {
     this.conflicts.set(conflict.conflictId, conflict);
   }
 
-  private async integrateSharedMemory(sharedMemory: SharedMemory, sourceAgent: string): Promise<string> {
+  private async integrateSharedMemory(
+    sharedMemory: SharedMemory,
+    sourceAgent: string,
+  ): Promise<string> {
     // Add transformation for integration
     sharedMemory.transformations.push({
       agentId: this.agentId,
       transformationType: 'enrichment',
       appliedAt: new Date().toISOString(),
-      details: { integratedFrom: sourceAgent }
+      details: { integratedFrom: sourceAgent },
     });
 
     // Store in local memory with special metadata
@@ -551,14 +558,14 @@ export class MultiAgentMemorySharing extends EventEmitter {
         ...sharedMemory.originalEntry.metadata,
         sharedFrom: sourceAgent,
         integratedAt: new Date().toISOString(),
-        tags: [...(sharedMemory.originalEntry.metadata.tags || []), 'shared', 'collaborative']
-      }
+        tags: [...(sharedMemory.originalEntry.metadata.tags || []), 'shared', 'collaborative'],
+      },
     };
 
     await this.memoryManager.remember(
       enrichedEntry.type,
       enrichedEntry.data,
-      enrichedEntry.metadata
+      enrichedEntry.metadata,
     );
 
     return 'integrated_successfully';
@@ -571,21 +578,21 @@ export class MultiAgentMemorySharing extends EventEmitter {
     // Apply criteria filtering
     if (syncRequest.criteria) {
       if (syncRequest.criteria.types) {
-        filteredMemories = filteredMemories.filter(m =>
-          syncRequest.criteria!.types!.includes(m.type)
+        filteredMemories = filteredMemories.filter((m) =>
+          syncRequest.criteria!.types!.includes(m.type),
         );
       }
 
       if (syncRequest.criteria.tags) {
-        filteredMemories = filteredMemories.filter(m =>
-          m.metadata.tags?.some(tag => syncRequest.criteria!.tags!.includes(tag))
+        filteredMemories = filteredMemories.filter(
+          (m) => m.metadata.tags?.some((tag) => syncRequest.criteria!.tags!.includes(tag)),
         );
       }
 
       if (syncRequest.criteria.timeRange) {
         const start = new Date(syncRequest.criteria.timeRange.start);
         const end = new Date(syncRequest.criteria.timeRange.end);
-        filteredMemories = filteredMemories.filter(m => {
+        filteredMemories = filteredMemories.filter((m) => {
           const memTime = new Date(m.timestamp);
           return memTime >= start && memTime <= end;
         });
@@ -593,7 +600,7 @@ export class MultiAgentMemorySharing extends EventEmitter {
     }
 
     // Convert to shared memories
-    return filteredMemories.map(memory => ({
+    return filteredMemories.map((memory) => ({
       originalEntry: memory,
       sharingMetadata: {
         sourceAgent: this.agentId,
@@ -601,9 +608,9 @@ export class MultiAgentMemorySharing extends EventEmitter {
         accessCount: 0,
         trustScore: this.calculateInitialTrustScore(memory),
         validatedBy: [],
-        conflicts: []
+        conflicts: [],
       },
-      transformations: []
+      transformations: [],
     }));
   }
 
@@ -648,9 +655,11 @@ export class MultiAgentMemorySharing extends EventEmitter {
 
   private isLikelyDuplicate(entry1: MemoryEntry, entry2: MemoryEntry): boolean {
     // Simple duplicate detection
-    return entry1.type === entry2.type &&
-           entry1.metadata.projectId === entry2.metadata.projectId &&
-           Math.abs(new Date(entry1.timestamp).getTime() - new Date(entry2.timestamp).getTime()) < 60000; // 1 minute
+    return (
+      entry1.type === entry2.type &&
+      entry1.metadata.projectId === entry2.metadata.projectId &&
+      Math.abs(new Date(entry1.timestamp).getTime() - new Date(entry2.timestamp).getTime()) < 60000
+    ); // 1 minute
   }
 
   private async mergeConflictingEntries(_conflict: ConflictResolution): Promise<void> {
@@ -670,9 +679,12 @@ export class MultiAgentMemorySharing extends EventEmitter {
   }
 
   private startPeriodicSync(): void {
-    this.syncInterval = setInterval(async () => {
-      await this.performPeriodicSync();
-    }, 5 * 60 * 1000); // Every 5 minutes
+    this.syncInterval = setInterval(
+      async () => {
+        await this.performPeriodicSync();
+      },
+      5 * 60 * 1000,
+    ); // Every 5 minutes
   }
 
   private async performPeriodicSync(): Promise<void> {
@@ -707,7 +719,11 @@ export class MultiAgentMemorySharing extends EventEmitter {
     // Persist collaborative insights
   }
 
-  private async createSyncRequest(_targetAgent: string, _type: SyncRequest['requestType'], _options: any): Promise<void> {
+  private async createSyncRequest(
+    _targetAgent: string,
+    _type: SyncRequest['requestType'],
+    _options: any,
+  ): Promise<void> {
     // Create sync request (placeholder)
   }
 

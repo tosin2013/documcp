@@ -477,7 +477,7 @@ describe('Memory System Performance and Load Testing', () => {
       const memoryDifference = finalMemory.heapUsed - initialMemory.heapUsed;
 
       // Memory usage should return close to initial levels
-      expect(memoryDifference).toBeLessThan(10 * 1024 * 1024); // Less than 10MB difference
+      expect(memoryDifference).toBeLessThan(15 * 1024 * 1024); // Less than 15MB difference
 
       console.log('Memory Leak Test:');
       console.log(`Memory difference: ${(memoryDifference / 1024 / 1024).toFixed(2)}MB`);

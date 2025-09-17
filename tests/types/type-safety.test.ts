@@ -1,9 +1,9 @@
-import { 
-  HealthAnalysis, 
-  ChecklistItem, 
-  BestPracticesReport, 
+import {
+  HealthAnalysis,
+  ChecklistItem,
+  BestPracticesReport,
   convertBestPracticesReportToChecklistItems,
-  generateHealthRecommendations 
+  generateHealthRecommendations,
 } from '../../src/types/api';
 
 describe('Type Safety Tests', () => {
@@ -16,14 +16,14 @@ describe('Type Safety Tests', () => {
             type: 'warning',
             message: 'Missing section',
             section: 'introduction',
-            line: 10
-          }
+            line: 10,
+          },
         ],
         recommendations: ['Add introduction section'],
         metadata: {
           checkDate: '2023-01-01',
-          version: '1.0.0'
-        }
+          version: '1.0.0',
+        },
       };
 
       expect(healthAnalysis.score).toBe(85);
@@ -41,7 +41,7 @@ describe('Type Safety Tests', () => {
           description: 'README has a clear, descriptive title',
           completed: true,
           required: true,
-          category: 'structure'
+          category: 'structure',
         },
         {
           id: 'readme-description',
@@ -49,8 +49,8 @@ describe('Type Safety Tests', () => {
           description: 'README includes project description',
           completed: false,
           required: true,
-          category: 'content'
-        }
+          category: 'content',
+        },
       ];
 
       const report: BestPracticesReport = {
@@ -58,9 +58,9 @@ describe('Type Safety Tests', () => {
         score: 50,
         categories: {
           structure: { total: 1, completed: 1, score: 100 },
-          content: { total: 1, completed: 0, score: 0 }
+          content: { total: 1, completed: 0, score: 0 },
         },
-        recommendations: ['Add project description']
+        recommendations: ['Add project description'],
       };
 
       expect(report.items).toHaveLength(2);
@@ -77,12 +77,12 @@ describe('Type Safety Tests', () => {
             description: 'Test description',
             completed: true,
             required: true,
-            category: 'test'
-          }
+            category: 'test',
+          },
         ],
         score: 100,
         categories: { test: { total: 1, completed: 1, score: 100 } },
-        recommendations: []
+        recommendations: [],
       };
 
       const items = convertBestPracticesReportToChecklistItems(report);
@@ -99,8 +99,8 @@ describe('Type Safety Tests', () => {
         recommendations: ['Add more examples', 'Improve documentation'],
         metadata: {
           checkDate: '2023-01-01',
-          version: '1.0.0'
-        }
+          version: '1.0.0',
+        },
       };
 
       const recommendations = generateHealthRecommendations(analysis);

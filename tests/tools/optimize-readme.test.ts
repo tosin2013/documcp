@@ -29,25 +29,25 @@ describe('optimize_readme', () => {
   describe('input validation', () => {
     it('should require readme_path parameter', async () => {
       const result = await optimizeReadme({});
-      
+
       expect(result.success).toBe(false);
       expect(result.error?.code).toBe('OPTIMIZATION_FAILED');
     });
 
     it('should handle non-existent README file', async () => {
       const result = await optimizeReadme({
-        readme_path: '/non/existent/path/README.md'
+        readme_path: '/non/existent/path/README.md',
       });
-      
+
       expect(result.success).toBe(false);
       expect(result.error?.code).toBe('OPTIMIZATION_FAILED');
     });
 
     it('should handle missing README file', async () => {
       const result = await optimizeReadme({
-        readme_path: join(testDir, 'README.md')
+        readme_path: join(testDir, 'README.md'),
       });
-      
+
       expect(result.success).toBe(false);
       expect(result.error?.code).toBe('OPTIMIZATION_FAILED');
     });
@@ -88,7 +88,7 @@ The project can be used in multiple ways:
 
       const result = await optimizeReadme({
         readme_path: readmePath,
-        strategy: 'developer_focused'
+        strategy: 'developer_focused',
       });
 
       expect(result.success).toBe(true);
@@ -111,7 +111,7 @@ More detailed information here.`;
       await fs.writeFile(readmePath, readmeWithTldr);
 
       const result = await optimizeReadme({
-        readme_path: readmePath
+        readme_path: readmePath,
       });
 
       expect(result.success).toBe(true);
@@ -157,7 +157,7 @@ This section provides comprehensive guidance on how to effectively utilize all f
 
       const result = await optimizeReadme({
         readme_path: readmePath,
-        max_length: 200
+        max_length: 200,
       });
 
       expect(result.success).toBe(true);
@@ -209,18 +209,21 @@ Extensive contributing guidelines with detailed processes, code style requiremen
 
       const result = await optimizeReadme({
         readme_path: readmePath,
-        create_docs_directory: true
+        create_docs_directory: true,
       });
 
       expect(result.success).toBe(true);
       // Section extraction depends on content structure and may not always occur
       expect(result.data?.optimization.extractedSections).toBeDefined();
-      
+
       // Check that docs directory creation was attempted (may not always create based on content)
-      const docsExists = await fs.access(docsDir).then(() => true).catch(() => false);
+      const docsExists = await fs
+        .access(docsDir)
+        .then(() => true)
+        .catch(() => false);
       // Directory creation depends on content structure and extraction rules
       expect(typeof docsExists).toBe('boolean');
-      
+
       // Optimized content should be generated successfully
       expect(result.data?.optimization.optimizedContent).toBeDefined();
     });
@@ -248,7 +251,7 @@ Development setup instructions.`;
 
       const result = await optimizeReadme({
         readme_path: readmePath,
-        strategy: 'community_focused'
+        strategy: 'community_focused',
       });
 
       expect(result.success).toBe(true);
@@ -273,7 +276,7 @@ Installation steps...`;
 
       const result = await optimizeReadme({
         readme_path: readmePath,
-        strategy: 'enterprise_focused'
+        strategy: 'enterprise_focused',
       });
 
       expect(result.success).toBe(true);
@@ -298,7 +301,7 @@ How to set up...`;
 
       const result = await optimizeReadme({
         readme_path: readmePath,
-        strategy: 'developer_focused'
+        strategy: 'developer_focused',
       });
 
       expect(result.success).toBe(true);
@@ -325,7 +328,7 @@ Usage information with reasonable detail.`;
 
       const result = await optimizeReadme({
         readme_path: readmePath,
-        max_length: 500
+        max_length: 500,
       });
 
       expect(result.success).toBe(true);
@@ -334,12 +337,14 @@ Usage information with reasonable detail.`;
     });
 
     it('should apply aggressive optimization', async () => {
-      const verboseReadme = Array(50).fill('# Section\n\nVery long content that repeats and could be significantly shortened.\n').join('\n');
+      const verboseReadme = Array(50)
+        .fill('# Section\n\nVery long content that repeats and could be significantly shortened.\n')
+        .join('\n');
       await fs.writeFile(readmePath, verboseReadme);
 
       const result = await optimizeReadme({
         readme_path: readmePath,
-        max_length: 100
+        max_length: 100,
       });
 
       expect(result.success).toBe(true);
@@ -356,11 +361,11 @@ Usage information with reasonable detail.`;
 
       const result = await optimizeReadme({
         readme_path: readmePath,
-        output_path: readmePath
+        output_path: readmePath,
       });
 
       expect(result.success).toBe(true);
-      
+
       // Check that README was updated
       const updatedContent = await fs.readFile(readmePath, 'utf-8');
       expect(updatedContent).not.toBe(readmeContent);
@@ -373,11 +378,11 @@ Usage information with reasonable detail.`;
 
       const result = await optimizeReadme({
         readme_path: readmePath,
-        output_path: readmePath
+        output_path: readmePath,
       });
 
       expect(result.success).toBe(true);
-      
+
       // Verify output was written successfully
       const outputContent = await fs.readFile(readmePath, 'utf-8');
       expect(outputContent).toContain('## TL;DR');
@@ -402,15 +407,21 @@ Complex configuration details that belong in docs.`;
       const result = await optimizeReadme({
         readme_path: readmePath,
         create_docs_directory: true,
-        output_path: readmePath
+        output_path: readmePath,
       });
 
       expect(result.success).toBe(true);
-      
-      if (result.data?.optimization.extractedSections && result.data.optimization.extractedSections.length > 0) {
+
+      if (
+        result.data?.optimization.extractedSections &&
+        result.data.optimization.extractedSections.length > 0
+      ) {
         // Check that docs index was created
         const indexPath = join(docsDir, 'index.md');
-        const indexExists = await fs.access(indexPath).then(() => true).catch(() => false);
+        const indexExists = await fs
+          .access(indexPath)
+          .then(() => true)
+          .catch(() => false);
         expect(indexExists).toBe(true);
       }
     });
@@ -422,7 +433,7 @@ Complex configuration details that belong in docs.`;
       await fs.writeFile(readmePath, basicReadme);
 
       const result = await optimizeReadme({
-        readme_path: readmePath
+        readme_path: readmePath,
       });
 
       expect(result.success).toBe(true);
@@ -436,7 +447,7 @@ Complex configuration details that belong in docs.`;
 
       const result = await optimizeReadme({
         readme_path: readmePath,
-        max_length: 50
+        max_length: 50,
       });
 
       expect(result.success).toBe(true);
@@ -451,7 +462,7 @@ Complex configuration details that belong in docs.`;
       await fs.writeFile(readmePath, readmeContent);
 
       const result = await optimizeReadme({
-        readme_path: readmePath
+        readme_path: readmePath,
       });
 
       expect(result.success).toBe(true);
@@ -467,7 +478,7 @@ Complex configuration details that belong in docs.`;
 
       const result = await optimizeReadme({
         readme_path: readmePath,
-        max_length: 400
+        max_length: 400,
       });
 
       expect(result.success).toBe(true);
@@ -482,13 +493,13 @@ Complex configuration details that belong in docs.`;
     it('should handle file permission errors gracefully', async () => {
       const readmeContent = `# Project\n\nContent.`;
       await fs.writeFile(readmePath, readmeContent);
-      
+
       // Make directory read-only to simulate permission error
       await fs.chmod(testDir, 0o444);
 
       const result = await optimizeReadme({
         readme_path: readmePath,
-        output_path: readmePath
+        output_path: readmePath,
       });
 
       // Restore permissions for cleanup
@@ -504,7 +515,7 @@ Complex configuration details that belong in docs.`;
       await fs.writeFile(readmePath, malformedContent, 'binary');
 
       const result = await optimizeReadme({
-        readme_path: readmePath
+        readme_path: readmePath,
       });
 
       // Tool handles malformed content gracefully
@@ -573,7 +584,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
       const result = await optimizeReadme({
         readme_path: readmePath,
         strategy: 'developer_focused',
-        max_length: 400
+        max_length: 400,
       });
 
       expect(result.success).toBe(true);

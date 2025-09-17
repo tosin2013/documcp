@@ -34,7 +34,11 @@ import { analyzeReadme } from './tools/analyze-readme.js';
 import { optimizeReadme } from './tools/optimize-readme.js';
 import { formatMCPResponse } from './types/api.js';
 import { generateTechnicalWriterPrompts } from './prompts/technical-writer-prompts.js';
-import { DOCUMENTATION_WORKFLOWS, WORKFLOW_EXECUTION_GUIDANCE, WORKFLOW_METADATA } from './workflows/documentation-workflow.js';
+import {
+  DOCUMENTATION_WORKFLOWS,
+  WORKFLOW_EXECUTION_GUIDANCE,
+  WORKFLOW_METADATA,
+} from './workflows/documentation-workflow.js';
 import {
   initializeMemory,
   rememberAnalysis,
@@ -44,7 +48,7 @@ import {
   getMemoryStatistics,
   exportMemories,
   cleanupOldMemories,
-  memoryTools
+  memoryTools,
 } from './memory/index.js';
 
 // Get version from package.json
@@ -61,7 +65,7 @@ const server = new Server(
     capabilities: {
       tools: {},
       prompts: {
-        listChanged: true
+        listChanged: true,
       },
       resources: {},
     },
@@ -83,10 +87,12 @@ const TOOLS = [
     description: 'Recommend the best static site generator based on project analysis',
     inputSchema: z.object({
       analysisId: z.string().describe('ID from previous repository analysis'),
-      preferences: z.object({
-        priority: z.enum(['simplicity', 'features', 'performance']).optional(),
-        ecosystem: z.enum(['javascript', 'python', 'ruby', 'go', 'any']).optional(),
-      }).optional(),
+      preferences: z
+        .object({
+          priority: z.enum(['simplicity', 'features', 'performance']).optional(),
+          ecosystem: z.enum(['javascript', 'python', 'ruby', 'go', 'any']).optional(),
+        })
+        .optional(),
     }),
   },
   {
@@ -132,36 +138,72 @@ const TOOLS = [
     inputSchema: z.object({
       analysisId: z.string().describe('Repository analysis ID from analyze_repository tool'),
       docsPath: z.string().describe('Path to documentation directory'),
-      populationLevel: z.enum(['basic', 'comprehensive', 'intelligent']).optional().default('comprehensive'),
+      populationLevel: z
+        .enum(['basic', 'comprehensive', 'intelligent'])
+        .optional()
+        .default('comprehensive'),
       includeProjectSpecific: z.boolean().optional().default(true),
       preserveExisting: z.boolean().optional().default(true),
-      technologyFocus: z.array(z.string()).optional().describe('Specific technologies to emphasize'),
+      technologyFocus: z
+        .array(z.string())
+        .optional()
+        .describe('Specific technologies to emphasize'),
     }),
   },
   {
     name: 'validate_diataxis_content',
-    description: 'Validate the accuracy, completeness, and compliance of generated Diataxis documentation',
+    description:
+      'Validate the accuracy, completeness, and compliance of generated Diataxis documentation',
     inputSchema: z.object({
       contentPath: z.string().describe('Path to the documentation directory to validate'),
-      analysisId: z.string().optional().describe('Optional repository analysis ID for context-aware validation'),
-      validationType: z.enum(['accuracy', 'completeness', 'compliance', 'all']).optional().default('all').describe('Type of validation: accuracy, completeness, compliance, or all'),
-      includeCodeValidation: z.boolean().optional().default(true).describe('Whether to validate code examples'),
-      confidence: z.enum(['strict', 'moderate', 'permissive']).optional().default('moderate').describe('Validation confidence level: strict, moderate, or permissive'),
+      analysisId: z
+        .string()
+        .optional()
+        .describe('Optional repository analysis ID for context-aware validation'),
+      validationType: z
+        .enum(['accuracy', 'completeness', 'compliance', 'all'])
+        .optional()
+        .default('all')
+        .describe('Type of validation: accuracy, completeness, compliance, or all'),
+      includeCodeValidation: z
+        .boolean()
+        .optional()
+        .default(true)
+        .describe('Whether to validate code examples'),
+      confidence: z
+        .enum(['strict', 'moderate', 'permissive'])
+        .optional()
+        .default('moderate')
+        .describe('Validation confidence level: strict, moderate, or permissive'),
     }),
   },
   {
     name: 'validate_content',
-    description: 'Validate general content quality: broken links, code syntax, references, and basic accuracy',
+    description:
+      'Validate general content quality: broken links, code syntax, references, and basic accuracy',
     inputSchema: z.object({
       contentPath: z.string().describe('Path to the content directory to validate'),
-      validationType: z.string().optional().default('all').describe('Type of validation: links, code, references, or all'),
-      includeCodeValidation: z.boolean().optional().default(true).describe('Whether to validate code blocks'),
-      followExternalLinks: z.boolean().optional().default(false).describe('Whether to validate external URLs (slower)'),
+      validationType: z
+        .string()
+        .optional()
+        .default('all')
+        .describe('Type of validation: links, code, references, or all'),
+      includeCodeValidation: z
+        .boolean()
+        .optional()
+        .default(true)
+        .describe('Whether to validate code blocks'),
+      followExternalLinks: z
+        .boolean()
+        .optional()
+        .default(false)
+        .describe('Whether to validate external URLs (slower)'),
     }),
   },
   {
     name: 'detect_documentation_gaps',
-    description: 'Analyze repository and existing documentation to identify missing content and gaps',
+    description:
+      'Analyze repository and existing documentation to identify missing content and gaps',
     inputSchema: z.object({
       repositoryPath: z.string().describe('Path to the repository to analyze'),
       documentationPath: z.string().optional().describe('Path to existing documentation (if any)'),
@@ -177,119 +219,259 @@ const TOOLS = [
       ssg: z.enum(['jekyll', 'hugo', 'docusaurus', 'mkdocs', 'eleventy']),
       port: z.number().optional().default(3000).describe('Port for local server'),
       timeout: z.number().optional().default(60).describe('Timeout in seconds for build process'),
-      skipBuild: z.boolean().optional().default(false).describe('Skip build step and only start server'),
+      skipBuild: z
+        .boolean()
+        .optional()
+        .default(false)
+        .describe('Skip build step and only start server'),
     }),
   },
   {
     name: 'evaluate_readme_health',
-    description: 'Evaluate README files for community health, accessibility, and onboarding effectiveness',
+    description:
+      'Evaluate README files for community health, accessibility, and onboarding effectiveness',
     inputSchema: z.object({
       readme_path: z.string().describe('Path to the README file to evaluate'),
-      project_type: z.enum(['community_library', 'enterprise_tool', 'personal_project', 'documentation']).optional().default('community_library').describe('Type of project for tailored evaluation'),
-      repository_path: z.string().optional().describe('Optional path to repository for additional context'),
+      project_type: z
+        .enum(['community_library', 'enterprise_tool', 'personal_project', 'documentation'])
+        .optional()
+        .default('community_library')
+        .describe('Type of project for tailored evaluation'),
+      repository_path: z
+        .string()
+        .optional()
+        .describe('Optional path to repository for additional context'),
     }),
   },
   {
     name: 'readme_best_practices',
-    description: 'Analyze README files against best practices checklist and generate templates for improvement',
+    description:
+      'Analyze README files against best practices checklist and generate templates for improvement',
     inputSchema: z.object({
       readme_path: z.string().describe('Path to the README file to analyze'),
-      project_type: z.enum(['library', 'application', 'tool', 'documentation', 'framework']).optional().default('library').describe('Type of project for tailored analysis'),
-      generate_template: z.boolean().optional().default(false).describe('Generate README templates and community files'),
-      output_directory: z.string().optional().describe('Directory to write generated templates and community files'),
-      include_community_files: z.boolean().optional().default(true).describe('Generate community health files (CONTRIBUTING.md, CODE_OF_CONDUCT.md, etc.)'),
-      target_audience: z.enum(['beginner', 'intermediate', 'advanced', 'mixed']).optional().default('mixed').describe('Target audience for recommendations'),
+      project_type: z
+        .enum(['library', 'application', 'tool', 'documentation', 'framework'])
+        .optional()
+        .default('library')
+        .describe('Type of project for tailored analysis'),
+      generate_template: z
+        .boolean()
+        .optional()
+        .default(false)
+        .describe('Generate README templates and community files'),
+      output_directory: z
+        .string()
+        .optional()
+        .describe('Directory to write generated templates and community files'),
+      include_community_files: z
+        .boolean()
+        .optional()
+        .default(true)
+        .describe('Generate community health files (CONTRIBUTING.md, CODE_OF_CONDUCT.md, etc.)'),
+      target_audience: z
+        .enum(['beginner', 'intermediate', 'advanced', 'mixed'])
+        .optional()
+        .default('mixed')
+        .describe('Target audience for recommendations'),
     }),
   },
   {
     name: 'check_documentation_links',
-    description: 'Comprehensive link checking for documentation deployment with external, internal, and anchor link validation',
+    description:
+      'Comprehensive link checking for documentation deployment with external, internal, and anchor link validation',
     inputSchema: z.object({
-      documentation_path: z.string().optional().default('./docs').describe('Path to the documentation directory to check'),
-      check_external_links: z.boolean().optional().default(true).describe('Validate external URLs (slower but comprehensive)'),
-      check_internal_links: z.boolean().optional().default(true).describe('Validate internal file references'),
-      check_anchor_links: z.boolean().optional().default(true).describe('Validate anchor links within documents'),
-      timeout_ms: z.number().min(1000).max(30000).optional().default(5000).describe('Timeout for external link requests in milliseconds'),
-      max_concurrent_checks: z.number().min(1).max(20).optional().default(5).describe('Maximum concurrent link checks'),
-      allowed_domains: z.array(z.string()).optional().default([]).describe('Whitelist of allowed external domains (empty = all allowed)'),
-      ignore_patterns: z.array(z.string()).optional().default([]).describe('URL patterns to ignore during checking'),
-      fail_on_broken_links: z.boolean().optional().default(false).describe('Fail the check if broken links are found'),
-      output_format: z.enum(['summary', 'detailed', 'json']).optional().default('detailed').describe('Output format for results'),
+      documentation_path: z
+        .string()
+        .optional()
+        .default('./docs')
+        .describe('Path to the documentation directory to check'),
+      check_external_links: z
+        .boolean()
+        .optional()
+        .default(true)
+        .describe('Validate external URLs (slower but comprehensive)'),
+      check_internal_links: z
+        .boolean()
+        .optional()
+        .default(true)
+        .describe('Validate internal file references'),
+      check_anchor_links: z
+        .boolean()
+        .optional()
+        .default(true)
+        .describe('Validate anchor links within documents'),
+      timeout_ms: z
+        .number()
+        .min(1000)
+        .max(30000)
+        .optional()
+        .default(5000)
+        .describe('Timeout for external link requests in milliseconds'),
+      max_concurrent_checks: z
+        .number()
+        .min(1)
+        .max(20)
+        .optional()
+        .default(5)
+        .describe('Maximum concurrent link checks'),
+      allowed_domains: z
+        .array(z.string())
+        .optional()
+        .default([])
+        .describe('Whitelist of allowed external domains (empty = all allowed)'),
+      ignore_patterns: z
+        .array(z.string())
+        .optional()
+        .default([])
+        .describe('URL patterns to ignore during checking'),
+      fail_on_broken_links: z
+        .boolean()
+        .optional()
+        .default(false)
+        .describe('Fail the check if broken links are found'),
+      output_format: z
+        .enum(['summary', 'detailed', 'json'])
+        .optional()
+        .default('detailed')
+        .describe('Output format for results'),
     }),
   },
   {
     name: 'generate_readme_template',
-    description: 'Generate standardized README templates for different project types with best practices',
+    description:
+      'Generate standardized README templates for different project types with best practices',
     inputSchema: z.object({
       projectName: z.string().min(1).describe('Name of the project'),
       description: z.string().min(1).describe('Brief description of what the project does'),
-      templateType: z.enum(['library', 'application', 'cli-tool', 'api', 'documentation']).describe('Type of project template to generate'),
+      templateType: z
+        .enum(['library', 'application', 'cli-tool', 'api', 'documentation'])
+        .describe('Type of project template to generate'),
       author: z.string().optional().describe('Project author/organization name'),
       license: z.string().optional().default('MIT').describe('Project license'),
-      includeScreenshots: z.boolean().optional().default(false).describe('Include screenshot placeholders for applications'),
+      includeScreenshots: z
+        .boolean()
+        .optional()
+        .default(false)
+        .describe('Include screenshot placeholders for applications'),
       includeBadges: z.boolean().optional().default(true).describe('Include status badges'),
-      includeContributing: z.boolean().optional().default(true).describe('Include contributing section'),
+      includeContributing: z
+        .boolean()
+        .optional()
+        .default(true)
+        .describe('Include contributing section'),
       outputPath: z.string().optional().describe('Path to write the generated README.md file'),
     }),
   },
   {
     name: 'validate_readme_checklist',
-    description: 'Validate README files against community best practices checklist with detailed scoring',
+    description:
+      'Validate README files against community best practices checklist with detailed scoring',
     inputSchema: z.object({
       readmePath: z.string().min(1).describe('Path to the README file to validate'),
-      projectPath: z.string().optional().describe('Path to project directory for additional context'),
+      projectPath: z
+        .string()
+        .optional()
+        .describe('Path to project directory for additional context'),
       strict: z.boolean().optional().default(false).describe('Use strict validation rules'),
-      outputFormat: z.enum(['json', 'markdown', 'console']).optional().default('console').describe('Output format for the validation report'),
+      outputFormat: z
+        .enum(['json', 'markdown', 'console'])
+        .optional()
+        .default('console')
+        .describe('Output format for the validation report'),
     }),
   },
   {
     name: 'analyze_readme',
-    description: 'Comprehensive README analysis with length assessment, structure evaluation, and optimization opportunities',
+    description:
+      'Comprehensive README analysis with length assessment, structure evaluation, and optimization opportunities',
     inputSchema: z.object({
       project_path: z.string().min(1).describe('Path to the project directory containing README'),
-      target_audience: z.enum(['community_contributors', 'enterprise_users', 'developers', 'general']).optional().default('community_contributors').describe('Target audience for analysis'),
-      optimization_level: z.enum(['light', 'moderate', 'aggressive']).optional().default('moderate').describe('Level of optimization suggestions'),
-      max_length_target: z.number().min(50).max(1000).optional().default(300).describe('Target maximum length in lines'),
+      target_audience: z
+        .enum(['community_contributors', 'enterprise_users', 'developers', 'general'])
+        .optional()
+        .default('community_contributors')
+        .describe('Target audience for analysis'),
+      optimization_level: z
+        .enum(['light', 'moderate', 'aggressive'])
+        .optional()
+        .default('moderate')
+        .describe('Level of optimization suggestions'),
+      max_length_target: z
+        .number()
+        .min(50)
+        .max(1000)
+        .optional()
+        .default(300)
+        .describe('Target maximum length in lines'),
     }),
   },
   {
     name: 'optimize_readme',
-    description: 'Optimize README content by restructuring, condensing, and extracting detailed sections to separate documentation',
+    description:
+      'Optimize README content by restructuring, condensing, and extracting detailed sections to separate documentation',
     inputSchema: z.object({
       readme_path: z.string().min(1).describe('Path to the README file to optimize'),
-      strategy: z.enum(['community_focused', 'enterprise_focused', 'developer_focused', 'general']).optional().default('community_focused').describe('Optimization strategy'),
-      max_length: z.number().min(50).max(1000).optional().default(300).describe('Target maximum length in lines'),
-      include_tldr: z.boolean().optional().default(true).describe('Generate and include TL;DR section'),
-      preserve_existing: z.boolean().optional().default(true).describe('Preserve existing content structure where possible'),
-      output_path: z.string().optional().describe('Path to write optimized README (if not specified, returns content only)'),
-      create_docs_directory: z.boolean().optional().default(true).describe('Create docs/ directory for extracted content'),
+      strategy: z
+        .enum(['community_focused', 'enterprise_focused', 'developer_focused', 'general'])
+        .optional()
+        .default('community_focused')
+        .describe('Optimization strategy'),
+      max_length: z
+        .number()
+        .min(50)
+        .max(1000)
+        .optional()
+        .default(300)
+        .describe('Target maximum length in lines'),
+      include_tldr: z
+        .boolean()
+        .optional()
+        .default(true)
+        .describe('Generate and include TL;DR section'),
+      preserve_existing: z
+        .boolean()
+        .optional()
+        .default(true)
+        .describe('Preserve existing content structure where possible'),
+      output_path: z
+        .string()
+        .optional()
+        .describe('Path to write optimized README (if not specified, returns content only)'),
+      create_docs_directory: z
+        .boolean()
+        .optional()
+        .default(true)
+        .describe('Create docs/ directory for extracted content'),
     }),
   },
   // Memory system tools
-  ...memoryTools.map(tool => ({
+  ...memoryTools.map((tool) => ({
     ...tool,
     inputSchema: z.object(
-      Object.entries(tool.inputSchema.properties || {}).reduce((acc: any, [key, value]: [string, any]) => {
-        if (value.type === 'string') {
-          acc[key] = value.enum ? z.enum(value.enum) : z.string();
-        } else if (value.type === 'number') {
-          acc[key] = z.number();
-        } else if (value.type === 'boolean') {
-          acc[key] = z.boolean();
-        } else if (value.type === 'object') {
-          acc[key] = z.object({});
-        }
-        if (value.description) {
-          acc[key] = acc[key].describe(value.description);
-        }
-        if (!tool.inputSchema.required?.includes(key)) {
-          acc[key] = acc[key].optional();
-        }
-        if (value.default !== undefined) {
-          acc[key] = acc[key].default(value.default);
-        }
-        return acc;
-      }, {})
+      Object.entries(tool.inputSchema.properties || {}).reduce(
+        (acc: any, [key, value]: [string, any]) => {
+          if (value.type === 'string') {
+            acc[key] = value.enum ? z.enum(value.enum) : z.string();
+          } else if (value.type === 'number') {
+            acc[key] = z.number();
+          } else if (value.type === 'boolean') {
+            acc[key] = z.boolean();
+          } else if (value.type === 'object') {
+            acc[key] = z.object({});
+          }
+          if (value.description) {
+            acc[key] = acc[key].describe(value.description);
+          }
+          if (!tool.inputSchema.required?.includes(key)) {
+            acc[key] = acc[key].optional();
+          }
+          if (value.default !== undefined) {
+            acc[key] = acc[key].default(value.default);
+          }
+          return acc;
+        },
+        {},
+      ),
     ),
   })),
 ];
@@ -302,8 +484,8 @@ const PROMPTS = [
     arguments: [
       { name: 'project_path', description: 'Path to the project directory', required: true },
       { name: 'target_audience', description: 'Target audience for the tutorial', required: false },
-      { name: 'learning_goal', description: 'What users should learn', required: false }
-    ]
+      { name: 'learning_goal', description: 'What users should learn', required: false },
+    ],
   },
   {
     name: 'howto-guide-writer',
@@ -311,44 +493,54 @@ const PROMPTS = [
     arguments: [
       { name: 'project_path', description: 'Path to the project directory', required: true },
       { name: 'problem', description: 'Problem to solve', required: false },
-      { name: 'user_experience', description: 'User experience level', required: false }
-    ]
+      { name: 'user_experience', description: 'User experience level', required: false },
+    ],
   },
   {
     name: 'reference-writer',
-    description: 'Generate information-oriented reference documentation following Diataxis principles',
+    description:
+      'Generate information-oriented reference documentation following Diataxis principles',
     arguments: [
       { name: 'project_path', description: 'Path to the project directory', required: true },
-      { name: 'reference_type', description: 'Type of reference (API, CLI, etc.)', required: false },
-      { name: 'completeness', description: 'Level of completeness required', required: false }
-    ]
+      {
+        name: 'reference_type',
+        description: 'Type of reference (API, CLI, etc.)',
+        required: false,
+      },
+      { name: 'completeness', description: 'Level of completeness required', required: false },
+    ],
   },
   {
     name: 'explanation-writer',
-    description: 'Generate understanding-oriented explanation content following Diataxis principles',
+    description:
+      'Generate understanding-oriented explanation content following Diataxis principles',
     arguments: [
       { name: 'project_path', description: 'Path to the project directory', required: true },
       { name: 'concept', description: 'Concept to explain', required: false },
-      { name: 'depth', description: 'Depth of explanation', required: false }
-    ]
+      { name: 'depth', description: 'Depth of explanation', required: false },
+    ],
   },
   {
     name: 'diataxis-organizer',
     description: 'Organize existing documentation using Diataxis framework principles',
     arguments: [
       { name: 'project_path', description: 'Path to the project directory', required: true },
-      { name: 'current_docs', description: 'Description of current documentation', required: false },
-      { name: 'priority', description: 'Organization priority', required: false }
-    ]
+      {
+        name: 'current_docs',
+        description: 'Description of current documentation',
+        required: false,
+      },
+      { name: 'priority', description: 'Organization priority', required: false },
+    ],
   },
   {
     name: 'readme-optimizer',
     description: 'Optimize README content using Diataxis-aware principles',
     arguments: [
       { name: 'project_path', description: 'Path to the project directory', required: true },
-      { name: 'optimization_focus', description: 'Focus area for optimization', required: false }
-    ]
-  }
+      { name: 'optimization_focus', description: 'Focus area for optimization', required: false },
+    ],
+  },
 ];
 
 // In-memory storage for resources
@@ -411,11 +603,11 @@ server.setRequestHandler(ListPromptsRequestSchema, async () => ({
 // Get specific prompt
 server.setRequestHandler(GetPromptRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
-  
+
   // Generate dynamic prompt messages using our Diataxis-aligned prompt system
   const projectPath = args?.project_path || process.cwd();
   const messages = await generateTechnicalWriterPrompts(name, projectPath, args || {});
-  
+
   return {
     description: `Technical writing assistance for ${name}`,
     messages,
@@ -448,7 +640,7 @@ server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
   // Handle template resources (static content)
   if (uri.startsWith('documcp://templates/')) {
     const templateType = uri.split('/').pop();
-    
+
     switch (templateType) {
       case 'jekyll-config':
         return {
@@ -514,26 +706,30 @@ markup:
             {
               uri,
               mimeType: 'application/json',
-              text: JSON.stringify({
-                "structure": {
-                  "tutorials": {
-                    "description": "Learning-oriented guides",
-                    "files": ["getting-started.md", "your-first-project.md"]
+              text: JSON.stringify(
+                {
+                  structure: {
+                    tutorials: {
+                      description: 'Learning-oriented guides',
+                      files: ['getting-started.md', 'your-first-project.md'],
+                    },
+                    'how-to-guides': {
+                      description: 'Problem-oriented step-by-step guides',
+                      files: ['common-tasks.md', 'troubleshooting.md'],
+                    },
+                    reference: {
+                      description: 'Information-oriented technical reference',
+                      files: ['api-reference.md', 'configuration.md'],
+                    },
+                    explanation: {
+                      description: 'Understanding-oriented background material',
+                      files: ['architecture.md', 'design-decisions.md'],
+                    },
                   },
-                  "how-to-guides": {
-                    "description": "Problem-oriented step-by-step guides",
-                    "files": ["common-tasks.md", "troubleshooting.md"]
-                  },
-                  "reference": {
-                    "description": "Information-oriented technical reference",
-                    "files": ["api-reference.md", "configuration.md"]
-                  },
-                  "explanation": {
-                    "description": "Understanding-oriented background material",
-                    "files": ["architecture.md", "design-decisions.md"]
-                  }
-                }
-              }, null, 2),
+                },
+                null,
+                2,
+              ),
             },
           ],
         };
@@ -546,7 +742,7 @@ markup:
   // Handle workflow resources
   if (uri.startsWith('documcp://workflows/')) {
     const workflowType = uri.split('/').pop();
-    
+
     switch (workflowType) {
       case 'all':
         return {
@@ -554,11 +750,15 @@ markup:
             {
               uri,
               mimeType: 'application/json',
-              text: JSON.stringify({
-                workflows: DOCUMENTATION_WORKFLOWS,
-                executionGuidance: WORKFLOW_EXECUTION_GUIDANCE,
-                metadata: WORKFLOW_METADATA
-              }, null, 2),
+              text: JSON.stringify(
+                {
+                  workflows: DOCUMENTATION_WORKFLOWS,
+                  executionGuidance: WORKFLOW_EXECUTION_GUIDANCE,
+                  metadata: WORKFLOW_METADATA,
+                },
+                null,
+                2,
+              ),
             },
           ],
         };
@@ -591,10 +791,15 @@ markup:
             {
               uri,
               mimeType: 'application/json',
-              text: JSON.stringify({
-                executionGuidance: WORKFLOW_EXECUTION_GUIDANCE,
-                recommendationEngine: "Use recommendWorkflow() function with project status and requirements"
-              }, null, 2),
+              text: JSON.stringify(
+                {
+                  executionGuidance: WORKFLOW_EXECUTION_GUIDANCE,
+                  recommendationEngine:
+                    'Use recommendWorkflow() function with project status and requirements',
+                },
+                null,
+                2,
+              ),
             },
           ],
         };
@@ -639,7 +844,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         storeResource(
           `documcp://analysis/${analysisId}`,
           JSON.stringify(result, null, 2),
-          'application/json'
+          'application/json',
         );
 
         // Remember in persistent memory
@@ -652,14 +857,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           if (similarProjects.length > 0) {
             (result as any).insights = {
               similarProjects,
-              message: `Found ${similarProjects.length} similar projects in memory`
+              message: `Found ${similarProjects.length} similar projects in memory`,
             };
           }
         }
 
         return result;
       }
-      
+
       case 'recommend_ssg': {
         const result = await recommendSSG(args);
         // Store recommendation as resource
@@ -667,7 +872,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         storeResource(
           `documcp://analysis/${recommendationId}`,
           JSON.stringify(result, null, 2),
-          'application/json'
+          'application/json',
         );
 
         // Remember recommendation
@@ -683,7 +888,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         }
         return result;
       }
-      
+
       case 'generate_config': {
         const result = await generateConfig(args);
         // Store generated config as resource
@@ -691,11 +896,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         storeResource(
           `documcp://config/${configId}`,
           JSON.stringify(result, null, 2),
-          'text/plain'
+          'text/plain',
         );
         return result;
       }
-      
+
       case 'setup_structure': {
         const result = await setupStructure(args);
         // Store structure as resource
@@ -703,11 +908,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         storeResource(
           `documcp://structure/${structureId}`,
           JSON.stringify(result, null, 2),
-          'application/json'
+          'application/json',
         );
         return result;
       }
-      
+
       case 'deploy_pages': {
         const result = await deployPages(args);
         // Store deployment workflow as resource
@@ -715,16 +920,16 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         storeResource(
           `documcp://deployment/${workflowId}`,
           JSON.stringify(result, null, 2),
-          'text/yaml'
+          'text/yaml',
         );
         return result;
       }
-      
+
       case 'verify_deployment': {
         const result = await verifyDeployment(args);
         return result;
       }
-      
+
       case 'populate_diataxis_content': {
         const result = await handlePopulateDiataxisContent(args);
         // Store populated content info as resource
@@ -732,26 +937,28 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         storeResource(
           `documcp://structure/${populationId}`,
           JSON.stringify(result, null, 2),
-          'application/json'
+          'application/json',
         );
         return {
           content: [
             {
               type: 'text',
-              text: `Content population completed successfully. Generated ${result.filesCreated} files with ${Math.round(result.populationMetrics.coverage)}% coverage.`,
+              text: `Content population completed successfully. Generated ${
+                result.filesCreated
+              } files with ${Math.round(result.populationMetrics.coverage)}% coverage.`,
             },
             {
               type: 'text',
               text: `Population metrics: Coverage: ${result.populationMetrics.coverage}%, Completeness: ${result.populationMetrics.completeness}%, Project Specificity: ${result.populationMetrics.projectSpecificity}%`,
             },
             {
-              type: 'text', 
-              text: `Next steps:\n${result.nextSteps.map(step => `- ${step}`).join('\n')}`,
+              type: 'text',
+              text: `Next steps:\n${result.nextSteps.map((step) => `- ${step}`).join('\n')}`,
             },
           ],
         };
       }
-      
+
       case 'validate_diataxis_content': {
         const result = await handleValidateDiataxisContent(args);
         // Store validation results as resource
@@ -759,40 +966,44 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         storeResource(
           `documcp://analysis/${validationId}`,
           JSON.stringify(result, null, 2),
-          'application/json'
+          'application/json',
         );
-        
+
         // Return structured validation results as JSON
         const validationSummary = {
           status: result.success ? 'PASSED' : 'ISSUES FOUND',
           confidence: `${result.confidence.overall}%`,
           issuesFound: result.issues.length,
           breakdown: {
-            errors: result.issues.filter(i => i.type === 'error').length,
-            warnings: result.issues.filter(i => i.type === 'warning').length,
-            info: result.issues.filter(i => i.type === 'info').length
+            errors: result.issues.filter((i) => i.type === 'error').length,
+            warnings: result.issues.filter((i) => i.type === 'warning').length,
+            info: result.issues.filter((i) => i.type === 'info').length,
           },
-          topIssues: result.issues.slice(0, 5).map(issue => ({
+          topIssues: result.issues.slice(0, 5).map((issue) => ({
             type: issue.type.toUpperCase(),
             category: issue.category,
             file: issue.location.file,
-            description: issue.description
+            description: issue.description,
           })),
           recommendations: result.recommendations,
           nextSteps: result.nextSteps,
           confidenceBreakdown: result.confidence.breakdown,
-          resourceId: validationId
+          resourceId: validationId,
         };
 
         return {
           content: [
             {
               type: 'text',
-              text: `Content validation ${result.success ? 'passed' : 'found issues'}. Overall confidence: ${result.confidence.overall}%.`,
+              text: `Content validation ${
+                result.success ? 'passed' : 'found issues'
+              }. Overall confidence: ${result.confidence.overall}%.`,
             },
             {
               type: 'text',
-              text: `Issues found: ${result.issues.length} (${result.issues.filter(i => i.type === 'error').length} errors, ${result.issues.filter(i => i.type === 'warning').length} warnings)`,
+              text: `Issues found: ${result.issues.length} (${
+                result.issues.filter((i) => i.type === 'error').length
+              } errors, ${result.issues.filter((i) => i.type === 'warning').length} warnings)`,
             },
             {
               type: 'text',
@@ -801,7 +1012,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           ],
         };
       }
-      
+
       case 'validate_content': {
         const result = await validateGeneralContent(args);
         // Store validation results as resource
@@ -809,7 +1020,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         storeResource(
           `documcp://analysis/${validationId}`,
           JSON.stringify(result, null, 2),
-          'application/json'
+          'application/json',
         );
 
         // Return structured validation results as JSON
@@ -821,18 +1032,22 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           brokenLinks: result.brokenLinks || [],
           codeErrors: (result.codeErrors || []).slice(0, 10), // Limit to first 10 errors
           recommendations: result.recommendations || [],
-          resourceId: validationId
+          resourceId: validationId,
         };
 
         return {
           content: [
             {
               type: 'text',
-              text: `Content validation completed. Status: ${result.success ? 'PASSED' : 'ISSUES FOUND'}`,
+              text: `Content validation completed. Status: ${
+                result.success ? 'PASSED' : 'ISSUES FOUND'
+              }`,
             },
             {
               type: 'text',
-              text: `Results: ${result.linksChecked || 0} links checked, ${result.codeBlocksValidated || 0} code blocks validated`,
+              text: `Results: ${result.linksChecked || 0} links checked, ${
+                result.codeBlocksValidated || 0
+              } code blocks validated`,
             },
             {
               type: 'text',
@@ -841,7 +1056,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           ],
         };
       }
-      
+
       case 'detect_documentation_gaps': {
         const result = await detectDocumentationGaps(args);
         // Store gap analysis as resource
@@ -849,11 +1064,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         storeResource(
           `documcp://analysis/${gapAnalysisId}`,
           JSON.stringify(result, null, 2),
-          'application/json'
+          'application/json',
         );
         return result;
       }
-      
+
       case 'test_local_deployment': {
         const result = await testLocalDeployment(args);
         // Store test results as resource
@@ -861,11 +1076,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         storeResource(
           `documcp://deployment/${testId}`,
           JSON.stringify(result, null, 2),
-          'application/json'
+          'application/json',
         );
         return result;
       }
-      
+
       case 'evaluate_readme_health': {
         const result = await evaluateReadmeHealth(args as any);
         // Store health evaluation as resource
@@ -873,12 +1088,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         storeResource(
           `documcp://analysis/${healthId}`,
           JSON.stringify(result, null, 2),
-          'application/json'
+          'application/json',
         );
         return result;
       }
-      
-      
+
       case 'readme_best_practices': {
         const result = await readmeBestPractices(args as any);
         // Store best practices analysis as resource
@@ -886,11 +1100,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         storeResource(
           `documcp://analysis/${analysisId}`,
           JSON.stringify(result, null, 2),
-          'application/json'
+          'application/json',
         );
         return formatMCPResponse(result);
       }
-      
+
       case 'check_documentation_links': {
         const result = await checkDocumentationLinks(args as any);
         // Store link check results as resource
@@ -898,31 +1112,27 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         storeResource(
           `documcp://analysis/${linkCheckId}`,
           JSON.stringify(result, null, 2),
-          'application/json'
+          'application/json',
         );
         return formatMCPResponse(result);
       }
-      
+
       case 'generate_readme_template': {
         const result = await generateReadmeTemplate(args as any);
         // Store generated template as resource
         const templateId = `readme-template-${Date.now()}`;
-        storeResource(
-          `documcp://template/${templateId}`,
-          result.content,
-          'text/markdown'
-        );
+        storeResource(`documcp://template/${templateId}`, result.content, 'text/markdown');
         return formatMCPResponse({
           success: true,
           data: result,
           metadata: {
             toolVersion: packageJson.version,
             executionTime: Date.now(),
-            timestamp: new Date().toISOString()
-          }
+            timestamp: new Date().toISOString(),
+          },
         });
       }
-      
+
       case 'validate_readme_checklist': {
         const result = await validateReadmeChecklist(args as any);
         // Store validation report as resource
@@ -930,7 +1140,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         storeResource(
           `documcp://analysis/${validationId}`,
           JSON.stringify(result, null, 2),
-          'application/json'
+          'application/json',
         );
         return formatMCPResponse({
           success: true,
@@ -938,11 +1148,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           metadata: {
             toolVersion: packageJson.version,
             executionTime: Date.now(),
-            timestamp: new Date().toISOString()
-          }
+            timestamp: new Date().toISOString(),
+          },
         });
       }
-      
+
       case 'analyze_readme': {
         const result = await analyzeReadme(args as any);
         // Store analysis results as resource
@@ -950,11 +1160,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         storeResource(
           `documcp://analysis/${analysisId}`,
           JSON.stringify(result, null, 2),
-          'application/json'
+          'application/json',
         );
         return formatMCPResponse(result);
       }
-      
+
       case 'optimize_readme': {
         const result = await optimizeReadme(args as any);
         // Store optimization results as resource
@@ -962,7 +1172,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         storeResource(
           `documcp://analysis/${optimizationId}`,
           JSON.stringify(result, null, 2),
-          'application/json'
+          'application/json',
         );
         return formatMCPResponse(result);
       }
@@ -976,13 +1186,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         let results;
         if (args?.type === 'all') {
           results = await manager.search(args?.query || '', {
-            sortBy: 'timestamp'
+            sortBy: 'timestamp',
           });
         } else {
-          results = await manager.search(
-            args?.type || 'analysis',
-            { sortBy: 'timestamp' }
-          );
+          results = await manager.search(args?.type || 'analysis', { sortBy: 'timestamp' });
         }
 
         if (args?.limit && typeof args.limit === 'number') {
@@ -1056,7 +1263,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
 
       case 'memory_export': {
-        const format = (args?.format === 'json' || args?.format === 'csv') ? args.format : 'json';
+        const format = args?.format === 'json' || args?.format === 'csv' ? args.format : 'json';
         const exported = await exportMemories(format);
 
         return {
@@ -1078,7 +1285,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
         if (args?.dryRun) {
           const stats = await getMemoryStatistics();
-          const cutoff = new Date(Date.now() - (daysToKeep * 24 * 60 * 60 * 1000));
+          const cutoff = new Date(Date.now() - daysToKeep * 24 * 60 * 60 * 1000);
           const oldCount = Object.entries((stats as any).statistics?.byMonth || {})
             .filter(([month]) => new Date(month + '-01') < cutoff)
             .reduce((sum, [_, count]) => sum + (count as number), 0);

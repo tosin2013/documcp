@@ -5,18 +5,18 @@ const mockStat = jest.fn();
 const mockReaddir = jest.fn();
 
 jest.mock('../../src/tools/analyze-repository.js', () => ({
-  analyzeRepository: mockAnalyzeRepository
+  analyzeRepository: mockAnalyzeRepository,
 }));
 
 jest.mock('../../src/tools/validate-content.js', () => ({
-  handleValidateDiataxisContent: mockValidateContent
+  handleValidateDiataxisContent: mockValidateContent,
 }));
 
 jest.mock('fs', () => ({
   promises: {
     stat: mockStat,
     readdir: mockReaddir,
-  }
+  },
 }));
 
 // Now import the module under test
@@ -43,9 +43,7 @@ describe('detectDocumentationGaps', () => {
   const mockValidationResult = {
     success: true,
     confidence: { overall: 85 },
-    issues: [
-      { type: 'warning', description: 'Missing API examples' },
-    ],
+    issues: [{ type: 'warning', description: 'Missing API examples' }],
     validationResults: [
       { status: 'pass', message: 'Good structure' },
       { status: 'fail', message: 'Missing references', recommendation: 'Add API docs' },
@@ -54,21 +52,25 @@ describe('detectDocumentationGaps', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // Default successful repository analysis
     mockAnalyzeRepository.mockResolvedValue({
-      content: [{
-        type: 'text',
-        text: JSON.stringify(mockRepositoryAnalysis)
-      }]
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(mockRepositoryAnalysis),
+        },
+      ],
     });
 
     // Default validation result
     mockValidateContent.mockResolvedValue({
-      content: [{
-        type: 'text', 
-        text: JSON.stringify({ success: true, data: mockValidationResult })
-      }]
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify({ success: true, data: mockValidationResult }),
+        },
+      ],
     } as any);
   });
 
@@ -79,13 +81,13 @@ describe('detectDocumentationGaps', () => {
 
       const result = await detectDocumentationGaps({
         repositoryPath: '/test/repo',
-        depth: 'quick'
+        depth: 'quick',
       });
 
       expect(result.content).toBeDefined();
       expect(result.content[0]).toBeDefined();
       const data = JSON.parse(result.content[0].text);
-      
+
       expect(data.repositoryPath).toBe('/test/repo');
       expect(data.overallScore).toBe(0);
       expect(data.gaps).toContainEqual(
@@ -93,8 +95,8 @@ describe('detectDocumentationGaps', () => {
           category: 'general',
           gapType: 'missing_section',
           description: 'No documentation directory found',
-          priority: 'critical'
-        })
+          priority: 'critical',
+        }),
       );
     });
 
@@ -120,24 +122,24 @@ describe('detectDocumentationGaps', () => {
       const result = await detectDocumentationGaps({
         repositoryPath: '/test/repo',
         documentationPath: '/test/repo/docs',
-        depth: 'standard'
+        depth: 'standard',
       });
 
       const data = JSON.parse(result.content[0].text);
-      
+
       expect(data.gaps).toContainEqual(
         expect.objectContaining({
           category: 'tutorials',
           gapType: 'missing_section',
-          priority: 'high'
-        })
+          priority: 'high',
+        }),
       );
       expect(data.gaps).toContainEqual(
         expect.objectContaining({
-          category: 'how-to', 
+          category: 'how-to',
           gapType: 'missing_section',
-          priority: 'medium'
-        })
+          priority: 'medium',
+        }),
       );
     });
 
@@ -153,26 +155,26 @@ describe('detectDocumentationGaps', () => {
 
       const result = await detectDocumentationGaps({
         repositoryPath: '/test/repo',
-        documentationPath: '/test/repo/docs'
+        documentationPath: '/test/repo/docs',
       });
 
       const data = JSON.parse(result.content[0].text);
-      
+
       // Should detect API documentation gap
       expect(data.gaps).toContainEqual(
         expect.objectContaining({
           category: 'reference',
           description: 'API endpoints detected but no API documentation found',
-          priority: 'critical'
-        })
+          priority: 'critical',
+        }),
       );
 
-      // Should detect Docker documentation gap  
+      // Should detect Docker documentation gap
       expect(data.gaps).toContainEqual(
         expect.objectContaining({
           category: 'how-to',
-          description: 'Docker configuration found but no Docker documentation'
-        })
+          description: 'Docker configuration found but no Docker documentation',
+        }),
       );
     });
 
@@ -181,20 +183,28 @@ describe('detectDocumentationGaps', () => {
       mockStat.mockResolvedValue({ isDirectory: () => true } as any);
       mockReaddir.mockImplementation((dirPath: any) => {
         if (String(dirPath).includes('/docs')) {
-          return Promise.resolve(['index.md', 'tutorials', 'how-to', 'reference', 'explanation'] as any);
+          return Promise.resolve([
+            'index.md',
+            'tutorials',
+            'how-to',
+            'reference',
+            'explanation',
+          ] as any);
         }
         return Promise.resolve(['getting-started.md', 'advanced.md'] as any);
       });
 
       const result = await detectDocumentationGaps({
         repositoryPath: '/test/repo',
-        documentationPath: '/test/repo/docs'
+        documentationPath: '/test/repo/docs',
       });
 
       const data = JSON.parse(result.content[0].text);
-      
+
       expect(data.strengths).toContain('Has main documentation index file');
-      expect(data.strengths).toContain('Well-organized sections: tutorials, how-to, reference, explanation');
+      expect(data.strengths).toContain(
+        'Well-organized sections: tutorials, how-to, reference, explanation',
+      );
     });
 
     it('should calculate accurate coverage scores', async () => {
@@ -206,11 +216,11 @@ describe('detectDocumentationGaps', () => {
 
       const result = await detectDocumentationGaps({
         repositoryPath: '/test/repo',
-        documentationPath: '/test/repo/docs'
+        documentationPath: '/test/repo/docs',
       });
 
       const data = JSON.parse(result.content[0].text);
-      
+
       expect(data.contentCoverage.tutorials).toBe(60);
       expect(data.contentCoverage.howTo).toBe(60);
       expect(data.contentCoverage.reference).toBe(60);
@@ -220,14 +230,14 @@ describe('detectDocumentationGaps', () => {
 
     it('should handle existing analysis ID reuse', async () => {
       const existingAnalysisId = 'existing_analysis_456';
-      
+
       const result = await detectDocumentationGaps({
         repositoryPath: '/test/repo',
-        analysisId: existingAnalysisId
+        analysisId: existingAnalysisId,
       });
 
       const data = JSON.parse(result.content[0].text);
-      
+
       expect(data.analysisId).toBe(existingAnalysisId);
       expect(mockAnalyzeRepository).not.toHaveBeenCalled();
     });
@@ -236,18 +246,20 @@ describe('detectDocumentationGaps', () => {
   describe('error handling', () => {
     it('should handle repository analysis failure', async () => {
       mockAnalyzeRepository.mockResolvedValue({
-        content: [{
-          type: 'text',
-          text: JSON.stringify({ success: false })
-        }]
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({ success: false }),
+          },
+        ],
       });
 
       const result = await detectDocumentationGaps({
-        repositoryPath: '/invalid/repo'
+        repositoryPath: '/invalid/repo',
       });
 
       const response = JSON.parse(result.content[0].text);
-      
+
       expect(response.success).toBe(false);
       expect(response.error.code).toBe('GAP_DETECTION_FAILED');
       expect(response.error.message).toContain('Repository analysis failed');
@@ -256,14 +268,16 @@ describe('detectDocumentationGaps', () => {
     it('should handle validation errors gracefully', async () => {
       // Ensure analyze repository succeeds
       mockAnalyzeRepository.mockResolvedValue({
-        content: [{
-          type: 'text',
-          text: JSON.stringify(mockRepositoryAnalysis)
-        }]
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(mockRepositoryAnalysis),
+          },
+        ],
       });
-      
+
       mockValidateContent.mockRejectedValue(new Error('Validation failed'));
-      
+
       // Mock fs operations for analyzeExistingDocumentation
       mockStat.mockImplementation(async (filePath: string) => {
         if (filePath.includes('docs')) {
@@ -271,7 +285,7 @@ describe('detectDocumentationGaps', () => {
         }
         throw new Error('Not found');
       });
-      
+
       mockReaddir.mockImplementation(async (dirPath: string) => {
         if (dirPath.includes('docs')) {
           return ['index.md'];
@@ -281,7 +295,7 @@ describe('detectDocumentationGaps', () => {
 
       const result = await detectDocumentationGaps({
         repositoryPath: '/test/repo',
-        documentationPath: '/test/repo/docs'
+        documentationPath: '/test/repo/docs',
       });
 
       // Should still work without validation
@@ -295,7 +309,7 @@ describe('detectDocumentationGaps', () => {
       mockStat.mockRejectedValue(new Error('Permission denied'));
 
       const result = await detectDocumentationGaps({
-        repositoryPath: '/restricted/repo'
+        repositoryPath: '/restricted/repo',
       });
 
       const response = JSON.parse(result.content[0].text);
@@ -311,14 +325,14 @@ describe('detectDocumentationGaps', () => {
       mockStat.mockRejectedValue(new Error('ENOENT')); // No docs exist
 
       const result = await detectDocumentationGaps({
-        repositoryPath: '/test/repo'
+        repositoryPath: '/test/repo',
       });
 
       const response = JSON.parse(result.content[0].text);
-      
+
       expect(response.analysisId).toBe('analysis_123');
       expect(response.recommendations.immediate).toContain(
-        'Create documentation structure using setup_structure tool'
+        'Create documentation structure using setup_structure tool',
       );
     });
 
@@ -335,11 +349,11 @@ describe('detectDocumentationGaps', () => {
 
       const result = await detectDocumentationGaps({
         repositoryPath: '/test/repo',
-        documentationPath: '/test/repo/docs'
+        documentationPath: '/test/repo/docs',
       });
 
       const response = JSON.parse(result.content[0].text);
-      
+
       expect(response.analysisId).toBe('analysis_123');
       expect(response.recommendations).toBeDefined();
       expect(response.recommendations.immediate.length).toBeGreaterThan(0);
@@ -349,16 +363,20 @@ describe('detectDocumentationGaps', () => {
 
   describe('input validation', () => {
     it('should handle invalid depth parameter', async () => {
-      await expect(detectDocumentationGaps({
-        repositoryPath: '/test/repo',
-        depth: 'invalid' as any
-      })).rejects.toThrow();
+      await expect(
+        detectDocumentationGaps({
+          repositoryPath: '/test/repo',
+          depth: 'invalid' as any,
+        }),
+      ).rejects.toThrow();
     });
 
     it('should require repositoryPath', async () => {
-      await expect(detectDocumentationGaps({
-        documentationPath: '/test/docs'
-      } as any)).rejects.toThrow();
+      await expect(
+        detectDocumentationGaps({
+          documentationPath: '/test/docs',
+        } as any),
+      ).rejects.toThrow();
     });
   });
 });

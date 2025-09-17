@@ -17,7 +17,10 @@ describe('KnowledgeGraph', () => {
 
   beforeEach(async () => {
     // Create unique temp directory for each test
-    tempDir = path.join(os.tmpdir(), `memory-graph-test-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
+    tempDir = path.join(
+      os.tmpdir(),
+      `memory-graph-test-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    );
     await fs.mkdir(tempDir, { recursive: true });
 
     // Create memory manager for knowledge graph
@@ -50,9 +53,9 @@ describe('KnowledgeGraph', () => {
         label: 'Test Project',
         properties: {
           language: 'typescript',
-          framework: 'react'
+          framework: 'react',
         },
-        weight: 1.0
+        weight: 1.0,
       };
 
       const addedNode = graph.addNode(projectNode);
@@ -69,7 +72,7 @@ describe('KnowledgeGraph', () => {
         type: 'project',
         label: 'Web App',
         properties: { language: 'typescript' },
-        weight: 1.0
+        weight: 1.0,
       });
 
       const techNode = graph.addNode({
@@ -77,7 +80,7 @@ describe('KnowledgeGraph', () => {
         type: 'technology',
         label: 'React',
         properties: { category: 'framework' },
-        weight: 1.0
+        weight: 1.0,
       });
 
       // Add edge
@@ -87,7 +90,7 @@ describe('KnowledgeGraph', () => {
         type: 'uses',
         weight: 1.0,
         confidence: 0.9,
-        properties: { importance: 'high' }
+        properties: { importance: 'high' },
       };
 
       const addedEdge = graph.addEdge(edge);
@@ -104,7 +107,7 @@ describe('KnowledgeGraph', () => {
         type: 'project',
         label: 'Test 1',
         properties: {},
-        weight: 1.0
+        weight: 1.0,
       });
 
       graph.addNode({
@@ -112,7 +115,7 @@ describe('KnowledgeGraph', () => {
         type: 'technology',
         label: 'Vue',
         properties: {},
-        weight: 1.0
+        weight: 1.0,
       });
 
       const nodes = await graph.getAllNodes();
@@ -127,7 +130,7 @@ describe('KnowledgeGraph', () => {
         type: 'project',
         label: 'Test 2',
         properties: {},
-        weight: 1.0
+        weight: 1.0,
       });
 
       const node2 = graph.addNode({
@@ -135,7 +138,7 @@ describe('KnowledgeGraph', () => {
         type: 'technology',
         label: 'Angular',
         properties: {},
-        weight: 1.0
+        weight: 1.0,
       });
 
       graph.addEdge({
@@ -144,7 +147,7 @@ describe('KnowledgeGraph', () => {
         type: 'uses',
         weight: 1.0,
         confidence: 0.8,
-        properties: {}
+        properties: {},
       });
 
       const edges = await graph.getAllEdges();
@@ -161,7 +164,7 @@ describe('KnowledgeGraph', () => {
         type: 'project',
         label: 'Project A',
         properties: {},
-        weight: 1.0
+        weight: 1.0,
       });
 
       graph.addNode({
@@ -169,7 +172,7 @@ describe('KnowledgeGraph', () => {
         type: 'project',
         label: 'Project B',
         properties: {},
-        weight: 1.0
+        weight: 1.0,
       });
 
       graph.addNode({
@@ -177,17 +180,17 @@ describe('KnowledgeGraph', () => {
         type: 'technology',
         label: 'Vue',
         properties: { category: 'framework' },
-        weight: 1.0
+        weight: 1.0,
       });
 
       const results = graph.query({
-        nodeTypes: ['project']
+        nodeTypes: ['project'],
       });
 
       expect(results).toBeDefined();
       expect(Array.isArray(results.nodes)).toBe(true);
       expect(results.nodes.length).toBe(2);
-      expect(results.nodes.every(node => node.type === 'project')).toBe(true);
+      expect(results.nodes.every((node) => node.type === 'project')).toBe(true);
     });
 
     test('should find connections for a node', async () => {
@@ -197,7 +200,7 @@ describe('KnowledgeGraph', () => {
         type: 'project',
         label: 'Connected Test',
         properties: {},
-        weight: 1.0
+        weight: 1.0,
       });
 
       const techNode = graph.addNode({
@@ -205,7 +208,7 @@ describe('KnowledgeGraph', () => {
         type: 'technology',
         label: 'Express',
         properties: {},
-        weight: 1.0
+        weight: 1.0,
       });
 
       graph.addEdge({
@@ -214,7 +217,7 @@ describe('KnowledgeGraph', () => {
         type: 'uses',
         weight: 1.0,
         confidence: 0.9,
-        properties: {}
+        properties: {},
       });
 
       const connections = await graph.getConnections(projectNode.id);
@@ -230,7 +233,7 @@ describe('KnowledgeGraph', () => {
         type: 'project',
         label: 'Path Test Project',
         properties: {},
-        weight: 1.0
+        weight: 1.0,
       });
 
       const techNode = graph.addNode({
@@ -238,7 +241,7 @@ describe('KnowledgeGraph', () => {
         type: 'technology',
         label: 'Node.js',
         properties: {},
-        weight: 1.0
+        weight: 1.0,
       });
 
       graph.addEdge({
@@ -247,7 +250,7 @@ describe('KnowledgeGraph', () => {
         type: 'uses',
         weight: 1.0,
         confidence: 0.9,
-        properties: {}
+        properties: {},
       });
 
       const path = graph.findPath(projectNode.id, techNode.id);
@@ -260,19 +263,27 @@ describe('KnowledgeGraph', () => {
   describe('Graph Analysis', () => {
     test('should build from memory entries', async () => {
       // Add some test memory entries first
-      await memoryManager.remember('analysis', {
-        language: { primary: 'python' },
-        framework: { name: 'django' }
-      }, {
-        projectId: 'analysis-project'
-      });
+      await memoryManager.remember(
+        'analysis',
+        {
+          language: { primary: 'python' },
+          framework: { name: 'django' },
+        },
+        {
+          projectId: 'analysis-project',
+        },
+      );
 
-      await memoryManager.remember('recommendation', {
-        recommended: 'mkdocs',
-        confidence: 0.9
-      }, {
-        projectId: 'analysis-project'
-      });
+      await memoryManager.remember(
+        'recommendation',
+        {
+          recommended: 'mkdocs',
+          confidence: 0.9,
+        },
+        {
+          projectId: 'analysis-project',
+        },
+      );
 
       // Build graph from memories
       await graph.buildFromMemories();
@@ -285,31 +296,35 @@ describe('KnowledgeGraph', () => {
       // The graph might start empty, which is okay for this basic test
       if (nodes.length > 0) {
         // Optionally check node types if any were created
-        const nodeTypes = [...new Set(nodes.map(n => n.type))];
+        const nodeTypes = [...new Set(nodes.map((n) => n.type))];
         expect(nodeTypes.length).toBeGreaterThan(0);
       }
     });
 
     test('should generate graph-based recommendations', async () => {
       // Add some memory data first
-      await memoryManager.remember('analysis', {
-        language: { primary: 'javascript' },
-        framework: { name: 'react' }
-      }, {
-        projectId: 'rec-test-project'
-      });
+      await memoryManager.remember(
+        'analysis',
+        {
+          language: { primary: 'javascript' },
+          framework: { name: 'react' },
+        },
+        {
+          projectId: 'rec-test-project',
+        },
+      );
 
       await graph.buildFromMemories();
 
       const projectFeatures = {
         language: 'javascript',
-        framework: 'react'
+        framework: 'react',
       };
 
-      const recommendations = await graph.getGraphBasedRecommendation(
-        projectFeatures,
-        ['docusaurus', 'gatsby']
-      );
+      const recommendations = await graph.getGraphBasedRecommendation(projectFeatures, [
+        'docusaurus',
+        'gatsby',
+      ]);
 
       expect(Array.isArray(recommendations)).toBe(true);
       // Even if no recommendations found, should return empty array
@@ -322,7 +337,7 @@ describe('KnowledgeGraph', () => {
         type: 'project',
         label: 'Stats Test',
         properties: {},
-        weight: 1.0
+        weight: 1.0,
       });
 
       graph.addNode({
@@ -330,7 +345,7 @@ describe('KnowledgeGraph', () => {
         type: 'technology',
         label: 'Webpack',
         properties: {},
-        weight: 1.0
+        weight: 1.0,
       });
 
       const stats = await graph.getStatistics();
@@ -357,17 +372,17 @@ describe('KnowledgeGraph', () => {
           type: 'project',
           label: `Concurrent Project ${i}`,
           properties: { index: i },
-          weight: 1.0
-        })
+          weight: 1.0,
+        }),
       );
 
       expect(nodes).toHaveLength(10);
-      expect(nodes.every(node => typeof node.id === 'string')).toBe(true);
+      expect(nodes.every((node) => typeof node.id === 'string')).toBe(true);
     });
 
     test('should handle invalid query parameters', () => {
       const results = graph.query({
-        nodeTypes: ['non-existent-type']
+        nodeTypes: ['non-existent-type'],
       });
 
       expect(results).toBeDefined();
@@ -394,7 +409,7 @@ describe('KnowledgeGraph', () => {
         type: 'project',
         label: 'Persistence Test',
         properties: {},
-        weight: 1.0
+        weight: 1.0,
       });
 
       // Save to memory

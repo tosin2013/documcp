@@ -24,20 +24,23 @@ describe('generate-technical-writer-prompts', () => {
   describe('Input Validation', () => {
     it('should require project_path parameter', async () => {
       const result = await generateTechnicalWriterPrompts({});
-      
+
       expect(result.isError).toBe(true);
       expect(result.content[0].text).toContain('Required');
     });
 
     it('should accept valid context_sources', async () => {
-      await fs.writeFile(join(testProjectPath, 'package.json'), JSON.stringify({
-        name: 'test-project',
-        dependencies: { react: '^18.0.0' }
-      }));
+      await fs.writeFile(
+        join(testProjectPath, 'package.json'),
+        JSON.stringify({
+          name: 'test-project',
+          dependencies: { react: '^18.0.0' },
+        }),
+      );
 
       const result = await generateTechnicalWriterPrompts({
         project_path: testProjectPath,
-        context_sources: ['repository_analysis', 'readme_health', 'documentation_gaps']
+        context_sources: ['repository_analysis', 'readme_health', 'documentation_gaps'],
       });
 
       expect(result.isError).toBe(false);
@@ -45,13 +48,16 @@ describe('generate-technical-writer-prompts', () => {
     });
 
     it('should validate audience parameter', async () => {
-      await fs.writeFile(join(testProjectPath, 'package.json'), JSON.stringify({
-        name: 'test-project'
-      }));
+      await fs.writeFile(
+        join(testProjectPath, 'package.json'),
+        JSON.stringify({
+          name: 'test-project',
+        }),
+      );
 
       const result = await generateTechnicalWriterPrompts({
         project_path: testProjectPath,
-        audience: 'developer'
+        audience: 'developer',
       });
 
       expect(result.isError).toBe(false);
@@ -61,20 +67,23 @@ describe('generate-technical-writer-prompts', () => {
 
   describe('Project Context Analysis', () => {
     it('should detect Node.js project with React', async () => {
-      await fs.writeFile(join(testProjectPath, 'package.json'), JSON.stringify({
-        name: 'test-react-app',
-        dependencies: {
-          react: '^18.0.0',
-          'react-dom': '^18.0.0'
-        },
-        devDependencies: {
-          typescript: '^5.0.0'
-        }
-      }));
+      await fs.writeFile(
+        join(testProjectPath, 'package.json'),
+        JSON.stringify({
+          name: 'test-react-app',
+          dependencies: {
+            react: '^18.0.0',
+            'react-dom': '^18.0.0',
+          },
+          devDependencies: {
+            typescript: '^5.0.0',
+          },
+        }),
+      );
 
       const result = await generateTechnicalWriterPrompts({
         project_path: testProjectPath,
-        context_sources: ['repository_analysis']
+        context_sources: ['repository_analysis'],
       });
 
       expect(result.isError).toBe(false);
@@ -90,22 +99,27 @@ describe('generate-technical-writer-prompts', () => {
 
       const result = await generateTechnicalWriterPrompts({
         project_path: testProjectPath,
-        context_sources: ['repository_analysis']
+        context_sources: ['repository_analysis'],
       });
 
       expect(result.isError).toBe(false);
-      expect(result.generation.contextSummary.projectContext.projectType).toBe('python_application');
+      expect(result.generation.contextSummary.projectContext.projectType).toBe(
+        'python_application',
+      );
       expect(result.generation.contextSummary.projectContext.languages).toContain('Python');
     });
 
     it('should detect CI/CD configuration', async () => {
       await fs.mkdir(join(testProjectPath, '.github', 'workflows'), { recursive: true });
-      await fs.writeFile(join(testProjectPath, '.github', 'workflows', 'ci.yml'), 'name: CI\non: [push]');
+      await fs.writeFile(
+        join(testProjectPath, '.github', 'workflows', 'ci.yml'),
+        'name: CI\non: [push]',
+      );
       await fs.writeFile(join(testProjectPath, 'package.json'), JSON.stringify({ name: 'test' }));
 
       const result = await generateTechnicalWriterPrompts({
         project_path: testProjectPath,
-        context_sources: ['repository_analysis']
+        context_sources: ['repository_analysis'],
       });
 
       expect(result.isError).toBe(false);
@@ -118,7 +132,7 @@ describe('generate-technical-writer-prompts', () => {
 
       const result = await generateTechnicalWriterPrompts({
         project_path: testProjectPath,
-        context_sources: ['repository_analysis']
+        context_sources: ['repository_analysis'],
       });
 
       expect(result.isError).toBe(false);
@@ -133,7 +147,7 @@ describe('generate-technical-writer-prompts', () => {
 
       const result = await generateTechnicalWriterPrompts({
         project_path: testProjectPath,
-        context_sources: ['readme_health']
+        context_sources: ['readme_health'],
       });
 
       expect(result.isError).toBe(false);
@@ -145,7 +159,7 @@ describe('generate-technical-writer-prompts', () => {
 
       const result = await generateTechnicalWriterPrompts({
         project_path: testProjectPath,
-        context_sources: ['readme_health']
+        context_sources: ['readme_health'],
       });
 
       expect(result.isError).toBe(false);
@@ -155,20 +169,25 @@ describe('generate-technical-writer-prompts', () => {
 
   describe('Prompt Generation', () => {
     beforeEach(async () => {
-      await fs.writeFile(join(testProjectPath, 'package.json'), JSON.stringify({
-        name: 'test-project',
-        dependencies: { react: '^18.0.0' }
-      }));
+      await fs.writeFile(
+        join(testProjectPath, 'package.json'),
+        JSON.stringify({
+          name: 'test-project',
+          dependencies: { react: '^18.0.0' },
+        }),
+      );
     });
 
     it('should generate content generation prompts', async () => {
       const result = await generateTechnicalWriterPrompts({
         project_path: testProjectPath,
-        prompt_types: ['content_generation']
+        prompt_types: ['content_generation'],
       });
 
       expect(result.isError).toBe(false);
-      const contentPrompts = result.generation.prompts.filter(p => p.category === 'content_generation');
+      const contentPrompts = result.generation.prompts.filter(
+        (p) => p.category === 'content_generation',
+      );
       expect(contentPrompts.length).toBeGreaterThan(0);
       expect(contentPrompts[0].title).toContain('Project Overview');
       expect(contentPrompts[0].prompt).toContain('web_application');
@@ -179,13 +198,20 @@ describe('generate-technical-writer-prompts', () => {
       const result = await generateTechnicalWriterPrompts({
         project_path: testProjectPath,
         context_sources: ['documentation_gaps'],
-        prompt_types: ['gap_filling']
+        prompt_types: ['gap_filling'],
       });
 
       expect(result.isError).toBe(false);
-      const gapPrompts = result.generation.prompts.filter(p => p.category === 'gap_filling');
+      const gapPrompts = result.generation.prompts.filter((p) => p.category === 'gap_filling');
       expect(gapPrompts.length).toBeGreaterThan(0);
-      expect(gapPrompts.some(p => p.title.includes('installation') || p.title.includes('api') || p.title.includes('contributing'))).toBe(true);
+      expect(
+        gapPrompts.some(
+          (p) =>
+            p.title.includes('installation') ||
+            p.title.includes('api') ||
+            p.title.includes('contributing'),
+        ),
+      ).toBe(true);
     });
 
     it('should generate style improvement prompts for low health scores', async () => {
@@ -194,11 +220,13 @@ describe('generate-technical-writer-prompts', () => {
       const result = await generateTechnicalWriterPrompts({
         project_path: testProjectPath,
         context_sources: ['readme_health'],
-        prompt_types: ['style_improvement']
+        prompt_types: ['style_improvement'],
       });
 
       expect(result.isError).toBe(false);
-      const stylePrompts = result.generation.prompts.filter(p => p.category === 'style_improvement');
+      const stylePrompts = result.generation.prompts.filter(
+        (p) => p.category === 'style_improvement',
+      );
       expect(stylePrompts.length).toBeGreaterThan(0);
       expect(stylePrompts[0].title).toContain('Style Enhancement');
     });
@@ -207,11 +235,13 @@ describe('generate-technical-writer-prompts', () => {
       const result = await generateTechnicalWriterPrompts({
         project_path: testProjectPath,
         integration_level: 'comprehensive',
-        prompt_types: ['deployment_optimization']
+        prompt_types: ['deployment_optimization'],
       });
 
       expect(result.isError).toBe(false);
-      const deploymentPrompts = result.generation.prompts.filter(p => p.category === 'deployment_optimization');
+      const deploymentPrompts = result.generation.prompts.filter(
+        (p) => p.category === 'deployment_optimization',
+      );
       expect(deploymentPrompts.length).toBeGreaterThan(0);
       expect(deploymentPrompts[0].title).toContain('Deployment Documentation');
     });
@@ -219,7 +249,7 @@ describe('generate-technical-writer-prompts', () => {
     it('should include integration hints and related tools', async () => {
       const result = await generateTechnicalWriterPrompts({
         project_path: testProjectPath,
-        prompt_types: ['content_generation']
+        prompt_types: ['content_generation'],
       });
 
       expect(result.isError).toBe(false);
@@ -233,22 +263,25 @@ describe('generate-technical-writer-prompts', () => {
 
   describe('Audience-Specific Prompts', () => {
     beforeEach(async () => {
-      await fs.writeFile(join(testProjectPath, 'package.json'), JSON.stringify({
-        name: 'test-project',
-        dependencies: { express: '^4.0.0' }
-      }));
+      await fs.writeFile(
+        join(testProjectPath, 'package.json'),
+        JSON.stringify({
+          name: 'test-project',
+          dependencies: { express: '^4.0.0' },
+        }),
+      );
     });
 
     it('should generate developer-focused prompts', async () => {
       const result = await generateTechnicalWriterPrompts({
         project_path: testProjectPath,
         audience: 'developer',
-        prompt_types: ['content_generation']
+        prompt_types: ['content_generation'],
       });
 
       expect(result.isError).toBe(false);
       const prompts = result.generation.prompts;
-      expect(prompts.every(p => p.audience === 'developer')).toBe(true);
+      expect(prompts.every((p) => p.audience === 'developer')).toBe(true);
       expect(prompts[0].prompt).toContain('developer');
     });
 
@@ -256,28 +289,31 @@ describe('generate-technical-writer-prompts', () => {
       const result = await generateTechnicalWriterPrompts({
         project_path: testProjectPath,
         audience: 'enterprise',
-        prompt_types: ['content_generation']
+        prompt_types: ['content_generation'],
       });
 
       expect(result.isError).toBe(false);
       const prompts = result.generation.prompts;
-      expect(prompts.every(p => p.audience === 'enterprise')).toBe(true);
+      expect(prompts.every((p) => p.audience === 'enterprise')).toBe(true);
       expect(prompts[0].prompt).toContain('enterprise');
     });
   });
 
   describe('Integration Levels', () => {
     beforeEach(async () => {
-      await fs.writeFile(join(testProjectPath, 'package.json'), JSON.stringify({
-        name: 'test-project'
-      }));
+      await fs.writeFile(
+        join(testProjectPath, 'package.json'),
+        JSON.stringify({
+          name: 'test-project',
+        }),
+      );
     });
 
     it('should generate basic prompts for basic integration', async () => {
       const result = await generateTechnicalWriterPrompts({
         project_path: testProjectPath,
         integration_level: 'basic',
-        prompt_types: ['content_generation']
+        prompt_types: ['content_generation'],
       });
 
       expect(result.isError).toBe(false);
@@ -288,38 +324,45 @@ describe('generate-technical-writer-prompts', () => {
     it('should generate comprehensive prompts for comprehensive integration', async () => {
       const result = await generateTechnicalWriterPrompts({
         project_path: testProjectPath,
-        integration_level: 'comprehensive'
+        integration_level: 'comprehensive',
       });
 
       expect(result.isError).toBe(false);
       expect(result.generation.contextSummary.integrationLevel).toBe('comprehensive');
-      const deploymentPrompts = result.generation.prompts.filter(p => p.category === 'deployment_optimization');
+      const deploymentPrompts = result.generation.prompts.filter(
+        (p) => p.category === 'deployment_optimization',
+      );
       expect(deploymentPrompts.length).toBeGreaterThan(0);
     });
 
     it('should generate advanced prompts for advanced integration', async () => {
       const result = await generateTechnicalWriterPrompts({
         project_path: testProjectPath,
-        integration_level: 'advanced'
+        integration_level: 'advanced',
       });
 
       expect(result.isError).toBe(false);
       expect(result.generation.contextSummary.integrationLevel).toBe('advanced');
-      const deploymentPrompts = result.generation.prompts.filter(p => p.category === 'deployment_optimization');
+      const deploymentPrompts = result.generation.prompts.filter(
+        (p) => p.category === 'deployment_optimization',
+      );
       expect(deploymentPrompts.length).toBeGreaterThan(0);
     });
   });
 
   describe('Recommendations and Next Steps', () => {
     beforeEach(async () => {
-      await fs.writeFile(join(testProjectPath, 'package.json'), JSON.stringify({
-        name: 'test-project'
-      }));
+      await fs.writeFile(
+        join(testProjectPath, 'package.json'),
+        JSON.stringify({
+          name: 'test-project',
+        }),
+      );
     });
 
     it('should generate integration recommendations', async () => {
       const result = await generateTechnicalWriterPrompts({
-        project_path: testProjectPath
+        project_path: testProjectPath,
       });
 
       expect(result.isError).toBe(false);
@@ -330,7 +373,7 @@ describe('generate-technical-writer-prompts', () => {
 
     it('should generate structured next steps', async () => {
       const result = await generateTechnicalWriterPrompts({
-        project_path: testProjectPath
+        project_path: testProjectPath,
       });
 
       expect(result.isError).toBe(false);
@@ -344,16 +387,16 @@ describe('generate-technical-writer-prompts', () => {
     it('should recommend README template creation for missing README', async () => {
       // Ensure no README exists
       await fs.writeFile(join(testProjectPath, 'package.json'), JSON.stringify({ name: 'test' }));
-      
+
       const result = await generateTechnicalWriterPrompts({
         project_path: testProjectPath,
-        context_sources: ['readme_health']
+        context_sources: ['readme_health'],
       });
 
       expect(result.isError).toBe(false);
-      expect(result.generation.recommendations.some(r => 
-        r.includes('generate_readme_template')
-      )).toBe(true);
+      expect(
+        result.generation.recommendations.some((r) => r.includes('generate_readme_template')),
+      ).toBe(true);
     });
 
     it('should recommend testing documentation for projects with tests', async () => {
@@ -361,27 +404,30 @@ describe('generate-technical-writer-prompts', () => {
 
       const result = await generateTechnicalWriterPrompts({
         project_path: testProjectPath,
-        context_sources: ['repository_analysis']
+        context_sources: ['repository_analysis'],
       });
 
       expect(result.isError).toBe(false);
-      expect(result.generation.recommendations.some(r => 
-        r.includes('testing documentation')
-      )).toBe(true);
+      expect(
+        result.generation.recommendations.some((r) => r.includes('testing documentation')),
+      ).toBe(true);
     });
   });
 
   describe('Metadata and Scoring', () => {
     beforeEach(async () => {
-      await fs.writeFile(join(testProjectPath, 'package.json'), JSON.stringify({
-        name: 'test-project',
-        dependencies: { react: '^18.0.0' }
-      }));
+      await fs.writeFile(
+        join(testProjectPath, 'package.json'),
+        JSON.stringify({
+          name: 'test-project',
+          dependencies: { react: '^18.0.0' },
+        }),
+      );
     });
 
     it('should include comprehensive metadata', async () => {
       const result = await generateTechnicalWriterPrompts({
-        project_path: testProjectPath
+        project_path: testProjectPath,
       });
 
       expect(result.isError).toBe(false);
@@ -397,7 +443,7 @@ describe('generate-technical-writer-prompts', () => {
 
       const result = await generateTechnicalWriterPrompts({
         project_path: testProjectPath,
-        context_sources: ['repository_analysis', 'readme_health']
+        context_sources: ['repository_analysis', 'readme_health'],
       });
 
       expect(result.isError).toBe(false);
@@ -408,7 +454,7 @@ describe('generate-technical-writer-prompts', () => {
       const result = await generateTechnicalWriterPrompts({
         project_path: testProjectPath,
         prompt_types: ['content_generation', 'gap_filling'],
-        context_sources: ['documentation_gaps']
+        context_sources: ['documentation_gaps'],
       });
 
       expect(result.isError).toBe(false);
@@ -421,7 +467,7 @@ describe('generate-technical-writer-prompts', () => {
   describe('Error Handling', () => {
     it('should handle non-existent project path gracefully', async () => {
       const result = await generateTechnicalWriterPrompts({
-        project_path: '/non/existent/path'
+        project_path: '/non/existent/path',
       });
 
       expect(result.isError).toBe(false); // Should not error, just provide limited context
@@ -432,7 +478,7 @@ describe('generate-technical-writer-prompts', () => {
       const result = await generateTechnicalWriterPrompts({
         project_path: testProjectPath,
         // @ts-ignore - testing invalid input
-        context_sources: ['invalid_source']
+        context_sources: ['invalid_source'],
       });
 
       expect(result.isError).toBe(true);
@@ -442,7 +488,7 @@ describe('generate-technical-writer-prompts', () => {
     it('should provide empty result structure on error', async () => {
       const result = await generateTechnicalWriterPrompts({
         // @ts-ignore - testing invalid input
-        project_path: null
+        project_path: null,
       });
 
       expect(result.isError).toBe(true);
@@ -455,43 +501,50 @@ describe('generate-technical-writer-prompts', () => {
 
   describe('Cross-Tool Integration', () => {
     beforeEach(async () => {
-      await fs.writeFile(join(testProjectPath, 'package.json'), JSON.stringify({
-        name: 'integration-test',
-        dependencies: { 'next': '^13.0.0' }
-      }));
+      await fs.writeFile(
+        join(testProjectPath, 'package.json'),
+        JSON.stringify({
+          name: 'integration-test',
+          dependencies: { next: '^13.0.0' },
+        }),
+      );
     });
 
     it('should reference multiple DocuMCP tools in integration hints', async () => {
       const result = await generateTechnicalWriterPrompts({
         project_path: testProjectPath,
-        integration_level: 'comprehensive'
+        integration_level: 'comprehensive',
       });
 
       expect(result.isError).toBe(false);
-      const allHints = result.generation.prompts.flatMap(p => p.integrationHints);
-      const allTools = result.generation.prompts.flatMap(p => p.relatedTools);
-      
+      const allHints = result.generation.prompts.flatMap((p) => p.integrationHints);
+      const allTools = result.generation.prompts.flatMap((p) => p.relatedTools);
+
       // Should reference multiple DocuMCP tools
       expect(allTools).toContain('analyze_repository');
       expect(allTools).toContain('detect_documentation_gaps');
       expect(allTools).toContain('readme_best_practices');
       // Check for any deployment-related tools since validate_content may not always be included
-      expect(allTools.some(tool => ['validate_content', 'deploy_pages', 'verify_deployment'].includes(tool))).toBe(true);
+      expect(
+        allTools.some((tool) =>
+          ['validate_content', 'deploy_pages', 'verify_deployment'].includes(tool),
+        ),
+      ).toBe(true);
     });
 
     it('should provide workflow guidance for tool chaining', async () => {
       const result = await generateTechnicalWriterPrompts({
         project_path: testProjectPath,
-        integration_level: 'advanced'
+        integration_level: 'advanced',
       });
 
       expect(result.isError).toBe(false);
-      expect(result.generation.recommendations.some(r => 
-        r.includes('analyze_repository first')
-      )).toBe(true);
-      expect(result.generation.recommendations.some(r => 
-        r.includes('validate_content')
-      )).toBe(true);
+      expect(
+        result.generation.recommendations.some((r) => r.includes('analyze_repository first')),
+      ).toBe(true);
+      expect(result.generation.recommendations.some((r) => r.includes('validate_content'))).toBe(
+        true,
+      );
     });
   });
 });

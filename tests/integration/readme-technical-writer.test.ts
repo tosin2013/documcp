@@ -216,7 +216,7 @@ See [CHANGELOG.md](CHANGELOG.md) for a list of changes and version history.
       const analysisResult = await analyzeReadme({
         project_path: testDir,
         target_audience: 'developers',
-        optimization_level: 'moderate'
+        optimization_level: 'moderate',
       });
 
       expect(analysisResult.success).toBe(true);
@@ -226,7 +226,9 @@ See [CHANGELOG.md](CHANGELOG.md) for a list of changes and version history.
 
       console.log(`📊 Analysis Score: ${analysisResult.data?.analysis.overallScore}/100`);
       console.log(`📝 Word Count: ${analysisResult.data?.analysis.lengthAnalysis.currentWords}`);
-      console.log(`💡 Optimization Opportunities: ${analysisResult.data?.analysis.optimizationOpportunities.length}`);
+      console.log(
+        `💡 Optimization Opportunities: ${analysisResult.data?.analysis.optimizationOpportunities.length}`,
+      );
 
       // Step 2: Optimize the README
       console.log('\n🛠️  Optimizing README...');
@@ -236,7 +238,7 @@ See [CHANGELOG.md](CHANGELOG.md) for a list of changes and version history.
         max_length: 300,
         include_tldr: true,
         create_docs_directory: true,
-        output_path: readmePath
+        output_path: readmePath,
       });
 
       expect(optimizationResult.success).toBe(true);
@@ -245,9 +247,15 @@ See [CHANGELOG.md](CHANGELOG.md) for a list of changes and version history.
       // Note: Optimization may not always reduce length due to TL;DR addition
       expect(optimizationResult.data?.optimization.optimizedLength).toBeGreaterThan(0);
 
-      console.log(`📉 Length Reduction: ${optimizationResult.data?.optimization.reductionPercentage}%`);
-      console.log(`🔄 Restructuring Changes: ${optimizationResult.data?.optimization.restructuringChanges.length}`);
-      console.log(`📁 Extracted Sections: ${optimizationResult.data?.optimization.extractedSections.length}`);
+      console.log(
+        `📉 Length Reduction: ${optimizationResult.data?.optimization.reductionPercentage}%`,
+      );
+      console.log(
+        `🔄 Restructuring Changes: ${optimizationResult.data?.optimization.restructuringChanges.length}`,
+      );
+      console.log(
+        `📁 Extracted Sections: ${optimizationResult.data?.optimization.extractedSections.length}`,
+      );
 
       // Step 3: Verify the optimized README is better
       const optimizedContent = await fs.readFile(readmePath, 'utf-8');
@@ -259,15 +267,17 @@ See [CHANGELOG.md](CHANGELOG.md) for a list of changes and version history.
       console.log('\n🔍 Re-analyzing optimized README...');
       const reanalysisResult = await analyzeReadme({
         project_path: testDir,
-        target_audience: 'developers'
+        target_audience: 'developers',
       });
 
       expect(reanalysisResult.success).toBe(true);
       console.log(`📊 New Analysis Score: ${reanalysisResult.data?.analysis.overallScore}/100`);
-      
+
       // The optimized version should have fewer optimization opportunities
-      const originalOpportunities = analysisResult.data?.analysis.optimizationOpportunities.length ?? 0;
-      const newOpportunities = reanalysisResult.data?.analysis.optimizationOpportunities.length ?? 0;
+      const originalOpportunities =
+        analysisResult.data?.analysis.optimizationOpportunities.length ?? 0;
+      const newOpportunities =
+        reanalysisResult.data?.analysis.optimizationOpportunities.length ?? 0;
       expect(newOpportunities).toBeLessThanOrEqual(originalOpportunities);
     });
 
@@ -299,12 +309,12 @@ Contact our support team.`;
       const result = await optimizeReadme({
         readme_path: readmePath,
         strategy: 'enterprise_focused',
-        max_length: 200
+        max_length: 200,
       });
 
       expect(result.success).toBe(true);
       expect(result.data?.optimization.optimizedContent).toContain('## TL;DR');
-      
+
       // Enterprise strategy should provide relevant optimization
       expect(result.data?.optimization.recommendations.length).toBeGreaterThan(0);
       expect(result.data?.optimization.optimizedContent).toContain('## TL;DR');
@@ -332,12 +342,12 @@ MIT License`;
       const result = await optimizeReadme({
         readme_path: readmePath,
         strategy: 'community_focused',
-        max_length: 150
+        max_length: 150,
       });
 
       expect(result.success).toBe(true);
       expect(result.data?.optimization.optimizedContent).toContain('## TL;DR');
-      
+
       // Community strategy should focus on contribution and collaboration
       const optimizedContent = result.data?.optimization.optimizedContent || '';
       expect(optimizedContent.toLowerCase()).toMatch(/contribut|collaborat|communit/);
@@ -351,7 +361,7 @@ MIT License`;
       await fs.writeFile(readmePath, noHeadingsReadme);
 
       const analysisResult = await analyzeReadme({
-        project_path: testDir
+        project_path: testDir,
       });
 
       expect(analysisResult.success).toBe(true);
@@ -360,7 +370,7 @@ MIT License`;
 
       const optimizationResult = await optimizeReadme({
         readme_path: readmePath,
-        strategy: 'general'
+        strategy: 'general',
       });
 
       expect(optimizationResult.success).toBe(true);
@@ -374,7 +384,7 @@ MIT License`;
 
       const analysisResult = await analyzeReadme({
         project_path: testDir,
-        max_length_target: 100
+        max_length_target: 100,
       });
 
       expect(analysisResult.success).toBe(true);
@@ -382,7 +392,7 @@ MIT License`;
 
       const optimizationResult = await optimizeReadme({
         readme_path: readmePath,
-        max_length: 100
+        max_length: 100,
       });
 
       expect(optimizationResult.success).toBe(true);
@@ -409,49 +419,51 @@ Use it like this.`;
 
       const result = await optimizeReadme({
         readme_path: readmePath,
-        preserve_existing: true
+        preserve_existing: true,
       });
 
       expect(result.success).toBe(true);
       // The tool may still generate a TL;DR even with existing one for optimization
-      expect(result.data?.optimization.optimizedContent).toContain('This project does X for Y users');
+      expect(result.data?.optimization.optimizedContent).toContain(
+        'This project does X for Y users',
+      );
     });
   });
 
   describe('Performance and scalability', () => {
     it('should handle large README files efficiently', async () => {
       // Create a large README with many sections
-      const largeSections = Array.from({ length: 50 }, (_, i) => 
-        `## Section ${i + 1}\n\nThis is section ${i + 1} with some content. `.repeat(20)
+      const largeSections = Array.from({ length: 50 }, (_, i) =>
+        `## Section ${i + 1}\n\nThis is section ${i + 1} with some content. `.repeat(20),
       ).join('\n\n');
-      
+
       const largeReadme = `# Large Project\n\n${largeSections}`;
 
       await fs.writeFile(readmePath, largeReadme);
 
       const startTime = Date.now();
-      
+
       const analysisResult = await analyzeReadme({
         project_path: testDir,
-        max_length_target: 500
+        max_length_target: 500,
       });
 
       const analysisTime = Date.now() - startTime;
-      
+
       expect(analysisResult.success).toBe(true);
       expect(analysisTime).toBeLessThan(5000); // Should complete within 5 seconds
       expect(analysisResult.data?.analysis.lengthAnalysis.exceedsTarget).toBe(true);
 
       const optimizationStartTime = Date.now();
-      
+
       const optimizationResult = await optimizeReadme({
         readme_path: readmePath,
         max_length: 500,
-        create_docs_directory: true
+        create_docs_directory: true,
       });
 
       const optimizationTime = Date.now() - optimizationStartTime;
-      
+
       expect(optimizationResult.success).toBe(true);
       expect(optimizationTime).toBeLessThan(5000); // Should complete within 5 seconds
       expect(optimizationResult.data?.optimization.extractedSections.length).toBeGreaterThan(0);

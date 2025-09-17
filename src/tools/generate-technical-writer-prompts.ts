@@ -6,24 +6,40 @@ import { join } from 'path';
 // Input validation schema
 const GeneratePromptsInputSchema = z.object({
   project_path: z.string().min(1, 'Project path is required'),
-  context_sources: z.array(z.enum([
-    'repository_analysis',
-    'readme_health',
-    'documentation_gaps',
-    'best_practices',
-    'content_validation',
-    'deployment_context'
-  ])).optional().default(['repository_analysis', 'readme_health']),
-  audience: z.enum(['developer', 'end_user', 'contributor', 'enterprise', 'mixed']).optional().default('mixed'),
-  prompt_types: z.array(z.enum([
-    'content_generation',
-    'style_improvement',
-    'structure_guidance',
-    'gap_filling',
-    'audience_adaptation',
-    'deployment_optimization'
-  ])).optional().default(['content_generation', 'gap_filling']),
-  integration_level: z.enum(['basic', 'comprehensive', 'advanced']).optional().default('comprehensive')
+  context_sources: z
+    .array(
+      z.enum([
+        'repository_analysis',
+        'readme_health',
+        'documentation_gaps',
+        'best_practices',
+        'content_validation',
+        'deployment_context',
+      ]),
+    )
+    .optional()
+    .default(['repository_analysis', 'readme_health']),
+  audience: z
+    .enum(['developer', 'end_user', 'contributor', 'enterprise', 'mixed'])
+    .optional()
+    .default('mixed'),
+  prompt_types: z
+    .array(
+      z.enum([
+        'content_generation',
+        'style_improvement',
+        'structure_guidance',
+        'gap_filling',
+        'audience_adaptation',
+        'deployment_optimization',
+      ]),
+    )
+    .optional()
+    .default(['content_generation', 'gap_filling']),
+  integration_level: z
+    .enum(['basic', 'comprehensive', 'advanced'])
+    .optional()
+    .default('comprehensive'),
 });
 
 type GeneratePromptsInput = z.infer<typeof GeneratePromptsInputSchema>;
@@ -82,12 +98,13 @@ interface PromptGenerationResult {
  * Generate intelligent technical writer prompts based on comprehensive project analysis
  */
 export async function generateTechnicalWriterPrompts(
-  input: Partial<GeneratePromptsInput>
+  input: Partial<GeneratePromptsInput>,
 ): Promise<MCPContentWrapper & { generation: PromptGenerationResult; nextSteps: NextStep[] }> {
   try {
     // Validate input
     const validatedInput = GeneratePromptsInputSchema.parse(input);
-    const { project_path, context_sources, audience, prompt_types, integration_level } = validatedInput;
+    const { project_path, context_sources, audience, prompt_types, integration_level } =
+      validatedInput;
 
     // Build comprehensive context by integrating multiple tool outputs
     const projectContext = await buildProjectContext(project_path);
@@ -99,14 +116,14 @@ export async function generateTechnicalWriterPrompts(
       documentationContext,
       audience,
       prompt_types,
-      integration_level
+      integration_level,
     );
 
     // Create recommendations based on cross-tool insights
     const recommendations = generateIntegrationRecommendations(
       projectContext,
       documentationContext,
-      prompts
+      prompts,
     );
 
     const nextSteps = generateNextSteps(prompts, integration_level);
@@ -116,7 +133,7 @@ export async function generateTechnicalWriterPrompts(
       contextSummary: {
         projectContext,
         documentationContext,
-        integrationLevel: integration_level
+        integrationLevel: integration_level,
       },
       recommendations,
       nextSteps,
@@ -124,29 +141,39 @@ export async function generateTechnicalWriterPrompts(
         totalPrompts: prompts.length,
         promptsByCategory: categorizePrompts(prompts),
         confidenceScore: calculateConfidenceScore(projectContext, documentationContext),
-        generatedAt: new Date().toISOString()
-      }
+        generatedAt: new Date().toISOString(),
+      },
     };
 
     return {
       content: [
         {
           type: 'text',
-          text: `Generated ${prompts.length} intelligent technical writer prompts with ${integration_level} integration level`
-        }
+          text: `Generated ${prompts.length} intelligent technical writer prompts with ${integration_level} integration level`,
+        },
       ],
       generation: result,
       nextSteps,
-      isError: false
+      isError: false,
     };
-
   } catch (error) {
     const emptyResult: PromptGenerationResult = {
       prompts: [],
       contextSummary: {
-        projectContext: { projectType: 'unknown', languages: [], frameworks: [], hasTests: false, hasCI: false },
-        documentationContext: { readmeExists: false, documentationGaps: [], contentIssues: [], linkIssues: [] },
-        integrationLevel: 'basic'
+        projectContext: {
+          projectType: 'unknown',
+          languages: [],
+          frameworks: [],
+          hasTests: false,
+          hasCI: false,
+        },
+        documentationContext: {
+          readmeExists: false,
+          documentationGaps: [],
+          contentIssues: [],
+          linkIssues: [],
+        },
+        integrationLevel: 'basic',
       },
       recommendations: [],
       nextSteps: [],
@@ -154,20 +181,22 @@ export async function generateTechnicalWriterPrompts(
         totalPrompts: 0,
         promptsByCategory: {},
         confidenceScore: 0,
-        generatedAt: new Date().toISOString()
-      }
+        generatedAt: new Date().toISOString(),
+      },
     };
 
     return {
       content: [
         {
           type: 'text',
-          text: `Error generating technical writer prompts: ${error instanceof Error ? error.message : 'Unknown error'}`
-        }
+          text: `Error generating technical writer prompts: ${
+            error instanceof Error ? error.message : 'Unknown error'
+          }`,
+        },
       ],
       generation: emptyResult,
       nextSteps: [],
-      isError: true
+      isError: true,
     };
   }
 }
@@ -186,38 +215,37 @@ async function buildProjectContext(projectPath: string): Promise<ProjectContext>
     // Analyze package.json if it exists
     try {
       const packageJson = JSON.parse(await fs.readFile(packageJsonPath, 'utf-8'));
-      
+
       // Determine project type from dependencies
       const deps = { ...packageJson.dependencies, ...packageJson.devDependencies };
-      
+
       if (deps['react']) frameworks.push('React');
       if (deps['vue']) frameworks.push('Vue');
       if (deps['angular']) frameworks.push('Angular');
       if (deps['next']) frameworks.push('Next.js');
       if (deps['express']) frameworks.push('Express');
       if (deps['typescript']) languages.push('TypeScript');
-      
+
       languages.push('JavaScript');
       projectType = frameworks.length > 0 ? 'web_application' : 'library';
-      
+
       // Detect package manager
       if (await fileExists(join(projectPath, 'yarn.lock'))) packageManager = 'yarn';
       else if (await fileExists(join(projectPath, 'pnpm-lock.yaml'))) packageManager = 'pnpm';
       else packageManager = 'npm';
-      
     } catch {
       // Fallback analysis for non-Node.js projects
       const files = await fs.readdir(projectPath);
-      
-      if (files.some(f => f.endsWith('.py'))) {
+
+      if (files.some((f) => f.endsWith('.py'))) {
         languages.push('Python');
         projectType = 'python_application';
       }
-      if (files.some(f => f.endsWith('.rs'))) {
+      if (files.some((f) => f.endsWith('.rs'))) {
         languages.push('Rust');
         projectType = 'rust_application';
       }
-      if (files.some(f => f.endsWith('.go'))) {
+      if (files.some((f) => f.endsWith('.go'))) {
         languages.push('Go');
         projectType = 'go_application';
       }
@@ -232,16 +260,15 @@ async function buildProjectContext(projectPath: string): Promise<ProjectContext>
       frameworks,
       packageManager,
       hasTests,
-      hasCI
+      hasCI,
     };
-
   } catch (error) {
     return {
       projectType: 'unknown',
       languages: [],
       frameworks: [],
       hasTests: false,
-      hasCI: false
+      hasCI: false,
     };
   }
 }
@@ -251,17 +278,17 @@ async function buildProjectContext(projectPath: string): Promise<ProjectContext>
  */
 async function buildDocumentationContext(
   projectPath: string,
-  contextSources: string[]
+  contextSources: string[],
 ): Promise<DocumentationContext> {
   const readmeExists = await fileExists(join(projectPath, 'README.md'));
-  
+
   // This would integrate with actual tool outputs in production
   // For now, we'll simulate the integration points
   const context: DocumentationContext = {
     readmeExists,
     documentationGaps: [],
     contentIssues: [],
-    linkIssues: []
+    linkIssues: [],
   };
 
   // Simulate integration with analyze_readme tool
@@ -290,7 +317,7 @@ async function generateContextualPrompts(
   documentationContext: DocumentationContext,
   audience: string,
   promptTypes: string[],
-  integrationLevel: string
+  integrationLevel: string,
 ): Promise<TechnicalWriterPrompt[]> {
   const prompts: TechnicalWriterPrompt[] = [];
 
@@ -302,15 +329,22 @@ async function generateContextualPrompts(
       category: 'content_generation',
       audience,
       priority: 'high',
-      prompt: `Generate a compelling project overview for a ${projectContext.projectType} built with ${projectContext.frameworks.join(', ')} and ${projectContext.languages.join(', ')}. Focus on the problem it solves and key benefits for ${audience} users.`,
-      context: `Project uses ${projectContext.languages.join(', ')} with ${projectContext.frameworks.join(', ')} frameworks`,
-      expectedOutput: 'A clear, engaging project description that explains purpose, benefits, and target audience',
+      prompt: `Generate a compelling project overview for a ${
+        projectContext.projectType
+      } built with ${projectContext.frameworks.join(', ')} and ${projectContext.languages.join(
+        ', ',
+      )}. Focus on the problem it solves and key benefits for ${audience} users.`,
+      context: `Project uses ${projectContext.languages.join(
+        ', ',
+      )} with ${projectContext.frameworks.join(', ')} frameworks`,
+      expectedOutput:
+        'A clear, engaging project description that explains purpose, benefits, and target audience',
       integrationHints: [
         'Use analyze_repository output for technical accuracy',
         'Reference detect_documentation_gaps for missing context',
-        'Align with readme_best_practices recommendations'
+        'Align with readme_best_practices recommendations',
       ],
-      relatedTools: ['analyze_repository', 'detect_documentation_gaps', 'readme_best_practices']
+      relatedTools: ['analyze_repository', 'detect_documentation_gaps', 'readme_best_practices'],
     });
   }
 
@@ -323,21 +357,30 @@ async function generateContextualPrompts(
         category: 'gap_filling',
         audience,
         priority: 'high',
-        prompt: `Create comprehensive ${gap.replace('_', ' ')} content for a ${projectContext.projectType} project. Include practical examples and ${audience}-focused guidance.`,
+        prompt: `Create comprehensive ${gap.replace('_', ' ')} content for a ${
+          projectContext.projectType
+        } project. Include practical examples and ${audience}-focused guidance.`,
         context: `Missing ${gap} identified by documentation gap analysis`,
-        expectedOutput: `Complete ${gap.replace('_', ' ')} section with examples and clear instructions`,
+        expectedOutput: `Complete ${gap.replace(
+          '_',
+          ' ',
+        )} section with examples and clear instructions`,
         integrationHints: [
           'Use repository analysis for technical context',
           'Reference best practices for structure',
-          'Validate against content standards'
+          'Validate against content standards',
         ],
-        relatedTools: ['detect_documentation_gaps', 'validate_content', 'setup_structure']
+        relatedTools: ['detect_documentation_gaps', 'validate_content', 'setup_structure'],
       });
     }
   }
 
   // Style improvement prompts based on health scores
-  if (promptTypes.includes('style_improvement') && documentationContext.readmeHealth && documentationContext.readmeHealth < 80) {
+  if (
+    promptTypes.includes('style_improvement') &&
+    documentationContext.readmeHealth &&
+    documentationContext.readmeHealth < 80
+  ) {
     prompts.push({
       id: 'style-improvement-prompt',
       title: 'Documentation Style Enhancement',
@@ -346,13 +389,14 @@ async function generateContextualPrompts(
       priority: 'medium',
       prompt: `Improve the writing style and clarity of existing documentation. Focus on ${audience} readability, consistent tone, and professional presentation.`,
       context: `Current README health score: ${documentationContext.readmeHealth}/100`,
-      expectedOutput: 'Refined documentation with improved clarity, consistency, and professional tone',
+      expectedOutput:
+        'Refined documentation with improved clarity, consistency, and professional tone',
       integrationHints: [
         'Use evaluate_readme_health metrics for focus areas',
         'Apply readme_best_practices guidelines',
-        'Validate improvements with content validation'
+        'Validate improvements with content validation',
       ],
-      relatedTools: ['evaluate_readme_health', 'readme_best_practices', 'validate_content']
+      relatedTools: ['evaluate_readme_health', 'readme_best_practices', 'validate_content'],
     });
   }
 
@@ -366,13 +410,14 @@ async function generateContextualPrompts(
       priority: 'medium',
       prompt: `Create deployment documentation that integrates with the recommended static site generator and deployment workflow. Include environment setup, build process, and troubleshooting.`,
       context: `Project has CI: ${projectContext.hasCI}, Package manager: ${projectContext.packageManager}`,
-      expectedOutput: 'Complete deployment guide with step-by-step instructions and troubleshooting',
+      expectedOutput:
+        'Complete deployment guide with step-by-step instructions and troubleshooting',
       integrationHints: [
         'Use recommend_ssg output for deployment strategy',
         'Reference deploy_pages workflow',
-        'Include verify_deployment checklist'
+        'Include verify_deployment checklist',
       ],
-      relatedTools: ['recommend_ssg', 'deploy_pages', 'verify_deployment', 'test_local_deployment']
+      relatedTools: ['recommend_ssg', 'deploy_pages', 'verify_deployment', 'test_local_deployment'],
     });
   }
 
@@ -385,12 +430,12 @@ async function generateContextualPrompts(
 function generateIntegrationRecommendations(
   projectContext: ProjectContext,
   documentationContext: DocumentationContext,
-  _prompts: TechnicalWriterPrompt[]
+  _prompts: TechnicalWriterPrompt[],
 ): string[] {
   const recommendations: string[] = [];
 
   recommendations.push('Run analyze_repository first to establish comprehensive project context');
-  
+
   if (!documentationContext.readmeExists) {
     recommendations.push('Use generate_readme_template to create initial README structure');
   }
@@ -408,7 +453,9 @@ function generateIntegrationRecommendations(
   }
 
   recommendations.push('Validate all generated content using validate_content tool');
-  recommendations.push('Check documentation links with check_documentation_links after content creation');
+  recommendations.push(
+    'Check documentation links with check_documentation_links after content creation',
+  );
 
   return recommendations;
 }
@@ -422,39 +469,39 @@ function generateNextSteps(prompts: TechnicalWriterPrompt[], integrationLevel: s
   steps.push({
     action: 'Execute high-priority prompts first to address critical documentation gaps',
     toolRequired: 'generate_technical_writer_prompts',
-    priority: 'high'
+    priority: 'high',
   });
-  
+
   steps.push({
     action: 'Use generated prompts with AI writing tools for content creation',
     toolRequired: 'optimize_readme',
-    priority: 'high'
+    priority: 'high',
   });
-  
+
   steps.push({
     action: 'Validate generated content using DocuMCP validation tools',
     toolRequired: 'validate_content',
-    priority: 'medium'
+    priority: 'medium',
   });
 
   if (integrationLevel === 'comprehensive' || integrationLevel === 'advanced') {
     steps.push({
       action: 'Run full documentation workflow using integrated tool chain',
       toolRequired: 'analyze_repository',
-      priority: 'medium'
+      priority: 'medium',
     });
-    
+
     steps.push({
       action: 'Test documentation with target audience using deployment tools',
       toolRequired: 'test_local_deployment',
-      priority: 'low'
+      priority: 'low',
     });
   }
 
   steps.push({
     action: 'Iterate on content based on validation feedback and best practices analysis',
     toolRequired: 'readme_best_practices',
-    priority: 'low'
+    priority: 'low',
   });
 
   return steps;
@@ -475,13 +522,13 @@ async function fileExists(path: string): Promise<boolean> {
 async function hasTestFiles(projectPath: string): Promise<boolean> {
   try {
     const files = await fs.readdir(projectPath, { recursive: true });
-    return files.some(file => 
-      typeof file === 'string' && (
-        file.includes('test') || 
-        file.includes('spec') || 
-        file.endsWith('.test.js') || 
-        file.endsWith('.spec.js')
-      )
+    return files.some(
+      (file) =>
+        typeof file === 'string' &&
+        (file.includes('test') ||
+          file.includes('spec') ||
+          file.endsWith('.test.js') ||
+          file.endsWith('.spec.js')),
     );
   } catch {
     return false;
@@ -490,37 +537,37 @@ async function hasTestFiles(projectPath: string): Promise<boolean> {
 
 async function hasCIConfig(projectPath: string): Promise<boolean> {
   const ciFiles = ['.github/workflows', '.gitlab-ci.yml', 'circle.yml', '.travis.yml'];
-  
+
   for (const ciFile of ciFiles) {
     if (await fileExists(join(projectPath, ciFile))) {
       return true;
     }
   }
-  
+
   return false;
 }
 
 function categorizePrompts(prompts: TechnicalWriterPrompt[]): Record<string, number> {
   const categories: Record<string, number> = {};
-  
+
   for (const prompt of prompts) {
     categories[prompt.category] = (categories[prompt.category] || 0) + 1;
   }
-  
+
   return categories;
 }
 
 function calculateConfidenceScore(
   projectContext: ProjectContext,
-  documentationContext: DocumentationContext
+  documentationContext: DocumentationContext,
 ): number {
   let score = 50; // Base score
-  
+
   // Increase confidence based on available context
   if (projectContext.projectType !== 'unknown') score += 20;
   if (projectContext.languages.length > 0) score += 15;
   if (projectContext.frameworks.length > 0) score += 10;
   if (documentationContext.readmeExists) score += 5;
-  
+
   return Math.min(score, 100);
 }

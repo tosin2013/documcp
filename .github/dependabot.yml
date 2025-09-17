@@ -1,79 +1,79 @@
 version: 2
 updates:
   # Enable version updates for npm
-  - package-ecosystem: "npm"
-    directory: "/"
+  - package-ecosystem: 'npm'
+    directory: '/'
     schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "04:00"
+      interval: 'weekly'
+      day: 'monday'
+      time: '04:00'
     open-pull-requests-limit: 5
     reviewers:
-      - "tosinakinosho"
+      - 'tosinakinosho'
     assignees:
-      - "tosinakinosho"
+      - 'tosinakinosho'
     commit-message:
-      prefix: "deps"
-      include: "scope"
+      prefix: 'deps'
+      include: 'scope'
     labels:
-      - "dependencies"
-      - "npm"
-    
+      - 'dependencies'
+      - 'npm'
+
   # Enable security updates
-  - package-ecosystem: "npm"
-    directory: "/"
+  - package-ecosystem: 'npm'
+    directory: '/'
     schedule:
-      interval: "daily"
+      interval: 'daily'
     open-pull-requests-limit: 10
     labels:
-      - "security"
-      - "dependencies"
+      - 'security'
+      - 'dependencies'
     reviewers:
-      - "tosinakinosho"
-    
+      - 'tosinakinosho'
+
   # Documentation site dependencies (Docusaurus in /docs)
-  - package-ecosystem: "npm"
-    directory: "/docs"
+  - package-ecosystem: 'npm'
+    directory: '/docs'
     schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "04:00"
+      interval: 'weekly'
+      day: 'monday'
+      time: '04:00'
     open-pull-requests-limit: 5
     reviewers:
-      - "tosinakinosho"
+      - 'tosinakinosho'
     assignees:
-      - "tosinakinosho"
+      - 'tosinakinosho'
     commit-message:
-      prefix: "deps(docs)"
-      include: "scope"
+      prefix: 'deps(docs)'
+      include: 'scope'
     labels:
-      - "dependencies"
-      - "npm"
-      - "documentation"
-    
+      - 'dependencies'
+      - 'npm'
+      - 'documentation'
+
   # Documentation site security updates
-  - package-ecosystem: "npm"
-    directory: "/docs"
+  - package-ecosystem: 'npm'
+    directory: '/docs'
     schedule:
-      interval: "daily"
+      interval: 'daily'
     open-pull-requests-limit: 10
     labels:
-      - "security"
-      - "dependencies"
-      - "documentation"
+      - 'security'
+      - 'dependencies'
+      - 'documentation'
     reviewers:
-      - "tosinakinosho"
-    
+      - 'tosinakinosho'
+
   # GitHub Actions dependencies
-  - package-ecosystem: "github-actions"
-    directory: "/"
+  - package-ecosystem: 'github-actions'
+    directory: '/'
     schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "04:00"
+      interval: 'weekly'
+      day: 'monday'
+      time: '04:00'
     open-pull-requests-limit: 3
     reviewers:
-      - "tosinakinosho"
+      - 'tosinakinosho'
     labels:
-      - "github-actions"
-      - "dependencies"
+      - 'github-actions'
+      - 'dependencies'

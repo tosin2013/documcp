@@ -16,7 +16,7 @@ import {
   recallProjectHistory,
   getProjectInsights,
   getSimilarProjects,
-  getMemoryStatistics
+  getMemoryStatistics,
 } from '../../src/memory/integration.js';
 import { analyzeRepository } from '../../src/tools/analyze-repository.js';
 import { recommendSSG } from '../../src/tools/recommend-ssg.js';
@@ -27,7 +27,10 @@ describe('Memory MCP Tools Integration', () => {
 
   beforeEach(async () => {
     // Create unique temp directory for each test
-    tempDir = path.join(os.tmpdir(), `memory-mcp-integration-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
+    tempDir = path.join(
+      os.tmpdir(),
+      `memory-mcp-integration-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    );
     await fs.mkdir(tempDir, { recursive: true });
 
     // Create a mock project structure for testing
@@ -48,20 +51,29 @@ describe('Memory MCP Tools Integration', () => {
     await fs.mkdir(projectPath, { recursive: true });
 
     // Create package.json
-    await fs.writeFile(path.join(projectPath, 'package.json'), JSON.stringify({
-      name: 'test-project',
-      version: '1.0.0',
-      dependencies: {
-        'react': '^18.0.0',
-        'typescript': '^5.0.0'
-      },
-      devDependencies: {
-        'jest': '^29.0.0'
-      }
-    }, null, 2));
+    await fs.writeFile(
+      path.join(projectPath, 'package.json'),
+      JSON.stringify(
+        {
+          name: 'test-project',
+          version: '1.0.0',
+          dependencies: {
+            react: '^18.0.0',
+            typescript: '^5.0.0',
+          },
+          devDependencies: {
+            jest: '^29.0.0',
+          },
+        },
+        null,
+        2,
+      ),
+    );
 
     // Create README.md
-    await fs.writeFile(path.join(projectPath, 'README.md'), `# Test Project
+    await fs.writeFile(
+      path.join(projectPath, 'README.md'),
+      `# Test Project
 
 A test project for memory integration testing.
 
@@ -69,20 +81,30 @@ A test project for memory integration testing.
 - TypeScript support
 - React components
 - Jest testing
-`);
+`,
+    );
 
     // Create src directory with TypeScript files
     await fs.mkdir(path.join(projectPath, 'src'));
     await fs.writeFile(path.join(projectPath, 'src/index.ts'), 'export const hello = "world";');
-    await fs.writeFile(path.join(projectPath, 'src/component.tsx'), 'import React from "react"; export const Component = () => <div>Hello</div>;');
+    await fs.writeFile(
+      path.join(projectPath, 'src/component.tsx'),
+      'import React from "react"; export const Component = () => <div>Hello</div>;',
+    );
 
     // Create tests directory
     await fs.mkdir(path.join(projectPath, '__tests__'));
-    await fs.writeFile(path.join(projectPath, '__tests__/index.test.ts'), 'test("hello world", () => { expect(true).toBe(true); });');
+    await fs.writeFile(
+      path.join(projectPath, '__tests__/index.test.ts'),
+      'test("hello world", () => { expect(true).toBe(true); });',
+    );
 
     // Create docs directory
     await fs.mkdir(path.join(projectPath, 'docs'));
-    await fs.writeFile(path.join(projectPath, 'docs/setup.md'), '# Setup Guide\n\nHow to set up the project.');
+    await fs.writeFile(
+      path.join(projectPath, 'docs/setup.md'),
+      '# Setup Guide\n\nHow to set up the project.',
+    );
   }
 
   describe('Memory Integration Initialization', () => {
@@ -105,7 +127,7 @@ A test project for memory integration testing.
       await memoryManager.remember('analysis', { test: true });
 
       // Give events time to fire
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise((resolve) => setTimeout(resolve, 50));
 
       expect(eventsFired).toBeGreaterThanOrEqual(1);
     });
@@ -116,15 +138,15 @@ A test project for memory integration testing.
       // Run repository analysis tool
       const analysisResult = await analyzeRepository({
         path: testProjectDir,
-        depth: 'standard'
+        depth: 'standard',
       });
 
       expect(analysisResult.isError).toBeFalsy();
       expect(analysisResult.content).toBeDefined();
 
       // Extract analysis data from MCP response
-      const analysisContent = analysisResult.content.find(c =>
-        c.type === 'text' && c.text.includes('Analysis Complete')
+      const analysisContent = analysisResult.content.find(
+        (c) => c.type === 'text' && c.text.includes('Analysis Complete'),
       );
       expect(analysisContent).toBeDefined();
 
@@ -134,7 +156,7 @@ A test project for memory integration testing.
         language: { primary: 'typescript' },
         framework: { name: 'react' },
         stats: { files: 5 },
-        repository: { url: 'github.com/test/project' }
+        repository: { url: 'github.com/test/project' },
       };
 
       const memoryId = await rememberAnalysis(testProjectDir, analysisData);
@@ -156,7 +178,7 @@ A test project for memory integration testing.
         language: { primary: 'javascript' },
         framework: { name: 'vue' },
         stats: { files: 25 },
-        repository: { url: 'github.com/test/vue-project' }
+        repository: { url: 'github.com/test/vue-project' },
       };
 
       const memoryId = await rememberAnalysis('/test/vue-project', analysisData);
@@ -177,7 +199,7 @@ A test project for memory integration testing.
       const analysisData = {
         projectId: 'ssg-test',
         language: { primary: 'typescript' },
-        framework: { name: 'react' }
+        framework: { name: 'react' },
       };
 
       const analysisId = await rememberAnalysis('/test/ssg-project', analysisData);
@@ -187,8 +209,8 @@ A test project for memory integration testing.
         analysisId,
         preferences: {
           priority: 'features',
-          ecosystem: 'javascript'
-        }
+          ecosystem: 'javascript',
+        },
       });
 
       expect(recommendationResult.content).toBeDefined();
@@ -198,7 +220,7 @@ A test project for memory integration testing.
         recommended: 'docusaurus',
         confidence: 0.85,
         reasoning: ['React-based', 'TypeScript support'],
-        analysisId
+        analysisId,
       };
 
       const memoryId = await rememberRecommendation(analysisId, recommendationData);
@@ -218,14 +240,14 @@ A test project for memory integration testing.
       // Create analysis
       const analysisData = {
         projectId: 'linked-test',
-        language: { primary: 'python' }
+        language: { primary: 'python' },
       };
       const analysisId = await rememberAnalysis('/test/python-project', analysisData);
 
       // Create recommendation
       const recommendationData = {
         recommended: 'mkdocs',
-        confidence: 0.9
+        confidence: 0.9,
       };
       const recommendationId = await rememberRecommendation(analysisId, recommendationData);
 
@@ -246,7 +268,7 @@ A test project for memory integration testing.
         status: 'success',
         duration: 120,
         url: 'https://test-project.github.io',
-        branch: 'gh-pages'
+        branch: 'gh-pages',
       };
 
       const memoryId = await rememberDeployment('github.com/test/project', deploymentData);
@@ -267,7 +289,7 @@ A test project for memory integration testing.
         ssg: 'jekyll',
         status: 'failed',
         error: 'Build failed: missing dependency',
-        duration: 45
+        duration: 45,
       };
 
       const memoryId = await rememberDeployment('github.com/test/failed-project', failedDeployment);
@@ -289,8 +311,8 @@ A test project for memory integration testing.
         plugins: ['search', 'navigation'],
         build: {
           outputDir: '_site',
-          baseUrl: '/docs/'
-        }
+          baseUrl: '/docs/',
+        },
       };
 
       const memoryId = await rememberConfiguration('test-docs', 'mkdocs', configData);
@@ -315,20 +337,20 @@ A test project for memory integration testing.
       const analysisData = {
         projectId,
         language: { primary: 'typescript' },
-        framework: { name: 'react' }
+        framework: { name: 'react' },
       };
       await rememberAnalysis('/test/history-project', analysisData);
 
       const recommendationData = {
         recommended: 'docusaurus',
-        confidence: 0.8
+        confidence: 0.8,
       };
       await rememberRecommendation('analysis-id', recommendationData);
 
       const deploymentData = {
         ssg: 'docusaurus',
         status: 'success',
-        duration: 90
+        duration: 90,
       };
       await rememberDeployment('github.com/test/history-project', deploymentData);
 
@@ -348,14 +370,14 @@ A test project for memory integration testing.
       const successfulDeployment = {
         ssg: 'hugo',
         status: 'success',
-        duration: 60
+        duration: 60,
       };
       await rememberDeployment('github.com/test/insights-project', successfulDeployment);
 
       const failedDeployment = {
         ssg: 'hugo',
         status: 'failed',
-        error: 'Build timeout'
+        error: 'Build timeout',
       };
       await rememberDeployment('github.com/test/insights-project', failedDeployment);
 
@@ -366,7 +388,7 @@ A test project for memory integration testing.
       // Insights may be empty if memories don't meet criteria, that's ok
       if (insights.length > 0) {
         // Should include deployment success rate if deployments exist
-        const successRateInsight = insights.find(i => i.includes('success rate'));
+        const successRateInsight = insights.find((i) => i.includes('success rate'));
         expect(successRateInsight).toBeDefined();
       }
     });
@@ -378,26 +400,26 @@ A test project for memory integration testing.
       await rememberAnalysis('/project1', {
         projectId: 'project1',
         language: { primary: 'typescript' },
-        framework: { name: 'react' }
+        framework: { name: 'react' },
       });
 
       await rememberAnalysis('/project2', {
         projectId: 'project2',
         language: { primary: 'typescript' },
-        framework: { name: 'vue' }
+        framework: { name: 'vue' },
       });
 
       await rememberAnalysis('/project3', {
         projectId: 'project3',
         language: { primary: 'python' },
-        framework: { name: 'django' }
+        framework: { name: 'django' },
       });
 
       // Search for similar projects
       const targetProject = {
         language: { primary: 'typescript' },
         framework: { name: 'react' },
-        stats: { files: 100 }
+        stats: { files: 100 },
       };
 
       const similarProjects = await getSimilarProjects(targetProject, 3);
@@ -407,7 +429,7 @@ A test project for memory integration testing.
       // Similar projects may be empty if no matches found, that's ok
       if (similarProjects.length > 0) {
         // Should find TypeScript projects first
-        const tsProjects = similarProjects.filter(p => p.similarity > 0);
+        const tsProjects = similarProjects.filter((p) => p.similarity > 0);
         expect(tsProjects.length).toBeGreaterThan(0);
       }
     });
@@ -419,21 +441,21 @@ A test project for memory integration testing.
         language: { primary: 'javascript' },
         framework: { name: 'vue' },
         stats: { files: 50 },
-        documentation: { type: 'api' }
+        documentation: { type: 'api' },
       });
 
       await rememberAnalysis('/partial-match', {
         projectId: 'partial-match',
         language: { primary: 'javascript' },
         framework: { name: 'react' },
-        stats: { files: 45 }
+        stats: { files: 45 },
       });
 
       const targetProject = {
         language: { primary: 'javascript' },
         framework: { name: 'vue' },
         stats: { files: 52 },
-        documentation: { type: 'api' }
+        documentation: { type: 'api' },
       };
 
       const similarProjects = await getSimilarProjects(targetProject, 5);
@@ -442,8 +464,8 @@ A test project for memory integration testing.
 
       // Similar projects may be empty, but if found should have similarity scores
       if (similarProjects.length > 0) {
-        const exactMatch = similarProjects.find(p => p.projectId === 'exact-match');
-        const partialMatch = similarProjects.find(p => p.projectId === 'partial-match');
+        const exactMatch = similarProjects.find((p) => p.projectId === 'exact-match');
+        const partialMatch = similarProjects.find((p) => p.projectId === 'partial-match');
 
         if (exactMatch && partialMatch) {
           expect(exactMatch.similarity).toBeGreaterThan(partialMatch.similarity);
@@ -457,12 +479,12 @@ A test project for memory integration testing.
       // Create some test data
       await rememberAnalysis('/stats-test', {
         projectId: 'stats-test',
-        language: { primary: 'go' }
+        language: { primary: 'go' },
       });
 
       await rememberDeployment('github.com/test/stats', {
         ssg: 'hugo',
-        status: 'success'
+        status: 'success',
       });
 
       const stats = await getMemoryStatistics();
@@ -477,7 +499,7 @@ A test project for memory integration testing.
       const malformedData = {
         // Missing required fields
         language: null,
-        framework: undefined
+        framework: undefined,
       };
 
       // Should not throw but handle gracefully
@@ -492,7 +514,7 @@ A test project for memory integration testing.
     test('should handle missing analysis when creating recommendations', async () => {
       const recommendationData = {
         recommended: 'jekyll',
-        confidence: 0.7
+        confidence: 0.7,
       };
 
       // Reference non-existent analysis
@@ -516,7 +538,7 @@ A test project for memory integration testing.
       const uniqueProject = {
         language: { primary: 'rust' },
         framework: { name: 'actix' },
-        stats: { files: 500 }
+        stats: { files: 500 },
       };
 
       const similarProjects = await getSimilarProjects(uniqueProject, 5);

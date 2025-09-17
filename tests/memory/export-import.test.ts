@@ -41,9 +41,8 @@ describe('MemoryExportImportSystem', () => {
     memoryManager = new MemoryManager(tempDir);
     await memoryManager.initialize();
 
-    // Create required dependencies for MemoryExportImportSystem
-    storage = new JSONLStorage(tempDir);
-    await storage.initialize();
+    // Use the memory manager's storage for consistency
+    storage = memoryManager.getStorage();
 
     learningSystem = new IncrementalLearningSystem(memoryManager);
     await learningSystem.initialize();
@@ -164,10 +163,15 @@ describe('MemoryExportImportSystem', () => {
       const content = await fs.readFile(exportPath, 'utf-8');
       const lines = content.trim().split('\n');
 
-      expect(lines.length).toBe(3);
+      expect(lines.length).toBe(4); // 1 metadata + 3 memory entries
       lines.forEach((line) => {
         expect(() => JSON.parse(line)).not.toThrow();
       });
+
+      // First line should be metadata
+      const firstLine = JSON.parse(lines[0]);
+      expect(firstLine).toHaveProperty('version');
+      expect(firstLine).toHaveProperty('exportedAt');
     });
 
     test('should export with filtering options', async () => {
@@ -369,7 +373,8 @@ describe('MemoryExportImportSystem', () => {
 
       expect(result.success).toBe(false);
       expect(result.errors).toBeGreaterThan(0);
-      expect(Array.isArray(result.errors)).toBe(true);
+      expect(Array.isArray(result.errorDetails)).toBe(true);
+      expect(result.errorDetails.length).toBeGreaterThan(0);
     });
 
     test('should perform dry run import', async () => {
@@ -625,7 +630,8 @@ describe('MemoryExportImportSystem', () => {
 
       expect(result.imported).toBe(1); // Only valid memory imported
       expect(result.errors).toBe(1); // One error for invalid memory
-      expect(Array.isArray(result.errors)).toBe(true);
+      expect(Array.isArray(result.errorDetails)).toBe(true);
+      expect(result.errorDetails.length).toBe(1);
     });
 
     test('should validate data integrity', async () => {

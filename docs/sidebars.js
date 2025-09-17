@@ -8,7 +8,7 @@ const sidebars = {
       label: '📚 Tutorials',
       items: [
         'tutorials/getting-started-with-documcp',
-        'tutorials/setting-up-your-development-environment', 
+        'tutorials/setting-up-your-development-environment',
         'tutorials/writing-and-running-tests',
       ],
     },

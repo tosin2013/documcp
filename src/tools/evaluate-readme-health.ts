@@ -6,7 +6,10 @@ import { formatMCPResponse } from '../types/api.js';
 // Input validation schema
 const EvaluateReadmeHealthSchema = z.object({
   readme_path: z.string().min(1, 'README path is required'),
-  project_type: z.enum(['community_library', 'enterprise_tool', 'personal_project', 'documentation']).optional().default('community_library'),
+  project_type: z
+    .enum(['community_library', 'enterprise_tool', 'personal_project', 'documentation'])
+    .optional()
+    .default('community_library'),
   repository_path: z.string().optional(),
 });
 
@@ -54,36 +57,54 @@ export async function evaluateReadmeHealth(input: EvaluateReadmeHealthInput) {
   try {
     // Validate input
     const validatedInput = EvaluateReadmeHealthSchema.parse(input);
-    
+
     // Read README file
     const readmePath = path.resolve(validatedInput.readme_path);
     const readmeContent = await fs.readFile(readmePath, 'utf-8');
-    
+
     // Get repository context if available
     let repoContext: any = null;
     if (validatedInput.repository_path) {
       repoContext = await analyzeRepositoryContext(validatedInput.repository_path);
     }
-    
+
     // Evaluate all health components
     const communityHealth = evaluateCommunityHealth(readmeContent, repoContext);
     const accessibility = evaluateAccessibility(readmeContent);
     const onboarding = evaluateOnboarding(readmeContent, validatedInput.project_type);
     const contentQuality = evaluateContentQuality(readmeContent);
-    
+
     // Calculate overall score
-    const totalScore = communityHealth.score + accessibility.score + onboarding.score + contentQuality.score;
-    const maxTotalScore = communityHealth.maxScore + accessibility.maxScore + onboarding.maxScore + contentQuality.maxScore;
+    const totalScore =
+      communityHealth.score + accessibility.score + onboarding.score + contentQuality.score;
+    const maxTotalScore =
+      communityHealth.maxScore +
+      accessibility.maxScore +
+      onboarding.maxScore +
+      contentQuality.maxScore;
     const percentage = (totalScore / maxTotalScore) * 100;
-    
+
     // Generate grade
     const grade = getGrade(percentage);
-    
+
     // Generate recommendations and insights
-    const recommendations = generateHealthRecommendations([communityHealth, accessibility, onboarding, contentQuality], 'general');
-    const strengths = identifyStrengths([communityHealth, accessibility, onboarding, contentQuality]);
-    const criticalIssues = identifyCriticalIssues([communityHealth, accessibility, onboarding, contentQuality]);
-    
+    const recommendations = generateHealthRecommendations(
+      [communityHealth, accessibility, onboarding, contentQuality],
+      'general',
+    );
+    const strengths = identifyStrengths([
+      communityHealth,
+      accessibility,
+      onboarding,
+      contentQuality,
+    ]);
+    const criticalIssues = identifyCriticalIssues([
+      communityHealth,
+      accessibility,
+      onboarding,
+      contentQuality,
+    ]);
+
     const report: ReadmeHealthReport = {
       overallScore: Math.round(percentage),
       maxScore: 100,
@@ -97,7 +118,10 @@ export async function evaluateReadmeHealth(input: EvaluateReadmeHealthInput) {
       recommendations,
       strengths,
       criticalIssues,
-      estimatedImprovementTime: estimateImprovementTime(recommendations.length, criticalIssues.length),
+      estimatedImprovementTime: estimateImprovementTime(
+        recommendations.length,
+        criticalIssues.length,
+      ),
     };
 
     const response = {
@@ -117,7 +141,6 @@ export async function evaluateReadmeHealth(input: EvaluateReadmeHealthInput) {
         timestamp: new Date().toISOString(),
       },
     });
-
   } catch (error) {
     return formatMCPResponse({
       success: false,
@@ -153,7 +176,10 @@ function evaluateCommunityHealth(content: string, _repoContext: any): HealthScor
     },
     {
       check: 'Issue/PR templates mentioned',
-      passed: /issue.template|pull.request.template|\.github\/issue_template|\.github\/pull_request_template/i.test(content),
+      passed:
+        /issue.template|pull.request.template|\.github\/issue_template|\.github\/pull_request_template/i.test(
+          content,
+        ),
       points: 0,
       maxPoints: 5,
       recommendation: 'Reference issue and PR templates to streamline contributions',
@@ -175,7 +201,7 @@ function evaluateCommunityHealth(content: string, _repoContext: any): HealthScor
   ];
 
   // Award points for passed checks
-  checks.forEach(check => {
+  checks.forEach((check) => {
     if (check.passed) {
       check.points = check.maxPoints;
     }
@@ -194,9 +220,9 @@ function evaluateCommunityHealth(content: string, _repoContext: any): HealthScor
 
 function evaluateAccessibility(content: string): HealthScoreComponent {
   const lines = content.split('\n');
-  const headings = lines.filter(line => line.trim().startsWith('#'));
+  const headings = lines.filter((line) => line.trim().startsWith('#'));
   const images = content.match(/!\[.*?\]\(.*?\)/g) || [];
-  
+
   const checks: HealthCheckDetail[] = [
     {
       check: 'Scannable structure with proper spacing',
@@ -207,14 +233,14 @@ function evaluateAccessibility(content: string): HealthScoreComponent {
     },
     {
       check: 'Clear heading hierarchy',
-      passed: headings.length >= 3 && headings.some(h => h.startsWith('##')),
+      passed: headings.length >= 3 && headings.some((h) => h.startsWith('##')),
       points: 0,
       maxPoints: 5,
       recommendation: 'Use proper heading hierarchy (H1, H2, H3) to structure content',
     },
     {
       check: 'Alt text for images',
-      passed: images.length === 0 || images.every(img => !img.includes('![](')),
+      passed: images.length === 0 || images.every((img) => !img.includes('![](')),
       points: 0,
       maxPoints: 5,
       recommendation: 'Add descriptive alt text for all images for screen readers',
@@ -224,12 +250,13 @@ function evaluateAccessibility(content: string): HealthScoreComponent {
       passed: !/\b(guys|blacklist|whitelist|master|slave)\b/i.test(content),
       points: 0,
       maxPoints: 5,
-      recommendation: 'Use inclusive language (e.g., "team" instead of "guys", "allowlist/blocklist")',
+      recommendation:
+        'Use inclusive language (e.g., "team" instead of "guys", "allowlist/blocklist")',
     },
   ];
 
   // Award points for passed checks
-  checks.forEach(check => {
+  checks.forEach((check) => {
     if (check.passed) {
       check.points = check.maxPoints;
     }
@@ -279,7 +306,7 @@ function evaluateOnboarding(content: string, _projectType: string): HealthScoreC
   ];
 
   // Award points for passed checks
-  checks.forEach(check => {
+  checks.forEach((check) => {
     if (check.passed) {
       check.points = check.maxPoints;
     }
@@ -300,7 +327,7 @@ function evaluateContentQuality(content: string): HealthScoreComponent {
   const wordCount = content.split(/\s+/).length;
   const codeBlocks = (content.match(/```/g) || []).length / 2;
   const links = (content.match(/\[.*?\]\(.*?\)/g) || []).length;
-  
+
   const checks: HealthCheckDetail[] = [
     {
       check: 'Adequate content length',
@@ -333,7 +360,7 @@ function evaluateContentQuality(content: string): HealthScoreComponent {
   ];
 
   // Award points for passed checks
-  checks.forEach(check => {
+  checks.forEach((check) => {
     if (check.passed) {
       check.points = check.maxPoints;
     }
@@ -354,7 +381,7 @@ async function analyzeRepositoryContext(repoPath: string): Promise<any> {
   try {
     const repoDir = path.resolve(repoPath);
     const files = await fs.readdir(repoDir);
-    
+
     return {
       hasCodeOfConduct: files.includes('CODE_OF_CONDUCT.md'),
       hasContributing: files.includes('CONTRIBUTING.md'),
@@ -377,7 +404,7 @@ function getGrade(percentage: number): 'A' | 'B' | 'C' | 'D' | 'F' {
 
 function generateHealthRecommendations(analysis: any[], _projectType: string): string[] {
   const recommendations: string[] = [];
-  
+
   analysis.forEach((component: any) => {
     component.details.forEach((detail: any) => {
       if (detail.points < detail.maxPoints) {
@@ -385,32 +412,41 @@ function generateHealthRecommendations(analysis: any[], _projectType: string): s
       }
     });
   });
-  
+
   return recommendations.slice(0, 10); // Top 10 recommendations
 }
 
 function identifyStrengths(components: HealthScoreComponent[]): string[] {
   const strengths: string[] = [];
-  
-  components.forEach(component => {
-    const passedChecks = component.details.filter(detail => detail.passed);
+
+  components.forEach((component) => {
+    const passedChecks = component.details.filter((detail) => detail.passed);
     if (passedChecks.length > component.details.length / 2) {
-      strengths.push(`Strong ${component.name.toLowerCase()}: ${passedChecks.map(c => c.check.toLowerCase()).join(', ')}`);
+      strengths.push(
+        `Strong ${component.name.toLowerCase()}: ${passedChecks
+          .map((c) => c.check.toLowerCase())
+          .join(', ')}`,
+      );
     }
   });
-  
+
   return strengths;
 }
 
 function identifyCriticalIssues(components: HealthScoreComponent[]): string[] {
   const critical: string[] = [];
-  
-  components.forEach(component => {
-    if (component.score < component.maxScore * 0.3) { // Less than 30% score
-      critical.push(`Critical: Poor ${component.name.toLowerCase()} (${component.score}/${component.maxScore} points)`);
+
+  components.forEach((component) => {
+    if (component.score < component.maxScore * 0.3) {
+      // Less than 30% score
+      critical.push(
+        `Critical: Poor ${component.name.toLowerCase()} (${component.score}/${
+          component.maxScore
+        } points)`,
+      );
     }
   });
-  
+
   return critical;
 }
 
@@ -418,7 +454,7 @@ function estimateImprovementTime(recommendationCount: number, criticalCount: num
   const baseTime = recommendationCount * 15; // 15 minutes per recommendation
   const criticalTime = criticalCount * 30; // 30 minutes per critical issue
   const totalMinutes = baseTime + criticalTime;
-  
+
   if (totalMinutes < 60) return `${totalMinutes} minutes`;
   if (totalMinutes < 480) return `${Math.round(totalMinutes / 60)} hours`;
   return `${Math.round(totalMinutes / 480)} days`;
@@ -426,30 +462,32 @@ function estimateImprovementTime(recommendationCount: number, criticalCount: num
 
 function generateSummary(report: ReadmeHealthReport): string {
   const { overallScore, grade, components } = report;
-  
+
   const componentScores = Object.values(components)
-    .map(c => `${c.name}: ${c.score}/${c.maxScore}`)
+    .map((c) => `${c.name}: ${c.score}/${c.maxScore}`)
     .join(', ');
-  
+
   return `README Health Score: ${overallScore}/100 (Grade ${grade}). Component breakdown: ${componentScores}. ${report.criticalIssues.length} critical issues identified.`;
 }
 
 function generateNextSteps(report: ReadmeHealthReport): string[] {
   const steps: string[] = [];
-  
+
   if (report.criticalIssues.length > 0) {
     steps.push('Address critical issues first to establish baseline community health');
   }
-  
+
   if (report.recommendations.length > 0) {
-    steps.push(`Implement top ${Math.min(3, report.recommendations.length)} recommendations for quick wins`);
+    steps.push(
+      `Implement top ${Math.min(3, report.recommendations.length)} recommendations for quick wins`,
+    );
   }
-  
+
   if (report.overallScore < 85) {
     steps.push('Target 85+ health score for optimal community engagement');
   }
-  
+
   steps.push('Re-evaluate after improvements to track progress');
-  
+
   return steps;
 }

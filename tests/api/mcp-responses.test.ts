@@ -124,19 +124,21 @@ describe('API Response Standardization Tests', () => {
       expect(formatted.isError).toBeFalsy();
 
       // Check main data is included
-      const dataContent = formatted.content.find(c => c.text.includes('success'));
+      const dataContent = formatted.content.find((c) => c.text.includes('success'));
       expect(dataContent).toBeDefined();
 
       // Check metadata is included
-      const metadataContent = formatted.content.find(c => c.text.includes('123ms'));
+      const metadataContent = formatted.content.find((c) => c.text.includes('123ms'));
       expect(metadataContent).toBeDefined();
 
       // Check recommendations are included
-      const recommendationContent = formatted.content.find(c => c.text.includes('Recommendations:'));
+      const recommendationContent = formatted.content.find((c) =>
+        c.text.includes('Recommendations:'),
+      );
       expect(recommendationContent).toBeDefined();
 
       // Check next steps are included
-      const nextStepContent = formatted.content.find(c => c.text.includes('Next Steps:'));
+      const nextStepContent = formatted.content.find((c) => c.text.includes('Next Steps:'));
       expect(nextStepContent).toBeDefined();
     });
 
@@ -161,11 +163,15 @@ describe('API Response Standardization Tests', () => {
       expect(formatted.isError).toBe(true);
 
       // Check error message is included
-      const errorContent = formatted.content.find(c => c.text.includes('Input validation failed'));
+      const errorContent = formatted.content.find((c) =>
+        c.text.includes('Input validation failed'),
+      );
       expect(errorContent).toBeDefined();
 
       // Check resolution is included
-      const resolutionContent = formatted.content.find(c => c.text.includes('Check your input parameters'));
+      const resolutionContent = formatted.content.find((c) =>
+        c.text.includes('Check your input parameters'),
+      );
       expect(resolutionContent).toBeDefined();
     });
 
@@ -186,7 +192,7 @@ describe('API Response Standardization Tests', () => {
       expect(formatted.isError).toBeFalsy();
 
       // Should not include recommendations or next steps sections
-      const fullText = formatted.content.map(c => c.text).join('\n');
+      const fullText = formatted.content.map((c) => c.text).join('\n');
       expect(fullText).not.toContain('Recommendations:');
       expect(fullText).not.toContain('Next Steps:');
     });
@@ -208,8 +214,8 @@ describe('API Response Standardization Tests', () => {
       };
 
       const formatted = formatMCPResponse(response);
-      const recommendationText = formatted.content
-        .find(c => c.text.includes('Recommendations:'))?.text || '';
+      const recommendationText =
+        formatted.content.find((c) => c.text.includes('Recommendations:'))?.text || '';
 
       expect(recommendationText).toContain('ℹ️'); // Info icon
       expect(recommendationText).toContain('⚠️'); // Warning icon
@@ -235,14 +241,14 @@ describe('API Response Standardization Tests', () => {
     it('should validate error code consistency', () => {
       const errorCodes = [
         'ANALYSIS_FAILED',
-        'RECOMMENDATION_FAILED', 
+        'RECOMMENDATION_FAILED',
         'CONFIG_GENERATION_FAILED',
         'STRUCTURE_SETUP_FAILED',
         'DEPLOYMENT_SETUP_FAILED',
         'VERIFICATION_FAILED',
       ];
 
-      errorCodes.forEach(code => {
+      errorCodes.forEach((code) => {
         expect(code).toMatch(/^[A-Z_]+$/);
         expect(code).toContain('_');
         expect(code.endsWith('_FAILED')).toBe(true);
@@ -259,7 +265,7 @@ describe('API Response Standardization Tests', () => {
         'verify_deployment',
       ];
 
-      validTools.forEach(tool => {
+      validTools.forEach((tool) => {
         expect(tool).toMatch(/^[a-z_]+$/);
         expect(tool).not.toContain('-');
         expect(tool).not.toContain(' ');
@@ -275,7 +281,7 @@ describe('API Response Standardization Tests', () => {
         'Verify Deployment Setup',
       ];
 
-      recommendationActions.forEach(action => {
+      recommendationActions.forEach((action) => {
         expect(action).toMatch(/^[A-Z]/); // Starts with capital
         expect(action.length).toBeGreaterThan(5); // Meaningful length
         expect(action.endsWith('.')).toBe(false); // No trailing period
@@ -300,9 +306,9 @@ describe('API Response Standardization Tests', () => {
       // Must have content array for MCP compatibility
       expect(formatted.content).toBeDefined();
       expect(Array.isArray(formatted.content)).toBe(true);
-      
+
       // Each content item must have type and text
-      formatted.content.forEach(item => {
+      formatted.content.forEach((item) => {
         expect(item.type).toBe('text');
         expect(typeof item.text).toBe('string');
         expect(item.text.length).toBeGreaterThan(0);
@@ -381,9 +387,9 @@ describe('API Response Standardization Tests', () => {
 
       const formatted = formatMCPResponse(response);
       expect(formatted.content).toBeDefined();
-      
+
       // Should include the large data in JSON format
-      const dataContent = formatted.content.find(c => c.text.includes('"items"'));
+      const dataContent = formatted.content.find((c) => c.text.includes('"items"'));
       expect(dataContent).toBeDefined();
     });
 

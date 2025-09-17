@@ -43,14 +43,16 @@ const inputSchema = z.object({
   depth: z.enum(['quick', 'standard', 'deep']).optional().default('standard'),
 });
 
-export async function analyzeRepository(args: unknown): Promise<{ content: any[]; isError?: boolean }> {
+export async function analyzeRepository(
+  args: unknown,
+): Promise<{ content: any[]; isError?: boolean }> {
   const startTime = Date.now();
   const { path: repoPath, depth } = inputSchema.parse(args);
 
   try {
     // Verify path exists and is accessible
     await fs.access(repoPath, fs.constants.R_OK);
-    
+
     // Try to read the directory to catch permission issues early
     try {
       await fs.readdir(repoPath);
@@ -60,7 +62,7 @@ export async function analyzeRepository(args: unknown): Promise<{ content: any[]
       }
       throw error;
     }
-    
+
     const analysis: RepositoryAnalysis = {
       id: generateAnalysisId(),
       timestamp: new Date().toISOString(),
@@ -174,12 +176,15 @@ function getLanguageFromExtension(ext: string): string | null {
     '.jl': 'julia',
     '.zig': 'zig',
   };
-  
+
   return languageMap[ext] || null;
 }
 
 // Analyze repository structure
-async function analyzeStructure(repoPath: string, depth: 'quick' | 'standard' | 'deep'): Promise<RepositoryAnalysis['structure']> {
+async function analyzeStructure(
+  repoPath: string,
+  depth: 'quick' | 'standard' | 'deep',
+): Promise<RepositoryAnalysis['structure']> {
   const stats = {
     totalFiles: 0,
     totalDirectories: 0,
@@ -190,30 +195,38 @@ async function analyzeStructure(repoPath: string, depth: 'quick' | 'standard' | 
   };
 
   const maxDepth = depth === 'quick' ? 2 : depth === 'standard' ? 5 : 10;
-  
+
   async function walkDirectory(dirPath: string, currentDepth: number = 0): Promise<void> {
     if (currentDepth > maxDepth) return;
-    
+
     try {
       const entries = await fs.readdir(dirPath, { withFileTypes: true });
-      
+
       for (const entry of entries) {
         const fullPath = path.join(dirPath, entry.name);
-        
+
         if (entry.isDirectory()) {
           stats.totalDirectories++;
-          
+
           // Check for special directories
-          if (entry.name.includes('test') || entry.name.includes('spec') || entry.name === '__tests__') {
+          if (
+            entry.name.includes('test') ||
+            entry.name.includes('spec') ||
+            entry.name === '__tests__'
+          ) {
             stats.hasTests = true;
           }
-          if (entry.name === '.github' || entry.name === '.gitlab-ci' || entry.name === '.circleci') {
+          if (
+            entry.name === '.github' ||
+            entry.name === '.gitlab-ci' ||
+            entry.name === '.circleci'
+          ) {
             stats.hasCI = true;
           }
           if (entry.name === 'docs' || entry.name === 'documentation' || entry.name === 'doc') {
             stats.hasDocs = true;
           }
-          
+
           // Skip node_modules and other common ignored directories
           if (!['node_modules', '.git', 'dist', 'build', '.next', '.nuxt'].includes(entry.name)) {
             await walkDirectory(fullPath, currentDepth + 1);
@@ -222,18 +235,18 @@ async function analyzeStructure(repoPath: string, depth: 'quick' | 'standard' | 
           // Skip hidden files (starting with .)
           if (!entry.name.startsWith('.')) {
             stats.totalFiles++;
-            
+
             // Track languages by file extension
             const ext = path.extname(entry.name).toLowerCase();
             if (ext && getLanguageFromExtension(ext)) {
               stats.languages[ext] = (stats.languages[ext] || 0) + 1;
             }
-            
+
             // Check for CI files
             if (entry.name.match(/\.(yml|yaml)$/) && entry.name.includes('ci')) {
               stats.hasCI = true;
             }
-            
+
             // Check for test files
             if (entry.name.includes('test') || entry.name.includes('spec')) {
               stats.hasTests = true;
@@ -245,7 +258,7 @@ async function analyzeStructure(repoPath: string, depth: 'quick' | 'standard' | 
       // Skip directories we can't read
     }
   }
-  
+
   await walkDirectory(repoPath);
   return stats;
 }
@@ -281,8 +294,8 @@ async function analyzeDependencies(repoPath: string): Promise<RepositoryAnalysis
         result.ecosystem = 'python';
         result.packages = requirementsContent
           .split('\n')
-          .filter(line => line.trim() && !line.startsWith('#'))
-          .map(line => line.split('==')[0].split('>=')[0].split('<=')[0].trim());
+          .filter((line) => line.trim() && !line.startsWith('#'))
+          .map((line) => line.split('==')[0].split('>=')[0].split('<=')[0].trim());
         return result;
       } catch {
         const pyprojectContent = await fs.readFile(pyprojectPath, 'utf-8');
@@ -292,8 +305,10 @@ async function analyzeDependencies(repoPath: string): Promise<RepositoryAnalysis
         if (dependencyMatches) {
           result.packages = dependencyMatches[1]
             .split(',')
-            .map(dep => dep.trim().replace(/["']/g, '').split('==')[0].split('>=')[0].split('<=')[0])
-            .filter(dep => dep.length > 0);
+            .map(
+              (dep) => dep.trim().replace(/["']/g, '').split('==')[0].split('>=')[0].split('<=')[0],
+            )
+            .filter((dep) => dep.length > 0);
         }
         return result;
       }
@@ -308,7 +323,7 @@ async function analyzeDependencies(repoPath: string): Promise<RepositoryAnalysis
       result.ecosystem = 'ruby';
       const gemMatches = gemfileContent.match(/gem\s+['"]([^'"]+)['"]/g);
       if (gemMatches) {
-        result.packages = gemMatches.map(match => match.match(/gem\s+['"]([^'"]+)['"]/)![1]);
+        result.packages = gemMatches.map((match) => match.match(/gem\s+['"]([^'"]+)['"]/)![1]);
       }
       return result;
     } catch {
@@ -324,8 +339,8 @@ async function analyzeDependencies(repoPath: string): Promise<RepositoryAnalysis
       if (requireMatches) {
         result.packages = requireMatches[1]
           .split('\n')
-          .map(line => line.trim().split(' ')[0])
-          .filter(pkg => pkg && !pkg.startsWith('//'));
+          .map((line) => line.trim().split(' ')[0])
+          .filter((pkg) => pkg && !pkg.startsWith('//'));
       }
       return result;
     } catch {
@@ -339,7 +354,9 @@ async function analyzeDependencies(repoPath: string): Promise<RepositoryAnalysis
 }
 
 // Analyze documentation structure
-async function analyzeDocumentation(repoPath: string): Promise<RepositoryAnalysis['documentation']> {
+async function analyzeDocumentation(
+  repoPath: string,
+): Promise<RepositoryAnalysis['documentation']> {
   const result: RepositoryAnalysis['documentation'] = {
     hasReadme: false,
     hasContributing: false,
@@ -350,7 +367,7 @@ async function analyzeDocumentation(repoPath: string): Promise<RepositoryAnalysi
 
   try {
     const entries = await fs.readdir(repoPath);
-    
+
     // Check for standard files
     for (const entry of entries) {
       const lowerEntry = entry.toLowerCase();
@@ -366,19 +383,19 @@ async function analyzeDocumentation(repoPath: string): Promise<RepositoryAnalysi
     // Find documentation files
     const docExtensions = ['.md', '.rst', '.txt', '.adoc'];
     const commonDocDirs = ['docs', 'documentation', 'doc', 'wiki'];
-    
+
     // Check root directory for docs
     for (const entry of entries) {
       const entryPath = path.join(repoPath, entry);
       const stat = await fs.stat(entryPath);
-      
-      if (stat.isFile() && docExtensions.some(ext => entry.toLowerCase().endsWith(ext))) {
+
+      if (stat.isFile() && docExtensions.some((ext) => entry.toLowerCase().endsWith(ext))) {
         result.existingDocs.push(entry);
       } else if (stat.isDirectory() && commonDocDirs.includes(entry.toLowerCase())) {
         try {
           const docFiles = await fs.readdir(entryPath);
           for (const docFile of docFiles) {
-            if (docExtensions.some(ext => docFile.toLowerCase().endsWith(ext))) {
+            if (docExtensions.some((ext) => docFile.toLowerCase().endsWith(ext))) {
               result.existingDocs.push(path.join(entry, docFile));
             }
           }
@@ -405,12 +422,16 @@ async function analyzeDocumentation(repoPath: string): Promise<RepositoryAnalysi
 }
 
 // Helper function to count languages in a directory
-async function countLanguagesInDirectory(dirPath: string, languages: Record<string, number>, depth: number = 0): Promise<void> {
+async function countLanguagesInDirectory(
+  dirPath: string,
+  languages: Record<string, number>,
+  depth: number = 0,
+): Promise<void> {
   if (depth > 3) return; // Limit depth for performance
-  
+
   try {
     const entries = await fs.readdir(dirPath, { withFileTypes: true });
-    
+
     for (const entry of entries) {
       if (entry.isFile()) {
         const ext = path.extname(entry.name).toLowerCase();
@@ -427,7 +448,9 @@ async function countLanguagesInDirectory(dirPath: string, languages: Record<stri
 }
 
 // Generate recommendations based on analysis
-async function generateRecommendations(repoPath: string): Promise<RepositoryAnalysis['recommendations']> {
+async function generateRecommendations(
+  repoPath: string,
+): Promise<RepositoryAnalysis['recommendations']> {
   const result: RepositoryAnalysis['recommendations'] = {
     primaryLanguage: 'unknown',
     projectType: 'unknown',
@@ -438,12 +461,11 @@ async function generateRecommendations(repoPath: string): Promise<RepositoryAnal
     // Determine primary language by counting files
     const languages: Record<string, number> = {};
     await countLanguagesInDirectory(repoPath, languages);
-    
+
     // Find primary language
     let primaryExt = '';
     if (Object.keys(languages).length > 0) {
-      primaryExt = Object.entries(languages)
-        .reduce((a, b) => a[1] > b[1] ? a : b)[0];
+      primaryExt = Object.entries(languages).reduce((a, b) => (a[1] > b[1] ? a : b))[0];
       const primaryLanguage = getLanguageFromExtension(primaryExt);
       result.primaryLanguage = primaryLanguage || 'unknown';
     }
@@ -452,9 +474,9 @@ async function generateRecommendations(repoPath: string): Promise<RepositoryAnal
     const entries = await fs.readdir(repoPath);
     const hasPackageJson = entries.includes('package.json');
     const hasDockerfile = entries.includes('Dockerfile');
-    const hasK8sFiles = entries.some(entry => entry.endsWith('.yaml') || entry.endsWith('.yml'));
-    const hasTests = entries.some(entry => entry.includes('test') || entry.includes('spec'));
-    
+    const hasK8sFiles = entries.some((entry) => entry.endsWith('.yaml') || entry.endsWith('.yml'));
+    const hasTests = entries.some((entry) => entry.includes('test') || entry.includes('spec'));
+
     if (hasPackageJson && entries.includes('src') && hasTests) {
       result.projectType = 'library';
     } else if (hasDockerfile || hasK8sFiles) {
@@ -469,9 +491,9 @@ async function generateRecommendations(repoPath: string): Promise<RepositoryAnal
 
     // Estimate team size based on complexity and structure
     const totalFiles = Object.values(languages).reduce((sum, count) => sum + count, 0);
-    const hasCI = entries.some(entry => entry.includes('.github') || entry.includes('.gitlab'));
-    const hasContributing = entries.some(entry => entry.toLowerCase().includes('contributing'));
-    
+    const hasCI = entries.some((entry) => entry.includes('.github') || entry.includes('.gitlab'));
+    const hasContributing = entries.some((entry) => entry.toLowerCase().includes('contributing'));
+
     if (totalFiles > 100 || (hasCI && hasContributing)) {
       result.teamSize = 'large';
     } else if (totalFiles > 50 || hasCI) {

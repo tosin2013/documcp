@@ -5,7 +5,7 @@ import { join } from 'path';
 
 describe('checkDocumentationLinks', () => {
   const testDir = join(process.cwd(), 'test-docs-temp');
-  
+
   beforeEach(async () => {
     // Create test directory structure
     await mkdir(testDir, { recursive: true });
@@ -28,36 +28,36 @@ describe('checkDocumentationLinks', () => {
       await writeFile(join(testDir, 'guides', 'test.md'), '# Guide');
 
       const result = await checkDocumentationLinks({
-        documentation_path: testDir
+        documentation_path: testDir,
       });
 
       const formatted = formatMCPResponse(result);
       expect(formatted.isError).toBe(false);
-      const contentText = formatted.content.map(c => c.text).join(' ');
+      const contentText = formatted.content.map((c) => c.text).join(' ');
       expect(contentText).toContain('"totalLinks": 1');
     });
 
     test('should validate timeout_ms parameter', async () => {
       const result = await checkDocumentationLinks({
         documentation_path: testDir,
-        timeout_ms: 500 // Below minimum
+        timeout_ms: 500, // Below minimum
       });
 
       const formatted = formatMCPResponse(result);
       expect(formatted.isError).toBe(true);
-      const contentText = formatted.content.map(c => c.text).join(' ');
+      const contentText = formatted.content.map((c) => c.text).join(' ');
       expect(contentText).toContain('Number must be greater than or equal to 1000');
     });
 
     test('should validate max_concurrent_checks parameter', async () => {
       const result = await checkDocumentationLinks({
         documentation_path: testDir,
-        max_concurrent_checks: 25 // Above maximum
+        max_concurrent_checks: 25, // Above maximum
       });
 
       const formatted = formatMCPResponse(result);
       expect(formatted.isError).toBe(true);
-      const contentText = formatted.content.map(c => c.text).join(' ');
+      const contentText = formatted.content.map((c) => c.text).join(' ');
       expect(contentText).toContain('Number must be less than or equal to 20');
     });
   });
@@ -70,29 +70,29 @@ describe('checkDocumentationLinks', () => {
 
       const result = await checkDocumentationLinks({
         documentation_path: testDir,
-        check_external_links: false
+        check_external_links: false,
       });
 
       const formatted = formatMCPResponse(result);
       expect(formatted.isError).toBe(false);
-      const contentText = formatted.content.map(c => c.text).join(' ');
+      const contentText = formatted.content.map((c) => c.text).join(' ');
       expect(contentText).toContain('"filesScanned": 3');
     });
 
     test('should handle empty documentation directory', async () => {
       const result = await checkDocumentationLinks({
-        documentation_path: testDir
+        documentation_path: testDir,
       });
 
       const formatted = formatMCPResponse(result);
       expect(formatted.isError).toBe(true);
-      const contentText = formatted.content.map(c => c.text).join(' ');
+      const contentText = formatted.content.map((c) => c.text).join(' ');
       expect(contentText).toContain('No documentation files found');
     });
 
     test('should handle non-existent directory', async () => {
       const result = await checkDocumentationLinks({
-        documentation_path: '/non/existent/path'
+        documentation_path: '/non/existent/path',
       });
 
       const formatted = formatMCPResponse(result);
@@ -111,12 +111,12 @@ describe('checkDocumentationLinks', () => {
       const result = await checkDocumentationLinks({
         documentation_path: testDir,
         check_external_links: false,
-        check_internal_links: true
+        check_internal_links: true,
       });
 
       const formatted = formatMCPResponse(result);
       expect(formatted.isError).toBe(false);
-      const contentText = formatted.content.map(c => c.text).join(' ');
+      const contentText = formatted.content.map((c) => c.text).join(' ');
       expect(contentText).toContain('"totalLinks": 1');
     });
 
@@ -129,7 +129,7 @@ describe('checkDocumentationLinks', () => {
 
       const result = await checkDocumentationLinks({
         documentation_path: testDir,
-        check_external_links: false
+        check_external_links: false,
       });
 
       const formatted = formatMCPResponse(result);
@@ -147,7 +147,7 @@ describe('checkDocumentationLinks', () => {
 
       const result = await checkDocumentationLinks({
         documentation_path: testDir,
-        check_external_links: false
+        check_external_links: false,
       });
 
       const formatted = formatMCPResponse(result);
@@ -165,12 +165,12 @@ describe('checkDocumentationLinks', () => {
       const result = await checkDocumentationLinks({
         documentation_path: testDir,
         check_external_links: false,
-        check_internal_links: true
+        check_internal_links: true,
       });
 
       const formatted = formatMCPResponse(result);
       expect(formatted.isError).toBe(false);
-      const contentText = formatted.content.map(c => c.text).join(' ');
+      const contentText = formatted.content.map((c) => c.text).join(' ');
       expect(contentText).toContain('"status": "valid"');
     });
 
@@ -181,12 +181,12 @@ describe('checkDocumentationLinks', () => {
         documentation_path: testDir,
         check_external_links: false,
         check_internal_links: true,
-        fail_on_broken_links: false
+        fail_on_broken_links: false,
       });
 
       const formatted = formatMCPResponse(result);
       expect(formatted.isError).toBe(false);
-      const contentText = formatted.content.map(c => c.text).join(' ');
+      const contentText = formatted.content.map((c) => c.text).join(' ');
       expect(contentText).toContain('"status": "broken"');
     });
 
@@ -197,12 +197,12 @@ describe('checkDocumentationLinks', () => {
       const result = await checkDocumentationLinks({
         documentation_path: testDir,
         check_external_links: false,
-        check_internal_links: true
+        check_internal_links: true,
       });
 
       const formatted = formatMCPResponse(result);
       expect(formatted.isError).toBe(false);
-      const contentText = formatted.content.map(c => c.text).join(' ');
+      const contentText = formatted.content.map((c) => c.text).join(' ');
       expect(contentText).toContain('"status": "valid"');
     });
 
@@ -213,7 +213,7 @@ describe('checkDocumentationLinks', () => {
       const result = await checkDocumentationLinks({
         documentation_path: testDir,
         check_external_links: false,
-        check_internal_links: true
+        check_internal_links: true,
       });
 
       const formatted = formatMCPResponse(result);
@@ -227,7 +227,7 @@ describe('checkDocumentationLinks', () => {
 
       const result = await checkDocumentationLinks({
         documentation_path: testDir,
-        check_external_links: false
+        check_external_links: false,
       });
 
       const formatted = formatMCPResponse(result);
@@ -236,15 +236,18 @@ describe('checkDocumentationLinks', () => {
     });
 
     test('should respect allowed domains', async () => {
-      await writeFile(join(testDir, 'README.md'), `
+      await writeFile(
+        join(testDir, 'README.md'),
+        `
 [Allowed](https://github.com/test)
 [Not Allowed](https://example.com)
-`);
+`,
+      );
 
       const result = await checkDocumentationLinks({
         documentation_path: testDir,
         check_external_links: true,
-        allowed_domains: ['github.com']
+        allowed_domains: ['github.com'],
       });
 
       const formatted = formatMCPResponse(result);
@@ -257,7 +260,7 @@ describe('checkDocumentationLinks', () => {
       const result = await checkDocumentationLinks({
         documentation_path: testDir,
         check_external_links: true,
-        timeout_ms: 1000
+        timeout_ms: 1000,
       });
 
       const formatted = formatMCPResponse(result);
@@ -268,16 +271,19 @@ describe('checkDocumentationLinks', () => {
 
   describe('Link Filtering', () => {
     test('should ignore links matching ignore patterns', async () => {
-      await writeFile(join(testDir, 'README.md'), `
+      await writeFile(
+        join(testDir, 'README.md'),
+        `
 [Ignored](./temp/file.md)
 [Valid](./guides/test.md)
-`);
+`,
+      );
       await writeFile(join(testDir, 'guides', 'test.md'), '# Test');
 
       const result = await checkDocumentationLinks({
         documentation_path: testDir,
         check_external_links: false,
-        ignore_patterns: ['temp/']
+        ignore_patterns: ['temp/'],
       });
 
       const formatted = formatMCPResponse(result);
@@ -286,18 +292,21 @@ describe('checkDocumentationLinks', () => {
     });
 
     test('should filter by link types', async () => {
-      await writeFile(join(testDir, 'README.md'), `
+      await writeFile(
+        join(testDir, 'README.md'),
+        `
 [Internal](./test.md)
 [External](https://example.com)
 [Anchor](#section)
-`);
+`,
+      );
       await writeFile(join(testDir, 'test.md'), '# Test');
 
       const result = await checkDocumentationLinks({
         documentation_path: testDir,
         check_external_links: false,
         check_internal_links: true,
-        check_anchor_links: false
+        check_anchor_links: false,
       });
 
       const formatted = formatMCPResponse(result);
@@ -313,12 +322,12 @@ describe('checkDocumentationLinks', () => {
       const result = await checkDocumentationLinks({
         documentation_path: testDir,
         check_external_links: false,
-        fail_on_broken_links: true
+        fail_on_broken_links: true,
       });
 
       const formatted = formatMCPResponse(result);
       expect(formatted.isError).toBe(true);
-      const contentText = formatted.content.map(c => c.text).join(' ');
+      const contentText = formatted.content.map((c) => c.text).join(' ');
       expect(contentText).toContain('Found 1 broken links');
     });
 
@@ -328,7 +337,7 @@ describe('checkDocumentationLinks', () => {
       const result = await checkDocumentationLinks({
         documentation_path: testDir,
         check_external_links: false,
-        fail_on_broken_links: false
+        fail_on_broken_links: false,
       });
 
       const formatted = formatMCPResponse(result);
@@ -338,21 +347,24 @@ describe('checkDocumentationLinks', () => {
 
   describe('Report Generation', () => {
     test('should generate comprehensive report with summary', async () => {
-      await writeFile(join(testDir, 'README.md'), `
+      await writeFile(
+        join(testDir, 'README.md'),
+        `
 [Valid Internal](./test.md)
 [Broken Internal](./missing.md)
-`);
+`,
+      );
       await writeFile(join(testDir, 'test.md'), '# Test');
 
       const result = await checkDocumentationLinks({
         documentation_path: testDir,
         check_external_links: false,
-        fail_on_broken_links: false
+        fail_on_broken_links: false,
       });
 
       const formatted = formatMCPResponse(result);
       expect(formatted.isError).toBe(false);
-      const contentText = formatted.content.map(c => c.text).join(' ');
+      const contentText = formatted.content.map((c) => c.text).join(' ');
       expect(contentText).toContain('"summary"');
       expect(contentText).toContain('"results"');
       expect(contentText).toContain('"recommendations"');
@@ -365,12 +377,12 @@ describe('checkDocumentationLinks', () => {
 
       const result = await checkDocumentationLinks({
         documentation_path: testDir,
-        check_external_links: false
+        check_external_links: false,
       });
 
       const formatted = formatMCPResponse(result);
       expect(formatted.isError).toBe(false);
-      const contentText = formatted.content.map(c => c.text).join(' ');
+      const contentText = formatted.content.map((c) => c.text).join(' ');
       expect(contentText).toContain('"executionTime"');
       expect(contentText).toContain('"filesScanned"');
     });
@@ -381,12 +393,12 @@ describe('checkDocumentationLinks', () => {
 
       const result = await checkDocumentationLinks({
         documentation_path: testDir,
-        check_external_links: false
+        check_external_links: false,
       });
 
       const formatted = formatMCPResponse(result);
       expect(formatted.isError).toBe(false);
-      const contentText = formatted.content.map(c => c.text).join(' ');
+      const contentText = formatted.content.map((c) => c.text).join(' ');
       expect(contentText).toContain('All links are valid - excellent documentation quality!');
     });
   });
@@ -402,7 +414,7 @@ describe('checkDocumentationLinks', () => {
       const result = await checkDocumentationLinks({
         documentation_path: testDir,
         check_external_links: false,
-        max_concurrent_checks: 2
+        max_concurrent_checks: 2,
       });
 
       const formatted = formatMCPResponse(result);
@@ -416,27 +428,30 @@ describe('checkDocumentationLinks', () => {
       await writeFile(join(testDir, 'README.md'), '# No Links Here\nJust plain text.');
 
       const result = await checkDocumentationLinks({
-        documentation_path: testDir
+        documentation_path: testDir,
       });
 
       const formatted = formatMCPResponse(result);
       expect(formatted.isError).toBe(false);
-      const contentText = formatted.content.map(c => c.text).join(' ');
+      const contentText = formatted.content.map((c) => c.text).join(' ');
       expect(contentText).toContain('"totalLinks": 0');
     });
 
     test('should handle malformed markdown', async () => {
-      await writeFile(join(testDir, 'README.md'), `
+      await writeFile(
+        join(testDir, 'README.md'),
+        `
 # Malformed
 [Incomplete link](
 [Missing closing](test.md
 [Valid](./test.md)
-`);
+`,
+      );
       await writeFile(join(testDir, 'test.md'), '# Test');
 
       const result = await checkDocumentationLinks({
         documentation_path: testDir,
-        check_external_links: false
+        check_external_links: false,
       });
 
       const formatted = formatMCPResponse(result);
@@ -448,11 +463,11 @@ describe('checkDocumentationLinks', () => {
       await writeFile(join(testDir, 'README.md'), '[Test](./test.md)');
       await writeFile(join(testDir, 'test.md'), '# Test');
       // Create a binary file that should be ignored
-      await writeFile(join(testDir, 'image.png'), Buffer.from([0x89, 0x50, 0x4E, 0x47]));
+      await writeFile(join(testDir, 'image.png'), Buffer.from([0x89, 0x50, 0x4e, 0x47]));
 
       const result = await checkDocumentationLinks({
         documentation_path: testDir,
-        check_external_links: false
+        check_external_links: false,
       });
 
       const formatted = formatMCPResponse(result);
@@ -475,12 +490,12 @@ describe('checkDocumentationLinks', () => {
 
       const result = await checkDocumentationLinks({
         documentation_path: testDir,
-        check_external_links: false
+        check_external_links: false,
       });
 
       const formatted = formatMCPResponse(result);
       expect(formatted.isError).toBe(false);
-      const contentText = formatted.content.map(c => c.text).join(' ');
+      const contentText = formatted.content.map((c) => c.text).join(' ');
       expect(contentText).toContain('"totalLinks": 1');
     });
 
@@ -495,7 +510,7 @@ describe('checkDocumentationLinks', () => {
       const result = await checkDocumentationLinks({
         documentation_path: testDir,
         check_external_links: false,
-        check_anchor_links: true
+        check_anchor_links: true,
       });
 
       const formatted = formatMCPResponse(result);
@@ -512,7 +527,7 @@ describe('checkDocumentationLinks', () => {
 
       const result = await checkDocumentationLinks({
         documentation_path: testDir,
-        check_external_links: false
+        check_external_links: false,
       });
 
       const formatted = formatMCPResponse(result);
@@ -522,19 +537,22 @@ describe('checkDocumentationLinks', () => {
     test('should handle different internal link path formats', async () => {
       await mkdir(join(testDir, 'subdir'), { recursive: true });
       await mkdir(join(testDir, 'guides'), { recursive: true });
-      await writeFile(join(testDir, 'subdir', 'nested.md'), `
+      await writeFile(
+        join(testDir, 'subdir', 'nested.md'),
+        `
 [Current Dir](./file.md)
 [Parent Dir](../README.md)
 [Absolute](/guides/test.md)
 [Relative](file.md)
-`);
+`,
+      );
       await writeFile(join(testDir, 'subdir', 'file.md'), '# File');
       await writeFile(join(testDir, 'README.md'), '# Root');
       await writeFile(join(testDir, 'guides', 'test.md'), '# Guide');
 
       const result = await checkDocumentationLinks({
         documentation_path: testDir,
-        check_external_links: false
+        check_external_links: false,
       });
 
       const formatted = formatMCPResponse(result);
@@ -542,16 +560,19 @@ describe('checkDocumentationLinks', () => {
     });
 
     test('should handle external link domain filtering', async () => {
-      await writeFile(join(testDir, 'README.md'), `
+      await writeFile(
+        join(testDir, 'README.md'),
+        `
 [GitHub](https://github.com/test)
 [Subdomain](https://api.github.com/test)
 [Not Allowed](https://example.com)
-`);
+`,
+      );
 
       const result = await checkDocumentationLinks({
         documentation_path: testDir,
         check_external_links: true,
-        allowed_domains: ['github.com']
+        allowed_domains: ['github.com'],
       });
 
       const formatted = formatMCPResponse(result);
@@ -559,17 +580,20 @@ describe('checkDocumentationLinks', () => {
     });
 
     test('should handle external link fetch errors', async () => {
-      await writeFile(join(testDir, 'README.md'), '[Invalid URL](https://invalid-domain-that-does-not-exist-12345.com)');
+      await writeFile(
+        join(testDir, 'README.md'),
+        '[Invalid URL](https://invalid-domain-that-does-not-exist-12345.com)',
+      );
 
       const result = await checkDocumentationLinks({
         documentation_path: testDir,
         check_external_links: true,
-        timeout_ms: 2000
+        timeout_ms: 2000,
       });
 
       const formatted = formatMCPResponse(result);
       expect(formatted.isError).toBe(false);
-      const contentText = formatted.content.map(c => c.text).join(' ');
+      const contentText = formatted.content.map((c) => c.text).join(' ');
       expect(contentText).toContain('"status": "broken"');
     });
 
@@ -579,7 +603,7 @@ describe('checkDocumentationLinks', () => {
       const result = await checkDocumentationLinks({
         documentation_path: testDir,
         check_external_links: true,
-        timeout_ms: 5000
+        timeout_ms: 5000,
       });
 
       const formatted = formatMCPResponse(result);
@@ -594,7 +618,7 @@ describe('checkDocumentationLinks', () => {
 
       const result = await checkDocumentationLinks({
         documentation_path: testDir,
-        check_external_links: false
+        check_external_links: false,
       });
 
       const formatted = formatMCPResponse(result);
@@ -609,7 +633,7 @@ describe('checkDocumentationLinks', () => {
 
       const result = await checkDocumentationLinks({
         documentation_path: testDir,
-        check_external_links: false
+        check_external_links: false,
       });
 
       const formatted = formatMCPResponse(result);
@@ -626,33 +650,38 @@ describe('checkDocumentationLinks', () => {
 
       const result = await checkDocumentationLinks({
         documentation_path: testDir,
-        check_external_links: false
+        check_external_links: false,
       });
 
       const formatted = formatMCPResponse(result);
       expect(formatted.isError).toBe(false);
-      const contentText = formatted.content.map(c => c.text).join(' ');
-      expect(contentText).toContain('Consider implementing automated link checking in CI/CD pipeline');
+      const contentText = formatted.content.map((c) => c.text).join(' ');
+      expect(contentText).toContain(
+        'Consider implementing automated link checking in CI/CD pipeline',
+      );
     });
 
     test('should handle mixed link types with warnings', async () => {
-      await writeFile(join(testDir, 'README.md'), `
+      await writeFile(
+        join(testDir, 'README.md'),
+        `
 [Valid](./test.md)
 [Broken](./missing.md)
 [Timeout](https://httpstat.us/200?sleep=10000)
-`);
+`,
+      );
       await writeFile(join(testDir, 'test.md'), '# Test');
 
       const result = await checkDocumentationLinks({
         documentation_path: testDir,
         check_external_links: true,
         timeout_ms: 1000,
-        fail_on_broken_links: false
+        fail_on_broken_links: false,
       });
 
       const formatted = formatMCPResponse(result);
       expect(formatted.isError).toBe(false);
-      const contentText = formatted.content.map(c => c.text).join(' ');
+      const contentText = formatted.content.map((c) => c.text).join(' ');
       expect(contentText).toContain('"brokenLinks"');
       expect(contentText).toContain('"warningLinks"');
     });
@@ -667,12 +696,12 @@ describe('checkDocumentationLinks', () => {
 
       const result = await checkDocumentationLinks({
         documentation_path: testDir,
-        check_external_links: false
+        check_external_links: false,
       });
 
       const formatted = formatMCPResponse(result);
       expect(formatted.isError).toBe(false);
-      const contentText = formatted.content.map(c => c.text).join(' ');
+      const contentText = formatted.content.map((c) => c.text).join(' ');
       expect(contentText).toContain('"filesScanned": 2'); // Only README.md and test.md
     });
 
@@ -684,12 +713,12 @@ describe('checkDocumentationLinks', () => {
 
       const result = await checkDocumentationLinks({
         documentation_path: testDir,
-        check_external_links: false
+        check_external_links: false,
       });
 
       const formatted = formatMCPResponse(result);
       expect(formatted.isError).toBe(false);
-      const contentText = formatted.content.map(c => c.text).join(' ');
+      const contentText = formatted.content.map((c) => c.text).join(' ');
       expect(contentText).toContain('"filesScanned": 4');
     });
   });

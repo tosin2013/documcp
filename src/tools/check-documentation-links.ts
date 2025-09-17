@@ -14,7 +14,7 @@ const LinkCheckInputSchema = z.object({
   allowed_domains: z.array(z.string()).default([]),
   ignore_patterns: z.array(z.string()).default([]),
   fail_on_broken_links: z.boolean().default(false),
-  output_format: z.enum(['summary', 'detailed', 'json']).default('detailed')
+  output_format: z.enum(['summary', 'detailed', 'json']).default('detailed'),
 });
 
 type LinkCheckInput = z.infer<typeof LinkCheckInputSchema>;
@@ -51,27 +51,29 @@ interface LinkCheckReport {
   };
 }
 
-export async function checkDocumentationLinks(input: Partial<LinkCheckInput>): Promise<MCPToolResponse<LinkCheckReport>> {
+export async function checkDocumentationLinks(
+  input: Partial<LinkCheckInput>,
+): Promise<MCPToolResponse<LinkCheckReport>> {
   const startTime = Date.now();
-  
+
   try {
     // Validate input with defaults
     const validatedInput = LinkCheckInputSchema.parse(input);
-    const { 
-      documentation_path, 
-      check_external_links, 
-      check_internal_links, 
+    const {
+      documentation_path,
+      check_external_links,
+      check_internal_links,
       check_anchor_links,
       timeout_ms,
       max_concurrent_checks,
       allowed_domains,
       ignore_patterns,
-      fail_on_broken_links
+      fail_on_broken_links,
     } = validatedInput;
 
     // Scan documentation files
     const documentationFiles = await scanDocumentationFiles(documentation_path);
-    
+
     if (documentationFiles.length === 0) {
       return {
         success: false,
@@ -79,37 +81,35 @@ export async function checkDocumentationLinks(input: Partial<LinkCheckInput>): P
           code: 'NO_DOCUMENTATION_FILES',
           message: 'No documentation files found in the specified path',
           details: `Searched in: ${documentation_path}`,
-          resolution: 'Verify the documentation_path parameter points to a directory containing markdown files'
+          resolution:
+            'Verify the documentation_path parameter points to a directory containing markdown files',
         },
         metadata: {
           toolVersion: '1.0.0',
           executionTime: Date.now() - startTime,
-          timestamp: new Date().toISOString()
-        }
+          timestamp: new Date().toISOString(),
+        },
       };
     }
 
     // Extract all links from documentation files
     const allLinks = await extractLinksFromFiles(documentationFiles, documentation_path);
-    
+
     // Filter links based on configuration
     const filteredLinks = filterLinks(allLinks, {
       checkExternalLinks: check_external_links,
       checkInternalLinks: check_internal_links,
       checkAnchorLinks: check_anchor_links,
-      ignorePatterns: ignore_patterns
+      ignorePatterns: ignore_patterns,
     });
 
     // Check links with concurrency control
-    const linkResults = await checkLinksWithConcurrency(
-      filteredLinks, 
-      {
-        timeoutMs: timeout_ms,
-        maxConcurrent: max_concurrent_checks,
-        allowedDomains: allowed_domains,
-        documentationPath: documentation_path
-      }
-    );
+    const linkResults = await checkLinksWithConcurrency(filteredLinks, {
+      timeoutMs: timeout_ms,
+      maxConcurrent: max_concurrent_checks,
+      allowedDomains: allowed_domains,
+      documentationPath: documentation_path,
+    });
 
     // Generate report
     const report = generateLinkCheckReport(linkResults, {
@@ -119,7 +119,7 @@ export async function checkDocumentationLinks(input: Partial<LinkCheckInput>): P
       timeoutMs: timeout_ms,
       maxConcurrentChecks: max_concurrent_checks,
       filesScanned: documentationFiles.length,
-      executionTime: Date.now() - startTime
+      executionTime: Date.now() - startTime,
     });
 
     // Check if we should fail on broken links
@@ -130,14 +130,14 @@ export async function checkDocumentationLinks(input: Partial<LinkCheckInput>): P
           code: 'BROKEN_LINKS_FOUND',
           message: `Found ${report.summary.brokenLinks} broken links`,
           details: `${report.summary.brokenLinks} out of ${report.summary.totalLinks} links are broken`,
-          resolution: 'Fix the broken links or set fail_on_broken_links to false'
+          resolution: 'Fix the broken links or set fail_on_broken_links to false',
         },
         data: report,
         metadata: {
           toolVersion: '1.0.0',
           executionTime: Date.now() - startTime,
-          timestamp: new Date().toISOString()
-        }
+          timestamp: new Date().toISOString(),
+        },
       };
     }
 
@@ -147,10 +147,9 @@ export async function checkDocumentationLinks(input: Partial<LinkCheckInput>): P
       metadata: {
         toolVersion: '1.0.0',
         executionTime: Date.now() - startTime,
-        timestamp: new Date().toISOString()
-      }
+        timestamp: new Date().toISOString(),
+      },
     };
-
   } catch (error) {
     return {
       success: false,
@@ -158,28 +157,28 @@ export async function checkDocumentationLinks(input: Partial<LinkCheckInput>): P
         code: 'LINK_CHECK_ERROR',
         message: 'Failed to check documentation links',
         details: error instanceof Error ? error.message : 'Unknown error occurred',
-        resolution: 'Check the documentation path and ensure files are accessible'
+        resolution: 'Check the documentation path and ensure files are accessible',
       },
       metadata: {
         toolVersion: '1.0.0',
         executionTime: Date.now() - startTime,
-        timestamp: new Date().toISOString()
-      }
+        timestamp: new Date().toISOString(),
+      },
     };
   }
 }
 
 async function scanDocumentationFiles(basePath: string): Promise<string[]> {
   const files: string[] = [];
-  
+
   async function scanDirectory(dirPath: string): Promise<void> {
     try {
       const entries = await readdir(dirPath);
-      
+
       for (const entry of entries) {
         const fullPath = join(dirPath, entry);
         const stats = await stat(fullPath);
-        
+
         if (stats.isDirectory()) {
           // Skip node_modules and hidden directories
           if (!entry.startsWith('.') && entry !== 'node_modules') {
@@ -196,17 +195,22 @@ async function scanDocumentationFiles(basePath: string): Promise<string[]> {
       // Skip directories we can't read
     }
   }
-  
+
   await scanDirectory(basePath);
   return files;
 }
 
-async function extractLinksFromFiles(files: string[], basePath: string): Promise<Array<{
-  url: string;
-  sourceFile: string;
-  lineNumber: number;
-  linkType: 'internal' | 'external' | 'anchor' | 'mailto' | 'tel';
-}>> {
+async function extractLinksFromFiles(
+  files: string[],
+  basePath: string,
+): Promise<
+  Array<{
+    url: string;
+    sourceFile: string;
+    lineNumber: number;
+    linkType: 'internal' | 'external' | 'anchor' | 'mailto' | 'tel';
+  }>
+> {
   const allLinks: Array<{
     url: string;
     sourceFile: string;
@@ -231,16 +235,17 @@ async function extractLinksFromFiles(files: string[], basePath: string): Promise
       // Extract markdown links
       lines.forEach((line, index) => {
         let match;
-        
+
         // Markdown links [text](url)
         while ((match = markdownLinkRegex.exec(line)) !== null) {
           const url = match[2].trim();
-          if (url && !url.startsWith('#')) { // Skip empty and anchor-only links
+          if (url && !url.startsWith('#')) {
+            // Skip empty and anchor-only links
             allLinks.push({
               url,
               sourceFile: relativeFile,
               lineNumber: index + 1,
-              linkType: determineLinkType(url)
+              linkType: determineLinkType(url),
             });
           }
         }
@@ -253,7 +258,7 @@ async function extractLinksFromFiles(files: string[], basePath: string): Promise
               url,
               sourceFile: relativeFile,
               lineNumber: index + 1,
-              linkType: determineLinkType(url)
+              linkType: determineLinkType(url),
             });
           }
         }
@@ -266,7 +271,7 @@ async function extractLinksFromFiles(files: string[], basePath: string): Promise
               url,
               sourceFile: relativeFile,
               lineNumber: index + 1,
-              linkType: determineLinkType(url)
+              linkType: determineLinkType(url),
             });
           }
         }
@@ -287,20 +292,23 @@ function determineLinkType(url: string): 'internal' | 'external' | 'anchor' | 'm
   return 'internal';
 }
 
-function filterLinks(links: Array<{
-  url: string;
-  sourceFile: string;
-  lineNumber: number;
-  linkType: 'internal' | 'external' | 'anchor' | 'mailto' | 'tel';
-}>, options: {
-  checkExternalLinks: boolean;
-  checkInternalLinks: boolean;
-  checkAnchorLinks: boolean;
-  ignorePatterns: string[];
-}) {
-  return links.filter(link => {
+function filterLinks(
+  links: Array<{
+    url: string;
+    sourceFile: string;
+    lineNumber: number;
+    linkType: 'internal' | 'external' | 'anchor' | 'mailto' | 'tel';
+  }>,
+  options: {
+    checkExternalLinks: boolean;
+    checkInternalLinks: boolean;
+    checkAnchorLinks: boolean;
+    ignorePatterns: string[];
+  },
+) {
+  return links.filter((link) => {
     // Check if link should be ignored based on patterns
-    if (options.ignorePatterns.some(pattern => link.url.includes(pattern))) {
+    if (options.ignorePatterns.some((pattern) => link.url.includes(pattern))) {
       return false;
     }
 
@@ -333,10 +341,10 @@ async function checkLinksWithConcurrency(
     maxConcurrent: number;
     allowedDomains: string[];
     documentationPath: string;
-  }
+  },
 ): Promise<LinkCheckResult[]> {
   const results: LinkCheckResult[] = [];
-  
+
   async function checkSingleLink(link: {
     url: string;
     sourceFile: string;
@@ -344,7 +352,7 @@ async function checkLinksWithConcurrency(
     linkType: 'internal' | 'external' | 'anchor' | 'mailto' | 'tel';
   }): Promise<LinkCheckResult> {
     const startTime = Date.now();
-    
+
     try {
       if (link.linkType === 'internal') {
         return await checkInternalLink(link, options.documentationPath);
@@ -353,14 +361,14 @@ async function checkLinksWithConcurrency(
       } else if (link.linkType === 'anchor') {
         return await checkAnchorLink(link, options.documentationPath);
       }
-      
+
       return {
         url: link.url,
         status: 'skipped',
         sourceFile: link.sourceFile,
         lineNumber: link.lineNumber,
         linkType: link.linkType,
-        responseTime: Date.now() - startTime
+        responseTime: Date.now() - startTime,
       };
     } catch (error) {
       return {
@@ -370,7 +378,7 @@ async function checkLinksWithConcurrency(
         sourceFile: link.sourceFile,
         lineNumber: link.lineNumber,
         linkType: link.linkType,
-        responseTime: Date.now() - startTime
+        responseTime: Date.now() - startTime,
       };
     }
   }
@@ -389,25 +397,28 @@ async function checkLinksWithConcurrency(
   return results;
 }
 
-async function checkInternalLink(link: {
-  url: string;
-  sourceFile: string;
-  lineNumber: number;
-  linkType: 'internal' | 'external' | 'anchor' | 'mailto' | 'tel';
-}, documentationPath: string): Promise<LinkCheckResult> {
+async function checkInternalLink(
+  link: {
+    url: string;
+    sourceFile: string;
+    lineNumber: number;
+    linkType: 'internal' | 'external' | 'anchor' | 'mailto' | 'tel';
+  },
+  documentationPath: string,
+): Promise<LinkCheckResult> {
   const startTime = Date.now();
-  
+
   try {
     let targetPath = link.url;
-    
+
     // Remove anchor if present
     const [filePath] = targetPath.split('#');
-    
+
     // Handle relative paths properly using Node.js path resolution
     const absoluteDocPath = resolve(documentationPath);
     const sourceFileAbsolutePath = resolve(absoluteDocPath, link.sourceFile);
     const sourceDir = dirname(sourceFileAbsolutePath);
-    
+
     if (filePath.startsWith('./')) {
       // Current directory reference - resolve relative to source file directory
       targetPath = resolve(sourceDir, filePath.substring(2));
@@ -421,7 +432,7 @@ async function checkInternalLink(link: {
       // Relative path - resolve relative to source file directory
       targetPath = resolve(sourceDir, filePath);
     }
-    
+
     try {
       await stat(targetPath);
       return {
@@ -430,7 +441,7 @@ async function checkInternalLink(link: {
         sourceFile: link.sourceFile,
         lineNumber: link.lineNumber,
         linkType: link.linkType,
-        responseTime: Date.now() - startTime
+        responseTime: Date.now() - startTime,
       };
     } catch {
       return {
@@ -440,7 +451,7 @@ async function checkInternalLink(link: {
         sourceFile: link.sourceFile,
         lineNumber: link.lineNumber,
         linkType: link.linkType,
-        responseTime: Date.now() - startTime
+        responseTime: Date.now() - startTime,
       };
     }
   } catch (error) {
@@ -451,27 +462,31 @@ async function checkInternalLink(link: {
       sourceFile: link.sourceFile,
       lineNumber: link.lineNumber,
       linkType: link.linkType,
-      responseTime: Date.now() - startTime
+      responseTime: Date.now() - startTime,
     };
   }
 }
 
-async function checkExternalLink(link: {
-  url: string;
-  sourceFile: string;
-  lineNumber: number;
-  linkType: 'internal' | 'external' | 'anchor' | 'mailto' | 'tel';
-}, timeoutMs: number, allowedDomains: string[]): Promise<LinkCheckResult> {
+async function checkExternalLink(
+  link: {
+    url: string;
+    sourceFile: string;
+    lineNumber: number;
+    linkType: 'internal' | 'external' | 'anchor' | 'mailto' | 'tel';
+  },
+  timeoutMs: number,
+  allowedDomains: string[],
+): Promise<LinkCheckResult> {
   const startTime = Date.now();
-  
+
   try {
     // Check if domain is in allowed list (if specified)
     if (allowedDomains.length > 0) {
       const url = new URL(link.url);
-      const isAllowed = allowedDomains.some(domain => 
-        url.hostname === domain || url.hostname.endsWith('.' + domain)
+      const isAllowed = allowedDomains.some(
+        (domain) => url.hostname === domain || url.hostname.endsWith('.' + domain),
       );
-      
+
       if (!isAllowed) {
         return {
           url: link.url,
@@ -480,7 +495,7 @@ async function checkExternalLink(link: {
           sourceFile: link.sourceFile,
           lineNumber: link.lineNumber,
           linkType: link.linkType,
-          responseTime: Date.now() - startTime
+          responseTime: Date.now() - startTime,
         };
       }
     }
@@ -488,18 +503,18 @@ async function checkExternalLink(link: {
     // Simple HEAD request to check if URL is accessible
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-    
+
     try {
       const response = await fetch(link.url, {
         method: 'HEAD',
         signal: controller.signal,
         headers: {
-          'User-Agent': 'DocuMCP Link Checker 1.0'
-        }
+          'User-Agent': 'DocuMCP Link Checker 1.0',
+        },
       });
-      
+
       clearTimeout(timeoutId);
-      
+
       if (response.ok) {
         return {
           url: link.url,
@@ -508,7 +523,7 @@ async function checkExternalLink(link: {
           sourceFile: link.sourceFile,
           lineNumber: link.lineNumber,
           linkType: link.linkType,
-          responseTime: Date.now() - startTime
+          responseTime: Date.now() - startTime,
         };
       } else {
         return {
@@ -519,12 +534,12 @@ async function checkExternalLink(link: {
           sourceFile: link.sourceFile,
           lineNumber: link.lineNumber,
           linkType: link.linkType,
-          responseTime: Date.now() - startTime
+          responseTime: Date.now() - startTime,
         };
       }
     } catch (fetchError) {
       clearTimeout(timeoutId);
-      
+
       if (fetchError instanceof Error && fetchError.name === 'AbortError') {
         return {
           url: link.url,
@@ -533,10 +548,10 @@ async function checkExternalLink(link: {
           sourceFile: link.sourceFile,
           lineNumber: link.lineNumber,
           linkType: link.linkType,
-          responseTime: Date.now() - startTime
+          responseTime: Date.now() - startTime,
         };
       }
-      
+
       throw fetchError;
     }
   } catch (error) {
@@ -547,19 +562,22 @@ async function checkExternalLink(link: {
       sourceFile: link.sourceFile,
       lineNumber: link.lineNumber,
       linkType: link.linkType,
-      responseTime: Date.now() - startTime
+      responseTime: Date.now() - startTime,
     };
   }
 }
 
-async function checkAnchorLink(link: {
-  url: string;
-  sourceFile: string;
-  lineNumber: number;
-  linkType: 'internal' | 'external' | 'anchor' | 'mailto' | 'tel';
-}, _documentationPath: string): Promise<LinkCheckResult> {
+async function checkAnchorLink(
+  link: {
+    url: string;
+    sourceFile: string;
+    lineNumber: number;
+    linkType: 'internal' | 'external' | 'anchor' | 'mailto' | 'tel';
+  },
+  _documentationPath: string,
+): Promise<LinkCheckResult> {
   const startTime = Date.now();
-  
+
   // For now, just mark anchor links as valid
   // In a more sophisticated implementation, we would parse the target file
   // and check if the anchor exists
@@ -569,7 +587,7 @@ async function checkAnchorLink(link: {
     sourceFile: link.sourceFile,
     lineNumber: link.lineNumber,
     linkType: link.linkType,
-    responseTime: Date.now() - startTime
+    responseTime: Date.now() - startTime,
   };
 }
 
@@ -583,32 +601,34 @@ function generateLinkCheckReport(
     maxConcurrentChecks: number;
     filesScanned: number;
     executionTime: number;
-  }
+  },
 ): LinkCheckReport {
   const summary = {
     totalLinks: results.length,
-    validLinks: results.filter(r => r.status === 'valid').length,
-    brokenLinks: results.filter(r => r.status === 'broken').length,
-    warningLinks: results.filter(r => r.status === 'warning').length,
-    skippedLinks: results.filter(r => r.status === 'skipped').length,
+    validLinks: results.filter((r) => r.status === 'valid').length,
+    brokenLinks: results.filter((r) => r.status === 'broken').length,
+    warningLinks: results.filter((r) => r.status === 'warning').length,
+    skippedLinks: results.filter((r) => r.status === 'skipped').length,
     executionTime: config.executionTime,
-    filesScanned: config.filesScanned
+    filesScanned: config.filesScanned,
   };
 
   const recommendations: string[] = [];
-  
+
   if (summary.brokenLinks > 0) {
-    recommendations.push(`🔴 Fix ${summary.brokenLinks} broken links to improve documentation quality`);
+    recommendations.push(
+      `🔴 Fix ${summary.brokenLinks} broken links to improve documentation quality`,
+    );
   }
-  
+
   if (summary.warningLinks > 0) {
     recommendations.push(`🟡 Review ${summary.warningLinks} warning links that may need attention`);
   }
-  
+
   if (summary.validLinks === summary.totalLinks) {
     recommendations.push('✅ All links are valid - excellent documentation quality!');
   }
-  
+
   if (summary.totalLinks > 100) {
     recommendations.push('📊 Consider implementing automated link checking in CI/CD pipeline');
   }
@@ -622,7 +642,7 @@ function generateLinkCheckReport(
       checkInternalLinks: config.checkInternalLinks,
       checkAnchorLinks: config.checkAnchorLinks,
       timeoutMs: config.timeoutMs,
-      maxConcurrentChecks: config.maxConcurrentChecks
-    }
+      maxConcurrentChecks: config.maxConcurrentChecks,
+    },
   };
 }

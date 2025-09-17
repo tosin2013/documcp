@@ -17,7 +17,10 @@ describe('IncrementalLearningSystem', () => {
 
   beforeEach(async () => {
     // Create unique temp directory for each test
-    tempDir = path.join(os.tmpdir(), `memory-learning-test-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
+    tempDir = path.join(
+      os.tmpdir(),
+      `memory-learning-test-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    );
     await fs.mkdir(tempDir, { recursive: true });
 
     // Create memory manager for learning system
@@ -81,16 +84,19 @@ describe('IncrementalLearningSystem', () => {
         hasTests: true,
         hasCI: true,
         hasDocs: false,
-        isOpenSource: true
+        isOpenSource: true,
       };
 
       const baseRecommendation = {
         recommended: 'docusaurus',
         confidence: 0.8,
-        score: 0.85
+        score: 0.85,
       };
 
-      const improved = await learning.getImprovedRecommendation(projectFeatures, baseRecommendation);
+      const improved = await learning.getImprovedRecommendation(
+        projectFeatures,
+        baseRecommendation,
+      );
       expect(improved).toBeDefined();
       expect(improved.recommendation).toBeDefined();
       expect(typeof improved.confidence).toBe('number');
@@ -98,15 +104,19 @@ describe('IncrementalLearningSystem', () => {
     });
 
     test('should handle learning from memory entries', async () => {
-      const memoryEntry = await memoryManager.remember('recommendation', {
-        recommended: 'docusaurus',
-        confidence: 0.9,
-        language: { primary: 'typescript' },
-        framework: { name: 'react' }
-      }, {
-        projectId: 'test-project',
-        ssg: 'docusaurus'
-      });
+      const memoryEntry = await memoryManager.remember(
+        'recommendation',
+        {
+          recommended: 'docusaurus',
+          confidence: 0.9,
+          language: { primary: 'typescript' },
+          framework: { name: 'react' },
+        },
+        {
+          projectId: 'test-project',
+          ssg: 'docusaurus',
+        },
+      );
 
       // Learn from successful outcome
       await learning.learn(memoryEntry, 'success');
@@ -135,18 +145,21 @@ describe('IncrementalLearningSystem', () => {
         hasTests: false,
         hasCI: false,
         hasDocs: true,
-        isOpenSource: false
+        isOpenSource: false,
       };
 
       const baseRecommendation = {
         recommended: 'vuepress',
         confidence: 0.7,
-        score: 0.75
+        score: 0.75,
       };
 
       // Multiple learning cycles
       for (let i = 0; i < 3; i++) {
-        const improved = await learning.getImprovedRecommendation(projectFeatures, baseRecommendation);
+        const improved = await learning.getImprovedRecommendation(
+          projectFeatures,
+          baseRecommendation,
+        );
         expect(improved.recommendation).toBeDefined();
       }
 
@@ -172,15 +185,18 @@ describe('IncrementalLearningSystem', () => {
         hasTests: false,
         hasCI: false,
         hasDocs: false,
-        isOpenSource: false
+        isOpenSource: false,
       };
 
       const baseRecommendation = {
         recommended: 'jekyll',
-        confidence: 0.5
+        confidence: 0.5,
       };
 
-      const improved = await learning.getImprovedRecommendation(projectFeatures, baseRecommendation);
+      const improved = await learning.getImprovedRecommendation(
+        projectFeatures,
+        baseRecommendation,
+      );
       expect(improved).toBeDefined();
       expect(improved.recommendation).toBeDefined();
     });
@@ -194,12 +210,12 @@ describe('IncrementalLearningSystem', () => {
           hasTests: true,
           hasCI: true,
           hasDocs: true,
-          isOpenSource: true
+          isOpenSource: true,
         };
 
         const baseRecommendation = {
           recommended: 'hugo',
-          confidence: 0.8 + i * 0.02
+          confidence: 0.8 + i * 0.02,
         };
 
         return learning.getImprovedRecommendation(projectFeatures, baseRecommendation);
@@ -207,7 +223,7 @@ describe('IncrementalLearningSystem', () => {
 
       const results = await Promise.all(promises);
       expect(results.length).toBe(3);
-      results.forEach(result => {
+      results.forEach((result) => {
         expect(result.recommendation).toBeDefined();
       });
     });

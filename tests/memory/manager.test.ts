@@ -16,7 +16,10 @@ describe('MemoryManager', () => {
 
   beforeEach(async () => {
     // Create unique temp directory for each test
-    tempDir = path.join(os.tmpdir(), `memory-manager-test-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
+    tempDir = path.join(
+      os.tmpdir(),
+      `memory-manager-test-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    );
     await fs.mkdir(tempDir, { recursive: true });
     manager = new MemoryManager(tempDir);
     await manager.initialize();
@@ -41,13 +44,13 @@ describe('MemoryManager', () => {
       const data = {
         projectName: 'test-project',
         language: 'typescript',
-        framework: 'react'
+        framework: 'react',
       };
 
       const metadata = {
         projectId: 'test-proj-001',
         repository: 'github.com/test/repo',
-        tags: ['frontend', 'typescript']
+        tags: ['frontend', 'typescript'],
       };
 
       // Set context to ensure projectId is preserved
@@ -98,7 +101,7 @@ describe('MemoryManager', () => {
         repository: 'github.com/context/repo',
         branch: 'feature/memory',
         user: 'test-user',
-        session: 'session-123'
+        session: 'session-123',
       };
 
       manager.setContext(context);
@@ -112,7 +115,7 @@ describe('MemoryManager', () => {
     test('should use context when remembering', async () => {
       const context: MemoryContext = {
         projectId: 'auto-context-test',
-        repository: 'github.com/auto/repo'
+        repository: 'github.com/auto/repo',
       };
 
       manager.setContext(context);
@@ -138,10 +141,14 @@ describe('MemoryManager', () => {
       // Create some test data first
       manager.setContext({ projectId: 'search-test' });
 
-      await manager.remember('analysis', {
-        project: 'test-search',
-        language: 'typescript'
-      }, { tags: ['frontend'] });
+      await manager.remember(
+        'analysis',
+        {
+          project: 'test-search',
+          language: 'typescript',
+        },
+        { tags: ['frontend'] },
+      );
 
       // Test basic search functionality
       const results = await manager.search('');
@@ -156,7 +163,7 @@ describe('MemoryManager', () => {
       const options: MemorySearchOptions = {
         semantic: false,
         fuzzy: true,
-        sortBy: 'timestamp'
+        sortBy: 'timestamp',
       };
 
       const results = await manager.search('test', options);
@@ -219,18 +226,22 @@ describe('MemoryManager', () => {
 
       // Create multiple concurrent remember operations
       for (let i = 0; i < concurrentOps; i++) {
-        const promise = manager.remember('analysis', {
-          index: i,
-          data: `concurrent-test-${i}`
-        }, {
-          tags: [`tag-${i % 5}`]
-        });
+        const promise = manager.remember(
+          'analysis',
+          {
+            index: i,
+            data: `concurrent-test-${i}`,
+          },
+          {
+            tags: [`tag-${i % 5}`],
+          },
+        );
         promises.push(promise);
       }
 
       const memoryEntries = await Promise.all(promises);
       expect(memoryEntries).toHaveLength(concurrentOps);
-      expect(new Set(memoryEntries.map(m => m.id)).size).toBe(concurrentOps); // All IDs should be unique
+      expect(new Set(memoryEntries.map((m) => m.id)).size).toBe(concurrentOps); // All IDs should be unique
     });
   });
 
@@ -261,7 +272,7 @@ describe('MemoryManager', () => {
       for (let i = 0; i < bulkSize; i++) {
         const entry = await manager.remember('analysis', {
           index: i,
-          category: i % 3 === 0 ? 'A' : i % 3 === 1 ? 'B' : 'C'
+          category: i % 3 === 0 ? 'A' : i % 3 === 1 ? 'B' : 'C',
         });
         memoryEntries.push(entry);
       }
@@ -306,7 +317,7 @@ describe('MemoryManager', () => {
       // Test with extremely large data that might cause issues
       const largeData = {
         huge: 'x'.repeat(100000), // 100KB string
-        array: new Array(10000).fill(0).map((_, i) => ({ id: i, data: `item-${i}` }))
+        array: new Array(10000).fill(0).map((_, i) => ({ id: i, data: `item-${i}` })),
       };
 
       // Should handle large data gracefully
@@ -357,7 +368,7 @@ describe('MemoryManager', () => {
       await manager.forget(memoryEntry.id);
 
       // Give events time to fire
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise((resolve) => setTimeout(resolve, 50));
 
       // Verify events were triggered
       expect(eventCount).toBeGreaterThanOrEqual(1); // At least memory-created should fire
@@ -375,7 +386,7 @@ describe('MemoryManager', () => {
 
       manager.setContext({
         projectId: 'event-test',
-        user: 'event-user'
+        user: 'event-user',
       });
 
       // Give event time to fire

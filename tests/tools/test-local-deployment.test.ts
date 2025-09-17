@@ -6,31 +6,37 @@ import * as fs from 'fs';
 
 describe('testLocalDeployment', () => {
   const testRepoPath = process.cwd();
-  
+
   afterEach(() => {
     jest.restoreAllMocks();
   });
 
   describe('Input validation', () => {
     it('should handle invalid SSG parameter', async () => {
-      await expect(testLocalDeployment({
-        repositoryPath: '/test/path',
-        ssg: 'invalid' as any
-      })).rejects.toThrow();
+      await expect(
+        testLocalDeployment({
+          repositoryPath: '/test/path',
+          ssg: 'invalid' as any,
+        }),
+      ).rejects.toThrow();
     });
 
     it('should handle missing required parameters', async () => {
-      await expect(testLocalDeployment({
-        ssg: 'docusaurus'
-      } as any)).rejects.toThrow();
+      await expect(
+        testLocalDeployment({
+          ssg: 'docusaurus',
+        } as any),
+      ).rejects.toThrow();
     });
 
     it('should handle unsupported SSG gracefully', async () => {
       // This should throw a ZodError due to input validation
-      await expect(testLocalDeployment({
-        repositoryPath: testRepoPath,
-        ssg: 'gatsby' as any
-      })).rejects.toThrow('Invalid enum value');
+      await expect(
+        testLocalDeployment({
+          repositoryPath: testRepoPath,
+          ssg: 'gatsby' as any,
+        }),
+      ).rejects.toThrow('Invalid enum value');
     });
   });
 
@@ -39,9 +45,9 @@ describe('testLocalDeployment', () => {
       const result = await testLocalDeployment({
         repositoryPath: testRepoPath,
         ssg: 'hugo',
-        skipBuild: true
+        skipBuild: true,
       });
-      
+
       expect(result.content).toBeDefined();
       expect(Array.isArray(result.content)).toBe(true);
       expect(result.content.length).toBeGreaterThan(0);
@@ -52,7 +58,7 @@ describe('testLocalDeployment', () => {
       const result = await testLocalDeployment({
         repositoryPath: testRepoPath,
         ssg: 'hugo',
-        skipBuild: true
+        skipBuild: true,
       });
 
       const parsedResult = JSON.parse(result.content[0].text);
@@ -64,7 +70,7 @@ describe('testLocalDeployment', () => {
         repositoryPath: testRepoPath,
         ssg: 'hugo',
         port: 4000,
-        skipBuild: true
+        skipBuild: true,
       });
 
       const parsedResult = JSON.parse(result.content[0].text);
@@ -76,7 +82,7 @@ describe('testLocalDeployment', () => {
         repositoryPath: testRepoPath,
         ssg: 'hugo',
         timeout: 120,
-        skipBuild: true
+        skipBuild: true,
       });
 
       const parsedResult = JSON.parse(result.content[0].text);
@@ -87,12 +93,12 @@ describe('testLocalDeployment', () => {
   describe('SSG support', () => {
     it('should handle all supported SSG types', async () => {
       const ssgs = ['jekyll', 'hugo', 'docusaurus', 'mkdocs', 'eleventy'];
-      
+
       for (const ssg of ssgs) {
         const result = await testLocalDeployment({
           repositoryPath: testRepoPath,
           ssg: ssg as any,
-          skipBuild: true
+          skipBuild: true,
         });
 
         const parsedResult = JSON.parse(result.content[0].text);
@@ -103,13 +109,13 @@ describe('testLocalDeployment', () => {
 
     it('should generate test script for all SSG types', async () => {
       const ssgs = ['jekyll', 'hugo', 'docusaurus', 'mkdocs', 'eleventy'];
-      
+
       for (const ssg of ssgs) {
         const result = await testLocalDeployment({
           repositoryPath: testRepoPath,
           ssg: ssg as any,
           skipBuild: true,
-          port: 4000
+          port: 4000,
         });
 
         const parsedResult = JSON.parse(result.content[0].text);
@@ -122,7 +128,7 @@ describe('testLocalDeployment', () => {
       const result = await testLocalDeployment({
         repositoryPath: testRepoPath,
         ssg: 'docusaurus',
-        skipBuild: true
+        skipBuild: true,
       });
 
       const parsedResult = JSON.parse(result.content[0].text);
@@ -133,7 +139,7 @@ describe('testLocalDeployment', () => {
       const result = await testLocalDeployment({
         repositoryPath: testRepoPath,
         ssg: 'hugo',
-        skipBuild: true
+        skipBuild: true,
       });
 
       const parsedResult = JSON.parse(result.content[0].text);
@@ -146,14 +152,12 @@ describe('testLocalDeployment', () => {
       const result = await testLocalDeployment({
         repositoryPath: testRepoPath,
         ssg: 'jekyll', // Jekyll config unlikely to exist in this repo
-        skipBuild: true
+        skipBuild: true,
       });
 
       const parsedResult = JSON.parse(result.content[0].text);
       expect(parsedResult.recommendations).toEqual(
-        expect.arrayContaining([
-          expect.stringContaining('Missing configuration file')
-        ])
+        expect.arrayContaining([expect.stringContaining('Missing configuration file')]),
       );
     });
 
@@ -161,14 +165,12 @@ describe('testLocalDeployment', () => {
       const result = await testLocalDeployment({
         repositoryPath: testRepoPath,
         ssg: 'jekyll',
-        skipBuild: true
+        skipBuild: true,
       });
 
       const parsedResult = JSON.parse(result.content[0].text);
       expect(parsedResult.nextSteps).toEqual(
-        expect.arrayContaining([
-          expect.stringContaining('generate_config')
-        ])
+        expect.arrayContaining([expect.stringContaining('generate_config')]),
       );
     });
   });
@@ -181,7 +183,7 @@ describe('testLocalDeployment', () => {
 
       const result = await testLocalDeployment({
         repositoryPath: testRepoPath,
-        ssg: 'hugo'
+        ssg: 'hugo',
       });
 
       // The tool returns an error response structure instead of throwing
@@ -195,7 +197,7 @@ describe('testLocalDeployment', () => {
       const result = await testLocalDeployment({
         repositoryPath: '/non/existent/path',
         ssg: 'hugo',
-        skipBuild: true
+        skipBuild: true,
       });
 
       const parsedResult = JSON.parse(result.content[0].text);
@@ -210,7 +212,7 @@ describe('testLocalDeployment', () => {
       const result = await testLocalDeployment({
         repositoryPath: testRepoPath,
         ssg: 'hugo',
-        skipBuild: true
+        skipBuild: true,
       });
 
       const parsedResult = JSON.parse(result.content[0].text);
@@ -226,7 +228,7 @@ describe('testLocalDeployment', () => {
       const result = await testLocalDeployment({
         repositoryPath: testRepoPath,
         ssg: 'hugo',
-        skipBuild: true
+        skipBuild: true,
       });
 
       const parsedResult = JSON.parse(result.content[0].text);
@@ -239,12 +241,12 @@ describe('testLocalDeployment', () => {
         repositoryPath: testRepoPath,
         ssg: 'hugo',
         port: 8080,
-        skipBuild: true
+        skipBuild: true,
       });
 
       const parsedResult = JSON.parse(result.content[0].text);
       const testScript = parsedResult.testScript;
-      
+
       expect(testScript).toContain('# Local Deployment Test Script for hugo');
       expect(testScript).toContain('http://localhost:8080');
       expect(testScript).toContain('hugo server');
@@ -253,13 +255,13 @@ describe('testLocalDeployment', () => {
 
     it('should handle different timeout values', async () => {
       const timeouts = [30, 60, 120, 300];
-      
+
       for (const timeout of timeouts) {
         const result = await testLocalDeployment({
           repositoryPath: testRepoPath,
           ssg: 'hugo',
           timeout,
-          skipBuild: true
+          skipBuild: true,
         });
 
         const parsedResult = JSON.parse(result.content[0].text);
@@ -270,25 +272,23 @@ describe('testLocalDeployment', () => {
 
     it('should provide appropriate recommendations for each SSG type', async () => {
       const ssgConfigs = {
-        'jekyll': '_config.yml',
-        'hugo': 'config.toml',
-        'docusaurus': 'docusaurus.config.js',
-        'mkdocs': 'mkdocs.yml',
-        'eleventy': '.eleventy.js'
+        jekyll: '_config.yml',
+        hugo: 'config.toml',
+        docusaurus: 'docusaurus.config.js',
+        mkdocs: 'mkdocs.yml',
+        eleventy: '.eleventy.js',
       };
 
       for (const [ssg, configFile] of Object.entries(ssgConfigs)) {
         const result = await testLocalDeployment({
           repositoryPath: testRepoPath,
           ssg: ssg as any,
-          skipBuild: true
+          skipBuild: true,
         });
 
         const parsedResult = JSON.parse(result.content[0].text);
         expect(parsedResult.recommendations).toEqual(
-          expect.arrayContaining([
-            expect.stringContaining(configFile)
-          ])
+          expect.arrayContaining([expect.stringContaining(configFile)]),
         );
       }
     });
@@ -297,20 +297,18 @@ describe('testLocalDeployment', () => {
       const result = await testLocalDeployment({
         repositoryPath: testRepoPath,
         ssg: 'jekyll', // Missing config will trigger recommendations
-        skipBuild: true
+        skipBuild: true,
       });
 
       const parsedResult = JSON.parse(result.content[0].text);
       const nextSteps = parsedResult.nextSteps;
-      
+
       expect(Array.isArray(nextSteps)).toBe(true);
       expect(nextSteps.length).toBeGreaterThan(0);
-      
+
       // Should include generate_config step for missing config
       expect(nextSteps).toEqual(
-        expect.arrayContaining([
-          expect.stringContaining('generate_config')
-        ])
+        expect.arrayContaining([expect.stringContaining('generate_config')]),
       );
     });
 
@@ -318,7 +316,7 @@ describe('testLocalDeployment', () => {
       const result = await testLocalDeployment({
         repositoryPath: '',
         ssg: 'hugo',
-        skipBuild: true
+        skipBuild: true,
       });
 
       const parsedResult = JSON.parse(result.content[0].text);
@@ -329,13 +327,13 @@ describe('testLocalDeployment', () => {
 
     it('should validate port range handling', async () => {
       const ports = [1000, 3000, 8080, 9000, 65535];
-      
+
       for (const port of ports) {
         const result = await testLocalDeployment({
           repositoryPath: testRepoPath,
           ssg: 'hugo',
           port,
-          skipBuild: true
+          skipBuild: true,
         });
 
         const parsedResult = JSON.parse(result.content[0].text);
@@ -362,15 +360,13 @@ describe('testLocalDeployment', () => {
         const result = await testLocalDeployment({
           repositoryPath: testRepoPath,
           ssg: 'hugo',
-          skipBuild: true
+          skipBuild: true,
         });
 
         const parsedResult = JSON.parse(result.content[0].text);
         // Should not recommend missing config since file exists
         expect(parsedResult.recommendations).not.toEqual(
-          expect.arrayContaining([
-            expect.stringContaining('Missing configuration file')
-          ])
+          expect.arrayContaining([expect.stringContaining('Missing configuration file')]),
         );
 
         mockFsAccess.mockRestore();
@@ -383,15 +379,13 @@ describe('testLocalDeployment', () => {
         const result = await testLocalDeployment({
           repositoryPath: testRepoPath,
           ssg: 'jekyll',
-          skipBuild: true
+          skipBuild: true,
         });
 
         const parsedResult = JSON.parse(result.content[0].text);
         // Should not recommend missing config since file exists
         expect(parsedResult.recommendations).not.toEqual(
-          expect.arrayContaining([
-            expect.stringContaining('Missing configuration file')
-          ])
+          expect.arrayContaining([expect.stringContaining('Missing configuration file')]),
         );
 
         mockFsAccess.mockRestore();
@@ -404,15 +398,13 @@ describe('testLocalDeployment', () => {
         const result = await testLocalDeployment({
           repositoryPath: testRepoPath,
           ssg: 'docusaurus',
-          skipBuild: true
+          skipBuild: true,
         });
 
         const parsedResult = JSON.parse(result.content[0].text);
         // Should not recommend missing config since file exists
         expect(parsedResult.recommendations).not.toEqual(
-          expect.arrayContaining([
-            expect.stringContaining('Missing configuration file')
-          ])
+          expect.arrayContaining([expect.stringContaining('Missing configuration file')]),
         );
 
         mockFsAccess.mockRestore();
@@ -425,15 +417,13 @@ describe('testLocalDeployment', () => {
         const result = await testLocalDeployment({
           repositoryPath: testRepoPath,
           ssg: 'mkdocs',
-          skipBuild: true
+          skipBuild: true,
         });
 
         const parsedResult = JSON.parse(result.content[0].text);
         // Should not recommend missing config since file exists
         expect(parsedResult.recommendations).not.toEqual(
-          expect.arrayContaining([
-            expect.stringContaining('Missing configuration file')
-          ])
+          expect.arrayContaining([expect.stringContaining('Missing configuration file')]),
         );
 
         mockFsAccess.mockRestore();
@@ -446,15 +436,13 @@ describe('testLocalDeployment', () => {
         const result = await testLocalDeployment({
           repositoryPath: testRepoPath,
           ssg: 'eleventy',
-          skipBuild: true
+          skipBuild: true,
         });
 
         const parsedResult = JSON.parse(result.content[0].text);
         // Should not recommend missing config since file exists
         expect(parsedResult.recommendations).not.toEqual(
-          expect.arrayContaining([
-            expect.stringContaining('Missing configuration file')
-          ])
+          expect.arrayContaining([expect.stringContaining('Missing configuration file')]),
         );
 
         mockFsAccess.mockRestore();
@@ -467,7 +455,7 @@ describe('testLocalDeployment', () => {
           repositoryPath: testRepoPath,
           ssg: 'eleventy',
           skipBuild: false,
-          timeout: 10 // Short timeout to avoid long waits
+          timeout: 10, // Short timeout to avoid long waits
         });
 
         const parsedResult = JSON.parse(result.content[0].text);
@@ -481,7 +469,7 @@ describe('testLocalDeployment', () => {
           repositoryPath: testRepoPath,
           ssg: 'mkdocs',
           skipBuild: false,
-          timeout: 10 // Short timeout to avoid long waits
+          timeout: 10, // Short timeout to avoid long waits
         });
 
         const parsedResult = JSON.parse(result.content[0].text);
@@ -495,14 +483,16 @@ describe('testLocalDeployment', () => {
           repositoryPath: testRepoPath,
           ssg: 'hugo',
           skipBuild: true,
-          timeout: 5 // Very short timeout to trigger timeout path
+          timeout: 5, // Very short timeout to trigger timeout path
         });
 
         const parsedResult = JSON.parse(result.content[0].text);
         expect(parsedResult.ssg).toBe('hugo');
         expect(parsedResult.serverStarted).toBeDefined();
         // localUrl may be undefined if server doesn't start quickly enough
-        expect(typeof parsedResult.localUrl === 'string' || parsedResult.localUrl === undefined).toBe(true);
+        expect(
+          typeof parsedResult.localUrl === 'string' || parsedResult.localUrl === undefined,
+        ).toBe(true);
       });
 
       it('should test port customization in serve commands', async () => {
@@ -510,7 +500,7 @@ describe('testLocalDeployment', () => {
           repositoryPath: testRepoPath,
           ssg: 'jekyll',
           port: 4000,
-          skipBuild: true
+          skipBuild: true,
         });
 
         const parsedResult = JSON.parse(result.content[0].text);
@@ -523,7 +513,7 @@ describe('testLocalDeployment', () => {
           repositoryPath: testRepoPath,
           ssg: 'mkdocs',
           port: 8000,
-          skipBuild: true
+          skipBuild: true,
         });
 
         const parsedResult = JSON.parse(result.content[0].text);
@@ -536,7 +526,7 @@ describe('testLocalDeployment', () => {
           repositoryPath: testRepoPath,
           ssg: 'eleventy',
           port: 3001,
-          skipBuild: true
+          skipBuild: true,
         });
 
         const parsedResult = JSON.parse(result.content[0].text);
@@ -548,7 +538,7 @@ describe('testLocalDeployment', () => {
         const result = await testLocalDeployment({
           repositoryPath: testRepoPath,
           ssg: 'docusaurus',
-          skipBuild: true
+          skipBuild: true,
         });
 
         const parsedResult = JSON.parse(result.content[0].text);

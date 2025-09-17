@@ -10,7 +10,7 @@ module.exports = {
   favicon: 'img/favicon.ico',
   organizationName: 'tosin2013',
   projectName: 'documcp',
-  
+
   presets: [
     [
       'classic',

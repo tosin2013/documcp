@@ -27,16 +27,16 @@ describe('analyze_readme', () => {
   describe('input validation', () => {
     it('should require project_path parameter', async () => {
       const result = await analyzeReadme({});
-      
+
       expect(result.success).toBe(false);
       expect(result.error?.code).toBe('ANALYSIS_FAILED');
     });
 
     it('should handle non-existent project directory', async () => {
       const result = await analyzeReadme({
-        project_path: '/non/existent/path'
+        project_path: '/non/existent/path',
       });
-      
+
       expect(result.success).toBe(false);
       expect(result.error?.code).toBe('README_NOT_FOUND');
     });
@@ -48,7 +48,7 @@ describe('analyze_readme', () => {
       await fs.writeFile(readmePath, readmeContent);
 
       const result = await analyzeReadme({
-        project_path: testDir
+        project_path: testDir,
       });
 
       expect(result.success).toBe(true);
@@ -60,7 +60,7 @@ describe('analyze_readme', () => {
       await fs.writeFile(join(testDir, 'readme.md'), readmeContent);
 
       const result = await analyzeReadme({
-        project_path: testDir
+        project_path: testDir,
       });
 
       expect(result.success).toBe(true);
@@ -74,7 +74,7 @@ describe('analyze_readme', () => {
 
       const result = await analyzeReadme({
         project_path: testDir,
-        max_length_target: 300
+        max_length_target: 300,
       });
 
       expect(result.success).toBe(true);
@@ -88,7 +88,7 @@ describe('analyze_readme', () => {
 
       const result = await analyzeReadme({
         project_path: testDir,
-        max_length_target: 300
+        max_length_target: 300,
       });
 
       expect(result.success).toBe(true);
@@ -126,7 +126,7 @@ Guidelines here.`;
       await fs.writeFile(readmePath, wellStructuredReadme);
 
       const result = await analyzeReadme({
-        project_path: testDir
+        project_path: testDir,
       });
 
       expect(result.success).toBe(true);
@@ -139,7 +139,7 @@ Guidelines here.`;
       await fs.writeFile(readmePath, poorStructure);
 
       const result = await analyzeReadme({
-        project_path: testDir
+        project_path: testDir,
       });
 
       expect(result.success).toBe(true);
@@ -153,7 +153,7 @@ Guidelines here.`;
       await fs.writeFile(readmePath, readmeWithTldr);
 
       const result = await analyzeReadme({
-        project_path: testDir
+        project_path: testDir,
       });
 
       expect(result.success).toBe(true);
@@ -165,7 +165,7 @@ Guidelines here.`;
       await fs.writeFile(readmePath, readmeWithQuickStart);
 
       const result = await analyzeReadme({
-        project_path: testDir
+        project_path: testDir,
       });
 
       expect(result.success).toBe(true);
@@ -192,7 +192,7 @@ See [documentation](https://example.com) and [API reference](https://api.example
       await fs.writeFile(readmePath, readmeWithCodeAndLinks);
 
       const result = await analyzeReadme({
-        project_path: testDir
+        project_path: testDir,
       });
 
       expect(result.success).toBe(true);
@@ -209,7 +209,7 @@ See [documentation](https://example.com) and [API reference](https://api.example
       await fs.writeFile(join(testDir, 'CODE_OF_CONDUCT.md'), 'Code of conduct');
 
       const result = await analyzeReadme({
-        project_path: testDir
+        project_path: testDir,
       });
 
       expect(result.success).toBe(true);
@@ -228,7 +228,7 @@ Description here.`;
       await fs.writeFile(readmePath, readmeWithBadges);
 
       const result = await analyzeReadme({
-        project_path: testDir
+        project_path: testDir,
       });
 
       expect(result.success).toBe(true);
@@ -238,18 +238,24 @@ Description here.`;
 
   describe('optimization opportunities', () => {
     it('should identify length reduction opportunities', async () => {
-      const longReadme = Array(500).fill('# Section\n\nLong content here that exceeds target length.\n').join('\n');
+      const longReadme = Array(500)
+        .fill('# Section\n\nLong content here that exceeds target length.\n')
+        .join('\n');
       await fs.writeFile(readmePath, longReadme);
 
       const result = await analyzeReadme({
         project_path: testDir,
         max_length_target: 200,
-        optimization_level: 'aggressive'
+        optimization_level: 'aggressive',
       });
 
       expect(result.success).toBe(true);
       expect(result.data?.analysis.optimizationOpportunities.length).toBeGreaterThan(0);
-      expect(result.data?.analysis.optimizationOpportunities.some(op => op.type === 'length_reduction')).toBe(true);
+      expect(
+        result.data?.analysis.optimizationOpportunities.some(
+          (op) => op.type === 'length_reduction',
+        ),
+      ).toBe(true);
     });
 
     it('should identify content enhancement opportunities', async () => {
@@ -258,11 +264,15 @@ Description here.`;
 
       const result = await analyzeReadme({
         project_path: testDir,
-        target_audience: 'community_contributors'
+        target_audience: 'community_contributors',
       });
 
       expect(result.success).toBe(true);
-      expect(result.data?.analysis.optimizationOpportunities.some(op => op.type === 'content_enhancement')).toBe(true);
+      expect(
+        result.data?.analysis.optimizationOpportunities.some(
+          (op) => op.type === 'content_enhancement',
+        ),
+      ).toBe(true);
     });
   });
 
@@ -311,7 +321,7 @@ MIT © Author`;
       await fs.writeFile(join(testDir, 'CONTRIBUTING.md'), 'Guidelines');
 
       const result = await analyzeReadme({
-        project_path: testDir
+        project_path: testDir,
       });
 
       expect(result.success).toBe(true);
@@ -323,7 +333,7 @@ MIT © Author`;
       await fs.writeFile(readmePath, poorReadme);
 
       const result = await analyzeReadme({
-        project_path: testDir
+        project_path: testDir,
       });
 
       expect(result.success).toBe(true);
@@ -339,7 +349,7 @@ MIT © Author`;
       const result = await analyzeReadme({
         project_path: testDir,
         target_audience: 'community_contributors',
-        optimization_level: 'moderate'
+        optimization_level: 'moderate',
       });
 
       expect(result.success).toBe(true);
@@ -353,13 +363,16 @@ MIT © Author`;
 
       const result = await analyzeReadme({
         project_path: testDir,
-        target_audience: 'enterprise_users'
+        target_audience: 'enterprise_users',
       });
 
       expect(result.success).toBe(true);
-      expect(result.data?.analysis.recommendations.some(rec => 
-        rec.includes('enterprise') || rec.includes('security') || rec.includes('support')
-      )).toBe(true);
+      expect(
+        result.data?.analysis.recommendations.some(
+          (rec) =>
+            rec.includes('enterprise') || rec.includes('security') || rec.includes('support'),
+        ),
+      ).toBe(true);
     });
   });
 
@@ -370,7 +383,7 @@ MIT © Author`;
       await fs.writeFile(join(testDir, 'package.json'), '{"name": "test"}');
 
       const result = await analyzeReadme({
-        project_path: testDir
+        project_path: testDir,
       });
 
       expect(result.success).toBe(true);
@@ -383,7 +396,7 @@ MIT © Author`;
       await fs.writeFile(readmePath, readmeContent);
 
       const result = await analyzeReadme({
-        project_path: testDir
+        project_path: testDir,
       });
 
       expect(result.success).toBe(true);

@@ -114,9 +114,11 @@ export function formatMCPResponse<T>(response: MCPToolResponse<T>): MCPContentWr
     if (response.recommendations?.length) {
       content.push({
         type: 'text',
-        text: '\nRecommendations:\n' + response.recommendations
-          .map(r => `${getRecommendationIcon(r.type)} ${r.title}: ${r.description}`)
-          .join('\n'),
+        text:
+          '\nRecommendations:\n' +
+          response.recommendations
+            .map((r) => `${getRecommendationIcon(r.type)} ${r.title}: ${r.description}`)
+            .join('\n'),
       });
     }
 
@@ -124,9 +126,14 @@ export function formatMCPResponse<T>(response: MCPToolResponse<T>): MCPContentWr
     if (response.nextSteps?.length) {
       content.push({
         type: 'text',
-        text: '\nNext Steps:\n' + response.nextSteps
-          .map(s => `→ ${s.action} (use ${s.toolRequired}${s.description ? ': ' + s.description : ''})`)
-          .join('\n'),
+        text:
+          '\nNext Steps:\n' +
+          response.nextSteps
+            .map(
+              (s) =>
+                `→ ${s.action} (use ${s.toolRequired}${s.description ? ': ' + s.description : ''})`,
+            )
+            .join('\n'),
       });
     }
 
@@ -137,19 +144,19 @@ export function formatMCPResponse<T>(response: MCPToolResponse<T>): MCPContentWr
       type: 'text',
       text: JSON.stringify(response, null, 2),
     });
-    
+
     content.push({
       type: 'text',
       text: `Error: ${response.error.message}`,
     });
-    
+
     if (response.error.resolution) {
       content.push({
         type: 'text',
         text: `Resolution: ${response.error.resolution}`,
       });
     }
-    
+
     return { content, isError: true };
   }
 
@@ -170,7 +177,9 @@ function getRecommendationIcon(type: Recommendation['type']): string {
 }
 
 // Utility functions for type conversions to prevent common type errors
-export function convertBestPracticesReportToChecklistItems(report: BestPracticesReport): ChecklistItem[] {
+export function convertBestPracticesReportToChecklistItems(
+  report: BestPracticesReport,
+): ChecklistItem[] {
   return report.items;
 }
 

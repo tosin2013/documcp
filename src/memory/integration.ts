@@ -15,30 +15,30 @@ export async function initializeMemory(): Promise<MemoryManager> {
 
     // Set up event listeners
     memoryManager.on('memory-created', (entry: MemoryEntry) => {
-      console.error(`[Memory] Created: ${entry.id} (${entry.type})`);
+      // eslint-disable-next-line no-console
+      console.log(`[Memory] Created: ${entry.id} (${entry.type})`);
     });
 
     memoryManager.on('memory-updated', (entry: MemoryEntry) => {
-      console.error(`[Memory] Updated: ${entry.id}`);
+      // eslint-disable-next-line no-console
+      console.log(`[Memory] Updated: ${entry.id}`);
     });
 
     memoryManager.on('memory-deleted', (id: string) => {
-      console.error(`[Memory] Deleted: ${id}`);
+      // eslint-disable-next-line no-console
+      console.log(`[Memory] Deleted: ${id}`);
     });
   }
 
   return memoryManager;
 }
 
-export async function rememberAnalysis(
-  projectPath: string,
-  analysisData: any
-): Promise<string> {
+export async function rememberAnalysis(projectPath: string, analysisData: any): Promise<string> {
   const manager = await initializeMemory();
 
   manager.setContext({
     projectId: analysisData.projectId || projectPath,
-    repository: analysisData.repository?.url
+    repository: analysisData.repository?.url,
   });
 
   const entry = await manager.remember('analysis', analysisData, {
@@ -46,8 +46,8 @@ export async function rememberAnalysis(
     tags: [
       'analysis',
       analysisData.language?.primary || 'unknown',
-      analysisData.framework?.name || 'none'
-    ]
+      analysisData.framework?.name || 'none',
+    ],
   });
 
   return entry.id;
@@ -55,13 +55,13 @@ export async function rememberAnalysis(
 
 export async function rememberRecommendation(
   analysisId: string,
-  recommendation: any
+  recommendation: any,
 ): Promise<string> {
   const manager = await initializeMemory();
 
   const entry = await manager.remember('recommendation', recommendation, {
     ssg: recommendation.recommended,
-    tags: ['recommendation', recommendation.recommended, 'ssg']
+    tags: ['recommendation', recommendation.recommended, 'ssg'],
   });
 
   // Link to analysis
@@ -70,29 +70,26 @@ export async function rememberRecommendation(
     await manager.update(entry.id, {
       metadata: {
         ...entry.metadata,
-        projectId: analysis.metadata.projectId
-      }
+        projectId: analysis.metadata.projectId,
+      },
     });
   }
 
   return entry.id;
 }
 
-export async function rememberDeployment(
-  repository: string,
-  deploymentData: any
-): Promise<string> {
+export async function rememberDeployment(repository: string, deploymentData: any): Promise<string> {
   const manager = await initializeMemory();
 
   manager.setContext({
     projectId: repository,
-    repository
+    repository,
   });
 
   const entry = await manager.remember('deployment', deploymentData, {
     repository,
     ssg: deploymentData.ssg,
-    tags: ['deployment', deploymentData.status || 'unknown', deploymentData.ssg]
+    tags: ['deployment', deploymentData.status || 'unknown', deploymentData.ssg],
   });
 
   return entry.id;
@@ -101,42 +98,35 @@ export async function rememberDeployment(
 export async function rememberConfiguration(
   projectName: string,
   ssg: string,
-  configData: any
+  configData: any,
 ): Promise<string> {
   const manager = await initializeMemory();
 
   manager.setContext({
-    projectId: projectName
+    projectId: projectName,
   });
 
   const entry = await manager.remember('configuration', configData, {
     ssg,
-    tags: ['configuration', ssg, projectName]
+    tags: ['configuration', ssg, projectName],
   });
 
   return entry.id;
 }
 
-export async function recallProjectHistory(
-  projectId: string
-): Promise<any> {
+export async function recallProjectHistory(projectId: string): Promise<any> {
   const manager = await initializeMemory();
 
-  const memories = await manager.search(
-    { projectId },
-    { sortBy: 'timestamp', groupBy: 'type' }
-  );
+  const memories = await manager.search({ projectId }, { sortBy: 'timestamp', groupBy: 'type' });
 
   return {
     projectId,
     history: memories,
-    insights: await getProjectInsights(projectId)
+    insights: await getProjectInsights(projectId),
   };
 }
 
-export async function getProjectInsights(
-  projectId: string
-): Promise<string[]> {
+export async function getProjectInsights(projectId: string): Promise<string[]> {
   const manager = await initializeMemory();
 
   const memories = await manager.search({ projectId });
@@ -153,7 +143,7 @@ export async function getProjectInsights(
   const deployments = memories.filter((m: any) => m.type === 'deployment');
   if (deployments.length > 0) {
     const successful = deployments.filter((d: any) => d.data.status === 'success').length;
-    const rate = (successful / deployments.length * 100).toFixed(0);
+    const rate = ((successful / deployments.length) * 100).toFixed(0);
     insights.push(`Deployment success rate: ${rate}%`);
   }
 
@@ -161,7 +151,7 @@ export async function getProjectInsights(
   const lastMemory = memories[memories.length - 1];
   if (lastMemory) {
     const daysAgo = Math.floor(
-      (Date.now() - new Date(lastMemory.timestamp).getTime()) / (1000 * 60 * 60 * 24)
+      (Date.now() - new Date(lastMemory.timestamp).getTime()) / (1000 * 60 * 60 * 24),
     );
     insights.push(`Last activity: ${daysAgo} days ago`);
   }
@@ -169,10 +159,7 @@ export async function getProjectInsights(
   return insights;
 }
 
-export async function getSimilarProjects(
-  analysisData: any,
-  limit: number = 5
-): Promise<any[]> {
+export async function getSimilarProjects(analysisData: any, limit: number = 5): Promise<any[]> {
   const manager = await initializeMemory();
 
   // Search for projects with similar characteristics
@@ -182,7 +169,7 @@ export async function getSimilarProjects(
   if (analysisData.language?.primary) {
     const languageMatches = await manager.search(
       { tags: [analysisData.language.primary] },
-      { sortBy: 'timestamp' }
+      { sortBy: 'timestamp' },
     );
     similarProjects.push(...languageMatches);
   }
@@ -191,21 +178,21 @@ export async function getSimilarProjects(
   if (analysisData.framework?.name) {
     const frameworkMatches = await manager.search(
       { tags: [analysisData.framework.name] },
-      { sortBy: 'timestamp' }
+      { sortBy: 'timestamp' },
     );
     similarProjects.push(...frameworkMatches);
   }
 
   // Deduplicate and return top matches
   const unique = Array.from(
-    new Map(similarProjects.map(p => [p.metadata.projectId, p])).values()
+    new Map(similarProjects.map((p) => [p.metadata.projectId, p])).values(),
   );
 
-  return unique.slice(0, limit).map(project => ({
+  return unique.slice(0, limit).map((project) => ({
     projectId: project.metadata.projectId,
     similarity: calculateSimilarity(analysisData, project.data),
     recommendation: project.metadata.ssg,
-    timestamp: project.timestamp
+    timestamp: project.timestamp,
   }));
 }
 
@@ -241,7 +228,7 @@ export async function exportMemories(format: 'json' | 'csv' = 'json'): Promise<s
 
 export async function importMemories(
   data: string,
-  format: 'json' | 'csv' = 'json'
+  format: 'json' | 'csv' = 'json',
 ): Promise<number> {
   const manager = await initializeMemory();
   return await manager.import(data, format);

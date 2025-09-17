@@ -12,45 +12,45 @@ on:
         default: 'patch'
         type: choice
         options:
-        - patch
-        - minor
-        - major
+          - patch
+          - minor
+          - major
 
 jobs:
   test:
     name: Pre-release Tests
     runs-on: ubuntu-latest
-    
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20.x'
-        cache: 'npm'
-        
-    - name: Install dependencies
-      run: npm ci
-      
-    - name: Run full test suite
-      run: npm test -- --coverage
-      
-    - name: Verify 80% coverage threshold
-      run: |
-        coverage=$(npm test -- --coverage --silent | grep "All files" | awk '{print $4}' | sed 's/%//')
-        if (( $(echo "$coverage < 80" | bc -l) )); then
-          echo "Coverage $coverage% is below 80% threshold"
-          exit 1
-        fi
-        echo "Coverage $coverage% meets requirement"
-        
-    - name: Performance benchmarks
-      run: npm run test:performance
-      
-    - name: Build verification
-      run: npm run build
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run full test suite
+        run: npm test -- --coverage
+
+      - name: Verify 80% coverage threshold
+        run: |
+          coverage=$(npm test -- --coverage --silent | grep "All files" | awk '{print $4}' | sed 's/%//')
+          if (( $(echo "$coverage < 80" | bc -l) )); then
+            echo "Coverage $coverage% is below 80% threshold"
+            exit 1
+          fi
+          echo "Coverage $coverage% meets requirement"
+
+      - name: Performance benchmarks
+        run: npm run test:performance
+
+      - name: Build verification
+        run: npm run build
 
   release:
     name: Create Release
@@ -59,96 +59,96 @@ jobs:
     permissions:
       contents: write
       packages: write
-    
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-        
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20.x'
-        cache: 'npm'
-        registry-url: 'https://registry.npmjs.org'
-        
-    - name: Install dependencies
-      run: npm ci
-      
-    - name: Build project
-      run: npm run build
-      
-    - name: Generate changelog and release
-      id: release
-      run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        
-        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-          echo "Manual release triggered with version type: ${{ github.event.inputs.version_type }}"
-          npm run release:${{ github.event.inputs.version_type }}
-          
-          # Get the new version and changelog
-          NEW_VERSION=$(node -p "require('./package.json').version")
-          echo "new_version=v$NEW_VERSION" >> $GITHUB_OUTPUT
-          
-          # Extract changelog for this version
-          if [ -f "CHANGELOG.md" ]; then
-            # Get changelog section for current version
-            CHANGELOG_CONTENT=$(awk "/## \[$NEW_VERSION\]/{flag=1; next} /## \[/{flag=0} flag" CHANGELOG.md || echo "## Changes\n\nAutomated release $NEW_VERSION")
-            echo "changelog_content<<EOF" >> $GITHUB_OUTPUT
-            echo "$CHANGELOG_CONTENT" >> $GITHUB_OUTPUT
-            echo "EOF" >> $GITHUB_OUTPUT
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build project
+        run: npm run build
+
+      - name: Generate changelog and release
+        id: release
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "Manual release triggered with version type: ${{ github.event.inputs.version_type }}"
+            npm run release:${{ github.event.inputs.version_type }}
+
+            # Get the new version and changelog
+            NEW_VERSION=$(node -p "require('./package.json').version")
+            echo "new_version=v$NEW_VERSION" >> $GITHUB_OUTPUT
+
+            # Extract changelog for this version
+            if [ -f "CHANGELOG.md" ]; then
+              # Get changelog section for current version
+              CHANGELOG_CONTENT=$(awk "/## \[$NEW_VERSION\]/{flag=1; next} /## \[/{flag=0} flag" CHANGELOG.md || echo "## Changes\n\nAutomated release $NEW_VERSION")
+              echo "changelog_content<<EOF" >> $GITHUB_OUTPUT
+              echo "$CHANGELOG_CONTENT" >> $GITHUB_OUTPUT
+              echo "EOF" >> $GITHUB_OUTPUT
+            else
+              echo "changelog_content=Automated release v$NEW_VERSION" >> $GITHUB_OUTPUT
+            fi
+
+            # Push the changes
+            git push --follow-tags origin main
           else
-            echo "changelog_content=Automated release v$NEW_VERSION" >> $GITHUB_OUTPUT
+            echo "Tag-based release"
+            tag=${GITHUB_REF#refs/tags/}
+            echo "new_version=$tag" >> $GITHUB_OUTPUT
+            echo "changelog_content=Release $tag" >> $GITHUB_OUTPUT
           fi
-          
-          # Push the changes
-          git push --follow-tags origin main
-        else
-          echo "Tag-based release"
-          tag=${GITHUB_REF#refs/tags/}
-          echo "new_version=$tag" >> $GITHUB_OUTPUT
-          echo "changelog_content=Release $tag" >> $GITHUB_OUTPUT
-        fi
-        
-    - name: Create GitHub Release
-      uses: ncipollo/release-action@v1
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        tag: ${{ steps.release.outputs.new_version }}
-        name: Release ${{ steps.release.outputs.new_version }}
-        body: |
-          ## DocuMCP Release ${{ steps.release.outputs.new_version }}
-          
-          ${{ steps.release.outputs.changelog_content }}
-          
-          ### Installation
-          ```bash
-          npm install -g documcp@${{ steps.release.outputs.new_version }}
-          ```
-          
-          ### System Requirements
-          - Node.js 20.x or higher
-          - npm 9.x or higher
-          
-          ### Quick Start
-          ```bash
-          # Install globally
-          npm install -g documcp
-          
-          # Use with MCP client
-          documcp analyze-repository --path ./my-project
-          ```
-        draft: false
-        prerelease: false
-        
-    - name: Publish to npm
-      if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-      run: npm publish
-      env:
-        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create GitHub Release
+        uses: ncipollo/release-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ steps.release.outputs.new_version }}
+          name: Release ${{ steps.release.outputs.new_version }}
+          body: |
+            ## DocuMCP Release ${{ steps.release.outputs.new_version }}
+
+            ${{ steps.release.outputs.changelog_content }}
+
+            ### Installation
+            ```bash
+            npm install -g documcp@${{ steps.release.outputs.new_version }}
+            ```
+
+            ### System Requirements
+            - Node.js 20.x or higher
+            - npm 9.x or higher
+
+            ### Quick Start
+            ```bash
+            # Install globally
+            npm install -g documcp
+
+            # Use with MCP client
+            documcp analyze-repository --path ./my-project
+            ```
+          draft: false
+          prerelease: false
+
+      - name: Publish to npm
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   docs:
     name: Deploy Documentation
@@ -157,40 +157,40 @@ jobs:
     permissions:
       pages: write
       id-token: write
-    
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20.x'
-        cache: 'npm'
-        
-    - name: Install dependencies
-      run: npm ci
-      
-    - name: Generate test coverage
-      run: npm run test:coverage
-      
-    - name: Generate documentation
-      run: |
-        mkdir -p docs-site
-        cp README.md docs-site/index.md
-        cp -r docs/ docs-site/
-        if [ -d "coverage/" ]; then
-          cp -r coverage/ docs-site/coverage/
-        fi
-        
-    - name: Setup Pages
-      uses: actions/configure-pages@v4
-      
-    - name: Upload to GitHub Pages
-      uses: actions/upload-pages-artifact@v3
-      with:
-        path: docs-site
-        
-    - name: Deploy to GitHub Pages
-      id: deployment
-      uses: actions/deploy-pages@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate test coverage
+        run: npm run test:coverage
+
+      - name: Generate documentation
+        run: |
+          mkdir -p docs-site
+          cp README.md docs-site/index.md
+          cp -r docs/ docs-site/
+          if [ -d "coverage/" ]; then
+            cp -r coverage/ docs-site/coverage/
+          fi
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload to GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs-site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

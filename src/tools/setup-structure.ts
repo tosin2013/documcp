@@ -122,9 +122,14 @@ export async function setupStructure(args: unknown): Promise<{ content: any[] }>
   }
 }
 
-function generateCategoryIndex(category: string, description: string, ssg: string, includeExamples: boolean = true): string {
+function generateCategoryIndex(
+  category: string,
+  description: string,
+  ssg: string,
+  includeExamples: boolean = true,
+): string {
   const title = category.charAt(0).toUpperCase() + category.slice(1).replace('-', ' ');
-  
+
   let frontmatter = '';
   switch (ssg) {
     case 'docusaurus':
@@ -156,14 +161,22 @@ ${generateDiataxisExplanation(category)}
 
 ## Contents
 
-${includeExamples ? `- [Example: ${DIATAXIS_STRUCTURE[category as keyof typeof DIATAXIS_STRUCTURE].example}](./${DIATAXIS_STRUCTURE[category as keyof typeof DIATAXIS_STRUCTURE].example})` : '- Coming soon...'}
+${
+  includeExamples
+    ? `- [Example: ${DIATAXIS_STRUCTURE[category as keyof typeof DIATAXIS_STRUCTURE].example}](./${
+        DIATAXIS_STRUCTURE[category as keyof typeof DIATAXIS_STRUCTURE].example
+      })`
+    : '- Coming soon...'
+}
 `;
 }
 
 function generateExampleContent(category: string, filename: string, ssg: string): string {
-  const title = filename.replace('.md', '').replace(/-/g, ' ')
+  const title = filename
+    .replace('.md', '')
+    .replace(/-/g, ' ')
     .split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
 
   let frontmatter = '';

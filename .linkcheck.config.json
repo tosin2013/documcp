@@ -18,13 +18,7 @@
     "docusaurus.io",
     "facebook.github.io"
   ],
-  "ignore_patterns": [
-    "localhost",
-    "127.0.0.1",
-    "example.com",
-    "your-domain.com",
-    "placeholder"
-  ],
+  "ignore_patterns": ["localhost", "127.0.0.1", "example.com", "your-domain.com", "placeholder"],
   "fail_on_broken_links": false,
   "output_format": "detailed",
   "retry_config": {
