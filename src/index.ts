@@ -35,6 +35,20 @@ import { optimizeReadme } from './tools/optimize-readme.js';
 import { formatMCPResponse } from './types/api.js';
 import { generateTechnicalWriterPrompts } from './prompts/technical-writer-prompts.js';
 import { DOCUMENTATION_WORKFLOWS, WORKFLOW_EXECUTION_GUIDANCE, WORKFLOW_METADATA } from './workflows/documentation-workflow.js';
+import {
+  initializeMemory,
+  rememberAnalysis,
+  rememberRecommendation,
+  rememberDeployment,
+  rememberConfiguration,
+  recallProjectHistory,
+  getProjectInsights,
+  getSimilarProjects,
+  getMemoryStatistics,
+  exportMemories,
+  cleanupOldMemories,
+  memoryTools
+} from './memory/index.js';
 
 // Get version from package.json
 const __filename = fileURLToPath(import.meta.url);
@@ -254,6 +268,33 @@ const TOOLS = [
       create_docs_directory: z.boolean().optional().default(true).describe('Create docs/ directory for extracted content'),
     }),
   },
+  // Memory system tools
+  ...memoryTools.map(tool => ({
+    ...tool,
+    inputSchema: z.object(
+      Object.entries(tool.inputSchema.properties || {}).reduce((acc: any, [key, value]: [string, any]) => {
+        if (value.type === 'string') {
+          acc[key] = value.enum ? z.enum(value.enum) : z.string();
+        } else if (value.type === 'number') {
+          acc[key] = z.number();
+        } else if (value.type === 'boolean') {
+          acc[key] = z.boolean();
+        } else if (value.type === 'object') {
+          acc[key] = z.object({});
+        }
+        if (value.description) {
+          acc[key] = acc[key].describe(value.description);
+        }
+        if (!tool.inputSchema.required?.includes(key)) {
+          acc[key] = acc[key].optional();
+        }
+        if (value.default !== undefined) {
+          acc[key] = acc[key].default(value.default);
+        }
+        return acc;
+      }, {})
+    ),
+  })),
 ];
 
 // Native MCP Prompts for technical writing assistance
@@ -603,6 +644,22 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           JSON.stringify(result, null, 2),
           'application/json'
         );
+
+        // Remember in persistent memory
+        if (args?.path && typeof args.path === 'string') {
+          const memoryId = await rememberAnalysis(args.path, result);
+          (result as any).memoryId = memoryId;
+
+          // Get insights from similar projects
+          const similarProjects = await getSimilarProjects(result, 3);
+          if (similarProjects.length > 0) {
+            (result as any).insights = {
+              similarProjects,
+              message: `Found ${similarProjects.length} similar projects in memory`
+            };
+          }
+        }
+
         return result;
       }
       
@@ -615,6 +672,18 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           JSON.stringify(result, null, 2),
           'application/json'
         );
+
+        // Remember recommendation
+        if (args?.analysisId && typeof args.analysisId === 'string') {
+          const memoryId = await rememberRecommendation(args.analysisId, result);
+          (result as any).memoryId = memoryId;
+
+          // Get project history if available
+          const projectInsights = await getProjectInsights(args.analysisId);
+          if (projectInsights.length > 0) {
+            (result as any).projectHistory = projectInsights;
+          }
+        }
         return result;
       }
       
@@ -900,8 +969,144 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         );
         return formatMCPResponse(result);
       }
-      
-      
+
+      // Memory system tools
+      case 'memory_recall': {
+        await initializeMemory(); // Ensure memory is initialized
+        const manager = (await import('./memory/index.js')).getMemoryManager();
+        if (!manager) throw new Error('Memory system not initialized');
+
+        let results;
+        if (args?.type === 'all') {
+          results = await manager.search(args?.query || '', {
+            sortBy: 'timestamp'
+          });
+        } else {
+          results = await manager.search(
+            args?.type || 'analysis',
+            { sortBy: 'timestamp' }
+          );
+        }
+
+        if (args?.limit && typeof args.limit === 'number') {
+          results = results.slice(0, args.limit);
+        }
+
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Found ${results.length} memories`,
+            },
+            {
+              type: 'text',
+              text: JSON.stringify(results, null, 2),
+            },
+          ],
+        };
+      }
+
+      case 'memory_insights': {
+        const insights = await getMemoryStatistics();
+        if (args?.projectId && typeof args.projectId === 'string') {
+          const projectInsights = await getProjectInsights(args.projectId);
+          (insights as any).projectSpecific = projectInsights;
+        }
+
+        return {
+          content: [
+            {
+              type: 'text',
+              text: 'Memory system insights and patterns',
+            },
+            {
+              type: 'text',
+              text: JSON.stringify(insights, null, 2),
+            },
+          ],
+        };
+      }
+
+      case 'memory_similar': {
+        await initializeMemory();
+        const manager = (await import('./memory/index.js')).getMemoryManager();
+        if (!manager) throw new Error('Memory system not initialized');
+
+        if (!args?.analysisId || typeof args.analysisId !== 'string') {
+          throw new Error('analysisId is required');
+        }
+
+        const analysis = await manager.recall(args.analysisId);
+        if (!analysis) {
+          throw new Error(`Analysis ${args.analysisId} not found in memory`);
+        }
+
+        const limitValue = typeof args?.limit === 'number' ? args.limit : 5;
+        const similar = await getSimilarProjects(analysis.data, limitValue);
+
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Found ${similar.length} similar projects`,
+            },
+            {
+              type: 'text',
+              text: JSON.stringify(similar, null, 2),
+            },
+          ],
+        };
+      }
+
+      case 'memory_export': {
+        const format = (args?.format === 'json' || args?.format === 'csv') ? args.format : 'json';
+        const exported = await exportMemories(format);
+
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Exported memories in ${format} format`,
+            },
+            {
+              type: 'text',
+              text: exported,
+            },
+          ],
+        };
+      }
+
+      case 'memory_cleanup': {
+        const daysToKeep = typeof args?.daysToKeep === 'number' ? args.daysToKeep : 30;
+
+        if (args?.dryRun) {
+          const stats = await getMemoryStatistics();
+          const cutoff = new Date(Date.now() - (daysToKeep * 24 * 60 * 60 * 1000));
+          const oldCount = Object.entries((stats as any).statistics?.byMonth || {})
+            .filter(([month]) => new Date(month + '-01') < cutoff)
+            .reduce((sum, [_, count]) => sum + (count as number), 0);
+
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `Dry run: Would delete approximately ${oldCount} memories older than ${daysToKeep} days`,
+              },
+            ],
+          };
+        } else {
+          const deleted = await cleanupOldMemories(daysToKeep);
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `Cleaned up ${deleted} old memories`,
+              },
+            ],
+          };
+        }
+      }
+
       default:
         throw new Error(`Unknown tool: ${name}`);
     }
