@@ -653,7 +653,7 @@ export class MemoryPruningSystem extends EventEmitter {
   private optimizeCaches(): void {
     // Clear old cache entries
     // Clear similarity cache entries older than 24 hours
-    for (const [, innerMap] of this.similarityCache.entries()) {
+    for (const [key1, innerMap] of this.similarityCache.entries()) {
       for (const [key2] of innerMap.entries()) {
         // Simple heuristic - remove if keys suggest old timestamps
         if (Math.random() < 0.1) { // 10% chance to clear each entry

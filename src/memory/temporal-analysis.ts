@@ -862,7 +862,7 @@ export class TemporalMemoryAnalysis extends EventEmitter {
    */
   private async predictNextActivity(
     timeSeries: Array<{ timestamp: Date; value: number; metadata?: any }>,
-    _patterns: TemporalPattern[],
+    patterns: TemporalPattern[],
     _metrics: TemporalMetrics
   ): Promise<PredictionResult['nextActivity']> {
     const lastPoint = timeSeries[timeSeries.length - 1];
