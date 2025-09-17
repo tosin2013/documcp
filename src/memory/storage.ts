@@ -100,7 +100,6 @@ export class JSONLStorage {
     const line = JSON.stringify(completeEntry);
     await fs.promises.appendFile(filePath, line + '\n');
 
-    const stats = await fs.promises.stat(filePath);
     const lineNumber = await this.countLines(filePath);
 
     this.index.set(id, {
@@ -241,6 +240,7 @@ export class JSONLStorage {
     });
 
     let count = 0;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     for await (const _ of stream) {
       count++;
     }
@@ -268,7 +268,7 @@ export class JSONLStorage {
 
       const match = file.match(/^(\w+)_(\d{4})_(\d{2})\.jsonl$/);
       if (match) {
-        const [_, type, year, month] = match;
+        const [, type, year, month] = match;
         const monthKey = `${year}-${month}`;
 
         stats.byType[type] = (stats.byType[type] || 0) + 1;
@@ -285,7 +285,7 @@ export class JSONLStorage {
   async getAll(): Promise<MemoryEntry[]> {
     const entries: MemoryEntry[] = [];
 
-    for (const [id, location] of this.index) {
+    for (const [id] of this.index) {
       const entry = await this.get(id);
       if (entry) {
         entries.push(entry);

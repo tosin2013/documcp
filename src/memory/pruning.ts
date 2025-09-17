@@ -6,7 +6,7 @@
 import { EventEmitter } from 'events';
 import { MemoryEntry, JSONLStorage } from './storage.js';
 import { MemoryManager } from './manager.js';
-import { IncrementalLearningSystem, LearningPattern } from './learning.js';
+import { IncrementalLearningSystem } from './learning.js';
 import { KnowledgeGraph } from './knowledge-graph.js';
 
 export interface PruningPolicy {
@@ -433,7 +433,6 @@ export class MemoryPruningSystem extends EventEmitter {
    */
   private async calculateSimilarity(entry1: MemoryEntry, entry2: MemoryEntry): Promise<number> {
     // Check cache first
-    const cacheKey = `${entry1.id}-${entry2.id}`;
     if (this.similarityCache.has(entry1.id) && this.similarityCache.get(entry1.id)?.has(entry2.id)) {
       return this.similarityCache.get(entry1.id)!.get(entry2.id)!;
     }
@@ -653,12 +652,9 @@ export class MemoryPruningSystem extends EventEmitter {
    */
   private optimizeCaches(): void {
     // Clear old cache entries
-    const maxCacheAge = 24 * 60 * 60 * 1000; // 24 hours
-    const now = Date.now();
-
     // Clear similarity cache entries older than 24 hours
-    for (const [key1, innerMap] of this.similarityCache.entries()) {
-      for (const [key2, value] of innerMap.entries()) {
+    for (const [, innerMap] of this.similarityCache.entries()) {
+      for (const [key2] of innerMap.entries()) {
         // Simple heuristic - remove if keys suggest old timestamps
         if (Math.random() < 0.1) { // 10% chance to clear each entry
           innerMap.delete(key2);

@@ -6,7 +6,7 @@
 import { EventEmitter } from 'events';
 import { MemoryEntry, JSONLStorage } from './storage.js';
 import { MemoryManager } from './manager.js';
-import { IncrementalLearningSystem, LearningPattern } from './learning.js';
+import { IncrementalLearningSystem } from './learning.js';
 import { KnowledgeGraph } from './knowledge-graph.js';
 
 export interface TimeWindow {
@@ -405,20 +405,22 @@ export class TemporalMemoryAnalysis extends EventEmitter {
         case 'count':
           value = bucketEntries.length;
           break;
-        case 'success_rate':
+        case 'success_rate': {
           const successful = bucketEntries.filter(e =>
             e.data.outcome === 'success' || e.data.success === true
           ).length;
           value = bucketEntries.length > 0 ? successful / bucketEntries.length : 0;
           break;
+        }
         case 'activity_level':
           // Custom metric based on entry types and interactions
           value = this.calculateActivityLevel(bucketEntries);
           break;
-        case 'diversity':
+        case 'diversity': {
           const uniqueTypes = new Set(bucketEntries.map(e => e.type));
           value = uniqueTypes.size;
           break;
+        }
       }
 
       // Add metadata
@@ -576,7 +578,7 @@ export class TemporalMemoryAnalysis extends EventEmitter {
    */
   private async detectTrendPatterns(
     timeSeries: Array<{ timestamp: Date; value: number; metadata?: any }>,
-    query: TemporalQuery
+    _query: TemporalQuery
   ): Promise<TemporalPattern[]> {
     const patterns: TemporalPattern[] = [];
     const values = timeSeries.map(p => p.value);
@@ -648,7 +650,7 @@ export class TemporalMemoryAnalysis extends EventEmitter {
    */
   private async detectBurstPatterns(
     timeSeries: Array<{ timestamp: Date; value: number; metadata?: any }>,
-    query: TemporalQuery
+    _query: TemporalQuery
   ): Promise<TemporalPattern[]> {
     const patterns: TemporalPattern[] = [];
     const values = timeSeries.map(p => p.value);
@@ -686,7 +688,7 @@ export class TemporalMemoryAnalysis extends EventEmitter {
    */
   private async detectDecayPatterns(
     timeSeries: Array<{ timestamp: Date; value: number; metadata?: any }>,
-    query: TemporalQuery
+    _query: TemporalQuery
   ): Promise<TemporalPattern[]> {
     const patterns: TemporalPattern[] = [];
     const values = timeSeries.map(p => p.value);
@@ -839,7 +841,6 @@ export class TemporalMemoryAnalysis extends EventEmitter {
     const sumY = values.reduce((sum, val) => sum + val, 0);
     const sumXY = x.reduce((sum, val, i) => sum + val * values[i], 0);
     const sumXX = x.reduce((sum, val) => sum + val * val, 0);
-    const sumYY = values.reduce((sum, val) => sum + val * val, 0);
 
     const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
     const intercept = (sumY - slope * sumX) / n;
@@ -861,8 +862,8 @@ export class TemporalMemoryAnalysis extends EventEmitter {
    */
   private async predictNextActivity(
     timeSeries: Array<{ timestamp: Date; value: number; metadata?: any }>,
-    patterns: TemporalPattern[],
-    metrics: TemporalMetrics
+    _patterns: TemporalPattern[],
+    _metrics: TemporalMetrics
   ): Promise<PredictionResult['nextActivity']> {
     const lastPoint = timeSeries[timeSeries.length - 1];
     const averageValue = timeSeries.reduce((sum, p) => sum + p.value, 0) / timeSeries.length;
@@ -909,7 +910,7 @@ export class TemporalMemoryAnalysis extends EventEmitter {
    */
   private async detectAnomalies(
     timeSeries: Array<{ timestamp: Date; value: number; metadata?: any }>,
-    patterns: TemporalPattern[]
+    _patterns: TemporalPattern[]
   ): Promise<PredictionResult['anomalies']> {
     const anomalies: PredictionResult['anomalies'] = [];
     const values = timeSeries.map(p => p.value);
@@ -1074,7 +1075,7 @@ export class TemporalMemoryAnalysis extends EventEmitter {
     }
   }
 
-  private isShortTerm(pattern: TemporalPattern, query: TemporalQuery): boolean {
+  private isShortTerm(pattern: TemporalPattern, _query: TemporalQuery): boolean {
     if (pattern.period) {
       const days = pattern.period / (24 * 60 * 60 * 1000);
       return days <= 7;
@@ -1082,7 +1083,7 @@ export class TemporalMemoryAnalysis extends EventEmitter {
     return true;
   }
 
-  private isLongTerm(pattern: TemporalPattern, query: TemporalQuery): boolean {
+  private isLongTerm(pattern: TemporalPattern, _query: TemporalQuery): boolean {
     if (pattern.period) {
       const days = pattern.period / (24 * 60 * 60 * 1000);
       return days > 30;

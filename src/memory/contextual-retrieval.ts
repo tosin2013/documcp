@@ -8,7 +8,7 @@
 
 import { MemoryManager } from './manager.js';
 import { MemoryEntry } from './storage.js';
-import { KnowledgeGraph, GraphNode } from './knowledge-graph.js';
+import { KnowledgeGraph } from './knowledge-graph.js';
 
 export interface RetrievalContext {
   currentProject?: {
@@ -263,7 +263,7 @@ export class ContextualMemoryRetrieval {
   private async getTemporalCandidates(
     temporal: NonNullable<RetrievalContext['temporalContext']>
   ): Promise<MemoryEntry[]> {
-    let searchOptions: any = { sortBy: 'timestamp' };
+    const searchOptions: any = { sortBy: 'timestamp' };
 
     if (temporal.timeRange) {
       // Use memory manager's built-in time filtering

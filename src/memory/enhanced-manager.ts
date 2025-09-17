@@ -3,7 +3,7 @@
  * Combines Issues #47 and #48 for intelligent memory management
  */
 
-import { MemoryManager, MemoryContext } from './manager.js';
+import { MemoryManager } from './manager.js';
 import { MemoryEntry } from './storage.js';
 import IncrementalLearningSystem, { ProjectFeatures, LearningInsight } from './learning.js';
 import KnowledgeGraph, { RecommendationPath } from './knowledge-graph.js';
@@ -112,7 +112,7 @@ export class EnhancedMemoryManager extends MemoryManager {
     );
 
     // Determine final recommendation
-    let finalRecommendation = learningResult.recommendation;
+    const finalRecommendation = learningResult.recommendation;
     if (graphRecommendations.length > 0 && graphRecommendations[0].confidence > 0.8) {
       const graphChoice = graphRecommendations[0].to.label;
       if (graphChoice !== finalRecommendation.recommended) {

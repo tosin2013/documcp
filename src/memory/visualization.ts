@@ -6,9 +6,9 @@
 import { EventEmitter } from 'events';
 import { MemoryEntry, JSONLStorage } from './storage.js';
 import { MemoryManager } from './manager.js';
-import { IncrementalLearningSystem, LearningPattern } from './learning.js';
-import { KnowledgeGraph, GraphNode, GraphEdge } from './knowledge-graph.js';
-import { TemporalMemoryAnalysis, TemporalPattern, TemporalMetrics } from './temporal-analysis.js';
+import { IncrementalLearningSystem } from './learning.js';
+import { KnowledgeGraph } from './knowledge-graph.js';
+import { TemporalMemoryAnalysis } from './temporal-analysis.js';
 
 export interface VisualizationConfig {
   width: number;
@@ -1188,7 +1188,7 @@ export class MemoryVisualizationSystem extends EventEmitter {
     };
   }
 
-  private generateHTMLVisualization(chartData: ChartData, options?: any): string {
+  private generateHTMLVisualization(chartData: ChartData, _options?: any): string {
     // Generate basic HTML with embedded Chart.js or D3.js
     return `
 <!DOCTYPE html>

@@ -636,12 +636,12 @@ export class MultiAgentMemorySharing extends EventEmitter {
     return this.memoryManager.search(entry.metadata.projectId || '', { sortBy: 'timestamp' });
   }
 
-  private calculateConsistency(entry: MemoryEntry, similar: MemoryEntry[]): number {
+  private calculateConsistency(_entry: MemoryEntry, _similar: MemoryEntry[]): number {
     // Calculate consistency score (placeholder)
     return 0.8;
   }
 
-  private validateAnonymization(transformation: any): boolean {
+  private validateAnonymization(_transformation: any): boolean {
     // Validate anonymization transformation (placeholder)
     return true;
   }
@@ -653,19 +653,19 @@ export class MultiAgentMemorySharing extends EventEmitter {
            Math.abs(new Date(entry1.timestamp).getTime() - new Date(entry2.timestamp).getTime()) < 60000; // 1 minute
   }
 
-  private async mergeConflictingEntries(conflict: ConflictResolution): Promise<void> {
+  private async mergeConflictingEntries(_conflict: ConflictResolution): Promise<void> {
     // Merge conflicting entries (placeholder)
   }
 
-  private async prioritizeTrustedSource(conflict: ConflictResolution): Promise<void> {
+  private async prioritizeTrustedSource(_conflict: ConflictResolution): Promise<void> {
     // Prioritize trusted source (placeholder)
   }
 
-  private async useTemporalPrecedence(conflict: ConflictResolution): Promise<void> {
+  private async useTemporalPrecedence(_conflict: ConflictResolution): Promise<void> {
     // Use temporal precedence (placeholder)
   }
 
-  private async broadcastToTrustedAgents(sharedMemory: SharedMemory): Promise<void> {
+  private async broadcastToTrustedAgents(_sharedMemory: SharedMemory): Promise<void> {
     // Broadcast to trusted agents (placeholder)
   }
 
@@ -707,7 +707,7 @@ export class MultiAgentMemorySharing extends EventEmitter {
     // Persist collaborative insights
   }
 
-  private async createSyncRequest(targetAgent: string, type: SyncRequest['requestType'], options: any): Promise<void> {
+  private async createSyncRequest(_targetAgent: string, _type: SyncRequest['requestType'], _options: any): Promise<void> {
     // Create sync request (placeholder)
   }
 

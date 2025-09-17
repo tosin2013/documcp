@@ -726,7 +726,7 @@ export class KnowledgeGraph {
   /**
    * Calculate confidence for a recommendation path
    */
-  private calculatePathConfidence(path: GraphPath, features: any): number {
+  private calculatePathConfidence(path: GraphPath, _features: any): number {
     let confidence = path.confidence;
 
     // Boost confidence for shorter paths
@@ -860,7 +860,7 @@ export class KnowledgeGraph {
 
     // Update adjacency list
     this.adjacencyList.delete(nodeId);
-    for (const [sourceId, targets] of this.adjacencyList) {
+    for (const [, targets] of this.adjacencyList) {
       targets.delete(nodeId);
     }
 

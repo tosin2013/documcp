@@ -5,12 +5,11 @@
 
 import { EventEmitter } from 'events';
 import { promises as fs } from 'fs';
-import { createReadStream, createWriteStream } from 'fs';
-import { pipeline } from 'stream/promises';
+import { createWriteStream } from 'fs';
 import { MemoryEntry, JSONLStorage } from './storage.js';
 import { MemoryManager } from './manager.js';
-import { IncrementalLearningSystem, LearningPattern } from './learning.js';
-import { KnowledgeGraph, GraphNode, GraphEdge } from './knowledge-graph.js';
+import { IncrementalLearningSystem } from './learning.js';
+import { KnowledgeGraph } from './knowledge-graph.js';
 import { MemoryPruningSystem } from './pruning.js';
 
 export interface ExportOptions {
@@ -207,7 +206,7 @@ export class MemoryExportImportSystem extends EventEmitter {
 
       // Export to specified format
       let filePath: string;
-      let size: number;
+      let size = 0;
 
       switch (activeOptions.format) {
         case 'json':
@@ -503,7 +502,7 @@ export class MemoryExportImportSystem extends EventEmitter {
    */
   async validateCompatibility(
     sourcePath: string,
-    targetSystem: string = 'DocuMCP'
+    _targetSystem: string = 'DocuMCP'
   ): Promise<{
     compatible: boolean;
     issues: string[];
@@ -699,7 +698,7 @@ export class MemoryExportImportSystem extends EventEmitter {
     return `hash_${Math.abs(hash).toString(36)}`;
   }
 
-  private pseudonymizeValue(value: string): string {
+  private pseudonymizeValue(_value: string): string {
     // Simple pseudonymization - in production, use proper techniques
     const prefixes = ['user', 'project', 'system', 'item'];
     const suffix = Math.random().toString(36).substr(2, 8);
@@ -710,7 +709,7 @@ export class MemoryExportImportSystem extends EventEmitter {
   private async exportToJSON(
     outputPath: string,
     data: any,
-    options: ExportOptions
+    _options: ExportOptions
   ): Promise<string> {
     const jsonData = JSON.stringify(data, null, 2);
     const filePath = outputPath.endsWith('.json') ? outputPath : `${outputPath}.json`;
@@ -721,7 +720,7 @@ export class MemoryExportImportSystem extends EventEmitter {
   private async exportToJSONL(
     outputPath: string,
     data: any,
-    options: ExportOptions
+    _options: ExportOptions
   ): Promise<string> {
     const filePath = outputPath.endsWith('.jsonl') ? outputPath : `${outputPath}.jsonl`;
     const writeStream = createWriteStream(filePath);
@@ -751,7 +750,7 @@ export class MemoryExportImportSystem extends EventEmitter {
   private async exportToCSV(
     outputPath: string,
     data: any,
-    options: ExportOptions
+    _options: ExportOptions
   ): Promise<string> {
     const filePath = outputPath.endsWith('.csv') ? outputPath : `${outputPath}.csv`;
 
@@ -791,7 +790,7 @@ export class MemoryExportImportSystem extends EventEmitter {
   private async exportToXML(
     outputPath: string,
     data: any,
-    options: ExportOptions
+    _options: ExportOptions
   ): Promise<string> {
     const filePath = outputPath.endsWith('.xml') ? outputPath : `${outputPath}.xml`;
 
@@ -803,7 +802,7 @@ export class MemoryExportImportSystem extends EventEmitter {
   private async exportToYAML(
     outputPath: string,
     data: any,
-    options: ExportOptions
+    _options: ExportOptions
   ): Promise<string> {
     const filePath = outputPath.endsWith('.yaml') ? outputPath : `${outputPath}.yaml`;
 
@@ -814,12 +813,10 @@ export class MemoryExportImportSystem extends EventEmitter {
   }
 
   private async exportToSQLite(
-    outputPath: string,
-    data: any,
-    options: ExportOptions
+    _outputPath: string,
+    _data: any,
+    _options: ExportOptions
   ): Promise<string> {
-    const filePath = outputPath.endsWith('.db') ? outputPath : `${outputPath}.db`;
-
     // This would require a SQLite library like better-sqlite3
     // For now, throw an error indicating additional dependencies needed
     throw new Error('SQLite export requires additional dependencies (better-sqlite3)');
@@ -925,7 +922,7 @@ export class MemoryExportImportSystem extends EventEmitter {
       case 'yaml': case 'yml': return 'yaml';
       case 'db': case 'sqlite': return 'sqlite';
       case 'tar': case 'zip': return 'archive';
-      default:
+      default: {
         // Try to detect by content
         const content = await fs.readFile(filePath, 'utf8');
         if (content.trim().startsWith('{') || content.trim().startsWith('[')) {
@@ -935,6 +932,7 @@ export class MemoryExportImportSystem extends EventEmitter {
           return 'xml';
         }
         return 'unknown';
+      }
     }
   }
 
@@ -990,7 +988,7 @@ export class MemoryExportImportSystem extends EventEmitter {
 
       for (let j = 0; j < headers.length; j++) {
         const header = headers[j];
-        let value = values[j];
+        const value = values[j];
 
         // Parse special fields
         if (header === 'tags') {
@@ -1045,12 +1043,12 @@ export class MemoryExportImportSystem extends EventEmitter {
     return values;
   }
 
-  private async loadXMLData(filePath: string): Promise<any> {
+  private async loadXMLData(_filePath: string): Promise<any> {
     // This would require an XML parser
     throw new Error('XML import requires additional dependencies (xml2js)');
   }
 
-  private async loadYAMLData(filePath: string): Promise<any> {
+  private async loadYAMLData(_filePath: string): Promise<any> {
     // This would require a YAML parser
     throw new Error('YAML import requires additional dependencies (js-yaml)');
   }
@@ -1158,7 +1156,7 @@ export class MemoryExportImportSystem extends EventEmitter {
               result.imported++;
               result.summary.updatedEntries++;
               break;
-            case 'rename':
+            case 'rename': {
               const newId = `${entry.id}_imported_${Date.now()}`;
               if (!options.dryRun) {
                 await this.storage.store({ ...entry, id: newId });
@@ -1166,6 +1164,7 @@ export class MemoryExportImportSystem extends EventEmitter {
               result.imported++;
               result.summary.newEntries++;
               break;
+            }
           }
         } else {
           if (!options.dryRun) {

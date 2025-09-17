@@ -108,7 +108,7 @@ export class IncrementalLearningSystem {
     insights: LearningInsight[];
   }> {
     const insights: LearningInsight[] = [];
-    let adjustedRecommendation = { ...baseRecommendation };
+    const adjustedRecommendation = { ...baseRecommendation };
     let confidenceBoost = 0;
 
     // Apply SSG preference patterns
@@ -301,7 +301,7 @@ export class IncrementalLearningSystem {
    */
   private async updateSimilarityPattern(
     features: ProjectFeatures,
-    interaction: MemoryEntry
+    _interaction: MemoryEntry
   ): Promise<void> {
     const patternKey = this.generatePatternKey('project_similarity', features);
     const existing = this.patterns.get(patternKey);
@@ -515,7 +515,7 @@ export class IncrementalLearningSystem {
    * Persist learned patterns to memory
    */
   private async persistPatterns(): Promise<void> {
-    for (const [key, pattern] of this.patterns) {
+    for (const [, pattern] of this.patterns) {
       if (pattern.sampleSize >= this.minSampleSize) {
         await this.memoryManager.remember('interaction', {
           pattern,

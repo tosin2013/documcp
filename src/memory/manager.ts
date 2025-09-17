@@ -5,7 +5,6 @@
 
 import { JSONLStorage, MemoryEntry } from './storage.js';
 import { EventEmitter } from 'events';
-import * as path from 'path';
 
 export interface MemoryContext {
   projectId: string;
