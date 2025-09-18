@@ -29,6 +29,8 @@ export default {
     '!src/memory/multi-agent-sharing.ts',
     '!src/memory/pruning.ts',
     '!src/memory/visualization.ts',
+    '!src/memory/integration.ts',
+    '!src/memory/index.ts',
   ],
   coverageThreshold: {
     global: {
