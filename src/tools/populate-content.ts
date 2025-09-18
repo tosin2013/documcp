@@ -233,10 +233,10 @@ class ContentPopulationEngine {
 
   private extractPatternsFromSimilarProjects(projects: any[]): any {
     const patterns = {
-      commonFrameworks: {},
-      successfulSSGs: {},
-      documentationStructures: {},
-      deploymentStrategies: {},
+      commonFrameworks: {} as Record<string, number>,
+      successfulSSGs: {} as Record<string, number>,
+      documentationStructures: {} as Record<string, number>,
+      deploymentStrategies: {} as Record<string, number>,
     };
 
     projects.forEach(project => {
@@ -534,7 +534,7 @@ class ContentPopulationEngine {
     const recommendedVersions: Record<string, string> = {};
     Object.entries(versions).forEach(([tool, versionCounts]) => {
       const mostCommon = Object.entries(versionCounts)
-        .sort(([,a], [,b]) => b - a)[0];
+        .sort(([,a], [,b]) => (b as number) - (a as number))[0];
       if (mostCommon) {
         recommendedVersions[tool] = mostCommon[0];
       }
@@ -725,7 +725,7 @@ class ContentPopulationEngine {
       }, {} as Record<string, number>);
 
       const mostCommon = Object.entries(versionCounts)
-        .sort(([,a], [,b]) => b - a)[0];
+        .sort(([,a], [,b]) => (b as number) - (a as number))[0];
       return mostCommon ? mostCommon[0] : '18';
     }
 

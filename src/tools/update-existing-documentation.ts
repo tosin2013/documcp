@@ -747,7 +747,7 @@ class DocumentationUpdateEngine {
       const currentDeps = Object.keys(packageJson.dependencies);
 
       // Look for documented packages that are no longer dependencies
-      currentDeps.forEach(dep => {
+      for (const dep of currentDeps) {
         if (sectionContent.includes(dep)) {
           const version = packageJson.dependencies[dep];
           if (sectionContent.includes(dep) && !sectionContent.includes(version)) {
@@ -758,7 +758,7 @@ class DocumentationUpdateEngine {
             };
           }
         }
-      });
+      }
     }
 
     return null;
@@ -798,9 +798,9 @@ class DocumentationUpdateEngine {
       const packageJson = this.findPackageJsonInAnalysis(analysis);
       const actualDeps = packageJson ? Object.keys(packageJson.dependencies || {}) : [];
 
-      npmInstallMatches.forEach(match => {
+      npmInstallMatches.forEach((match: string) => {
         const packages = match.replace('npm install', '').trim().split(/\s+/);
-        packages.forEach(pkg => {
+        packages.forEach((pkg: string) => {
           if (pkg && !pkg.startsWith('-') && !actualDeps.includes(pkg)) {
             issues.push({
               type: 'incorrect-dependency',
