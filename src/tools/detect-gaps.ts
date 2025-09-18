@@ -4,6 +4,7 @@ import path from 'path';
 import { MCPToolResponse, formatMCPResponse } from '../types/api.js';
 import { analyzeRepository } from './analyze-repository.js';
 import { handleValidateDiataxisContent } from './validate-content.js';
+import { CodeScanner, CodeAnalysisResult } from '../utils/code-scanner.js';
 
 const inputSchema = z.object({
   repositoryPath: z.string().describe('Path to the repository to analyze'),
@@ -90,12 +91,16 @@ export async function detectDocumentationGaps(args: unknown): Promise<{ content:
       // In a full implementation, this would retrieve from persistent storage
     }
 
-    // Step 2: Analyze existing documentation structure
+    // Step 2: Perform deep code analysis
+    const codeScanner = new CodeScanner(repositoryPath);
+    const codeAnalysis = await codeScanner.analyzeRepository();
+
+    // Step 3: Analyze existing documentation structure
     const documentationAnalysis = await analyzeExistingDocumentation(
       documentationPath || path.join(repositoryPath, 'docs'),
     );
 
-    // Step 3: Perform content validation if documentation exists
+    // Step 4: Perform content validation if documentation exists
     let validationResult: any = null;
     if (documentationAnalysis.exists && documentationPath) {
       try {
@@ -119,17 +124,18 @@ export async function detectDocumentationGaps(args: unknown): Promise<{ content:
       }
     }
 
-    // Step 4: Identify gaps based on project analysis
+    // Step 5: Identify gaps based on project and code analysis
     const gaps = identifyDocumentationGaps(
       repositoryAnalysis,
       documentationAnalysis,
       validationResult,
+      codeAnalysis,
     );
 
-    // Step 5: Generate recommendations
-    const recommendations = generateRecommendations(gaps, repositoryAnalysis);
+    // Step 6: Generate recommendations
+    const recommendations = generateRecommendations(gaps, repositoryAnalysis, codeAnalysis);
 
-    // Step 6: Calculate coverage scores
+    // Step 7: Calculate coverage scores
     const contentCoverage = calculateContentCoverage(documentationAnalysis, gaps);
 
     const gapAnalysis: GapAnalysisResult = {
@@ -244,6 +250,7 @@ function identifyDocumentationGaps(
   repoAnalysis: any,
   docsAnalysis: any,
   validationResult: any,
+  codeAnalysis: CodeAnalysisResult,
 ): DocumentationGap[] {
   const gaps: DocumentationGap[] = [];
 
@@ -283,20 +290,124 @@ function identifyDocumentationGaps(
     }
   }
 
-  // Technology-specific gaps based on repository analysis
-  if (repoAnalysis) {
-    // Check for API documentation gaps
-    if (repoAnalysis.hasApiEndpoints && !hasApiDocumentation(docsAnalysis)) {
-      gaps.push({
-        category: 'reference',
-        gapType: 'missing_section',
-        description: 'API endpoints detected but no API documentation found',
-        priority: 'critical',
-        recommendation: 'Create API reference documentation',
-        estimatedEffort: 'substantial',
-      });
-    }
+  // Code-based gaps using actual code analysis
+  // Check for API documentation gaps based on actual endpoints found
+  if (codeAnalysis.apiEndpoints.length > 0 && !hasApiDocumentation(docsAnalysis)) {
+    gaps.push({
+      category: 'reference',
+      gapType: 'missing_section',
+      description: `Found ${codeAnalysis.apiEndpoints.length} API endpoints but no API documentation`,
+      priority: 'critical',
+      recommendation: 'Create API reference documentation for discovered endpoints',
+      estimatedEffort: 'substantial',
+      relatedFiles: [...new Set(codeAnalysis.apiEndpoints.map((ep) => ep.filePath))],
+    });
+  }
 
+  // Check for undocumented API endpoints
+  const undocumentedEndpoints = codeAnalysis.apiEndpoints.filter((ep) => !ep.hasDocumentation);
+  if (undocumentedEndpoints.length > 0) {
+    gaps.push({
+      category: 'reference',
+      gapType: 'missing_examples',
+      description: `${undocumentedEndpoints.length} API endpoints lack inline documentation`,
+      priority: 'high',
+      recommendation: 'Add JSDoc comments to API endpoint handlers',
+      estimatedEffort: 'moderate',
+      relatedFiles: [...new Set(undocumentedEndpoints.map((ep) => ep.filePath))],
+    });
+  }
+
+  // Check for class/interface documentation
+  const undocumentedClasses = codeAnalysis.classes.filter((cls) => cls.exported && !cls.hasJSDoc);
+  if (undocumentedClasses.length > 0) {
+    gaps.push({
+      category: 'reference',
+      gapType: 'incomplete_content',
+      description: `${undocumentedClasses.length} exported classes lack documentation`,
+      priority: 'medium',
+      recommendation: 'Add JSDoc comments to exported classes and create API reference',
+      estimatedEffort: 'moderate',
+      relatedFiles: [...new Set(undocumentedClasses.map((cls) => cls.filePath))],
+    });
+  }
+
+  // Check for interface documentation
+  const undocumentedInterfaces = codeAnalysis.interfaces.filter(
+    (iface) => iface.exported && !iface.hasJSDoc,
+  );
+  if (undocumentedInterfaces.length > 0) {
+    gaps.push({
+      category: 'reference',
+      gapType: 'incomplete_content',
+      description: `${undocumentedInterfaces.length} exported interfaces lack documentation`,
+      priority: 'medium',
+      recommendation: 'Add JSDoc comments to exported interfaces and create type documentation',
+      estimatedEffort: 'moderate',
+      relatedFiles: [...new Set(undocumentedInterfaces.map((iface) => iface.filePath))],
+    });
+  }
+
+  // Check for function documentation
+  const undocumentedFunctions = codeAnalysis.functions.filter(
+    (func) => func.exported && !func.hasJSDoc,
+  );
+  if (undocumentedFunctions.length > 0) {
+    gaps.push({
+      category: 'reference',
+      gapType: 'incomplete_content',
+      description: `${undocumentedFunctions.length} exported functions lack documentation`,
+      priority: 'medium',
+      recommendation: 'Add JSDoc comments to exported functions and create API reference',
+      estimatedEffort: 'substantial',
+      relatedFiles: [...new Set(undocumentedFunctions.map((func) => func.filePath))],
+    });
+  }
+
+  // Framework-specific documentation gaps
+  if (
+    codeAnalysis.frameworks.includes('React') &&
+    !hasFrameworkDocumentation(docsAnalysis, 'react')
+  ) {
+    gaps.push({
+      category: 'how-to',
+      gapType: 'missing_section',
+      description: 'React framework detected but no React-specific documentation found',
+      priority: 'medium',
+      recommendation: 'Create React component usage and development guides',
+      estimatedEffort: 'moderate',
+    });
+  }
+
+  if (
+    codeAnalysis.frameworks.includes('Express') &&
+    !hasFrameworkDocumentation(docsAnalysis, 'express')
+  ) {
+    gaps.push({
+      category: 'how-to',
+      gapType: 'missing_section',
+      description: 'Express framework detected but no Express-specific documentation found',
+      priority: 'medium',
+      recommendation: 'Create Express server setup and API development guides',
+      estimatedEffort: 'moderate',
+    });
+  }
+
+  // Test documentation gaps
+  if (codeAnalysis.hasTests && !hasTestingDocumentation(docsAnalysis)) {
+    gaps.push({
+      category: 'how-to',
+      gapType: 'missing_section',
+      description: 'Test files found but no testing documentation',
+      priority: 'medium',
+      recommendation: 'Create testing setup and contribution guides',
+      estimatedEffort: 'moderate',
+      relatedFiles: codeAnalysis.testFiles,
+    });
+  }
+
+  // Technology-specific gaps based on repository analysis (fallback)
+  if (repoAnalysis) {
     // Check for setup/installation guides
     if (repoAnalysis.packageManager && !hasInstallationGuide(docsAnalysis)) {
       gaps.push({
@@ -397,7 +508,34 @@ function hasCICDDocumentation(docsAnalysis: any): boolean {
   );
 }
 
-function generateRecommendations(gaps: DocumentationGap[], _repoAnalysis: any) {
+function hasFrameworkDocumentation(docsAnalysis: any, framework: string): boolean {
+  const allFiles = docsAnalysis.files || [];
+  return allFiles.some(
+    (file: string) =>
+      file.toLowerCase().includes(framework.toLowerCase()) ||
+      file.toLowerCase().includes(`${framework.toLowerCase()}-guide`) ||
+      file.toLowerCase().includes(`${framework.toLowerCase()}-setup`),
+  );
+}
+
+function hasTestingDocumentation(docsAnalysis: any): boolean {
+  const allFiles = docsAnalysis.files || [];
+  return allFiles.some(
+    (file: string) =>
+      file.toLowerCase().includes('test') ||
+      file.toLowerCase().includes('testing') ||
+      file.toLowerCase().includes('jest') ||
+      file.toLowerCase().includes('spec') ||
+      file.toLowerCase().includes('unit-test') ||
+      file.toLowerCase().includes('integration-test'),
+  );
+}
+
+function generateRecommendations(
+  gaps: DocumentationGap[],
+  _repoAnalysis: any,
+  codeAnalysis: CodeAnalysisResult,
+) {
   const immediate: string[] = [];
   const shortTerm: string[] = [];
   const longTerm: string[] = [];
@@ -420,6 +558,20 @@ function generateRecommendations(gaps: DocumentationGap[], _repoAnalysis: any) {
   mediumGaps.forEach((gap) => {
     longTerm.push(gap.recommendation);
   });
+
+  // Add code-analysis-based recommendations
+  if (codeAnalysis.apiEndpoints.length > 0) {
+    longTerm.push(
+      `Consider generating OpenAPI/Swagger documentation for ${codeAnalysis.apiEndpoints.length} API endpoints`,
+    );
+  }
+
+  if (
+    codeAnalysis.functions.length + codeAnalysis.classes.length + codeAnalysis.interfaces.length >
+    50
+  ) {
+    longTerm.push('Consider using automated documentation tools like TypeDoc for large codebases');
+  }
 
   // Add general recommendations
   if (immediate.length === 0 && shortTerm.length === 0) {

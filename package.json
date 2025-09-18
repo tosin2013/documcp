@@ -65,7 +65,14 @@
   "homepage": "https://github.com/tosin2013/documcp#readme",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^0.6.0",
+    "@typescript-eslint/typescript-estree": "^8.44.0",
+    "globby": "^14.1.0",
     "tmp": "^0.2.5",
+    "tree-sitter-bash": "^0.25.0",
+    "tree-sitter-go": "^0.25.0",
+    "tree-sitter-python": "^0.25.0",
+    "tree-sitter-yaml": "^0.5.0",
+    "web-tree-sitter": "^0.25.9",
     "zod": "^3.22.4",
     "zod-to-json-schema": "^3.24.6"
   },
