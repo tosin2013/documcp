@@ -7,11 +7,6 @@ export default {
     '<rootDir>/tests/memory/enhanced-manager.test.ts',
     '<rootDir>/tests/performance/memory-stress-testing.test.ts',
     '<rootDir>/tests/performance/memory-load-testing.test.ts',
-    // Exclude tests for experimental memory files (excluded from coverage)
-    '<rootDir>/tests/memory/visualization.test.ts',
-    '<rootDir>/tests/memory/multi-agent-sharing.test.ts',
-    '<rootDir>/tests/memory/pruning.test.ts',
-    '<rootDir>/tests/memory/integration.test.ts',
   ],
   transform: {
     '^.+\\.ts$': [
