@@ -68,7 +68,10 @@ const server = new Server(
       prompts: {
         listChanged: true,
       },
-      resources: {},
+      resources: {
+        subscribe: true,
+        listChanged: true,
+      },
     },
   },
 );
@@ -570,10 +573,98 @@ const PROMPTS = [
       { name: 'optimization_focus', description: 'Focus area for optimization', required: false },
     ],
   },
+  // Guided workflow prompts (ADR-007)
+  {
+    name: 'analyze-and-recommend',
+    description: 'Complete repository analysis and SSG recommendation workflow',
+    arguments: [
+      { name: 'project_path', description: 'Path to the project directory', required: true },
+      {
+        name: 'analysis_depth',
+        description: 'Analysis depth: quick, standard, deep',
+        required: false,
+      },
+      {
+        name: 'preferences',
+        description: 'SSG preferences (ecosystem, priority)',
+        required: false,
+      },
+    ],
+  },
+  {
+    name: 'setup-documentation',
+    description: 'Create comprehensive documentation structure with best practices',
+    arguments: [
+      { name: 'project_path', description: 'Path to the project directory', required: true },
+      { name: 'ssg_type', description: 'Static site generator type', required: false },
+      { name: 'include_examples', description: 'Include example content', required: false },
+    ],
+  },
+  {
+    name: 'troubleshoot-deployment',
+    description: 'Diagnose and fix GitHub Pages deployment issues',
+    arguments: [
+      { name: 'repository', description: 'Repository path or URL', required: true },
+      { name: 'deployment_url', description: 'Expected deployment URL', required: false },
+      { name: 'issue_description', description: 'Description of the issue', required: false },
+    ],
+  },
 ];
 
 // In-memory storage for resources
 const resourceStore = new Map<string, { content: string; mimeType: string }>();
+
+// Helper function to store tool results as resources
+function storeResourceFromToolResult(
+  toolName: string,
+  args: any,
+  result: any,
+  id?: string,
+): string {
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const resourceId = id || `${timestamp}-${Math.random().toString(36).substring(2, 11)}`;
+  let uri: string;
+  let mimeType = 'application/json';
+  let content: string;
+
+  // Determine URI and content based on tool type
+  switch (toolName) {
+    case 'analyze_repository':
+      uri = `documcp://analysis/${resourceId}`;
+      content = JSON.stringify(result, null, 2);
+      break;
+    case 'recommend_ssg':
+      uri = `documcp://recommendations/${resourceId}`;
+      content = JSON.stringify(result, null, 2);
+      break;
+    case 'generate_config':
+      uri = `documcp://config/${args.ssg}/${resourceId}`;
+      mimeType = 'text/plain';
+      content = typeof result === 'string' ? result : JSON.stringify(result, null, 2);
+      break;
+    case 'setup_structure':
+      uri = `documcp://structure/${resourceId}`;
+      content = JSON.stringify(result, null, 2);
+      break;
+    case 'deploy_pages':
+      uri = `documcp://deployment/${resourceId}`;
+      mimeType = 'text/yaml';
+      content = typeof result === 'string' ? result : JSON.stringify(result, null, 2);
+      break;
+    case 'verify_deployment':
+      uri = `documcp://verification/${resourceId}`;
+      content = JSON.stringify(result, null, 2);
+      break;
+    default:
+      uri = `documcp://results/${toolName}/${resourceId}`;
+      content = JSON.stringify(result, null, 2);
+  }
+
+  // Store the resource
+  resourceStore.set(uri, { content, mimeType });
+
+  return uri;
+}
 
 // Resource definitions following ADR-007
 const RESOURCES = [
@@ -581,6 +672,12 @@ const RESOURCES = [
     uri: 'documcp://analysis/',
     name: 'Repository Analysis Results',
     description: 'Results from repository analysis operations',
+    mimeType: 'application/json',
+  },
+  {
+    uri: 'documcp://recommendations/',
+    name: 'SSG Recommendations',
+    description: 'Static Site Generator recommendations based on project analysis',
     mimeType: 'application/json',
   },
   {
@@ -602,6 +699,12 @@ const RESOURCES = [
     mimeType: 'text/yaml',
   },
   {
+    uri: 'documcp://verification/',
+    name: 'Deployment Verification Results',
+    description: 'Results from deployment verification checks',
+    mimeType: 'application/json',
+  },
+  {
     uri: 'documcp://templates/',
     name: 'Reusable Templates',
     description: 'Template files for documentation setup',
@@ -611,6 +714,12 @@ const RESOURCES = [
     uri: 'documcp://workflows/',
     name: 'Documentation Workflows',
     description: 'Guided workflows for different documentation scenarios',
+    mimeType: 'application/json',
+  },
+  {
+    uri: 'documcp://results/',
+    name: 'Tool Results',
+    description: 'Results from various DocuMCP tools',
     mimeType: 'application/json',
   },
 ];
@@ -868,13 +977,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     switch (name) {
       case 'analyze_repository': {
         const result = await analyzeRepository(args);
+
         // Store analysis result as resource
-        const analysisId = `analysis-${Date.now()}`;
-        storeResource(
-          `documcp://analysis/${analysisId}`,
-          JSON.stringify(result, null, 2),
-          'application/json',
-        );
+        const resourceUri = storeResourceFromToolResult('analyze_repository', args, result);
+        (result as any).resourceUri = resourceUri;
 
         // Remember in persistent memory
         if (args?.path && typeof args.path === 'string') {
@@ -896,13 +1002,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case 'recommend_ssg': {
         const result = await recommendSSG(args);
+
         // Store recommendation as resource
-        const recommendationId = `recommendation-${Date.now()}`;
-        storeResource(
-          `documcp://analysis/${recommendationId}`,
-          JSON.stringify(result, null, 2),
-          'application/json',
-        );
+        const resourceUri = storeResourceFromToolResult('recommend_ssg', args, result);
+        (result as any).resourceUri = resourceUri;
 
         // Remember recommendation
         if (args?.analysisId && typeof args.analysisId === 'string') {
@@ -920,42 +1023,40 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case 'generate_config': {
         const result = await generateConfig(args);
+
         // Store generated config as resource
-        const configId = `config-${args?.ssg || 'unknown'}-${Date.now()}`;
-        storeResource(
-          `documcp://config/${configId}`,
-          JSON.stringify(result, null, 2),
-          'text/plain',
-        );
+        const resourceUri = storeResourceFromToolResult('generate_config', args, result);
+        (result as any).resourceUri = resourceUri;
+
         return result;
       }
 
       case 'setup_structure': {
         const result = await setupStructure(args);
+
         // Store structure as resource
-        const structureId = `structure-${Date.now()}`;
-        storeResource(
-          `documcp://structure/${structureId}`,
-          JSON.stringify(result, null, 2),
-          'application/json',
-        );
+        const resourceUri = storeResourceFromToolResult('setup_structure', args, result);
+        (result as any).resourceUri = resourceUri;
         return result;
       }
 
       case 'deploy_pages': {
         const result = await deployPages(args);
+
         // Store deployment workflow as resource
-        const workflowId = `workflow-${args?.ssg || 'unknown'}-${Date.now()}`;
-        storeResource(
-          `documcp://deployment/${workflowId}`,
-          JSON.stringify(result, null, 2),
-          'text/yaml',
-        );
+        const resourceUri = storeResourceFromToolResult('deploy_pages', args, result);
+        (result as any).resourceUri = resourceUri;
+
         return result;
       }
 
       case 'verify_deployment': {
         const result = await verifyDeployment(args);
+
+        // Store verification result as resource
+        const resourceUri = storeResourceFromToolResult('verify_deployment', args, result);
+        (result as any).resourceUri = resourceUri;
+
         return result;
       }
 

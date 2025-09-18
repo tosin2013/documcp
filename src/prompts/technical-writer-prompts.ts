@@ -122,6 +122,12 @@ export async function generateTechnicalWriterPrompts(
       return generateDiataxisOrganizerPrompt(context, args);
     case 'readme-optimizer':
       return generateReadmeOptimizerPrompt(context, args);
+    case 'analyze-and-recommend':
+      return generateAnalyzeAndRecommendPrompt(context, args);
+    case 'setup-documentation':
+      return generateSetupDocumentationPrompt(context, args);
+    case 'troubleshoot-deployment':
+      return generateTroubleshootDeploymentPrompt(context, args);
     default:
       throw new Error(`Unknown prompt type: ${promptType}`);
   }
@@ -491,4 +497,190 @@ async function identifyDocumentationGaps(
   }
 
   return gaps;
+}
+
+// Guided workflow prompt generators (ADR-007)
+
+function generateAnalyzeAndRecommendPrompt(
+  context: ProjectContext,
+  args: Record<string, any>,
+): PromptMessage[] {
+  const analysisDepth = args.analysis_depth || 'standard';
+  const preferences = args.preferences || 'balanced approach with good community support';
+
+  return [
+    {
+      role: 'user',
+      content: {
+        type: 'text',
+        text: `Execute a complete repository analysis and SSG recommendation workflow for this project.
+
+**Project Context:**
+- Type: ${context.projectType}
+- Languages: ${context.languages.join(', ')}
+- Frameworks: ${context.frameworks.join(', ')}
+- Package Manager: ${context.packageManager || 'N/A'}
+- Has Tests: ${context.hasTests}
+- Has CI: ${context.hasCI}
+- Documentation Gaps: ${context.documentationGaps.join(', ')}
+
+**Workflow Parameters:**
+- Analysis Depth: ${analysisDepth}
+- Preferences: ${preferences}
+
+**Expected Workflow:**
+1. **Repository Analysis**: Analyze project structure, dependencies, and complexity
+2. **SSG Recommendation**: Recommend the best static site generator based on project characteristics
+3. **Implementation Guidance**: Provide step-by-step setup instructions
+4. **Best Practices**: Include security, performance, and maintenance recommendations
+
+**Required Output Format:**
+- Executive summary with key findings
+- Detailed analysis results with metrics
+- SSG recommendation with justification
+- Implementation roadmap with priorities
+- Resource requirements and timeline estimates
+
+Please execute this workflow systematically and provide actionable recommendations.`,
+      },
+    },
+  ];
+}
+
+function generateSetupDocumentationPrompt(
+  context: ProjectContext,
+  args: Record<string, any>,
+): PromptMessage[] {
+  const ssgType = args.ssg_type || 'recommended based on project analysis';
+  const includeExamples = args.include_examples !== false;
+
+  return [
+    {
+      role: 'user',
+      content: {
+        type: 'text',
+        text: `Create a comprehensive documentation structure with best practices for this project.
+
+**Project Context:**
+- Type: ${context.projectType}
+- Languages: ${context.languages.join(', ')}
+- Frameworks: ${context.frameworks.join(', ')}
+- Current Documentation Gaps: ${context.documentationGaps.join(', ')}
+
+**Setup Parameters:**
+- SSG Type: ${ssgType}
+- Include Examples: ${includeExamples}
+
+**Documentation Structure Requirements:**
+1. **Diataxis Framework Implementation**:
+   - Tutorials: Learning-oriented content
+   - How-to Guides: Problem-solving content
+   - Reference: Information-oriented content
+   - Explanations: Understanding-oriented content
+
+2. **Configuration Setup**:
+   - SSG configuration files
+   - GitHub Pages deployment
+   - Automated workflows
+   - Security best practices
+
+3. **Content Guidelines**:
+   - Writing style guide
+   - Contribution guidelines
+   - Review processes
+   - Maintenance procedures
+
+4. **Development Integration**:
+   - Build pipeline integration
+   - Automated testing for docs
+   - Performance monitoring
+   - Analytics setup
+
+**Required Deliverables:**
+- Complete directory structure
+- Configuration files with comments
+- Sample content ${includeExamples ? 'with examples' : 'templates'}
+- Deployment automation
+- Maintenance runbook
+
+Please create a production-ready documentation system that scales with the project.`,
+      },
+    },
+  ];
+}
+
+function generateTroubleshootDeploymentPrompt(
+  context: ProjectContext,
+  args: Record<string, any>,
+): PromptMessage[] {
+  const repository = args.repository;
+  const deploymentUrl = args.deployment_url || 'GitHub Pages URL';
+  const issueDescription = args.issue_description || 'deployment not working as expected';
+
+  return [
+    {
+      role: 'user',
+      content: {
+        type: 'text',
+        text: `Diagnose and fix GitHub Pages deployment issues for this documentation project.
+
+**Repository Information:**
+- Repository: ${repository}
+- Expected URL: ${deploymentUrl}
+- Issue Description: ${issueDescription}
+
+**Project Context:**
+- Type: ${context.projectType}
+- Languages: ${context.languages.join(', ')}
+- Has CI: ${context.hasCI}
+
+**Troubleshooting Checklist:**
+
+1. **Repository Settings**:
+   - GitHub Pages source configuration
+   - Branch and folder settings
+   - Custom domain setup (if applicable)
+   - Repository visibility and permissions
+
+2. **Build Configuration**:
+   - GitHub Actions workflow validation
+   - Build dependencies and versions
+   - Output directory configuration
+   - Asset and link path issues
+
+3. **Content Issues**:
+   - Markdown syntax validation
+   - Link and image path verification
+   - YAML frontmatter validation
+   - Special character handling
+
+4. **Deployment Workflow**:
+   - Action permissions and secrets
+   - Deployment job configuration
+   - Artifact handling
+   - Cache and dependency issues
+
+5. **Performance and Security**:
+   - Build time optimization
+   - Security policy compliance
+   - CDN and caching configuration
+   - SSL certificate validation
+
+**Diagnostic Approach:**
+1. **Immediate Assessment**: Check current status and error messages
+2. **Systematic Testing**: Validate each component step-by-step
+3. **Fix Implementation**: Apply targeted solutions with validation
+4. **Prevention Setup**: Implement monitoring and automated checks
+
+**Required Output:**
+- Root cause analysis
+- Step-by-step fix instructions
+- Validation procedures
+- Prevention recommendations
+- Monitoring setup guide
+
+Please provide a comprehensive troubleshooting guide with specific, actionable solutions.`,
+      },
+    },
+  ];
 }
