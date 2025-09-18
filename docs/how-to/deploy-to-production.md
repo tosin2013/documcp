@@ -29,6 +29,7 @@ Before deploying, leverage historical deployment data to optimize your strategy:
 ```
 
 **Key insights to review:**
+
 - **69% deployment success rate** across all projects
 - **OIDC authentication** shows higher success rates
 - **Minimal permissions** reduce security issues
@@ -48,6 +49,7 @@ Learn from projects with similar characteristics:
 ```
 
 **Use the results to:**
+
 - Identify optimal workflow configurations
 - Avoid common deployment pitfalls
 - Choose proven deployment timing
@@ -67,6 +69,7 @@ Configure deployment using historical best practices:
 ```
 
 **Memory-informed features:**
+
 - **OIDC authentication** (reduces failures by 23%)
 - **Minimal permissions** (pages:write, id-token:write only)
 - **Optimized workflow timing** (based on success patterns)
@@ -102,11 +105,13 @@ Track your deployment outcome to improve the memory system:
 #### 1. Deployment Workflow Fails (31% of failures)
 
 **Memory insights show most failures occur due to:**
+
 - Incorrect branch configuration
 - Missing workflow permissions
 - Build process errors
 
 **Memory-informed solutions:**
+
 ```javascript
 // Query specific failure patterns
 {
@@ -117,6 +122,7 @@ Track your deployment outcome to improve the memory system:
 ```
 
 **Apply lessons learned:**
+
 - Use `gh-pages` branch (78% success rate vs 45% for `main`)
 - Enable Pages in repository settings before deployment
 - Verify OIDC token permissions
@@ -124,11 +130,13 @@ Track your deployment outcome to improve the memory system:
 #### 2. Build Process Errors (22% of failures)
 
 **Memory patterns indicate:**
+
 - Node.js version mismatches most common
 - Missing dependencies in workflow
 - Incorrect build commands
 
 **Memory-informed fixes:**
+
 ```javascript
 // Find successful build configurations for your SSG
 {
@@ -139,6 +147,7 @@ Track your deployment outcome to improve the memory system:
 ```
 
 **Apply successful patterns:**
+
 - Use Node.js 18+ (92% success rate)
 - Include all dependencies in workflow
 - Use recommended build commands from memory
@@ -146,11 +155,13 @@ Track your deployment outcome to improve the memory system:
 #### 3. Pages Configuration Issues (18% of failures)
 
 **Historical data shows:**
+
 - Custom domains need DNS verification
 - Branch protection rules can block deployment
 - Cache issues with GitHub Pages CDN
 
 **Memory-guided resolution:**
+
 ```bash
 # Check Pages settings (based on 89 successful deployments)
 gh api repos/:owner/:repo/pages
@@ -165,11 +176,13 @@ curl -X POST "https://api.github.com/repos/:owner/:repo/pages/builds"
 ### Performance Optimization (Memory-Driven)
 
 #### Deployment Timing
+
 - **Avoid 16:00 UTC** (peak activity, slower processing)
 - **Prefer 08:00-10:00 UTC** (best success rates)
 - **Monitor GitHub Status** before major deployments
 
 #### Configuration Optimization
+
 - **Use memory-recommended settings** from successful similar projects
 - **Apply proven workflow patterns** (available via memory recall)
 - **Follow security configurations** that show highest success rates

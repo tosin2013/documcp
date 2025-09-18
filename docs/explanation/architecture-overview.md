@@ -31,16 +31,17 @@ We chose this approach because...
 ### Trade-offs
 
 The main trade-offs include:
+
 - Trade-off 1: Benefit vs Cost
 - Trade-off 2: Benefit vs Cost
 
 ## Comparison with Alternatives
 
-| Approach | Pros | Cons |
-|----------|------|------|
-| Our Approach | Pro 1, Pro 2 | Con 1 |
-| Alternative 1 | Pro 1 | Con 1, Con 2 |
-| Alternative 2 | Pro 1, Pro 2 | Con 1 |
+| Approach      | Pros         | Cons         |
+| ------------- | ------------ | ------------ |
+| Our Approach  | Pro 1, Pro 2 | Con 1        |
+| Alternative 1 | Pro 1        | Con 1, Con 2 |
+| Alternative 2 | Pro 1, Pro 2 | Con 1        |
 
 ## Further Reading
 

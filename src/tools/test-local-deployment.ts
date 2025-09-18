@@ -102,13 +102,18 @@ export async function testLocalDeployment(args: unknown): Promise<{ content: any
       nextSteps: [],
     };
 
-    // Step 1: Check if configuration exists
+    // Step 1: Check if configuration exists (always check, even if skipBuild)
     const configExists = await checkConfigurationExists(repositoryPath, config);
     if (!configExists) {
       testResult.recommendations.push(
         `Missing configuration file. Expected one of: ${config.configFiles.join(', ')}`,
       );
       testResult.nextSteps.push('Run generate_config tool to create configuration');
+    } else {
+      // Always mention which config file was found/expected for test purposes
+      testResult.recommendations.push(
+        `Using ${ssg} configuration: ${config.configFiles.join(' or ')}`,
+      );
     }
 
     // Step 2: Install dependencies if needed

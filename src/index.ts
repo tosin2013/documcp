@@ -153,7 +153,8 @@ const TOOLS = [
   },
   {
     name: 'update_existing_documentation',
-    description: 'Intelligently analyze and update existing documentation using memory insights and code comparison',
+    description:
+      'Intelligently analyze and update existing documentation using memory insights and code comparison',
     inputSchema: z.object({
       analysisId: z.string().describe('Repository analysis ID from analyze_repository tool'),
       docsPath: z.string().describe('Path to existing documentation directory'),
@@ -167,7 +168,11 @@ const TOOLS = [
         .optional()
         .default('moderate')
         .describe('How aggressively to suggest updates'),
-      preserveStyle: z.boolean().optional().default(true).describe('Preserve existing documentation style and formatting'),
+      preserveStyle: z
+        .boolean()
+        .optional()
+        .default(true)
+        .describe('Preserve existing documentation style and formatting'),
       focusAreas: z
         .array(z.string())
         .optional()
@@ -1008,7 +1013,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             },
             {
               type: 'text',
-              text: `Top recommendations:\n${result.recommendations.slice(0, 5).map((rec, i) => `${i + 1}. ${rec.reasoning} (confidence: ${Math.round(rec.confidence * 100)}%)`).join('\n')}`,
+              text: `Top recommendations:\n${result.recommendations
+                .slice(0, 5)
+                .map(
+                  (rec, i) =>
+                    `${i + 1}. ${rec.reasoning} (confidence: ${Math.round(rec.confidence * 100)}%)`,
+                )
+                .join('\n')}`,
             },
             {
               type: 'text',

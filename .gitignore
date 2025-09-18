@@ -63,6 +63,9 @@ test-server.js
 *.temp
 .cache/
 
+# Memory backup files
+backup_*.json
+
 # Logs
 logs/
 *.log

@@ -11,6 +11,7 @@ This tutorial will guide you through setting up and using DocuMCP's intelligent 
 ## Prerequisites
 
 Before you begin, ensure you have:
+
 - Node.js 16+ installed
 - Access to a GitHub repository
 - Claude Code or another MCP-compatible client
@@ -28,6 +29,7 @@ Start by analyzing your repository to understand its characteristics and documen
 ```
 
 This will analyze your project and return:
+
 - **Project structure**: File counts, languages used, and organization
 - **Dependencies**: Production and development packages detected
 - **Documentation status**: Existing docs, README, contributing guidelines
@@ -35,12 +37,13 @@ This will analyze your project and return:
 - **Unique analysis ID**: For use in subsequent steps
 
 Example response snippet:
+
 ```json
 {
   "id": "analysis_abc123xyz",
   "structure": {
     "totalFiles": 150,
-    "languages": {".ts": 45, ".js": 12, ".md": 8},
+    "languages": { ".ts": 45, ".js": 12, ".md": 8 },
     "hasTests": true,
     "hasCI": true
   },
@@ -70,12 +73,14 @@ Next, get intelligent recommendations powered by DocuMCP's memory system:
 ```
 
 The memory system leverages patterns from 130+ previous projects to provide:
+
 - **Confidence-scored recommendations** (e.g., Docusaurus with 85% confidence)
 - **Historical success data** (69% deployment success rate insights)
 - **Pattern-based insights** (Hugo most common with 98 projects, but Docusaurus optimal for TypeScript)
 - **Similar project examples** to learn from successful configurations
 
 Example recommendation response:
+
 ```json
 {
   "recommended": "docusaurus",
@@ -124,6 +129,7 @@ Create a professional documentation structure following the Diataxis framework:
 ```
 
 This creates four optimized sections:
+
 - **Tutorials**: Learning-oriented guides
 - **How-to Guides**: Problem-solving instructions
 - **Reference**: Information-oriented technical docs
@@ -143,6 +149,7 @@ Set up automated deployment with security best practices:
 ```
 
 This generates:
+
 - GitHub Actions workflow with OIDC authentication
 - Minimal security permissions (pages:write, id-token:write only)
 - Automated build and deployment pipeline
@@ -166,6 +173,7 @@ Explore DocuMCP's advanced memory capabilities:
 ```
 
 The memory system provides:
+
 - **Pattern Recognition**: Most successful SSG choices for your project type
 - **Historical Insights**: Success rates and common issues
 - **Smart Recommendations**: Enhanced suggestions based on similar projects
@@ -182,6 +190,7 @@ Verify your setup with these checks:
 ## Summary
 
 In this tutorial, you learned how to:
+
 - **Analyze repositories** with comprehensive project profiling
 - **Get intelligent SSG recommendations** using memory-enhanced insights
 - **Generate optimized configurations** for your chosen static site generator

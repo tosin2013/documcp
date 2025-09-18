@@ -1,4 +1,4 @@
-name: Deploy Docusaurus to GitHub Pages
+name: Deploy Jekyll to GitHub Pages
 
 on:
   push:
@@ -21,22 +21,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
         with:
-          node-version: '20'
-          cache: 'npm'
+          ruby-version: '3.1'
+          bundler-cache: true
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build website
-        run: npm run build
+      - name: Build with Jekyll
+        run: bundle exec jekyll build
+        env:
+          JEKYLL_ENV: production
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v2
-        with:
-          path: ./build
 
   deploy:
     environment:

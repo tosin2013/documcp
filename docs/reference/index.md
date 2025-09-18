@@ -12,8 +12,8 @@ Information-oriented technical descriptions
 
 This section contains reference documentation following the Diataxis framework.
 
-
 **Reference** documentation is information-oriented:
+
 - Describe the machinery
 - Be accurate and complete
 - Focus on describing, not explaining

@@ -31,18 +31,20 @@ Get comprehensive statistics about patterns in the documentation ecosystem:
 ```
 
 **What you'll learn:**
+
 - Most successful SSG choices by project type
 - Deployment success rates (currently 69%)
 - Peak activity patterns (16:00 UTC most active)
 - Technology ecosystem trends
 
 **Example Response:**
+
 ```json
 {
   "learningStats": {
     "patterns": {
-      "mostCommonSSG": {"hugo": 98, "docusaurus": 56, "mkdocs": 60},
-      "deploymentSuccess": {"success": 89, "failed": 40}
+      "mostCommonSSG": { "hugo": 98, "docusaurus": 56, "mkdocs": 60 },
+      "deploymentSuccess": { "success": 89, "failed": 40 }
     },
     "insights": [
       "Most frequently used SSG: hugo (98 projects)",
@@ -67,6 +69,7 @@ Search through historical project data to find relevant patterns and insights:
 ```
 
 **Use cases:**
+
 - Find similar projects that succeeded with specific SSGs
 - Identify common deployment issues and solutions
 - Discover configuration patterns for your technology stack
@@ -87,6 +90,7 @@ Combine current project analysis with historical learning patterns:
 ```
 
 **Benefits:**
+
 - **Confidence scoring** based on historical success rates
 - **Risk assessment** using deployment failure patterns
 - **Optimization suggestions** from successful similar projects
@@ -113,6 +117,7 @@ Get SSG recommendations enhanced with memory system insights:
 ```
 
 **Enhanced insights include:**
+
 - **Success probability** for each SSG option
 - **Historical performance** of similar technology stacks
 - **Community trends** and adoption patterns
@@ -125,35 +130,37 @@ Get SSG recommendations enhanced with memory system insights:
 For a new TypeScript library project:
 
 1. **Analyze with memory context:**
+
    ```javascript
    // Step 1: Standard analysis
-   analyze_repository({path: "/my-ts-project"})
+   analyze_repository({ path: '/my-ts-project' });
 
    // Step 2: Memory-enhanced analysis
    memory_intelligent_analysis({
-     projectPath: "/my-ts-project",
-     baseAnalysis: analysisResult
-   })
+     projectPath: '/my-ts-project',
+     baseAnalysis: analysisResult,
+   });
    ```
 
 2. **Get memory-informed recommendations:**
+
    ```javascript
    // Memory reveals: TypeScript projects succeed 78% with Docusaurus
    memory_enhanced_recommendation({
-     projectPath: "/my-ts-project",
+     projectPath: '/my-ts-project',
      baseRecommendation: recommendationResult,
-     projectFeatures: {ecosystem: "javascript", complexity: "medium"}
-   })
+     projectFeatures: { ecosystem: 'javascript', complexity: 'medium' },
+   });
    ```
 
 3. **Learn from similar projects:**
    ```javascript
    // Find TypeScript projects with high deployment success
    memory_recall({
-     query: "typescript library docusaurus success",
-     type: "deployment",
-     limit: 5
-   })
+     query: 'typescript library docusaurus success',
+     type: 'deployment',
+     limit: 5,
+   });
    ```
 
 ### Workflow 2: Troubleshooting Failed Deployment
@@ -161,25 +168,27 @@ For a new TypeScript library project:
 When deployment issues occur:
 
 1. **Query failure patterns:**
+
    ```javascript
    memory_recall({
-     query: "deployment failed github pages",
-     type: "deployment",
-     limit: 10
-   })
+     query: 'deployment failed github pages',
+     type: 'deployment',
+     limit: 10,
+   });
    ```
 
 2. **Analyze success patterns:**
+
    ```javascript
-   memory_learning_stats({includeDetails: true})
+   memory_learning_stats({ includeDetails: true });
    // Review deploymentSuccess patterns
    ```
 
 3. **Get targeted insights:**
    ```javascript
    memory_insights({
-     projectId: "your-project-id"
-   })
+     projectId: 'your-project-id',
+   });
    ```
 
 ### Workflow 3: Technology Migration
@@ -187,17 +196,19 @@ When deployment issues occur:
 When migrating from one SSG to another:
 
 1. **Research migration patterns:**
+
    ```javascript
    memory_recall({
-     query: "hugo to docusaurus migration",
-     type: "configuration",
-     limit: 5
-   })
+     query: 'hugo to docusaurus migration',
+     type: 'configuration',
+     limit: 5,
+   });
    ```
 
 2. **Compare success rates:**
+
    ```javascript
-   memory_learning_stats({includeDetails: true})
+   memory_learning_stats({ includeDetails: true });
    // Compare SSG success rates in your ecosystem
    ```
 
@@ -206,11 +217,11 @@ When migrating from one SSG to another:
    memory_enhanced_recommendation({
      // Include migration context in projectFeatures
      projectFeatures: {
-       currentSSG: "hugo",
-       targetSSG: "docusaurus",
-       migrationReason: "better-typescript-support"
-     }
-   })
+       currentSSG: 'hugo',
+       targetSSG: 'docusaurus',
+       migrationReason: 'better-typescript-support',
+     },
+   });
    ```
 
 ## Memory System Best Practices
@@ -218,6 +229,7 @@ When migrating from one SSG to another:
 ### 1. Use Memory Context for Major Decisions
 
 Always check memory insights before choosing:
+
 - Static site generators
 - Deployment strategies
 - Configuration approaches
@@ -226,6 +238,7 @@ Always check memory insights before choosing:
 ### 2. Learn from Historical Patterns
 
 Regular memory queries help you:
+
 - Avoid common pitfalls
 - Identify optimal configurations
 - Understand ecosystem trends
@@ -234,6 +247,7 @@ Regular memory queries help you:
 ### 3. Contribute to Learning
 
 Your project outcomes improve the memory system:
+
 - Successful deployments strengthen patterns
 - Issue resolutions help others avoid problems
 - Configuration choices inform future recommendations
@@ -242,6 +256,7 @@ Your project outcomes improve the memory system:
 ### 4. Balance Memory with Project Needs
 
 Memory insights are powerful but should be balanced with:
+
 - Specific project requirements
 - Team expertise and preferences
 - Timeline and resource constraints
@@ -252,6 +267,7 @@ Memory insights are powerful but should be balanced with:
 ### Pattern Recognition
 
 The memory system identifies patterns across:
+
 - **Technology stacks**: Language + framework combinations
 - **Project sizes**: File count and complexity correlations
 - **Team patterns**: Usage during different time periods
@@ -260,6 +276,7 @@ The memory system identifies patterns across:
 ### Predictive Analysis
 
 Based on historical data, the system can predict:
+
 - **Deployment success probability** for your configuration
 - **Maintenance burden** based on SSG choice
 - **Community support trends** for technology combinations
@@ -268,6 +285,7 @@ Based on historical data, the system can predict:
 ### Continuous Learning
 
 The memory system continuously improves through:
+
 - **Outcome tracking**: Monitoring deployment and usage success
 - **Pattern refinement**: Improving recommendation accuracy
 - **Knowledge graph updates**: Building technology relationship maps

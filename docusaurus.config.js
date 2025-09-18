@@ -1,6 +1,7 @@
 module.exports = {
   title: 'DocuMCP',
-  tagline: 'Intelligent Model Context Protocol (MCP) server for revolutionizing documentation deployment with GitHub Pages automation, Diataxis framework integration, and smart SSG recommendations',
+  tagline:
+    'Intelligent Model Context Protocol (MCP) server for revolutionizing documentation deployment with GitHub Pages automation, Diataxis framework integration, and smart SSG recommendations',
   url: 'https://your-domain.com',
   baseUrl: '/',
   onBrokenLinks: 'throw',

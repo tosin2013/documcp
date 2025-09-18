@@ -12,8 +12,8 @@ Learning-oriented guides for newcomers
 
 This section contains tutorials documentation following the Diataxis framework.
 
-
 **Tutorials** are learning-oriented and help newcomers get started:
+
 - Take the reader through a process step by step
 - Focus on learning by doing
 - Ensure the reader succeeds in accomplishing something

@@ -12,8 +12,8 @@ Understanding-oriented conceptual discussions
 
 This section contains explanation documentation following the Diataxis framework.
 
-
 **Explanation** documentation is understanding-oriented:
+
 - Clarify and illuminate a topic
 - Provide context and background
 - Discuss alternatives and opinions
