@@ -23,6 +23,7 @@ import { deployPages } from './tools/deploy-pages.js';
 import { verifyDeployment } from './tools/verify-deployment.js';
 import { handlePopulateDiataxisContent } from './tools/populate-content.js';
 import { handleValidateDiataxisContent, validateGeneralContent } from './tools/validate-content.js';
+import { handleUpdateExistingDocumentation } from './tools/update-existing-documentation.js';
 import { detectDocumentationGaps } from './tools/detect-gaps.js';
 import { testLocalDeployment } from './tools/test-local-deployment.js';
 import { evaluateReadmeHealth } from './tools/evaluate-readme-health.js';
@@ -148,6 +149,29 @@ const TOOLS = [
         .array(z.string())
         .optional()
         .describe('Specific technologies to emphasize'),
+    }),
+  },
+  {
+    name: 'update_existing_documentation',
+    description: 'Intelligently analyze and update existing documentation using memory insights and code comparison',
+    inputSchema: z.object({
+      analysisId: z.string().describe('Repository analysis ID from analyze_repository tool'),
+      docsPath: z.string().describe('Path to existing documentation directory'),
+      compareMode: z
+        .enum(['comprehensive', 'gap-detection', 'accuracy-check'])
+        .optional()
+        .default('comprehensive')
+        .describe('Mode of comparison between code and documentation'),
+      updateStrategy: z
+        .enum(['conservative', 'moderate', 'aggressive'])
+        .optional()
+        .default('moderate')
+        .describe('How aggressively to suggest updates'),
+      preserveStyle: z.boolean().optional().default(true).describe('Preserve existing documentation style and formatting'),
+      focusAreas: z
+        .array(z.string())
+        .optional()
+        .describe('Specific areas to focus updates on (e.g., "dependencies", "scripts", "api")'),
     }),
   },
   {
@@ -950,6 +974,41 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             {
               type: 'text',
               text: `Population metrics: Coverage: ${result.populationMetrics.coverage}%, Completeness: ${result.populationMetrics.completeness}%, Project Specificity: ${result.populationMetrics.projectSpecificity}%`,
+            },
+            {
+              type: 'text',
+              text: `Next steps:\n${result.nextSteps.map((step) => `- ${step}`).join('\n')}`,
+            },
+          ],
+        };
+      }
+
+      case 'update_existing_documentation': {
+        const result = await handleUpdateExistingDocumentation(args);
+        // Store update analysis as resource
+        const updateId = `update-${Date.now()}`;
+        storeResource(
+          `documcp://analysis/${updateId}`,
+          JSON.stringify(result, null, 2),
+          'application/json',
+        );
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Documentation analysis completed. Found ${result.updateMetrics.gapsDetected} gaps and generated ${result.updateMetrics.recommendationsGenerated} recommendations.`,
+            },
+            {
+              type: 'text',
+              text: `Update metrics: Confidence Score: ${result.updateMetrics.confidenceScore}, Estimated Effort: ${result.updateMetrics.estimatedEffort}`,
+            },
+            {
+              type: 'text',
+              text: `Memory insights: ${result.memoryInsights.similarProjects.length} similar projects analyzed, ${result.memoryInsights.successfulUpdatePatterns.length} successful update patterns found`,
+            },
+            {
+              type: 'text',
+              text: `Top recommendations:\n${result.recommendations.slice(0, 5).map((rec, i) => `${i + 1}. ${rec.reasoning} (confidence: ${Math.round(rec.confidence * 100)}%)`).join('\n')}`,
             },
             {
               type: 'text',

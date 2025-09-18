@@ -1,6 +1,7 @@
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import { handleMemoryRecall, handleMemoryEnhancedRecommendation, handleMemoryIntelligentAnalysis } from '../memory/index.js';
 
 interface PopulationOptions {
   analysisId: string;
@@ -104,30 +105,34 @@ interface PopulationResult {
 }
 
 class ContentPopulationEngine {
-  // private analysisCache: Map<string, any> = new Map();  // For future caching
-  // private devopsGenerator: DevOpsContentGenerator;  // For future extensibility
+  private analysisCache: Map<string, any> = new Map();
+  private memoryInsights: any = null;
+  private similarProjects: any[] = [];
 
   async populateContent(options: PopulationOptions): Promise<PopulationResult> {
     // 1. Retrieve and validate repository analysis
     const analysis = await this.getRepositoryAnalysis(options.analysisId);
 
-    // 2. Generate content plan based on project characteristics
-    const contentPlan = await this.generateContentPlan(analysis, options.populationLevel);
+    // 2. Get memory-enhanced insights for intelligent content generation
+    await this.loadMemoryInsights(analysis, options);
 
-    // 3. Generate content for each Diataxis category
-    const tutorials = await this.generateTutorialContent(contentPlan.tutorials, analysis);
-    const howTos = await this.generateHowToContent(contentPlan.howToGuides, analysis);
-    const reference = await this.generateReferenceContent(contentPlan.reference, analysis);
-    const explanation = await this.generateExplanationContent(contentPlan.explanation, analysis);
+    // 3. Generate content plan based on project characteristics AND memory insights
+    const contentPlan = await this.generateIntelligentContentPlan(analysis, options.populationLevel, this.memoryInsights);
 
-    // 4. Write content to documentation structure
+    // 4. Generate memory-informed content for each Diataxis category
+    const tutorials = await this.generateMemoryInformedTutorialContent(contentPlan.tutorials, analysis, this.memoryInsights);
+    const howTos = await this.generateMemoryInformedHowToContent(contentPlan.howToGuides, analysis, this.memoryInsights);
+    const reference = await this.generateMemoryInformedReferenceContent(contentPlan.reference, analysis, this.memoryInsights);
+    const explanation = await this.generateMemoryInformedExplanationContent(contentPlan.explanation, analysis, this.memoryInsights);
+
+    // 5. Write content to documentation structure
     const filesCreated = await this.writeContentToStructure(
       options.docsPath,
       { tutorials, howTos, reference, explanation },
       options.preserveExisting,
     );
 
-    // 5. Generate cross-references and navigation updates
+    // 6. Generate cross-references and navigation updates
     await this.updateNavigationAndCrossReferences(options.docsPath, contentPlan);
 
     return {
@@ -135,51 +140,135 @@ class ContentPopulationEngine {
       filesCreated,
       contentPlan,
       populationMetrics: this.calculatePopulationMetrics(filesCreated, contentPlan),
-      nextSteps: this.generateNextSteps(analysis, contentPlan),
+      nextSteps: this.generateMemoryInformedNextSteps(analysis, contentPlan, this.memoryInsights),
     };
   }
 
   private async getRepositoryAnalysis(analysisId: string): Promise<any> {
-    // In a real implementation, this would retrieve from a persistent store
-    // For now, we'll read from a cached analysis file if it exists
-    const analysisPath = path.join('.documcp', 'analyses', `${analysisId}.json`);
+    // First try to get analysis from memory system
+    try {
+      const memoryRecall = await this.getFromMemorySystem(analysisId);
+      if (memoryRecall) {
+        return memoryRecall;
+      }
+    } catch (error) {
+      console.warn('Failed to retrieve from memory system:', error);
+    }
 
+    // Fallback to reading from cached analysis file
+    const analysisPath = path.join('.documcp', 'analyses', `${analysisId}.json`);
     try {
       const content = await fs.readFile(analysisPath, 'utf-8');
       return JSON.parse(content);
     } catch {
-      // Return a mock analysis for development
-      return this.getMockAnalysis();
+      throw new Error(`Repository analysis with ID '${analysisId}' not found. Please run analyze_repository first.`);
     }
   }
 
-  private getMockAnalysis(): any {
-    return {
-      metadata: {
-        projectName: 'documcp',
-        primaryLanguage: 'TypeScript',
-        ecosystem: 'Node.js',
-      },
-      technologies: {
-        runtime: 'Node.js',
-        framework: null,
-        testing: ['Jest'],
-        database: null,
-        deployment: ['GitHub Actions'],
-      },
-      dependencies: {
-        packages: ['@modelcontextprotocol/sdk', 'typescript', 'jest'],
-        ecosystem: 'npm',
-      },
-      structure: {
-        hasTests: true,
-        hasDocs: true,
-        hasCI: true,
-      },
-    };
+  private async getFromMemorySystem(analysisId: string): Promise<any> {
+    try {
+      const result = await handleMemoryRecall({
+        query: analysisId,
+        type: 'analysis',
+        limit: 1,
+      });
+      return result.memories?.[0]?.content;
+    } catch (error) {
+      console.warn('Memory system recall failed:', error);
+      return null;
+    }
   }
 
-  private async generateContentPlan(analysis: any, level: string): Promise<ContentPlan> {
+  private async loadMemoryInsights(analysis: any, options: PopulationOptions): Promise<void> {
+    try {
+      // Get similar projects from memory system
+      const similarProjectsQuery = `${analysis.metadata?.primaryLanguage || ''} ${analysis.metadata?.ecosystem || ''} documentation`;
+      const similarProjects = await handleMemoryRecall({
+        query: similarProjectsQuery,
+        type: 'recommendation',
+        limit: 5,
+      });
+
+      // Get memory-enhanced analysis
+      const enhancedAnalysis = await handleMemoryIntelligentAnalysis({
+        projectPath: analysis.projectPath || '',
+        baseAnalysis: analysis,
+      });
+
+      // Get memory-enhanced recommendations for content strategy
+      const enhancedRecommendations = await handleMemoryEnhancedRecommendation({
+        projectPath: analysis.projectPath || '',
+        baseRecommendation: {
+          contentStrategy: 'diataxis',
+          populationLevel: options.populationLevel,
+        },
+        projectFeatures: {
+          ecosystem: analysis.metadata?.ecosystem || 'unknown',
+          primaryLanguage: analysis.metadata?.primaryLanguage || 'unknown',
+          complexity: analysis.complexity || 'medium',
+          hasTests: analysis.structure?.hasTests || false,
+          hasCI: analysis.structure?.hasCI || false,
+        },
+      });
+
+      this.memoryInsights = {
+        similarProjects: similarProjects.memories || [],
+        enhancedAnalysis: enhancedAnalysis,
+        enhancedRecommendations: enhancedRecommendations,
+        patterns: this.extractPatternsFromSimilarProjects(similarProjects.memories || []),
+      };
+
+      this.similarProjects = similarProjects.memories || [];
+    } catch (error) {
+      console.warn('Failed to load memory insights:', error);
+      // Fallback to minimal insights
+      this.memoryInsights = {
+        similarProjects: [],
+        enhancedAnalysis: null,
+        enhancedRecommendations: null,
+        patterns: {},
+      };
+    }
+  }
+
+  private extractPatternsFromSimilarProjects(projects: any[]): any {
+    const patterns = {
+      commonFrameworks: {},
+      successfulSSGs: {},
+      documentationStructures: {},
+      deploymentStrategies: {},
+    };
+
+    projects.forEach(project => {
+      const content = project.content || {};
+
+      // Extract framework patterns
+      if (content.frameworks) {
+        content.frameworks.forEach((framework: string) => {
+          patterns.commonFrameworks[framework] = (patterns.commonFrameworks[framework] || 0) + 1;
+        });
+      }
+
+      // Extract SSG success patterns
+      if (content.recommendedSSG) {
+        patterns.successfulSSGs[content.recommendedSSG] = (patterns.successfulSSGs[content.recommendedSSG] || 0) + 1;
+      }
+
+      // Extract documentation structure patterns
+      if (content.documentationApproach) {
+        patterns.documentationStructures[content.documentationApproach] = (patterns.documentationStructures[content.documentationApproach] || 0) + 1;
+      }
+
+      // Extract deployment patterns
+      if (content.deploymentStrategy) {
+        patterns.deploymentStrategies[content.deploymentStrategy] = (patterns.deploymentStrategies[content.deploymentStrategy] || 0) + 1;
+      }
+    });
+
+    return patterns;
+  }
+
+  private async generateIntelligentContentPlan(analysis: any, level: string, memoryInsights: any): Promise<ContentPlan> {
     const plan: ContentPlan = {
       tutorials: [],
       howToGuides: [],
@@ -187,39 +276,44 @@ class ContentPopulationEngine {
       explanation: [],
     };
 
-    // Generate tutorials based on project type
-    plan.tutorials = this.generateTutorialPlan(analysis, level);
+    // Generate tutorials based on project type AND memory patterns
+    plan.tutorials = this.generateMemoryInformedTutorialPlan(analysis, level, memoryInsights);
 
-    // Generate how-to guides for common tasks
-    plan.howToGuides = this.generateHowToPlan(analysis, level);
+    // Generate how-to guides for common tasks (enhanced with successful patterns)
+    plan.howToGuides = this.generateMemoryInformedHowToPlan(analysis, level, memoryInsights);
 
-    // Generate reference documentation
-    plan.reference = this.generateReferencePlan(analysis, level);
+    // Generate reference documentation (based on similar project structures)
+    plan.reference = this.generateMemoryInformedReferencePlan(analysis, level, memoryInsights);
 
-    // Generate explanation content
-    plan.explanation = this.generateExplanationPlan(analysis, level);
+    // Generate explanation content (leveraging successful explanation patterns)
+    plan.explanation = this.generateMemoryInformedExplanationPlan(analysis, level, memoryInsights);
 
     return plan;
   }
 
-  private generateTutorialPlan(analysis: any, _level: string): TutorialContent[] {
+  private generateMemoryInformedTutorialPlan(analysis: any, _level: string, memoryInsights: any): TutorialContent[] {
     const tutorials: TutorialContent[] = [];
+    const patterns = memoryInsights?.patterns || {};
+    const similarProjects = memoryInsights?.similarProjects || [];
 
-    // Always include getting started
+    // Enhanced getting started based on successful patterns from similar projects
+    const gettingStartedApproach = this.getSuccessfulGettingStartedApproach(similarProjects, analysis);
     tutorials.push({
-      title: `Getting Started with ${analysis.metadata.projectName}`,
-      description: `Learn ${analysis.metadata.primaryLanguage} development with ${analysis.metadata.projectName}`,
-      content: this.generateGettingStartedContent(analysis),
-      codeExamples: this.generateGettingStartedExamples(analysis),
+      title: `Getting Started with ${analysis.metadata?.projectName || 'the Project'}`,
+      description: this.generateMemoryInformedDescription(analysis, similarProjects, 'getting-started'),
+      content: this.generateMemoryInformedGettingStartedContent(analysis, memoryInsights),
+      codeExamples: this.generateMemoryInformedGettingStartedExamples(analysis, memoryInsights),
     });
 
-    // Add technology-specific tutorials
-    if (analysis.metadata.ecosystem === 'Node.js') {
+    // Add technology-specific tutorials based on what worked for similar projects
+    const ecosystem = analysis.metadata?.ecosystem || analysis.technologies?.runtime;
+    if (ecosystem === 'Node.js' || ecosystem === 'javascript' || ecosystem === 'typescript') {
+      const nodeSuccessPatterns = this.extractNodeSuccessPatterns(similarProjects);
       tutorials.push({
-        title: 'Setting Up Your Development Environment',
-        description: 'Configure Node.js and TypeScript for development',
-        content: this.generateNodeSetupContent(analysis),
-        codeExamples: this.generateNodeSetupExamples(),
+        title: this.generateMemoryInformedTutorialTitle('environment-setup', nodeSuccessPatterns, analysis),
+        description: 'Configure your development environment based on proven successful patterns',
+        content: this.generateMemoryInformedNodeSetupContent(analysis, nodeSuccessPatterns),
+        codeExamples: this.generateMemoryInformedNodeSetupExamples(analysis, nodeSuccessPatterns),
       });
     }
 
@@ -352,7 +446,393 @@ class ContentPopulationEngine {
     return explanations;
   }
 
-  // Content generation methods
+  // Memory-informed helper methods
+  private getSuccessfulGettingStartedApproach(similarProjects: any[], analysis: any): any {
+    // Analyze successful getting-started approaches from similar projects
+    const approaches = similarProjects
+      .filter(p => p.content?.gettingStartedApproach)
+      .map(p => p.content.gettingStartedApproach);
+
+    // Return most common successful approach, or default based on project type
+    return approaches.length > 0 ? approaches[0] : this.getDefaultApproachForProjectType(analysis);
+  }
+
+  private generateMemoryInformedDescription(analysis: any, similarProjects: any[], tutorialType: string): string {
+    const successfulDescriptions = similarProjects
+      .filter(p => p.content?.tutorials?.[tutorialType])
+      .map(p => p.content.tutorials[tutorialType].description);
+
+    if (successfulDescriptions.length > 0) {
+      // Adapt successful pattern for this project
+      return `Learn ${analysis.metadata?.primaryLanguage || 'development'} with ${analysis.metadata?.projectName || 'this project'} using proven patterns from ${successfulDescriptions.length} similar successful projects`;
+    }
+
+    return `Learn ${analysis.metadata?.primaryLanguage || 'development'} development with ${analysis.metadata?.projectName || 'this project'}`;
+  }
+
+  private extractNodeSuccessPatterns(similarProjects: any[]): any {
+    const nodeProjects = similarProjects.filter(p =>
+      p.content?.ecosystem === 'Node.js' ||
+      p.content?.primaryLanguage === 'TypeScript' ||
+      p.content?.primaryLanguage === 'JavaScript'
+    );
+
+    return {
+      commonTools: this.extractCommonTools(nodeProjects),
+      successfulCommands: this.extractSuccessfulCommands(nodeProjects),
+      recommendedVersions: this.extractRecommendedVersions(nodeProjects),
+      bestPractices: this.extractBestPractices(nodeProjects),
+    };
+  }
+
+  private extractCommonTools(projects: any[]): string[] {
+    const toolCounts: Record<string, number> = {};
+    projects.forEach(p => {
+      (p.content?.tools || []).forEach((tool: string) => {
+        toolCounts[tool] = (toolCounts[tool] || 0) + 1;
+      });
+    });
+
+    // Return tools used by >50% of similar projects
+    const threshold = Math.ceil(projects.length * 0.5);
+    return Object.entries(toolCounts)
+      .filter(([_, count]) => count >= threshold)
+      .map(([tool, _]) => tool);
+  }
+
+  private extractSuccessfulCommands(projects: any[]): Record<string, string[]> {
+    const commands: Record<string, string[]> = {};
+    projects.forEach(p => {
+      if (p.content?.commands) {
+        Object.entries(p.content.commands).forEach(([key, cmds]) => {
+          if (!commands[key]) commands[key] = [];
+          commands[key].push(...(cmds as string[]));
+        });
+      }
+    });
+
+    // Deduplicate and return most common commands
+    Object.keys(commands).forEach(key => {
+      commands[key] = [...new Set(commands[key])];
+    });
+
+    return commands;
+  }
+
+  private extractRecommendedVersions(projects: any[]): Record<string, string> {
+    const versions: Record<string, Record<string, number>> = {};
+    projects.forEach(p => {
+      if (p.content?.versions) {
+        Object.entries(p.content.versions).forEach(([tool, version]) => {
+          if (!versions[tool]) versions[tool] = {};
+          versions[tool][version as string] = (versions[tool][version as string] || 0) + 1;
+        });
+      }
+    });
+
+    // Return most commonly used versions
+    const recommendedVersions: Record<string, string> = {};
+    Object.entries(versions).forEach(([tool, versionCounts]) => {
+      const mostCommon = Object.entries(versionCounts)
+        .sort(([,a], [,b]) => b - a)[0];
+      if (mostCommon) {
+        recommendedVersions[tool] = mostCommon[0];
+      }
+    });
+
+    return recommendedVersions;
+  }
+
+  private extractBestPractices(projects: any[]): string[] {
+    const practices: Record<string, number> = {};
+    projects.forEach(p => {
+      (p.content?.bestPractices || []).forEach((practice: string) => {
+        practices[practice] = (practices[practice] || 0) + 1;
+      });
+    });
+
+    // Return practices mentioned by >30% of projects
+    const threshold = Math.ceil(projects.length * 0.3);
+    return Object.entries(practices)
+      .filter(([_, count]) => count >= threshold)
+      .map(([practice, _]) => practice);
+  }
+
+  private getDefaultApproachForProjectType(analysis: any): any {
+    const projectType = analysis.metadata?.projectType || 'library';
+    const primaryLanguage = analysis.metadata?.primaryLanguage || 'JavaScript';
+
+    return {
+      type: projectType,
+      language: primaryLanguage,
+      approach: 'hands-on',
+      complexity: 'progressive',
+    };
+  }
+
+  private generateMemoryInformedTutorialTitle(tutorialType: string, patterns: any, analysis: any): string {
+    const projectName = analysis.metadata?.projectName || 'Project';
+    const language = analysis.metadata?.primaryLanguage || 'Development';
+
+    switch (tutorialType) {
+      case 'environment-setup':
+        return patterns.commonTools?.length > 0
+          ? `Setting Up Your ${language} Development Environment`
+          : `Development Environment Setup for ${projectName}`;
+      default:
+        return `${tutorialType} Tutorial for ${projectName}`;
+    }
+  }
+
+  // Enhanced content generation methods with memory insights
+  private generateMemoryInformedGettingStartedContent(analysis: any, memoryInsights: any): string {
+    const projectName = analysis.metadata?.projectName || 'the project';
+    const language = analysis.metadata?.primaryLanguage || 'development';
+    const patterns = memoryInsights?.patterns || {};
+    const similarProjects = memoryInsights?.similarProjects || [];
+
+    // Extract real project structure and dependencies
+    const realDependencies = analysis.dependencies?.packages || [];
+    const hasTests = analysis.structure?.hasTests;
+    const hasCI = analysis.structure?.hasCI;
+    const ecosystem = analysis.metadata?.ecosystem || 'Node.js';
+
+    // Build getting started content based on actual project characteristics
+    let content = `# Getting Started with ${projectName}\n\n`;
+
+    if (similarProjects.length > 0) {
+      content += `Welcome to ${projectName}! This tutorial leverages successful patterns from ${similarProjects.length} similar ${language} projects to get you up and running quickly.\n\n`;
+    } else {
+      content += `Welcome to ${projectName}! This tutorial will guide you through setting up and running the project.\n\n`;
+    }
+
+    // Prerequisites based on actual analysis
+    content += `## Prerequisites\n\n`;
+    content += `Based on the project analysis, you'll need:\n\n`;
+
+    if (ecosystem === 'Node.js' || language === 'TypeScript' || language === 'JavaScript') {
+      const recommendedVersion = this.getRecommendedNodeVersion(similarProjects);
+      content += `- Node.js (version ${recommendedVersion} or higher)\n`;
+      content += `- npm or yarn package manager\n`;
+    }
+
+    if (language === 'TypeScript') {
+      content += `- TypeScript (globally installed or via npx)\n`;
+    }
+
+    content += `- Git for version control\n\n`;
+
+    // Installation based on real dependencies
+    content += `## Installation\n\n`;
+    content += `1. Clone the repository:\n`;
+    content += `   \`\`\`bash\n`;
+    content += `   git clone <repository-url>\n`;
+    content += `   cd ${projectName}\n`;
+    content += `   \`\`\`\n\n`;
+
+    content += `2. Install dependencies:\n`;
+    content += `   \`\`\`bash\n`;
+    if (realDependencies.includes('yarn')) {
+      content += `   yarn install\n`;
+    } else {
+      content += `   npm install\n`;
+    }
+    content += `   \`\`\`\n\n`;
+
+    // Real environment setup
+    if (this.projectHasEnvFile(analysis)) {
+      content += `3. Set up environment variables:\n`;
+      content += `   \`\`\`bash\n`;
+      content += `   cp .env.example .env\n`;
+      content += `   \`\`\`\n\n`;
+    }
+
+    // Running based on actual project setup
+    content += `## Running the Project\n\n`;
+    const runCommands = this.extractActualRunCommands(analysis);
+    if (runCommands.length > 0) {
+      runCommands.forEach(cmd => {
+        content += `\`\`\`bash\n${cmd}\n\`\`\`\n\n`;
+      });
+    } else {
+      content += `\`\`\`bash\nnpm start\n\`\`\`\n\n`;
+    }
+
+    // Testing section based on actual test setup
+    if (hasTests) {
+      content += `## Verifying Your Setup\n\n`;
+      content += `Run the test suite to ensure everything is working:\n`;
+      content += `\`\`\`bash\n`;
+      const testFramework = this.detectTestFramework(analysis);
+      if (testFramework) {
+        content += `npm test  # Uses ${testFramework}\n`;
+      } else {
+        content += `npm test\n`;
+      }
+      content += `\`\`\`\n\n`;
+    }
+
+    // Next steps based on memory insights
+    content += `## Next Steps\n\n`;
+    if (patterns.documentationStructures) {
+      content += `- Explore the [Architecture Overview](../explanation/architecture.md)\n`;
+      content += `- Learn about [Adding New Features](../how-to/add-feature.md)\n`;
+    }
+    if (hasCI) {
+      content += `- Check the [Deployment Guide](../how-to/deploy.md)\n`;
+    }
+    content += `- Review the [API Reference](../reference/api.md)\n`;
+
+    return content;
+  }
+
+  private generateMemoryInformedGettingStartedExamples(analysis: any, memoryInsights: any): string[] {
+    const examples: string[] = [];
+    const projectName = analysis.metadata?.projectName || 'project';
+    const realPackageStructure = analysis.structure || {};
+
+    // Generate real usage example based on actual entry points
+    const entryPoint = this.findProjectEntryPoint(analysis);
+    if (entryPoint) {
+      examples.push(`// Example: Basic usage\nimport { initialize } from './${entryPoint}';\n\nconst app = initialize({\n  // Configuration options\n});\n\napp.start();`);
+    }
+
+    // TypeScript config example if project uses TypeScript
+    if (analysis.metadata?.primaryLanguage === 'TypeScript') {
+      const actualTsConfig = this.extractTsConfigPatterns(analysis);
+      examples.push(`// TypeScript configuration\n${JSON.stringify(actualTsConfig, null, 2)}`);
+    }
+
+    // Real package.json scripts
+    const scripts = this.extractPackageScripts(analysis);
+    if (scripts && Object.keys(scripts).length > 0) {
+      examples.push(`// Available scripts\n${JSON.stringify({ scripts }, null, 2)}`);
+    }
+
+    return examples;
+  }
+
+  private getRecommendedNodeVersion(similarProjects: any[]): string {
+    const versions = similarProjects
+      .map(p => p.content?.versions?.node)
+      .filter(Boolean);
+
+    if (versions.length > 0) {
+      // Return most common version
+      const versionCounts = versions.reduce((acc, v) => {
+        acc[v] = (acc[v] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+
+      const mostCommon = Object.entries(versionCounts)
+        .sort(([,a], [,b]) => b - a)[0];
+      return mostCommon ? mostCommon[0] : '18';
+    }
+
+    return '18'; // Default modern version
+  }
+
+  private projectHasEnvFile(analysis: any): boolean {
+    const files = analysis.files || [];
+    return files.some((f: any) =>
+      f.name === '.env.example' ||
+      f.name === '.env.template' ||
+      f.name === 'env.example'
+    );
+  }
+
+  private extractActualRunCommands(analysis: any): string[] {
+    const packageJson = this.findPackageJson(analysis);
+    if (packageJson?.scripts) {
+      const scripts = packageJson.scripts;
+      const runCommands = [];
+
+      if (scripts.dev) runCommands.push('npm run dev');
+      else if (scripts.start) runCommands.push('npm start');
+      else if (scripts.serve) runCommands.push('npm run serve');
+
+      return runCommands;
+    }
+
+    return [];
+  }
+
+  private detectTestFramework(analysis: any): string | null {
+    const dependencies = analysis.dependencies?.packages || [];
+
+    if (dependencies.includes('jest')) return 'Jest';
+    if (dependencies.includes('mocha')) return 'Mocha';
+    if (dependencies.includes('vitest')) return 'Vitest';
+    if (dependencies.includes('jasmine')) return 'Jasmine';
+
+    return null;
+  }
+
+  private findProjectEntryPoint(analysis: any): string | null {
+    const packageJson = this.findPackageJson(analysis);
+    if (packageJson?.main) {
+      return packageJson.main.replace(/\.(js|ts)$/, '');
+    }
+
+    // Look for common entry points
+    const files = analysis.files || [];
+    const entryPoints = ['index', 'main', 'app', 'server'];
+
+    for (const entry of entryPoints) {
+      if (files.some((f: any) => f.name === `${entry}.ts` || f.name === `${entry}.js`)) {
+        return entry;
+      }
+    }
+
+    return null;
+  }
+
+  private findPackageJson(analysis: any): any {
+    const files = analysis.files || [];
+    const packageFile = files.find((f: any) => f.name === 'package.json');
+
+    if (packageFile?.content) {
+      try {
+        return JSON.parse(packageFile.content);
+      } catch {
+        return null;
+      }
+    }
+
+    return null;
+  }
+
+  private extractTsConfigPatterns(analysis: any): any {
+    const files = analysis.files || [];
+    const tsConfigFile = files.find((f: any) => f.name === 'tsconfig.json');
+
+    if (tsConfigFile?.content) {
+      try {
+        return JSON.parse(tsConfigFile.content);
+      } catch {
+        // Return sensible defaults based on project analysis
+        return {
+          compilerOptions: {
+            target: "ES2020",
+            module: "commonjs",
+            strict: true,
+            esModuleInterop: true,
+            skipLibCheck: true,
+            forceConsistentCasingInFileNames: true
+          }
+        };
+      }
+    }
+
+    return null;
+  }
+
+  private extractPackageScripts(analysis: any): any {
+    const packageJson = this.findPackageJson(analysis);
+    return packageJson?.scripts || null;
+  }
+
+  // Content generation methods (keeping original structure but with memory enhancement)
   private generateGettingStartedContent(_analysis: any): string {
     return `# Getting Started with ${_analysis.metadata.projectName}
 
@@ -1647,6 +2127,196 @@ ${contentPlan.explanation
       completeness: 85, // Example metric
       projectSpecificity: 75, // Example metric
     };
+  }
+
+  private generateMemoryInformedNextSteps(analysis: any, contentPlan: ContentPlan, memoryInsights: any): string[] {
+    const nextSteps = [];
+    const patterns = memoryInsights?.patterns || {};
+    const similarProjects = memoryInsights?.similarProjects || [];
+
+    // Memory-informed next steps based on successful patterns
+    if (similarProjects.length > 0) {
+      nextSteps.push(`Review and customize the generated content (based on ${similarProjects.length} similar project patterns)`);
+    } else {
+      nextSteps.push('Review and customize the generated content');
+    }
+
+    // Project-specific recommendations
+    if (analysis.structure?.hasTests) {
+      nextSteps.push('Run and validate all code examples and commands');
+    }
+
+    if (analysis.structure?.hasCI) {
+      nextSteps.push('Set up automated documentation deployment using successful CI patterns');
+    }
+
+    // Memory-informed improvements
+    if (patterns.documentationStructures) {
+      nextSteps.push('Enhance documentation structure based on successful similar projects');
+    }
+
+    if (patterns.deploymentStrategies) {
+      nextSteps.push('Implement proven deployment strategies from similar projects');
+    }
+
+    // Always include validation
+    nextSteps.push('Validate technical accuracy using project-specific analysis');
+
+    return nextSteps;
+  }
+
+  // Add the missing memory-informed content generation methods
+  private async generateMemoryInformedTutorialContent(tutorials: any[], analysis: any, memoryInsights: any): Promise<any[]> {
+    return tutorials.map(tutorial => ({
+      ...tutorial,
+      content: this.enhanceContentWithMemoryInsights(tutorial.content, analysis, memoryInsights),
+      codeExamples: this.enhanceExamplesWithRealCode(tutorial.codeExamples || [], analysis, memoryInsights),
+    }));
+  }
+
+  private async generateMemoryInformedHowToContent(howTos: any[], analysis: any, memoryInsights: any): Promise<any[]> {
+    return howTos.map(howTo => ({
+      ...howTo,
+      content: this.enhanceContentWithMemoryInsights(howTo.content, analysis, memoryInsights),
+    }));
+  }
+
+  private async generateMemoryInformedReferenceContent(reference: any[], analysis: any, memoryInsights: any): Promise<any[]> {
+    return reference.map(ref => ({
+      ...ref,
+      content: this.generateMemoryInformedAPIReference(analysis, memoryInsights),
+    }));
+  }
+
+  private async generateMemoryInformedExplanationContent(explanation: any[], analysis: any, memoryInsights: any): Promise<any[]> {
+    return explanation.map(exp => ({
+      ...exp,
+      content: this.enhanceContentWithMemoryInsights(exp.content, analysis, memoryInsights),
+    }));
+  }
+
+  private enhanceContentWithMemoryInsights(content: string, analysis: any, memoryInsights: any): string {
+    // Replace generic placeholders with real project information
+    const projectName = analysis.metadata?.projectName || 'the project';
+    const language = analysis.metadata?.primaryLanguage || 'development';
+    const similarCount = memoryInsights?.similarProjects?.length || 0;
+
+    let enhancedContent = content;
+
+    // Add memory-informed context
+    if (similarCount > 0) {
+      enhancedContent = enhancedContent.replace(
+        /This guide/g,
+        `This guide (based on patterns from ${similarCount} similar ${language} projects)`
+      );
+    }
+
+    // Replace generic examples with real ones
+    enhancedContent = this.replaceGenericExamplesWithReal(enhancedContent, analysis);
+
+    return enhancedContent;
+  }
+
+  private enhanceExamplesWithRealCode(examples: string[], analysis: any, memoryInsights: any): string[] {
+    return examples.map(example => {
+      // Replace generic project names with actual project name
+      const projectName = analysis.metadata?.projectName || 'project';
+      return example.replace(/your-project|myproject|example-project/g, projectName);
+    });
+  }
+
+  private generateMemoryInformedAPIReference(analysis: any, memoryInsights: any): string {
+    const projectName = analysis.metadata?.projectName || 'Project';
+    const language = analysis.metadata?.primaryLanguage || 'development';
+
+    // Extract actual API structure from project analysis
+    const entryPoint = this.findProjectEntryPoint(analysis);
+    const packageJson = this.findPackageJson(analysis);
+
+    let content = `# API Reference\n\n`;
+    content += `Complete reference for ${projectName} APIs.\n\n`;
+
+    if (entryPoint) {
+      content += `## Core APIs\n\n`;
+      content += `### Entry Point: ${entryPoint}\n\n`;
+      content += `The main entry point for ${projectName}.\n\n`;
+    }
+
+    // Add real configuration if available
+    if (packageJson?.main) {
+      content += `**Main Module:** \`${packageJson.main}\`\n\n`;
+    }
+
+    // Add real scripts if available
+    const scripts = packageJson?.scripts;
+    if (scripts && Object.keys(scripts).length > 0) {
+      content += `## Available Scripts\n\n`;
+      Object.entries(scripts).forEach(([script, command]) => {
+        content += `### ${script}\n\n`;
+        content += `\`\`\`bash\nnpm run ${script}\n\`\`\`\n\n`;
+        content += `Runs: \`${command}\`\n\n`;
+      });
+    }
+
+    return content;
+  }
+
+  private replaceGenericExamplesWithReal(content: string, analysis: any): string {
+    const projectName = analysis.metadata?.projectName || 'project';
+    const language = analysis.metadata?.primaryLanguage || 'JavaScript';
+
+    // Replace generic project references
+    content = content.replace(/your-project-name/g, projectName);
+    content = content.replace(/YourProject/g, projectName);
+    content = content.replace(/your-language/g, language);
+
+    // Replace generic ports with common defaults for the project type
+    const defaultPort = this.getDefaultPortForProject(analysis);
+    content = content.replace(/3000/g, defaultPort.toString());
+
+    return content;
+  }
+
+  private getDefaultPortForProject(analysis: any): number {
+    const packageJson = this.findPackageJson(analysis);
+    if (packageJson?.scripts?.start && packageJson.scripts.start.includes('port')) {
+      // Try to extract port from start script
+      const portMatch = packageJson.scripts.start.match(/port[:\s=](\d+)/i);
+      if (portMatch) {
+        return parseInt(portMatch[1], 10);
+      }
+    }
+
+    // Default ports based on project type
+    const dependencies = analysis.dependencies?.packages || [];
+    if (dependencies.includes('express')) return 3000;
+    if (dependencies.includes('fastify')) return 3000;
+    if (dependencies.includes('next')) return 3000;
+    if (dependencies.includes('gatsby')) return 8000;
+    if (dependencies.includes('nuxt')) return 3000;
+
+    return 3000; // Generic default
+  }
+
+  // Stub methods for the missing plan generation (to be implemented if needed)
+  private generateMemoryInformedHowToPlan(analysis: any, level: string, memoryInsights: any): any[] {
+    return this.generateHowToPlan(analysis, level);
+  }
+
+  private generateMemoryInformedReferencePlan(analysis: any, level: string, memoryInsights: any): any[] {
+    return this.generateReferencePlan(analysis, level);
+  }
+
+  private generateMemoryInformedExplanationPlan(analysis: any, level: string, memoryInsights: any): any[] {
+    return this.generateExplanationPlan(analysis, level);
+  }
+
+  private generateMemoryInformedNodeSetupContent(analysis: any, patterns: any): string {
+    return this.generateNodeSetupContent(analysis);
+  }
+
+  private generateMemoryInformedNodeSetupExamples(analysis: any, patterns: any): string[] {
+    return this.generateNodeSetupExamples();
   }
 
   private generateNextSteps(_analysis: any, _contentPlan: ContentPlan): string[] {
