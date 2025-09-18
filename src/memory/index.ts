@@ -77,6 +77,9 @@ export {
   importMemories,
   getMemoryStatistics,
   getMemoryManager,
+  handleMemoryRecall,
+  handleMemoryIntelligentAnalysis,
+  handleMemoryEnhancedRecommendation,
 } from './integration.js';
 
 // Memory Tools for MCP

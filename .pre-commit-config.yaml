@@ -97,6 +97,13 @@ repos:
         files: package\.json$
         pass_filenames: false
 
+      - id: package-json-structure-check
+        name: Package.json Structure Protection
+        entry: node scripts/check-package-structure.cjs
+        language: system
+        files: package\.json$
+        pass_filenames: false
+
   # Build verification (ensures TypeScript compiles)
   - repo: local
     hooks:

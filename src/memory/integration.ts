@@ -257,3 +257,184 @@ export async function resetMemoryManager(storageDir?: string): Promise<void> {
     await initializeMemory(storageDir);
   }
 }
+
+// Memory handler functions for MCP tools
+export async function handleMemoryRecall(args: {
+  query: string;
+  type?: string;
+  limit?: number;
+}): Promise<any> {
+  const manager = await initializeMemory();
+
+  const searchOptions: any = {
+    sortBy: 'timestamp',
+    limit: args.limit || 10,
+  };
+
+  if (args.type && args.type !== 'all') {
+    searchOptions.type = args.type;
+  }
+
+  const memories = await manager.search({}, searchOptions);
+
+  return {
+    query: args.query,
+    type: args.type || 'all',
+    count: memories.length,
+    memories: memories.map((m: any) => ({
+      id: m.id,
+      type: m.type,
+      timestamp: m.timestamp,
+      data: m.data,
+      metadata: m.metadata,
+    })),
+  };
+}
+
+export async function handleMemoryIntelligentAnalysis(args: {
+  projectPath: string;
+  baseAnalysis: any;
+}): Promise<any> {
+  await initializeMemory();
+
+  // Get project history and similar projects for enhanced analysis
+  const projectId = args.baseAnalysis.projectId || args.projectPath;
+  const history = await recallProjectHistory(projectId);
+  const similarProjects = await getSimilarProjects(args.baseAnalysis);
+
+  // Enhance analysis with memory insights
+  const enhancedAnalysis = {
+    ...args.baseAnalysis,
+    memoryInsights: {
+      projectHistory: history,
+      similarProjects,
+      patterns: await extractPatterns(args.baseAnalysis, history.history),
+      recommendations: await generateRecommendations(args.baseAnalysis, similarProjects),
+    },
+  };
+
+  // Remember this enhanced analysis
+  await rememberAnalysis(args.projectPath, enhancedAnalysis);
+
+  return enhancedAnalysis;
+}
+
+export async function handleMemoryEnhancedRecommendation(args: {
+  projectPath: string;
+  baseRecommendation: any;
+  projectFeatures: any;
+}): Promise<any> {
+  await initializeMemory();
+
+  // Get similar projects with same features
+  const similarProjects = await getSimilarProjects(args.projectFeatures);
+
+  // Analyze success patterns
+  const successPatterns = await analyzeSuccessPatterns(similarProjects);
+
+  // Enhanced recommendation with memory insights
+  const enhancedRecommendation = {
+    ...args.baseRecommendation,
+    memoryEnhanced: {
+      similarProjects,
+      successPatterns,
+      confidence: calculateConfidence(args.baseRecommendation, successPatterns),
+      alternativeOptions: await getAlternativeOptions(args.baseRecommendation, successPatterns),
+    },
+  };
+
+  return enhancedRecommendation;
+}
+
+// Helper functions for memory enhancement
+async function extractPatterns(analysis: any, history: any[]): Promise<string[]> {
+  const patterns: string[] = [];
+
+  // Analyze deployment patterns
+  const deployments = history.filter((h: any) => h.type === 'deployment');
+  if (deployments.length > 0) {
+    const successfulDeployments = deployments.filter((d: any) => d.data.status === 'success');
+    if (successfulDeployments.length > 0) {
+      patterns.push('Previous successful deployments found');
+    }
+  }
+
+  // Analyze SSG patterns
+  const recommendations = history.filter((h: any) => h.type === 'recommendation');
+  if (recommendations.length > 0) {
+    const lastSSG = recommendations[recommendations.length - 1].data.recommended;
+    patterns.push(`Previously recommended SSG: ${lastSSG}`);
+  }
+
+  return patterns;
+}
+
+async function generateRecommendations(analysis: any, similarProjects: any[]): Promise<string[]> {
+  const recommendations: string[] = [];
+
+  if (similarProjects.length > 0) {
+    const popularSSG = findMostPopularSSG(similarProjects);
+    if (popularSSG) {
+      recommendations.push(`Consider ${popularSSG} based on similar project success`);
+    }
+  }
+
+  return recommendations;
+}
+
+async function analyzeSuccessPatterns(similarProjects: any[]): Promise<any> {
+  const patterns = {
+    ssgSuccess: {} as Record<string, number>,
+    deploymentPatterns: [] as string[],
+    commonFeatures: [] as string[],
+  };
+
+  // Analyze SSG success rates
+  similarProjects.forEach((project: any) => {
+    const ssg = project.recommendation;
+    if (ssg) {
+      patterns.ssgSuccess[ssg] = (patterns.ssgSuccess[ssg] || 0) + 1;
+    }
+  });
+
+  return patterns;
+}
+
+function calculateConfidence(baseRecommendation: any, successPatterns: any): number {
+  const recommended = baseRecommendation.recommended;
+  const successCount = successPatterns.ssgSuccess[recommended] || 0;
+  const totalProjects = Object.values(successPatterns.ssgSuccess as Record<string, number>).reduce(
+    (a: number, b: number) => a + b,
+    0,
+  );
+
+  if (totalProjects === 0) return 0.5; // Default confidence
+
+  return Math.min(successCount / totalProjects + 0.3, 1.0);
+}
+
+async function getAlternativeOptions(
+  baseRecommendation: any,
+  successPatterns: any,
+): Promise<string[]> {
+  const sorted = Object.entries(successPatterns.ssgSuccess)
+    .sort(([, a]: [string, any], [, b]: [string, any]) => b - a)
+    .map(([ssg]) => ssg);
+
+  // Return top 2 alternatives different from the base recommendation
+  return sorted.filter((ssg) => ssg !== baseRecommendation.recommended).slice(0, 2);
+}
+
+function findMostPopularSSG(projects: any[]): string | null {
+  const ssgCount: Record<string, number> = {};
+
+  projects.forEach((project) => {
+    const ssg = project.recommendation;
+    if (ssg) {
+      ssgCount[ssg] = (ssgCount[ssg] || 0) + 1;
+    }
+  });
+
+  const sorted = Object.entries(ssgCount).sort(([, a], [, b]) => b - a);
+  return sorted.length > 0 ? sorted[0][0] : null;
+}
