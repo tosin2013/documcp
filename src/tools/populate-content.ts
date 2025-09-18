@@ -1,7 +1,11 @@
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { handleMemoryRecall, handleMemoryEnhancedRecommendation, handleMemoryIntelligentAnalysis } from '../memory/index.js';
+import {
+  handleMemoryRecall,
+  handleMemoryEnhancedRecommendation,
+  handleMemoryIntelligentAnalysis,
+} from '../memory/index.js';
 
 interface PopulationOptions {
   analysisId: string;
@@ -117,13 +121,33 @@ class ContentPopulationEngine {
     await this.loadMemoryInsights(analysis, options);
 
     // 3. Generate content plan based on project characteristics AND memory insights
-    const contentPlan = await this.generateIntelligentContentPlan(analysis, options.populationLevel, this.memoryInsights);
+    const contentPlan = await this.generateIntelligentContentPlan(
+      analysis,
+      options.populationLevel,
+      this.memoryInsights,
+    );
 
     // 4. Generate memory-informed content for each Diataxis category
-    const tutorials = await this.generateMemoryInformedTutorialContent(contentPlan.tutorials, analysis, this.memoryInsights);
-    const howTos = await this.generateMemoryInformedHowToContent(contentPlan.howToGuides, analysis, this.memoryInsights);
-    const reference = await this.generateMemoryInformedReferenceContent(contentPlan.reference, analysis, this.memoryInsights);
-    const explanation = await this.generateMemoryInformedExplanationContent(contentPlan.explanation, analysis, this.memoryInsights);
+    const tutorials = await this.generateMemoryInformedTutorialContent(
+      contentPlan.tutorials,
+      analysis,
+      this.memoryInsights,
+    );
+    const howTos = await this.generateMemoryInformedHowToContent(
+      contentPlan.howToGuides,
+      analysis,
+      this.memoryInsights,
+    );
+    const reference = await this.generateMemoryInformedReferenceContent(
+      contentPlan.reference,
+      analysis,
+      this.memoryInsights,
+    );
+    const explanation = await this.generateMemoryInformedExplanationContent(
+      contentPlan.explanation,
+      analysis,
+      this.memoryInsights,
+    );
 
     // 5. Write content to documentation structure
     const filesCreated = await this.writeContentToStructure(
@@ -161,7 +185,9 @@ class ContentPopulationEngine {
       const content = await fs.readFile(analysisPath, 'utf-8');
       return JSON.parse(content);
     } catch {
-      throw new Error(`Repository analysis with ID '${analysisId}' not found. Please run analyze_repository first.`);
+      throw new Error(
+        `Repository analysis with ID '${analysisId}' not found. Please run analyze_repository first.`,
+      );
     }
   }
 
@@ -182,7 +208,9 @@ class ContentPopulationEngine {
   private async loadMemoryInsights(analysis: any, options: PopulationOptions): Promise<void> {
     try {
       // Get similar projects from memory system
-      const similarProjectsQuery = `${analysis.metadata?.primaryLanguage || ''} ${analysis.metadata?.ecosystem || ''} documentation`;
+      const similarProjectsQuery = `${analysis.metadata?.primaryLanguage || ''} ${
+        analysis.metadata?.ecosystem || ''
+      } documentation`;
       const similarProjects = await handleMemoryRecall({
         query: similarProjectsQuery,
         type: 'recommendation',
@@ -239,7 +267,7 @@ class ContentPopulationEngine {
       deploymentStrategies: {} as Record<string, number>,
     };
 
-    projects.forEach(project => {
+    projects.forEach((project) => {
       const content = project.content || {};
 
       // Extract framework patterns
@@ -251,24 +279,31 @@ class ContentPopulationEngine {
 
       // Extract SSG success patterns
       if (content.recommendedSSG) {
-        patterns.successfulSSGs[content.recommendedSSG] = (patterns.successfulSSGs[content.recommendedSSG] || 0) + 1;
+        patterns.successfulSSGs[content.recommendedSSG] =
+          (patterns.successfulSSGs[content.recommendedSSG] || 0) + 1;
       }
 
       // Extract documentation structure patterns
       if (content.documentationApproach) {
-        patterns.documentationStructures[content.documentationApproach] = (patterns.documentationStructures[content.documentationApproach] || 0) + 1;
+        patterns.documentationStructures[content.documentationApproach] =
+          (patterns.documentationStructures[content.documentationApproach] || 0) + 1;
       }
 
       // Extract deployment patterns
       if (content.deploymentStrategy) {
-        patterns.deploymentStrategies[content.deploymentStrategy] = (patterns.deploymentStrategies[content.deploymentStrategy] || 0) + 1;
+        patterns.deploymentStrategies[content.deploymentStrategy] =
+          (patterns.deploymentStrategies[content.deploymentStrategy] || 0) + 1;
       }
     });
 
     return patterns;
   }
 
-  private async generateIntelligentContentPlan(analysis: any, level: string, memoryInsights: any): Promise<ContentPlan> {
+  private async generateIntelligentContentPlan(
+    analysis: any,
+    level: string,
+    memoryInsights: any,
+  ): Promise<ContentPlan> {
     const plan: ContentPlan = {
       tutorials: [],
       howToGuides: [],
@@ -291,16 +326,27 @@ class ContentPopulationEngine {
     return plan;
   }
 
-  private generateMemoryInformedTutorialPlan(analysis: any, _level: string, memoryInsights: any): TutorialContent[] {
+  private generateMemoryInformedTutorialPlan(
+    analysis: any,
+    _level: string,
+    memoryInsights: any,
+  ): TutorialContent[] {
     const tutorials: TutorialContent[] = [];
     const patterns = memoryInsights?.patterns || {};
     const similarProjects = memoryInsights?.similarProjects || [];
 
     // Enhanced getting started based on successful patterns from similar projects
-    const gettingStartedApproach = this.getSuccessfulGettingStartedApproach(similarProjects, analysis);
+    const gettingStartedApproach = this.getSuccessfulGettingStartedApproach(
+      similarProjects,
+      analysis,
+    );
     tutorials.push({
       title: `Getting Started with ${analysis.metadata?.projectName || 'the Project'}`,
-      description: this.generateMemoryInformedDescription(analysis, similarProjects, 'getting-started'),
+      description: this.generateMemoryInformedDescription(
+        analysis,
+        similarProjects,
+        'getting-started',
+      ),
       content: this.generateMemoryInformedGettingStartedContent(analysis, memoryInsights),
       codeExamples: this.generateMemoryInformedGettingStartedExamples(analysis, memoryInsights),
     });
@@ -310,7 +356,11 @@ class ContentPopulationEngine {
     if (ecosystem === 'Node.js' || ecosystem === 'javascript' || ecosystem === 'typescript') {
       const nodeSuccessPatterns = this.extractNodeSuccessPatterns(similarProjects);
       tutorials.push({
-        title: this.generateMemoryInformedTutorialTitle('environment-setup', nodeSuccessPatterns, analysis),
+        title: this.generateMemoryInformedTutorialTitle(
+          'environment-setup',
+          nodeSuccessPatterns,
+          analysis,
+        ),
         description: 'Configure your development environment based on proven successful patterns',
         content: this.generateMemoryInformedNodeSetupContent(analysis, nodeSuccessPatterns),
         codeExamples: this.generateMemoryInformedNodeSetupExamples(analysis, nodeSuccessPatterns),
@@ -450,31 +500,40 @@ class ContentPopulationEngine {
   private getSuccessfulGettingStartedApproach(similarProjects: any[], analysis: any): any {
     // Analyze successful getting-started approaches from similar projects
     const approaches = similarProjects
-      .filter(p => p.content?.gettingStartedApproach)
-      .map(p => p.content.gettingStartedApproach);
+      .filter((p) => p.content?.gettingStartedApproach)
+      .map((p) => p.content.gettingStartedApproach);
 
     // Return most common successful approach, or default based on project type
     return approaches.length > 0 ? approaches[0] : this.getDefaultApproachForProjectType(analysis);
   }
 
-  private generateMemoryInformedDescription(analysis: any, similarProjects: any[], tutorialType: string): string {
+  private generateMemoryInformedDescription(
+    analysis: any,
+    similarProjects: any[],
+    tutorialType: string,
+  ): string {
     const successfulDescriptions = similarProjects
-      .filter(p => p.content?.tutorials?.[tutorialType])
-      .map(p => p.content.tutorials[tutorialType].description);
+      .filter((p) => p.content?.tutorials?.[tutorialType])
+      .map((p) => p.content.tutorials[tutorialType].description);
 
     if (successfulDescriptions.length > 0) {
       // Adapt successful pattern for this project
-      return `Learn ${analysis.metadata?.primaryLanguage || 'development'} with ${analysis.metadata?.projectName || 'this project'} using proven patterns from ${successfulDescriptions.length} similar successful projects`;
+      return `Learn ${analysis.metadata?.primaryLanguage || 'development'} with ${
+        analysis.metadata?.projectName || 'this project'
+      } using proven patterns from ${successfulDescriptions.length} similar successful projects`;
     }
 
-    return `Learn ${analysis.metadata?.primaryLanguage || 'development'} development with ${analysis.metadata?.projectName || 'this project'}`;
+    return `Learn ${analysis.metadata?.primaryLanguage || 'development'} development with ${
+      analysis.metadata?.projectName || 'this project'
+    }`;
   }
 
   private extractNodeSuccessPatterns(similarProjects: any[]): any {
-    const nodeProjects = similarProjects.filter(p =>
-      p.content?.ecosystem === 'Node.js' ||
-      p.content?.primaryLanguage === 'TypeScript' ||
-      p.content?.primaryLanguage === 'JavaScript'
+    const nodeProjects = similarProjects.filter(
+      (p) =>
+        p.content?.ecosystem === 'Node.js' ||
+        p.content?.primaryLanguage === 'TypeScript' ||
+        p.content?.primaryLanguage === 'JavaScript',
     );
 
     return {
@@ -487,7 +546,7 @@ class ContentPopulationEngine {
 
   private extractCommonTools(projects: any[]): string[] {
     const toolCounts: Record<string, number> = {};
-    projects.forEach(p => {
+    projects.forEach((p) => {
       (p.content?.tools || []).forEach((tool: string) => {
         toolCounts[tool] = (toolCounts[tool] || 0) + 1;
       });
@@ -502,7 +561,7 @@ class ContentPopulationEngine {
 
   private extractSuccessfulCommands(projects: any[]): Record<string, string[]> {
     const commands: Record<string, string[]> = {};
-    projects.forEach(p => {
+    projects.forEach((p) => {
       if (p.content?.commands) {
         Object.entries(p.content.commands).forEach(([key, cmds]) => {
           if (!commands[key]) commands[key] = [];
@@ -512,7 +571,7 @@ class ContentPopulationEngine {
     });
 
     // Deduplicate and return most common commands
-    Object.keys(commands).forEach(key => {
+    Object.keys(commands).forEach((key) => {
       commands[key] = [...new Set(commands[key])];
     });
 
@@ -521,7 +580,7 @@ class ContentPopulationEngine {
 
   private extractRecommendedVersions(projects: any[]): Record<string, string> {
     const versions: Record<string, Record<string, number>> = {};
-    projects.forEach(p => {
+    projects.forEach((p) => {
       if (p.content?.versions) {
         Object.entries(p.content.versions).forEach(([tool, version]) => {
           if (!versions[tool]) versions[tool] = {};
@@ -533,8 +592,9 @@ class ContentPopulationEngine {
     // Return most commonly used versions
     const recommendedVersions: Record<string, string> = {};
     Object.entries(versions).forEach(([tool, versionCounts]) => {
-      const mostCommon = Object.entries(versionCounts)
-        .sort(([,a], [,b]) => (b as number) - (a as number))[0];
+      const mostCommon = Object.entries(versionCounts).sort(
+        ([, a], [, b]) => (b as number) - (a as number),
+      )[0];
       if (mostCommon) {
         recommendedVersions[tool] = mostCommon[0];
       }
@@ -545,7 +605,7 @@ class ContentPopulationEngine {
 
   private extractBestPractices(projects: any[]): string[] {
     const practices: Record<string, number> = {};
-    projects.forEach(p => {
+    projects.forEach((p) => {
       (p.content?.bestPractices || []).forEach((practice: string) => {
         practices[practice] = (practices[practice] || 0) + 1;
       });
@@ -570,7 +630,11 @@ class ContentPopulationEngine {
     };
   }
 
-  private generateMemoryInformedTutorialTitle(tutorialType: string, patterns: any, analysis: any): string {
+  private generateMemoryInformedTutorialTitle(
+    tutorialType: string,
+    patterns: any,
+    analysis: any,
+  ): string {
     const projectName = analysis.metadata?.projectName || 'Project';
     const language = analysis.metadata?.primaryLanguage || 'Development';
 
@@ -651,7 +715,7 @@ class ContentPopulationEngine {
     content += `## Running the Project\n\n`;
     const runCommands = this.extractActualRunCommands(analysis);
     if (runCommands.length > 0) {
-      runCommands.forEach(cmd => {
+      runCommands.forEach((cmd) => {
         content += `\`\`\`bash\n${cmd}\n\`\`\`\n\n`;
       });
     } else {
@@ -686,7 +750,10 @@ class ContentPopulationEngine {
     return content;
   }
 
-  private generateMemoryInformedGettingStartedExamples(analysis: any, memoryInsights: any): string[] {
+  private generateMemoryInformedGettingStartedExamples(
+    analysis: any,
+    memoryInsights: any,
+  ): string[] {
     const examples: string[] = [];
     const projectName = analysis.metadata?.projectName || 'project';
     const realPackageStructure = analysis.structure || {};
@@ -694,7 +761,9 @@ class ContentPopulationEngine {
     // Generate real usage example based on actual entry points
     const entryPoint = this.findProjectEntryPoint(analysis);
     if (entryPoint) {
-      examples.push(`// Example: Basic usage\nimport { initialize } from './${entryPoint}';\n\nconst app = initialize({\n  // Configuration options\n});\n\napp.start();`);
+      examples.push(
+        `// Example: Basic usage\nimport { initialize } from './${entryPoint}';\n\nconst app = initialize({\n  // Configuration options\n});\n\napp.start();`,
+      );
     }
 
     // TypeScript config example if project uses TypeScript
@@ -713,19 +782,21 @@ class ContentPopulationEngine {
   }
 
   private getRecommendedNodeVersion(similarProjects: any[]): string {
-    const versions = similarProjects
-      .map(p => p.content?.versions?.node)
-      .filter(Boolean);
+    const versions = similarProjects.map((p) => p.content?.versions?.node).filter(Boolean);
 
     if (versions.length > 0) {
       // Return most common version
-      const versionCounts = versions.reduce((acc, v) => {
-        acc[v] = (acc[v] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
+      const versionCounts = versions.reduce(
+        (acc, v) => {
+          acc[v] = (acc[v] || 0) + 1;
+          return acc;
+        },
+        {} as Record<string, number>,
+      );
 
-      const mostCommon = Object.entries(versionCounts)
-        .sort(([,a], [,b]) => (b as number) - (a as number))[0];
+      const mostCommon = Object.entries(versionCounts).sort(
+        ([, a], [, b]) => (b as number) - (a as number),
+      )[0];
       return mostCommon ? mostCommon[0] : '18';
     }
 
@@ -734,10 +805,9 @@ class ContentPopulationEngine {
 
   private projectHasEnvFile(analysis: any): boolean {
     const files = analysis.files || [];
-    return files.some((f: any) =>
-      f.name === '.env.example' ||
-      f.name === '.env.template' ||
-      f.name === 'env.example'
+    return files.some(
+      (f: any) =>
+        f.name === '.env.example' || f.name === '.env.template' || f.name === 'env.example',
     );
   }
 
@@ -813,13 +883,13 @@ class ContentPopulationEngine {
         // Return sensible defaults based on project analysis
         return {
           compilerOptions: {
-            target: "ES2020",
-            module: "commonjs",
+            target: 'ES2020',
+            module: 'commonjs',
             strict: true,
             esModuleInterop: true,
             skipLibCheck: true,
-            forceConsistentCasingInFileNames: true
-          }
+            forceConsistentCasingInFileNames: true,
+          },
         };
       }
     }
@@ -2129,14 +2199,20 @@ ${contentPlan.explanation
     };
   }
 
-  private generateMemoryInformedNextSteps(analysis: any, contentPlan: ContentPlan, memoryInsights: any): string[] {
+  private generateMemoryInformedNextSteps(
+    analysis: any,
+    contentPlan: ContentPlan,
+    memoryInsights: any,
+  ): string[] {
     const nextSteps = [];
     const patterns = memoryInsights?.patterns || {};
     const similarProjects = memoryInsights?.similarProjects || [];
 
     // Memory-informed next steps based on successful patterns
     if (similarProjects.length > 0) {
-      nextSteps.push(`Review and customize the generated content (based on ${similarProjects.length} similar project patterns)`);
+      nextSteps.push(
+        `Review and customize the generated content (based on ${similarProjects.length} similar project patterns)`,
+      );
     } else {
       nextSteps.push('Review and customize the generated content');
     }
@@ -2166,36 +2242,60 @@ ${contentPlan.explanation
   }
 
   // Add the missing memory-informed content generation methods
-  private async generateMemoryInformedTutorialContent(tutorials: any[], analysis: any, memoryInsights: any): Promise<any[]> {
-    return tutorials.map(tutorial => ({
+  private async generateMemoryInformedTutorialContent(
+    tutorials: any[],
+    analysis: any,
+    memoryInsights: any,
+  ): Promise<any[]> {
+    return tutorials.map((tutorial) => ({
       ...tutorial,
       content: this.enhanceContentWithMemoryInsights(tutorial.content, analysis, memoryInsights),
-      codeExamples: this.enhanceExamplesWithRealCode(tutorial.codeExamples || [], analysis, memoryInsights),
+      codeExamples: this.enhanceExamplesWithRealCode(
+        tutorial.codeExamples || [],
+        analysis,
+        memoryInsights,
+      ),
     }));
   }
 
-  private async generateMemoryInformedHowToContent(howTos: any[], analysis: any, memoryInsights: any): Promise<any[]> {
-    return howTos.map(howTo => ({
+  private async generateMemoryInformedHowToContent(
+    howTos: any[],
+    analysis: any,
+    memoryInsights: any,
+  ): Promise<any[]> {
+    return howTos.map((howTo) => ({
       ...howTo,
       content: this.enhanceContentWithMemoryInsights(howTo.content, analysis, memoryInsights),
     }));
   }
 
-  private async generateMemoryInformedReferenceContent(reference: any[], analysis: any, memoryInsights: any): Promise<any[]> {
-    return reference.map(ref => ({
+  private async generateMemoryInformedReferenceContent(
+    reference: any[],
+    analysis: any,
+    memoryInsights: any,
+  ): Promise<any[]> {
+    return reference.map((ref) => ({
       ...ref,
       content: this.generateMemoryInformedAPIReference(analysis, memoryInsights),
     }));
   }
 
-  private async generateMemoryInformedExplanationContent(explanation: any[], analysis: any, memoryInsights: any): Promise<any[]> {
-    return explanation.map(exp => ({
+  private async generateMemoryInformedExplanationContent(
+    explanation: any[],
+    analysis: any,
+    memoryInsights: any,
+  ): Promise<any[]> {
+    return explanation.map((exp) => ({
       ...exp,
       content: this.enhanceContentWithMemoryInsights(exp.content, analysis, memoryInsights),
     }));
   }
 
-  private enhanceContentWithMemoryInsights(content: string, analysis: any, memoryInsights: any): string {
+  private enhanceContentWithMemoryInsights(
+    content: string,
+    analysis: any,
+    memoryInsights: any,
+  ): string {
     // Replace generic placeholders with real project information
     const projectName = analysis.metadata?.projectName || 'the project';
     const language = analysis.metadata?.primaryLanguage || 'development';
@@ -2207,7 +2307,7 @@ ${contentPlan.explanation
     if (similarCount > 0) {
       enhancedContent = enhancedContent.replace(
         /This guide/g,
-        `This guide (based on patterns from ${similarCount} similar ${language} projects)`
+        `This guide (based on patterns from ${similarCount} similar ${language} projects)`,
       );
     }
 
@@ -2217,8 +2317,12 @@ ${contentPlan.explanation
     return enhancedContent;
   }
 
-  private enhanceExamplesWithRealCode(examples: string[], analysis: any, memoryInsights: any): string[] {
-    return examples.map(example => {
+  private enhanceExamplesWithRealCode(
+    examples: string[],
+    analysis: any,
+    memoryInsights: any,
+  ): string[] {
+    return examples.map((example) => {
       // Replace generic project names with actual project name
       const projectName = analysis.metadata?.projectName || 'project';
       return example.replace(/your-project|myproject|example-project/g, projectName);
@@ -2299,15 +2403,27 @@ ${contentPlan.explanation
   }
 
   // Stub methods for the missing plan generation (to be implemented if needed)
-  private generateMemoryInformedHowToPlan(analysis: any, level: string, memoryInsights: any): any[] {
+  private generateMemoryInformedHowToPlan(
+    analysis: any,
+    level: string,
+    memoryInsights: any,
+  ): any[] {
     return this.generateHowToPlan(analysis, level);
   }
 
-  private generateMemoryInformedReferencePlan(analysis: any, level: string, memoryInsights: any): any[] {
+  private generateMemoryInformedReferencePlan(
+    analysis: any,
+    level: string,
+    memoryInsights: any,
+  ): any[] {
     return this.generateReferencePlan(analysis, level);
   }
 
-  private generateMemoryInformedExplanationPlan(analysis: any, level: string, memoryInsights: any): any[] {
+  private generateMemoryInformedExplanationPlan(
+    analysis: any,
+    level: string,
+    memoryInsights: any,
+  ): any[] {
     return this.generateExplanationPlan(analysis, level);
   }
 

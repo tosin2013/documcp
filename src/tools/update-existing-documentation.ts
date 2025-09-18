@@ -1,7 +1,11 @@
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { handleMemoryRecall, handleMemoryEnhancedRecommendation, handleMemoryIntelligentAnalysis } from '../memory/index.js';
+import {
+  handleMemoryRecall,
+  handleMemoryEnhancedRecommendation,
+  handleMemoryIntelligentAnalysis,
+} from '../memory/index.js';
 
 interface UpdateOptions {
   analysisId: string;
@@ -75,7 +79,11 @@ class DocumentationUpdateEngine {
     this.existingDocs = existingDocs;
 
     // 4. Perform comprehensive code-documentation comparison
-    const comparison = await this.performCodeDocumentationComparison(analysis, existingDocs, options);
+    const comparison = await this.performCodeDocumentationComparison(
+      analysis,
+      existingDocs,
+      options,
+    );
 
     // 5. Generate memory-informed update recommendations
     const recommendations = await this.generateUpdateRecommendations(comparison, options);
@@ -115,14 +123,18 @@ class DocumentationUpdateEngine {
       const content = await fs.readFile(analysisPath, 'utf-8');
       return JSON.parse(content);
     } catch {
-      throw new Error(`Repository analysis with ID '${analysisId}' not found. Please run analyze_repository first.`);
+      throw new Error(
+        `Repository analysis with ID '${analysisId}' not found. Please run analyze_repository first.`,
+      );
     }
   }
 
   private async loadMemoryInsights(analysis: any, options: UpdateOptions): Promise<void> {
     try {
       // Get similar projects that had successful documentation updates
-      const similarProjectsQuery = `${analysis.metadata?.primaryLanguage || ''} ${analysis.metadata?.ecosystem || ''} documentation update`;
+      const similarProjectsQuery = `${analysis.metadata?.primaryLanguage || ''} ${
+        analysis.metadata?.ecosystem || ''
+      } documentation update`;
       const similarProjects = await handleMemoryRecall({
         query: similarProjectsQuery,
         type: 'recommendation',
@@ -184,8 +196,8 @@ class DocumentationUpdateEngine {
 
   private extractUpdatePatterns(projects: any[]): any[] {
     return projects
-      .filter(p => p.content?.updatePatterns || p.content?.documentationUpdates)
-      .map(p => p.content?.updatePatterns || p.content?.documentationUpdates)
+      .filter((p) => p.content?.updatePatterns || p.content?.documentationUpdates)
+      .map((p) => p.content?.updatePatterns || p.content?.documentationUpdates)
       .flat()
       .filter(Boolean);
   }
@@ -193,7 +205,7 @@ class DocumentationUpdateEngine {
   private extractCommonGapTypes(projects: any[]): Record<string, number> {
     const gapTypes: Record<string, number> = {};
 
-    projects.forEach(p => {
+    projects.forEach((p) => {
       const gaps = p.content?.documentationGaps || [];
       gaps.forEach((gap: any) => {
         const type = gap.type || 'unknown';
@@ -216,7 +228,11 @@ class DocumentationUpdateEngine {
     return docs;
   }
 
-  private async recursivelyAnalyzeDocuments(dirPath: string, docs: Map<string, any>, relativePath: string = ''): Promise<void> {
+  private async recursivelyAnalyzeDocuments(
+    dirPath: string,
+    docs: Map<string, any>,
+    relativePath: string = '',
+  ): Promise<void> {
     try {
       const entries = await fs.readdir(dirPath, { withFileTypes: true });
 
@@ -273,16 +289,19 @@ class DocumentationUpdateEngine {
 
     // Common documentation types
     if (fileName.includes('readme')) return 'readme';
-    if (fileName.includes('getting-started') || fileName.includes('quickstart')) return 'getting-started';
+    if (fileName.includes('getting-started') || fileName.includes('quickstart'))
+      return 'getting-started';
     if (fileName.includes('api')) return 'api-reference';
     if (fileName.includes('install') || fileName.includes('setup')) return 'installation';
     if (fileName.includes('deploy')) return 'deployment';
     if (fileName.includes('config')) return 'configuration';
 
     // Infer from content
-    if (content.includes('# Getting Started') || content.includes('## Getting Started')) return 'getting-started';
+    if (content.includes('# Getting Started') || content.includes('## Getting Started'))
+      return 'getting-started';
     if (content.includes('# API') || content.includes('## API')) return 'api-reference';
-    if (content.includes('# Installation') || content.includes('## Installation')) return 'installation';
+    if (content.includes('# Installation') || content.includes('## Installation'))
+      return 'installation';
 
     return 'general';
   }
@@ -316,7 +335,7 @@ class DocumentationUpdateEngine {
       sections.push(currentSection);
     }
 
-    return sections.map(section => ({
+    return sections.map((section) => ({
       ...section,
       content: section.content.join('\n'),
       wordCount: section.content.join(' ').split(/\s+/).length,
@@ -373,9 +392,9 @@ class DocumentationUpdateEngine {
     // Extract from npm install commands
     const npmMatches = content.match(/npm install\s+([^`\n]+)/g);
     if (npmMatches) {
-      npmMatches.forEach(match => {
+      npmMatches.forEach((match) => {
         const packages = match.replace('npm install', '').trim().split(/\s+/);
-        packages.forEach(pkg => {
+        packages.forEach((pkg) => {
           if (pkg && !pkg.startsWith('-')) {
             dependencies.add(pkg);
           }
@@ -386,7 +405,7 @@ class DocumentationUpdateEngine {
     // Extract from import statements
     const importMatches = content.match(/import.*from\s+['"]([^'"]+)['"]/g);
     if (importMatches) {
-      importMatches.forEach(match => {
+      importMatches.forEach((match) => {
         const packageMatch = match.match(/from\s+['"]([^'"]+)['"]/);
         if (packageMatch && !packageMatch[1].startsWith('.')) {
           dependencies.add(packageMatch[1]);
@@ -403,7 +422,7 @@ class DocumentationUpdateEngine {
     // Extract function names from code blocks
     const functionMatches = content.match(/(?:function|const|let|var)\s+(\w+)/g);
     if (functionMatches) {
-      functionMatches.forEach(match => {
+      functionMatches.forEach((match) => {
         const functionMatch = match.match(/(?:function|const|let|var)\s+(\w+)/);
         if (functionMatch) {
           features.add(functionMatch[1]);
@@ -414,7 +433,7 @@ class DocumentationUpdateEngine {
     // Extract API endpoints
     const apiMatches = content.match(/(?:GET|POST|PUT|DELETE|PATCH)\s+([/\w-]+)/g);
     if (apiMatches) {
-      apiMatches.forEach(match => {
+      apiMatches.forEach((match) => {
         const endpointMatch = match.match(/(?:GET|POST|PUT|DELETE|PATCH)\s+([/\w-]+)/);
         if (endpointMatch) {
           features.add(endpointMatch[1]);
@@ -425,7 +444,7 @@ class DocumentationUpdateEngine {
     // Extract mentioned features from headings
     const headings = content.match(/#{1,6}\s+(.+)/g);
     if (headings) {
-      headings.forEach(heading => {
+      headings.forEach((heading) => {
         const headingText = heading.replace(/#{1,6}\s+/, '').toLowerCase();
         if (headingText.includes('feature') || headingText.includes('functionality')) {
           features.add(headingText);
@@ -457,7 +476,7 @@ class DocumentationUpdateEngine {
   private async performCodeDocumentationComparison(
     analysis: any,
     existingDocs: Map<string, any>,
-    options: UpdateOptions
+    options: UpdateOptions,
   ): Promise<CodeDocumentationComparison> {
     const codeFeatures = this.extractCodeFeatures(analysis);
     const documentedFeatures = this.extractAllDocumentedFeatures(existingDocs);
@@ -492,7 +511,7 @@ class DocumentationUpdateEngine {
     // Extract from scripts
     const packageJson = this.findPackageJsonInAnalysis(analysis);
     if (packageJson?.scripts) {
-      Object.keys(packageJson.scripts).forEach(script => {
+      Object.keys(packageJson.scripts).forEach((script) => {
         features.push({
           type: 'script',
           name: script,
@@ -574,15 +593,15 @@ class DocumentationUpdateEngine {
   private async detectDocumentationGaps(
     codeFeatures: any[],
     documentedFeatures: any[],
-    options: UpdateOptions
+    options: UpdateOptions,
   ): Promise<DocumentationGap[]> {
     const gaps: DocumentationGap[] = [];
     const memoryGapPatterns = this.memoryInsights?.commonGapTypes || {};
 
     // Find features in code that aren't documented
-    codeFeatures.forEach(codeFeature => {
-      const isDocumented = documentedFeatures.some(docFeature =>
-        this.featuresMatch(codeFeature, docFeature)
+    codeFeatures.forEach((codeFeature) => {
+      const isDocumented = documentedFeatures.some((docFeature) =>
+        this.featuresMatch(codeFeature, docFeature),
       );
 
       if (!isDocumented) {
@@ -601,9 +620,9 @@ class DocumentationUpdateEngine {
     });
 
     // Find documented features that no longer exist in code
-    documentedFeatures.forEach(docFeature => {
-      const existsInCode = codeFeatures.some(codeFeature =>
-        this.featuresMatch(codeFeature, docFeature)
+    documentedFeatures.forEach((docFeature) => {
+      const existsInCode = codeFeatures.some((codeFeature) =>
+        this.featuresMatch(codeFeature, docFeature),
       );
 
       if (!existsInCode) {
@@ -637,9 +656,15 @@ class DocumentationUpdateEngine {
     return codeName.includes(docName) || docName.includes(codeName);
   }
 
-  private determineGapSeverity(codeFeature: any, memoryGapPatterns: Record<string, number>): 'low' | 'medium' | 'high' | 'critical' {
+  private determineGapSeverity(
+    codeFeature: any,
+    memoryGapPatterns: Record<string, number>,
+  ): 'low' | 'medium' | 'high' | 'critical' {
     // High importance features
-    if (codeFeature.type === 'script' && ['start', 'dev', 'build', 'test'].includes(codeFeature.name)) {
+    if (
+      codeFeature.type === 'script' &&
+      ['start', 'dev', 'build', 'test'].includes(codeFeature.name)
+    ) {
       return 'high';
     }
 
@@ -661,11 +686,23 @@ class DocumentationUpdateEngine {
 
   private isCriticalDependency(depName: string): boolean {
     const criticalDeps = [
-      'react', 'vue', 'angular', 'express', 'fastify', 'next', 'nuxt', 'gatsby',
-      'typescript', 'jest', 'mocha', 'webpack', 'vite', 'rollup'
+      'react',
+      'vue',
+      'angular',
+      'express',
+      'fastify',
+      'next',
+      'nuxt',
+      'gatsby',
+      'typescript',
+      'jest',
+      'mocha',
+      'webpack',
+      'vite',
+      'rollup',
     ];
 
-    return criticalDeps.some(critical => depName.includes(critical));
+    return criticalDeps.some((critical) => depName.includes(critical));
   }
 
   private generateGapSuggestion(codeFeature: any, options: UpdateOptions): string {
@@ -686,20 +723,30 @@ class DocumentationUpdateEngine {
   }
 
   private findMemoryEvidenceForGap(codeFeature: any): any[] {
-    return this.memoryInsights?.similarProjects
-      .filter((p: any) => p.content?.gaps?.some((gap: any) => gap.type === codeFeature.type))
-      .slice(0, 3) || [];
+    return (
+      this.memoryInsights?.similarProjects
+        .filter((p: any) => p.content?.gaps?.some((gap: any) => gap.type === codeFeature.type))
+        .slice(0, 3) || []
+    );
   }
 
   private findMemoryEvidenceForOutdated(docFeature: any): any[] {
-    return this.memoryInsights?.similarProjects
-      .filter((p: any) => p.content?.outdatedSections?.some((section: any) =>
-        section.feature === docFeature.name
-      ))
-      .slice(0, 3) || [];
+    return (
+      this.memoryInsights?.similarProjects
+        .filter(
+          (p: any) =>
+            p.content?.outdatedSections?.some(
+              (section: any) => section.feature === docFeature.name,
+            ),
+        )
+        .slice(0, 3) || []
+    );
   }
 
-  private async detectOutdatedSections(analysis: any, existingDocs: Map<string, any>): Promise<any[]> {
+  private async detectOutdatedSections(
+    analysis: any,
+    existingDocs: Map<string, any>,
+  ): Promise<any[]> {
     const outdatedSections: any[] = [];
 
     existingDocs.forEach((doc, docPath) => {
@@ -764,7 +811,10 @@ class DocumentationUpdateEngine {
     return null;
   }
 
-  private async detectAccuracyIssues(analysis: any, existingDocs: Map<string, any>): Promise<any[]> {
+  private async detectAccuracyIssues(
+    analysis: any,
+    existingDocs: Map<string, any>,
+  ): Promise<any[]> {
     const accuracyIssues: any[] = [];
 
     existingDocs.forEach((doc, docPath) => {
@@ -773,7 +823,7 @@ class DocumentationUpdateEngine {
       codeBlocks.forEach((codeBlock: any, index: number) => {
         const issues = this.validateCodeBlock(codeBlock, analysis);
 
-        issues.forEach(issue => {
+        issues.forEach((issue) => {
           accuracyIssues.push({
             location: `${docPath}:code-block-${index}`,
             type: issue.type,
@@ -828,15 +878,17 @@ class DocumentationUpdateEngine {
 
   private async generateUpdateRecommendations(
     comparison: CodeDocumentationComparison,
-    options: UpdateOptions
+    options: UpdateOptions,
   ): Promise<UpdateRecommendation[]> {
     const recommendations: UpdateRecommendation[] = [];
 
     // Generate recommendations for gaps
     for (const gap of comparison.gaps) {
-      if (gap.severity === 'critical' || gap.severity === 'high' ||
-          (gap.severity === 'medium' && options.updateStrategy !== 'conservative')) {
-
+      if (
+        gap.severity === 'critical' ||
+        gap.severity === 'high' ||
+        (gap.severity === 'medium' && options.updateStrategy !== 'conservative')
+      ) {
         const recommendation = await this.generateGapRecommendation(gap, options);
         recommendations.push(recommendation);
       }
@@ -859,7 +911,10 @@ class DocumentationUpdateEngine {
     return recommendations.sort((a, b) => b.confidence - a.confidence);
   }
 
-  private async generateGapRecommendation(gap: DocumentationGap, options: UpdateOptions): Promise<UpdateRecommendation> {
+  private async generateGapRecommendation(
+    gap: DocumentationGap,
+    options: UpdateOptions,
+  ): Promise<UpdateRecommendation> {
     const memoryEvidence = gap.memoryEvidence || [];
     const successfulPatterns = this.memoryInsights?.successfulUpdatePatterns || [];
 
@@ -876,7 +931,7 @@ class DocumentationUpdateEngine {
 
   private generateContentForGap(gap: DocumentationGap, patterns: any[]): string {
     // Use memory patterns to generate appropriate content
-    const relevantPatterns = patterns.filter(p => p.gapType === gap.type);
+    const relevantPatterns = patterns.filter((p) => p.gapType === gap.type);
 
     if (relevantPatterns.length > 0) {
       const bestPattern = relevantPatterns[0];
@@ -901,10 +956,18 @@ class DocumentationUpdateEngine {
 
     // Increase confidence based on severity
     switch (gap.severity) {
-      case 'critical': confidence += 0.4; break;
-      case 'high': confidence += 0.3; break;
-      case 'medium': confidence += 0.2; break;
-      case 'low': confidence += 0.1; break;
+      case 'critical':
+        confidence += 0.4;
+        break;
+      case 'high':
+        confidence += 0.3;
+        break;
+      case 'medium':
+        confidence += 0.2;
+        break;
+      case 'low':
+        confidence += 0.1;
+        break;
     }
 
     // Increase confidence based on memory evidence
@@ -928,7 +991,10 @@ class DocumentationUpdateEngine {
     }
   }
 
-  private async generateOutdatedRecommendation(outdated: any, options: UpdateOptions): Promise<UpdateRecommendation> {
+  private async generateOutdatedRecommendation(
+    outdated: any,
+    options: UpdateOptions,
+  ): Promise<UpdateRecommendation> {
     return {
       section: outdated.location,
       currentContent: outdated.section,
@@ -940,7 +1006,10 @@ class DocumentationUpdateEngine {
     };
   }
 
-  private async generateAccuracyRecommendation(issue: any, options: UpdateOptions): Promise<UpdateRecommendation> {
+  private async generateAccuracyRecommendation(
+    issue: any,
+    options: UpdateOptions,
+  ): Promise<UpdateRecommendation> {
     return {
       section: issue.location,
       currentContent: 'Code block with accuracy issues',
@@ -954,16 +1023,20 @@ class DocumentationUpdateEngine {
 
   private calculateUpdateMetrics(
     comparison: CodeDocumentationComparison,
-    recommendations: UpdateRecommendation[]
+    recommendations: UpdateRecommendation[],
   ): any {
     const totalGaps = comparison.gaps.length;
     const totalRecommendations = recommendations.length;
-    const avgConfidence = recommendations.reduce((sum, r) => sum + r.confidence, 0) / recommendations.length || 0;
+    const avgConfidence =
+      recommendations.reduce((sum, r) => sum + r.confidence, 0) / recommendations.length || 0;
 
-    const effortCounts = recommendations.reduce((acc, r) => {
-      acc[r.effort] = (acc[r.effort] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+    const effortCounts = recommendations.reduce(
+      (acc, r) => {
+        acc[r.effort] = (acc[r.effort] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
 
     let estimatedEffort = 'low';
     if (effortCounts.high > 0) estimatedEffort = 'high';
@@ -979,22 +1052,26 @@ class DocumentationUpdateEngine {
 
   private generateMemoryInformedNextSteps(
     comparison: CodeDocumentationComparison,
-    recommendations: UpdateRecommendation[]
+    recommendations: UpdateRecommendation[],
   ): string[] {
     const nextSteps = [];
-    const highConfidenceRecs = recommendations.filter(r => r.confidence > 0.8);
-    const criticalGaps = comparison.gaps.filter(g => g.severity === 'critical');
+    const highConfidenceRecs = recommendations.filter((r) => r.confidence > 0.8);
+    const criticalGaps = comparison.gaps.filter((g) => g.severity === 'critical');
 
     if (criticalGaps.length > 0) {
       nextSteps.push(`Address ${criticalGaps.length} critical documentation gaps immediately`);
     }
 
     if (highConfidenceRecs.length > 0) {
-      nextSteps.push(`Implement ${highConfidenceRecs.length} high-confidence recommendations first`);
+      nextSteps.push(
+        `Implement ${highConfidenceRecs.length} high-confidence recommendations first`,
+      );
     }
 
     if (comparison.accuracyIssues.length > 0) {
-      nextSteps.push(`Fix ${comparison.accuracyIssues.length} code accuracy issues in documentation`);
+      nextSteps.push(
+        `Fix ${comparison.accuracyIssues.length} code accuracy issues in documentation`,
+      );
     }
 
     nextSteps.push('Review and validate all recommended changes before implementation');
@@ -1002,7 +1079,9 @@ class DocumentationUpdateEngine {
 
     const memoryInsights = this.memoryInsights?.similarProjects?.length || 0;
     if (memoryInsights > 0) {
-      nextSteps.push(`Leverage patterns from ${memoryInsights} similar projects for additional improvements`);
+      nextSteps.push(
+        `Leverage patterns from ${memoryInsights} similar projects for additional improvements`,
+      );
     }
 
     return nextSteps;
@@ -1012,7 +1091,8 @@ class DocumentationUpdateEngine {
 // Export the tool implementation
 export const updateExistingDocumentation: Tool = {
   name: 'update_existing_documentation',
-  description: 'Intelligently analyze and update existing documentation using memory insights and code comparison',
+  description:
+    'Intelligently analyze and update existing documentation using memory insights and code comparison',
   inputSchema: {
     type: 'object',
     properties: {
