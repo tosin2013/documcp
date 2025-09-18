@@ -239,16 +239,27 @@ describe('Tool Error Handling and Edge Cases', () => {
 
   describe('Structure Setup Error Handling', () => {
     it('should handle invalid output paths', async () => {
+      // Use a path that will definitely fail - a file path instead of directory
+      // First create a file, then try to use it as a directory path
+      const invalidPath = join(tempDir, 'not-a-directory.txt');
+      await fs.writeFile(invalidPath, 'this is a file, not a directory');
+
       const result = await setupStructure({
-        path: '/invalid/path/that/does/not/exist',
+        path: invalidPath,
         ssg: 'jekyll',
       });
 
       expect((result as any).isError).toBe(true);
       expect(result.content).toBeDefined();
-      expect(result.content.some((item: any) => item.text && item.text.includes('ENOENT'))).toBe(
-        true,
-      );
+      expect(
+        result.content.some(
+          (item: any) =>
+            item.text &&
+            (item.text.includes('ENOTDIR') ||
+              item.text.includes('EEXIST') ||
+              item.text.includes('not a directory')),
+        ),
+      ).toBe(true);
     });
 
     it('should handle missing SSG parameter', async () => {
