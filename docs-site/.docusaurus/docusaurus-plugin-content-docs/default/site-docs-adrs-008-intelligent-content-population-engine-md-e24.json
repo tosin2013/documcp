@@ -1,0 +1,21 @@
+{
+  "id": "adrs/008-intelligent-content-population-engine",
+  "title": "ADR-008: Intelligent Content Population Engine",
+  "description": "---",
+  "source": "@site/../docs/adrs/008-intelligent-content-population-engine.md",
+  "sourceDirName": "adrs",
+  "slug": "/adrs/008-intelligent-content-population-engine",
+  "permalink": "/documcp/adrs/008-intelligent-content-population-engine",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/tosinakinosho/documcp/tree/main/docs/../docs/adrs/008-intelligent-content-population-engine.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 8,
+  "frontMatter": {
+    "id": "008-intelligent-content-population-engine",
+    "title": "ADR-008: Intelligent Content Population Engine",
+    "sidebar_label": "ADR-8: Intelligent Content Population Engine",
+    "sidebar_position": 8
+  }
+}

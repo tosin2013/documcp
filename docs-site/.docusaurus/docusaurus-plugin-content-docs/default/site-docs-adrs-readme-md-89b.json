@@ -1,0 +1,21 @@
+{
+  "id": "adrs/README",
+  "title": "Architectural Decision Records",
+  "description": "This directory contains the Architectural Decision Records for the DocuMCP project - an intelligent MCP server for GitHub Pages documentation deployment.",
+  "source": "@site/../docs/adrs/README.md",
+  "sourceDirName": "adrs",
+  "slug": "/adrs/",
+  "permalink": "/documcp/adrs/",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/tosinakinosho/documcp/tree/main/docs/../docs/adrs/README.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 1,
+  "frontMatter": {
+    "id": "README",
+    "title": "Architectural Decision Records",
+    "sidebar_label": "ADR Overview",
+    "sidebar_position": 1
+  }
+}

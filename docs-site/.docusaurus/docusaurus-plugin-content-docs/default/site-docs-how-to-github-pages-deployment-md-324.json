@@ -1,0 +1,15 @@
+{
+  "id": "how-to/github-pages-deployment",
+  "title": "How to Deploy to GitHub Pages",
+  "description": "This guide shows you how to deploy your documentation to GitHub Pages using DocuMCP's automated workflows.",
+  "source": "@site/../docs/how-to/github-pages-deployment.md",
+  "sourceDirName": "how-to",
+  "slug": "/how-to/github-pages-deployment",
+  "permalink": "/documcp/how-to/github-pages-deployment",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/tosinakinosho/documcp/tree/main/docs/../docs/how-to/github-pages-deployment.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {}
+}

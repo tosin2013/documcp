@@ -1,0 +1,21 @@
+{
+  "id": "adrs/001-mcp-server-architecture",
+  "title": "ADR-001: MCP Server Architecture using TypeScript SDK",
+  "description": "Status",
+  "source": "@site/../docs/adrs/001-mcp-server-architecture.md",
+  "sourceDirName": "adrs",
+  "slug": "/adrs/001-mcp-server-architecture",
+  "permalink": "/documcp/adrs/001-mcp-server-architecture",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/tosinakinosho/documcp/tree/main/docs/../docs/adrs/001-mcp-server-architecture.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 1,
+  "frontMatter": {
+    "id": "001-mcp-server-architecture",
+    "title": "ADR-001: MCP Server Architecture using TypeScript SDK",
+    "sidebar_label": "ADR-001: MCP Server Architecture",
+    "sidebar_position": 1
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "id": "how-to/repository-analysis",
+  "title": "How to Analyze Your Repository with DocuMCP",
+  "description": "This guide walks you through using DocuMCP's repository analysis capabilities to understand your project's documentation needs.",
+  "source": "@site/../docs/how-to/repository-analysis.md",
+  "sourceDirName": "how-to",
+  "slug": "/how-to/repository-analysis",
+  "permalink": "/documcp/how-to/repository-analysis",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/tosinakinosho/documcp/tree/main/docs/../docs/how-to/repository-analysis.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {}
+}

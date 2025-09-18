@@ -1,0 +1,20 @@
+{
+  "id": "explanation/architecture",
+  "title": "DocuMCP Architecture Overview",
+  "description": "This document explains the architectural design of DocuMCP, providing insight into how the system works and why key design decisions were made.",
+  "source": "@site/../docs/explanation/architecture.md",
+  "sourceDirName": "explanation",
+  "slug": "/explanation/architecture",
+  "permalink": "/documcp/explanation/architecture",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/tosinakinosho/documcp/tree/main/docs/../docs/explanation/architecture.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "docs",
+  "previous": {
+    "title": "MCP Tools API Reference",
+    "permalink": "/documcp/reference/mcp-tools"
+  }
+}

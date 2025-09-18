@@ -1,0 +1,20 @@
+{
+  "id": "index",
+  "title": "DocuMCP Documentation",
+  "description": "Welcome to DocuMCP - an intelligent Model Context Protocol (MCP) server for GitHub Pages documentation deployment. This comprehensive guide is organized following the Diataxis framework.",
+  "source": "@site/../docs/index.md",
+  "sourceDirName": ".",
+  "slug": "/",
+  "permalink": "/documcp/",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/tosinakinosho/documcp/tree/main/docs/../docs/index.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "docs",
+  "next": {
+    "title": "Getting Started",
+    "permalink": "/documcp/tutorials/getting-started"
+  }
+}

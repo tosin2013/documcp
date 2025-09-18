@@ -1,27 +1,35 @@
-# Documentation
+# DocuMCP Documentation
 
-Welcome to the documentation! This comprehensive guide is organized following the Diataxis framework.
+Welcome to DocuMCP - an intelligent Model Context Protocol (MCP) server for GitHub Pages documentation deployment. This comprehensive guide is organized following the Diataxis framework.
 
 ## 📚 Learning-Oriented: Tutorials
 
-Start here if you're new to the project:
+Start here if you're new to DocuMCP:
 
-- [Getting Started with documcp](tutorials/getting-started-with-documcp.md)\n- [Setting Up Your Development Environment](tutorials/setting-up-your-development-environment.md)\n- [Writing and Running Tests](tutorials/writing-and-running-tests.md)
+- [Getting Started with DocuMCP](tutorials/getting-started.md)
+- [Your First Documentation Deployment](tutorials/first-deployment.md)
+- [Setting Up Your Development Environment](tutorials/development-setup.md)
 
 ## 🔧 Task-Oriented: How-To Guides
 
 Practical guides for specific tasks:
 
-- [How to Add a New Feature](how-to/how-to-add-a-new-feature.md)\n- [How to Debug Common Issues](how-to/how-to-debug-common-issues.md)\n- [How to Deploy Your Application](how-to/how-to-deploy-your-application.md)
+- [How to Prompt DocuMCP Effectively](how-to/prompting-guide.md)
+- [How to Analyze Your Repository](how-to/repository-analysis.md)
+- [How to Deploy to GitHub Pages](how-to/github-pages-deployment.md)
+- [How to Troubleshoot Common Issues](how-to/troubleshooting.md)
 
 ## 📖 Information-Oriented: Reference
 
 Detailed technical reference:
 
-- [API Reference](reference/api-reference.md)\n- [Configuration Options](reference/configuration-options.md)\n- [Command Line Interface](reference/command-line-interface.md)
+- [MCP Tools API Reference](reference/mcp-tools.md)
+- [Configuration Options](reference/configuration.md)
+- [Command Line Interface](reference/cli.md)
+- [Prompt Templates](reference/prompt-templates.md)
 
 ## 💡 Understanding-Oriented: Explanation
 
 Conceptual documentation and background:
 
-- [Architecture Overview](explanation/architecture-overview.md)\n- [Design Decisions](explanation/design-decisions.md)\n- [Technology Stack](explanation/technology-stack.md)
+- [DocuMCP Architecture Overview](explanation/architecture.md)

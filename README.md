@@ -7,6 +7,10 @@
 
 DocuMCP is an intelligent Model Context Protocol (MCP) server that revolutionizes documentation deployment for open-source projects. It provides deep repository analysis, intelligent static site generator recommendations, and automated GitHub Pages deployment workflows.
 
+## TL;DR
+
+DocuMCP analyzes your repository, recommends the perfect static site generator (Jekyll, Hugo, Docusaurus, MkDocs, or Eleventy), creates professional documentation structure following Diataxis principles, and deploys it automatically to GitHub Pages. Just say "analyze my repository and deploy documentation" to get started.
+
 ## Features
 
 - 🔍 **Repository Analysis**: Deep multi-layered analysis of project structure, dependencies, and documentation needs
@@ -41,11 +45,13 @@ DocuMCP works with various MCP-enabled clients. Here's how to configure it:
 ### Claude Desktop
 
 1. **Locate Claude Desktop's configuration file**:
+
    - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
    - **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
    - **Linux**: `~/.config/claude/claude_desktop_config.json`
 
 2. **Add documcp server configuration**:
+
    ```json
    {
      "mcpServers": {
@@ -105,159 +111,21 @@ DocuMCP works with various MCP-enabled clients. Here's how to configure it:
   ```
 - Find installation path: `npm list -g documcp`
 
-## Usage
+## Quick Start
 
-Once configured with your MCP client, DocuMCP provides eleven comprehensive MCP tools:
+Once configured with your MCP client, just prompt DocuMCP with natural language:
 
-### 1. Analyze Repository
-Performs deep analysis of your project to understand its characteristics and documentation needs.
+```bash
+# Complete workflow
+"analyze my repository and deploy documentation to GitHub Pages"
 
-```json
-{
-  "tool": "analyze_repository",
-  "arguments": {
-    "path": "/path/to/your/repo",
-    "depth": "standard"
-  }
-}
+# Step by step
+"analyze my repository for documentation needs"
+"recommend the best static site generator for my project"
+"set up documentation structure and deploy to GitHub Pages"
 ```
 
-### 2. Recommend SSG
-Provides intelligent recommendations for the best static site generator based on your project.
-
-```json
-{
-  "tool": "recommend_ssg",
-  "arguments": {
-    "analysisId": "analysis_12345",
-    "preferences": {
-      "priority": "simplicity"
-    }
-  }
-}
-```
-
-### 3. Generate Config
-Creates all necessary configuration files for your chosen static site generator.
-
-```json
-{
-  "tool": "generate_config",
-  "arguments": {
-    "ssg": "docusaurus",
-    "projectName": "My Project",
-    "outputPath": "./docs"
-  }
-}
-```
-
-### 4. Setup Structure
-Creates a Diataxis-compliant documentation structure with proper categorization.
-
-```json
-{
-  "tool": "setup_structure",
-  "arguments": {
-    "path": "./docs",
-    "ssg": "docusaurus",
-    "includeExamples": true
-  }
-}
-```
-
-### 5. Deploy Pages
-Sets up GitHub Actions workflows for automated deployment to GitHub Pages.
-
-```json
-{
-  "tool": "deploy_pages",
-  "arguments": {
-    "repository": ".",
-    "ssg": "docusaurus",
-    "branch": "gh-pages"
-  }
-}
-```
-
-### 6. Verify Deployment
-Checks your setup and provides troubleshooting guidance for successful deployment.
-
-```json
-{
-  "tool": "verify_deployment",
-  "arguments": {
-    "repository": ".",
-    "url": "https://yourusername.github.io/yourproject"
-  }
-}
-```
-
-### 7. Populate Diataxis Content
-Intelligently populates documentation with project-specific content.
-
-```json
-{
-  "tool": "populate_diataxis_content",
-  "arguments": {
-    "analysisId": "analysis_12345",
-    "docsPath": "./docs",
-    "populationLevel": "comprehensive"
-  }
-}
-```
-
-### 8. Validate Diataxis Content
-Validates accuracy, completeness, and compliance of documentation.
-
-```json
-{
-  "tool": "validate_diataxis_content",
-  "arguments": {
-    "contentPath": "./docs",
-    "validationType": "all"
-  }
-}
-```
-
-### 9. Validate Content
-Checks general content quality including links and code syntax.
-
-```json
-{
-  "tool": "validate_content",
-  "arguments": {
-    "contentPath": "./docs",
-    "validationType": "links"
-  }
-}
-```
-
-### 10. Detect Documentation Gaps
-Analyzes repository to identify missing documentation content.
-
-```json
-{
-  "tool": "detect_documentation_gaps",
-  "arguments": {
-    "repositoryPath": ".",
-    "documentationPath": "./docs"
-  }
-}
-```
-
-### 11. Test Local Deployment
-Tests documentation build and local server before deployment.
-
-```json
-{
-  "tool": "test_local_deployment",
-  "arguments": {
-    "repositoryPath": ".",
-    "ssg": "docusaurus",
-    "port": 3000
-  }
-}
-```
+DocuMCP provides 25+ tools including repository analysis, SSG recommendations, content generation, deployment automation, validation, and memory-enhanced insights. See the [complete documentation](docs/index.md) for detailed tool reference.
 
 ## Development
 

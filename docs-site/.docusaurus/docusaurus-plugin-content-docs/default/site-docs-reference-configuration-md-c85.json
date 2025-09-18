@@ -1,0 +1,15 @@
+{
+  "id": "reference/configuration",
+  "title": "Configuration Options",
+  "description": "This reference guide covers all configuration options available in DocuMCP and the static site generators it supports.",
+  "source": "@site/../docs/reference/configuration.md",
+  "sourceDirName": "reference",
+  "slug": "/reference/configuration",
+  "permalink": "/documcp/reference/configuration",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/tosinakinosho/documcp/tree/main/docs/../docs/reference/configuration.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {}
+}

@@ -1,0 +1,15 @@
+{
+  "id": "tutorials/development-setup",
+  "title": "Setting Up Your Development Environment",
+  "description": "This tutorial covers setting up a development environment for ongoing documentation work with DocuMCP, including local testing, content workflows, and maintenance automation.",
+  "source": "@site/../docs/tutorials/development-setup.md",
+  "sourceDirName": "tutorials",
+  "slug": "/tutorials/development-setup",
+  "permalink": "/documcp/tutorials/development-setup",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/tosinakinosho/documcp/tree/main/docs/../docs/tutorials/development-setup.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {}
+}

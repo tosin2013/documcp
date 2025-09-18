@@ -1,0 +1,21 @@
+{
+  "id": "adrs/007-mcp-prompts-and-resources-integration",
+  "title": "ADR-007: MCP Prompts and Resources Integration",
+  "description": "---",
+  "source": "@site/../docs/adrs/007-mcp-prompts-and-resources-integration.md",
+  "sourceDirName": "adrs",
+  "slug": "/adrs/007-mcp-prompts-and-resources-integration",
+  "permalink": "/documcp/adrs/007-mcp-prompts-and-resources-integration",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/tosinakinosho/documcp/tree/main/docs/../docs/adrs/007-mcp-prompts-and-resources-integration.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 7,
+  "frontMatter": {
+    "id": "007-mcp-prompts-and-resources-integration",
+    "title": "ADR-007: MCP Prompts and Resources Integration",
+    "sidebar_label": "ADR-7: MCP Prompts and Resources Integration",
+    "sidebar_position": 7
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "id": "how-to/prompting-guide",
+  "title": "How to Prompt DocuMCP Effectively",
+  "description": "This guide shows you how to interact with DocuMCP using effective prompts to get the best results from the system.",
+  "source": "@site/../docs/how-to/prompting-guide.md",
+  "sourceDirName": "how-to",
+  "slug": "/how-to/prompting-guide",
+  "permalink": "/documcp/how-to/prompting-guide",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/tosinakinosho/documcp/tree/main/docs/../docs/how-to/prompting-guide.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "docs",
+  "previous": {
+    "title": "Getting Started",
+    "permalink": "/documcp/tutorials/getting-started"
+  },
+  "next": {
+    "title": "MCP Tools API Reference",
+    "permalink": "/documcp/reference/mcp-tools"
+  }
+}

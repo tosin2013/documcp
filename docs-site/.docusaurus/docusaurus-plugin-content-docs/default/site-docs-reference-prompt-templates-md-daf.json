@@ -1,0 +1,15 @@
+{
+  "id": "reference/prompt-templates",
+  "title": "Prompt Templates",
+  "description": "DocuMCP provides a comprehensive set of prompt templates to help you interact effectively with the system. These templates are designed to get optimal results from DocuMCP's AI-powered documentation tools.",
+  "source": "@site/../docs/reference/prompt-templates.md",
+  "sourceDirName": "reference",
+  "slug": "/reference/prompt-templates",
+  "permalink": "/documcp/reference/prompt-templates",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/tosinakinosho/documcp/tree/main/docs/../docs/reference/prompt-templates.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {}
+}

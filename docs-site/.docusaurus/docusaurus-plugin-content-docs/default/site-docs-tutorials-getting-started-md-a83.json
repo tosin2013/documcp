@@ -1,0 +1,28 @@
+{
+  "id": "tutorials/getting-started",
+  "title": "Getting Started with DocuMCP",
+  "description": "This tutorial will guide you through setting up and using DocuMCP's intelligent documentation deployment system with memory-enhanced capabilities.",
+  "source": "@site/../docs/tutorials/getting-started.md",
+  "sourceDirName": "tutorials",
+  "slug": "/tutorials/getting-started",
+  "permalink": "/documcp/tutorials/getting-started",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/tosinakinosho/documcp/tree/main/docs/../docs/tutorials/getting-started.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {
+    "id": "getting-started",
+    "title": "Getting Started with DocuMCP",
+    "sidebar_label": "Getting Started"
+  },
+  "sidebar": "docs",
+  "previous": {
+    "title": "DocuMCP Documentation",
+    "permalink": "/documcp/"
+  },
+  "next": {
+    "title": "How to Prompt DocuMCP Effectively",
+    "permalink": "/documcp/how-to/prompting-guide"
+  }
+}

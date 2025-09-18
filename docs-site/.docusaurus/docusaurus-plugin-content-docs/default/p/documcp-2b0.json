@@ -1,0 +1,245 @@
+{
+  "version": {
+    "pluginId": "default",
+    "version": "current",
+    "label": "Next",
+    "banner": null,
+    "badge": false,
+    "noIndex": false,
+    "className": "docs-version-current",
+    "isLast": true,
+    "docsSidebars": {
+      "docs": [
+        {
+          "type": "link",
+          "label": "DocuMCP Documentation",
+          "href": "/documcp/",
+          "docId": "index",
+          "unlisted": false
+        },
+        {
+          "type": "category",
+          "label": "Tutorials",
+          "items": [
+            {
+              "type": "link",
+              "label": "Getting Started",
+              "href": "/documcp/tutorials/getting-started",
+              "docId": "tutorials/getting-started",
+              "unlisted": false
+            }
+          ],
+          "collapsed": true,
+          "collapsible": true
+        },
+        {
+          "type": "category",
+          "label": "How-to Guides",
+          "items": [
+            {
+              "type": "link",
+              "label": "How to Prompt DocuMCP Effectively",
+              "href": "/documcp/how-to/prompting-guide",
+              "docId": "how-to/prompting-guide",
+              "unlisted": false
+            }
+          ],
+          "collapsed": true,
+          "collapsible": true
+        },
+        {
+          "type": "category",
+          "label": "Reference",
+          "items": [
+            {
+              "type": "link",
+              "label": "MCP Tools API Reference",
+              "href": "/documcp/reference/mcp-tools",
+              "docId": "reference/mcp-tools",
+              "unlisted": false
+            }
+          ],
+          "collapsed": true,
+          "collapsible": true
+        },
+        {
+          "type": "category",
+          "label": "Explanation",
+          "items": [
+            {
+              "type": "link",
+              "label": "DocuMCP Architecture Overview",
+              "href": "/documcp/explanation/architecture",
+              "docId": "explanation/architecture",
+              "unlisted": false
+            }
+          ],
+          "collapsed": true,
+          "collapsible": true
+        }
+      ]
+    },
+    "docs": {
+      "adrs/001-mcp-server-architecture": {
+        "id": "adrs/001-mcp-server-architecture",
+        "title": "ADR-001: MCP Server Architecture using TypeScript SDK",
+        "description": "Status"
+      },
+      "adrs/002-repository-analysis-engine": {
+        "id": "adrs/002-repository-analysis-engine",
+        "title": "ADR-002: Repository Analysis Engine Design",
+        "description": "---"
+      },
+      "adrs/003-static-site-generator-recommendation-engine": {
+        "id": "adrs/003-static-site-generator-recommendation-engine",
+        "title": "ADR-003: SSG Recommendation Engine Design",
+        "description": "---"
+      },
+      "adrs/004-diataxis-framework-integration": {
+        "id": "adrs/004-diataxis-framework-integration",
+        "title": "ADR-004: Diataxis Framework Integration",
+        "description": "---"
+      },
+      "adrs/005-github-pages-deployment-automation": {
+        "id": "adrs/005-github-pages-deployment-automation",
+        "title": "ADR-005: GitHub Pages Deployment Automation",
+        "description": "---"
+      },
+      "adrs/006-mcp-tools-api-design": {
+        "id": "adrs/006-mcp-tools-api-design",
+        "title": "ADR-006: MCP Tools API Design and Interface Specification",
+        "description": "Status"
+      },
+      "adrs/007-mcp-prompts-and-resources-integration": {
+        "id": "adrs/007-mcp-prompts-and-resources-integration",
+        "title": "ADR-007: MCP Prompts and Resources Integration",
+        "description": "---"
+      },
+      "adrs/008-intelligent-content-population-engine": {
+        "id": "adrs/008-intelligent-content-population-engine",
+        "title": "ADR-008: Intelligent Content Population Engine",
+        "description": "---"
+      },
+      "adrs/009-content-accuracy-validation-framework": {
+        "id": "adrs/009-content-accuracy-validation-framework",
+        "title": "ADR-009: Content Accuracy Validation Framework",
+        "description": "---"
+      },
+      "adrs/README": {
+        "id": "adrs/README",
+        "title": "Architectural Decision Records",
+        "description": "This directory contains the Architectural Decision Records for the DocuMCP project - an intelligent MCP server for GitHub Pages documentation deployment."
+      },
+      "explanation/architecture": {
+        "id": "explanation/architecture",
+        "title": "DocuMCP Architecture Overview",
+        "description": "This document explains the architectural design of DocuMCP, providing insight into how the system works and why key design decisions were made.",
+        "sidebar": "docs"
+      },
+      "how-to/github-pages-deployment": {
+        "id": "how-to/github-pages-deployment",
+        "title": "How to Deploy to GitHub Pages",
+        "description": "This guide shows you how to deploy your documentation to GitHub Pages using DocuMCP's automated workflows."
+      },
+      "how-to/local-testing": {
+        "id": "how-to/local-testing",
+        "title": "Local Documentation Testing",
+        "description": "This guide shows how to test your documentation locally before deploying to GitHub Pages using containerized environments that don't affect your system."
+      },
+      "how-to/prompting-guide": {
+        "id": "how-to/prompting-guide",
+        "title": "How to Prompt DocuMCP Effectively",
+        "description": "This guide shows you how to interact with DocuMCP using effective prompts to get the best results from the system.",
+        "sidebar": "docs"
+      },
+      "how-to/repository-analysis": {
+        "id": "how-to/repository-analysis",
+        "title": "How to Analyze Your Repository with DocuMCP",
+        "description": "This guide walks you through using DocuMCP's repository analysis capabilities to understand your project's documentation needs."
+      },
+      "how-to/troubleshooting": {
+        "id": "how-to/troubleshooting",
+        "title": "Troubleshooting Common Issues",
+        "description": "This guide helps you diagnose and fix common problems when using DocuMCP for documentation deployment."
+      },
+      "index": {
+        "id": "index",
+        "title": "DocuMCP Documentation",
+        "description": "Welcome to DocuMCP - an intelligent Model Context Protocol (MCP) server for GitHub Pages documentation deployment. This comprehensive guide is organized following the Diataxis framework.",
+        "sidebar": "docs"
+      },
+      "reference/cli": {
+        "id": "reference/cli",
+        "title": "Command Line Interface",
+        "description": "DocuMCP primarily operates as an MCP server integrated with AI assistants, but it also provides command-line utilities for direct usage and debugging."
+      },
+      "reference/configuration": {
+        "id": "reference/configuration",
+        "title": "Configuration Options",
+        "description": "This reference guide covers all configuration options available in DocuMCP and the static site generators it supports."
+      },
+      "reference/mcp-tools": {
+        "id": "reference/mcp-tools",
+        "title": "MCP Tools API Reference",
+        "description": "DocuMCP provides a comprehensive set of tools via the Model Context Protocol (MCP). These tools enable intelligent documentation deployment through repository analysis, SSG recommendations, and automated GitHub Pages setup.",
+        "sidebar": "docs"
+      },
+      "reference/prompt-templates": {
+        "id": "reference/prompt-templates",
+        "title": "Prompt Templates",
+        "description": "DocuMCP provides a comprehensive set of prompt templates to help you interact effectively with the system. These templates are designed to get optimal results from DocuMCP's AI-powered documentation tools."
+      },
+      "research/domain-1-mcp-architecture/mcp-performance-research": {
+        "id": "research/domain-1-mcp-architecture/mcp-performance-research",
+        "title": "MCP Performance and Architecture Research",
+        "description": "Research Date: 2025-01-14"
+      },
+      "research/domain-3-ssg-recommendation/ssg-performance-analysis": {
+        "id": "research/domain-3-ssg-recommendation/ssg-performance-analysis",
+        "title": "Static Site Generator Performance Analysis",
+        "description": "Research Date: 2025-01-14"
+      },
+      "research/domain-5-github-deployment/github-pages-security-analysis": {
+        "id": "research/domain-5-github-deployment/github-pages-security-analysis",
+        "title": "GitHub Pages Deployment Security and Limitations Analysis",
+        "description": "Research Date: 2025-01-14"
+      },
+      "research/README": {
+        "id": "research/README",
+        "title": "DocuMCP Research Documentation",
+        "description": "This directory contains comprehensive research planning and findings for the DocuMCP project implementation phase."
+      },
+      "research/research-integration-summary-2025-01-14": {
+        "id": "research/research-integration-summary-2025-01-14",
+        "title": "Research Integration Summary",
+        "description": "Date: 2025-01-14"
+      },
+      "research/research-progress-template": {
+        "id": "research/research-progress-template",
+        "title": "Research Progress Template",
+        "description": "Domain: [Domain Name]"
+      },
+      "research/research-questions-2025-01-14": {
+        "id": "research/research-questions-2025-01-14",
+        "title": "DocuMCP Implementation Research Questions",
+        "description": "Generated: January 14, 2025"
+      },
+      "tutorials/development-setup": {
+        "id": "tutorials/development-setup",
+        "title": "Setting Up Your Development Environment",
+        "description": "This tutorial covers setting up a development environment for ongoing documentation work with DocuMCP, including local testing, content workflows, and maintenance automation."
+      },
+      "tutorials/first-deployment": {
+        "id": "tutorials/first-deployment",
+        "title": "Your First Documentation Deployment",
+        "description": "This tutorial walks you through deploying your first documentation site using DocuMCP, from analysis to live GitHub Pages deployment."
+      },
+      "tutorials/getting-started": {
+        "id": "tutorials/getting-started",
+        "title": "Getting Started with DocuMCP",
+        "description": "This tutorial will guide you through setting up and using DocuMCP's intelligent documentation deployment system with memory-enhanced capabilities.",
+        "sidebar": "docs"
+      }
+    }
+  }
+}
