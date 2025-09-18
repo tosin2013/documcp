@@ -28,6 +28,13 @@ repos:
       - id: mixed-line-ending
         args: ['--fix=lf']
 
+  # GitHub Actions linting
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.6.26
+    hooks:
+      - id: actionlint-docker
+        name: GitHub Actions Lint
+
   # TypeScript and JavaScript quality
   - repo: local
     hooks:
