@@ -1311,6 +1311,273 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         }
       }
 
+      case 'memory_intelligent_analysis': {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(
+                {
+                  status: 'development',
+                  message: 'Intelligent analysis feature is being developed',
+                  projectPath: args?.projectPath,
+                  baseAnalysis: args?.baseAnalysis,
+                },
+                null,
+                2,
+              ),
+            },
+          ],
+        };
+      }
+
+      case 'memory_enhanced_recommendation': {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(
+                {
+                  status: 'development',
+                  message: 'Enhanced recommendation feature is being developed',
+                  baseRecommendation: args?.baseRecommendation,
+                  projectFeatures: args?.projectFeatures,
+                },
+                null,
+                2,
+              ),
+            },
+          ],
+        };
+      }
+
+      case 'memory_learning_stats': {
+        const stats = await getMemoryStatistics();
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(
+                {
+                  status: 'active',
+                  learningStats: stats,
+                  message: 'Learning stats from current memory system',
+                },
+                null,
+                2,
+              ),
+            },
+          ],
+        };
+      }
+
+      case 'memory_knowledge_graph': {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(
+                {
+                  status: 'development',
+                  message: 'Knowledge graph feature is being developed',
+                  query: args?.query,
+                },
+                null,
+                2,
+              ),
+            },
+          ],
+        };
+      }
+
+      case 'memory_contextual_search': {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(
+                {
+                  status: 'development',
+                  message: 'Contextual search feature is being developed',
+                  query: args?.query,
+                  context: args?.context,
+                },
+                null,
+                2,
+              ),
+            },
+          ],
+        };
+      }
+
+      case 'memory_agent_network': {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(
+                {
+                  status: 'development',
+                  message: 'Agent network feature is being developed',
+                  action: args?.action,
+                },
+                null,
+                2,
+              ),
+            },
+          ],
+        };
+      }
+
+      case 'memory_pruning': {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(
+                {
+                  status: 'development',
+                  message: 'Memory pruning feature is being developed',
+                  dryRun: args?.dryRun,
+                },
+                null,
+                2,
+              ),
+            },
+          ],
+        };
+      }
+
+      case 'memory_temporal_analysis': {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(
+                {
+                  status: 'development',
+                  message: 'Temporal analysis feature is being developed',
+                  query: args?.query,
+                },
+                null,
+                2,
+              ),
+            },
+          ],
+        };
+      }
+
+      case 'memory_visualization': {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(
+                {
+                  status: 'development',
+                  message: 'Memory visualization feature is being developed',
+                  visualizationType: args?.visualizationType,
+                },
+                null,
+                2,
+              ),
+            },
+          ],
+        };
+      }
+
+      case 'memory_export_advanced': {
+        await initializeMemory();
+        const manager = (await import('./memory/index.js')).getMemoryManager();
+        if (!manager) throw new Error('Memory system not initialized');
+
+        const result = await manager.export('json');
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(
+                {
+                  status: 'success',
+                  exported: result.length,
+                  data: result,
+                },
+                null,
+                2,
+              ),
+            },
+          ],
+        };
+      }
+
+      case 'memory_import_advanced': {
+        await initializeMemory();
+        const manager = (await import('./memory/index.js')).getMemoryManager();
+        if (!manager) throw new Error('Memory system not initialized');
+
+        if (!args?.inputPath || typeof args.inputPath !== 'string') {
+          throw new Error('inputPath is required');
+        }
+
+        const fs = await import('fs/promises');
+        const data = await fs.readFile(args.inputPath, 'utf-8');
+        const result = await manager.import(data, 'json');
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(
+                {
+                  status: 'success',
+                  imported: result,
+                },
+                null,
+                2,
+              ),
+            },
+          ],
+        };
+      }
+
+      case 'memory_migration': {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(
+                {
+                  status: 'development',
+                  message: 'Migration functionality not yet implemented',
+                  action: args?.action,
+                },
+                null,
+                2,
+              ),
+            },
+          ],
+        };
+      }
+
+      case 'memory_optimization_metrics': {
+        const stats = await getMemoryStatistics();
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(
+                {
+                  status: 'active',
+                  optimizationMetrics: stats,
+                  message: 'Optimization metrics from current memory system',
+                },
+                null,
+                2,
+              ),
+            },
+          ],
+        };
+      }
+
       default:
         throw new Error(`Unknown tool: ${name}`);
     }
