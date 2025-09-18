@@ -476,12 +476,12 @@ class DocumentationUpdateEngine {
   private async performCodeDocumentationComparison(
     analysis: any,
     existingDocs: Map<string, any>,
-    options: UpdateOptions,
+    _options: UpdateOptions,
   ): Promise<CodeDocumentationComparison> {
     const codeFeatures = this.extractCodeFeatures(analysis);
     const documentedFeatures = this.extractAllDocumentedFeatures(existingDocs);
 
-    const gaps = await this.detectDocumentationGaps(codeFeatures, documentedFeatures, options);
+    const gaps = await this.detectDocumentationGaps(codeFeatures, documentedFeatures, _options);
     const outdatedSections = await this.detectOutdatedSections(analysis, existingDocs);
     const accuracyIssues = await this.detectAccuracyIssues(analysis, existingDocs);
 
@@ -593,7 +593,7 @@ class DocumentationUpdateEngine {
   private async detectDocumentationGaps(
     codeFeatures: any[],
     documentedFeatures: any[],
-    options: UpdateOptions,
+    _options: UpdateOptions,
   ): Promise<DocumentationGap[]> {
     const gaps: DocumentationGap[] = [];
     const memoryGapPatterns = this.memoryInsights?.commonGapTypes || {};
@@ -606,7 +606,7 @@ class DocumentationUpdateEngine {
 
       if (!isDocumented) {
         const severity = this.determineGapSeverity(codeFeature, memoryGapPatterns);
-        const suggestedUpdate = this.generateGapSuggestion(codeFeature, options);
+        const suggestedUpdate = this.generateGapSuggestion(codeFeature, _options);
 
         gaps.push({
           type: 'missing',
@@ -705,7 +705,7 @@ class DocumentationUpdateEngine {
     return criticalDeps.some((critical) => depName.includes(critical));
   }
 
-  private generateGapSuggestion(codeFeature: any, options: UpdateOptions): string {
+  private generateGapSuggestion(codeFeature: any, _options: UpdateOptions): string {
     switch (codeFeature.type) {
       case 'script':
         return `Add documentation for the '${codeFeature.name}' script: \`npm run ${codeFeature.name}\``;
@@ -878,7 +878,7 @@ class DocumentationUpdateEngine {
 
   private async generateUpdateRecommendations(
     comparison: CodeDocumentationComparison,
-    options: UpdateOptions,
+    _options: UpdateOptions,
   ): Promise<UpdateRecommendation[]> {
     const recommendations: UpdateRecommendation[] = [];
 
@@ -887,23 +887,23 @@ class DocumentationUpdateEngine {
       if (
         gap.severity === 'critical' ||
         gap.severity === 'high' ||
-        (gap.severity === 'medium' && options.updateStrategy !== 'conservative')
+        (gap.severity === 'medium' && _options.updateStrategy !== 'conservative')
       ) {
-        const recommendation = await this.generateGapRecommendation(gap, options);
+        const recommendation = await this.generateGapRecommendation(gap, _options);
         recommendations.push(recommendation);
       }
     }
 
     // Generate recommendations for outdated sections
     for (const outdated of comparison.outdatedSections) {
-      const recommendation = await this.generateOutdatedRecommendation(outdated, options);
+      const recommendation = await this.generateOutdatedRecommendation(outdated, _options);
       recommendations.push(recommendation);
     }
 
     // Generate recommendations for accuracy issues
     for (const issue of comparison.accuracyIssues) {
-      if (issue.severity !== 'low' || options.updateStrategy === 'aggressive') {
-        const recommendation = await this.generateAccuracyRecommendation(issue, options);
+      if (issue.severity !== 'low' || _options.updateStrategy === 'aggressive') {
+        const recommendation = await this.generateAccuracyRecommendation(issue, _options);
         recommendations.push(recommendation);
       }
     }
@@ -913,7 +913,7 @@ class DocumentationUpdateEngine {
 
   private async generateGapRecommendation(
     gap: DocumentationGap,
-    options: UpdateOptions,
+    _options: UpdateOptions,
   ): Promise<UpdateRecommendation> {
     const memoryEvidence = gap.memoryEvidence || [];
     const successfulPatterns = this.memoryInsights?.successfulUpdatePatterns || [];
@@ -993,7 +993,7 @@ class DocumentationUpdateEngine {
 
   private async generateOutdatedRecommendation(
     outdated: any,
-    options: UpdateOptions,
+    _options: UpdateOptions,
   ): Promise<UpdateRecommendation> {
     return {
       section: outdated.location,
@@ -1008,7 +1008,7 @@ class DocumentationUpdateEngine {
 
   private async generateAccuracyRecommendation(
     issue: any,
-    options: UpdateOptions,
+    _options: UpdateOptions,
   ): Promise<UpdateRecommendation> {
     return {
       section: issue.location,

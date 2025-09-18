@@ -302,7 +302,7 @@ class ContentPopulationEngine {
   private async generateIntelligentContentPlan(
     analysis: any,
     level: string,
-    memoryInsights: any,
+    _memoryInsights: any,
   ): Promise<ContentPlan> {
     const plan: ContentPlan = {
       tutorials: [],
@@ -312,16 +312,16 @@ class ContentPopulationEngine {
     };
 
     // Generate tutorials based on project type AND memory patterns
-    plan.tutorials = this.generateMemoryInformedTutorialPlan(analysis, level, memoryInsights);
+    plan.tutorials = this.generateMemoryInformedTutorialPlan(analysis, level, _memoryInsights);
 
     // Generate how-to guides for common tasks (enhanced with successful patterns)
-    plan.howToGuides = this.generateMemoryInformedHowToPlan(analysis, level, memoryInsights);
+    plan.howToGuides = this.generateMemoryInformedHowToPlan(analysis, level, _memoryInsights);
 
     // Generate reference documentation (based on similar project structures)
-    plan.reference = this.generateMemoryInformedReferencePlan(analysis, level, memoryInsights);
+    plan.reference = this.generateMemoryInformedReferencePlan(analysis, level, _memoryInsights);
 
     // Generate explanation content (leveraging successful explanation patterns)
-    plan.explanation = this.generateMemoryInformedExplanationPlan(analysis, level, memoryInsights);
+    plan.explanation = this.generateMemoryInformedExplanationPlan(analysis, level, _memoryInsights);
 
     return plan;
   }
@@ -329,17 +329,10 @@ class ContentPopulationEngine {
   private generateMemoryInformedTutorialPlan(
     analysis: any,
     _level: string,
-    memoryInsights: any,
+    _memoryInsights: any,
   ): TutorialContent[] {
     const tutorials: TutorialContent[] = [];
-    const patterns = memoryInsights?.patterns || {};
-    const similarProjects = memoryInsights?.similarProjects || [];
-
-    // Enhanced getting started based on successful patterns from similar projects
-    const gettingStartedApproach = this.getSuccessfulGettingStartedApproach(
-      similarProjects,
-      analysis,
-    );
+    const similarProjects = _memoryInsights?.similarProjects || [];
     tutorials.push({
       title: `Getting Started with ${analysis.metadata?.projectName || 'the Project'}`,
       description: this.generateMemoryInformedDescription(
@@ -347,8 +340,8 @@ class ContentPopulationEngine {
         similarProjects,
         'getting-started',
       ),
-      content: this.generateMemoryInformedGettingStartedContent(analysis, memoryInsights),
-      codeExamples: this.generateMemoryInformedGettingStartedExamples(analysis, memoryInsights),
+      content: this.generateMemoryInformedGettingStartedContent(analysis, _memoryInsights),
+      codeExamples: this.generateMemoryInformedGettingStartedExamples(analysis, _memoryInsights),
     });
 
     // Add technology-specific tutorials based on what worked for similar projects
@@ -649,11 +642,11 @@ class ContentPopulationEngine {
   }
 
   // Enhanced content generation methods with memory insights
-  private generateMemoryInformedGettingStartedContent(analysis: any, memoryInsights: any): string {
+  private generateMemoryInformedGettingStartedContent(analysis: any, _memoryInsights: any): string {
     const projectName = analysis.metadata?.projectName || 'the project';
     const language = analysis.metadata?.primaryLanguage || 'development';
-    const patterns = memoryInsights?.patterns || {};
-    const similarProjects = memoryInsights?.similarProjects || [];
+    const patterns = _memoryInsights?.patterns || {};
+    const similarProjects = _memoryInsights?.similarProjects || [];
 
     // Extract real project structure and dependencies
     const realDependencies = analysis.dependencies?.packages || [];
@@ -752,11 +745,9 @@ class ContentPopulationEngine {
 
   private generateMemoryInformedGettingStartedExamples(
     analysis: any,
-    memoryInsights: any,
+    _memoryInsights: any,
   ): string[] {
     const examples: string[] = [];
-    const projectName = analysis.metadata?.projectName || 'project';
-    const realPackageStructure = analysis.structure || {};
 
     // Generate real usage example based on actual entry points
     const entryPoint = this.findProjectEntryPoint(analysis);
@@ -2201,17 +2192,17 @@ ${contentPlan.explanation
 
   private generateMemoryInformedNextSteps(
     analysis: any,
-    contentPlan: ContentPlan,
-    memoryInsights: any,
+    _contentPlan: ContentPlan,
+    _memoryInsights: any,
   ): string[] {
     const nextSteps = [];
-    const patterns = memoryInsights?.patterns || {};
-    const similarProjects = memoryInsights?.similarProjects || [];
+    const patterns = _memoryInsights?.patterns || {};
+    const _similarProjects = _memoryInsights?.similarProjects || [];
 
     // Memory-informed next steps based on successful patterns
-    if (similarProjects.length > 0) {
+    if (_similarProjects.length > 0) {
       nextSteps.push(
-        `Review and customize the generated content (based on ${similarProjects.length} similar project patterns)`,
+        `Review and customize the generated content (based on ${_similarProjects.length} similar project patterns)`,
       );
     } else {
       nextSteps.push('Review and customize the generated content');
@@ -2245,15 +2236,15 @@ ${contentPlan.explanation
   private async generateMemoryInformedTutorialContent(
     tutorials: any[],
     analysis: any,
-    memoryInsights: any,
+    _memoryInsights: any,
   ): Promise<any[]> {
     return tutorials.map((tutorial) => ({
       ...tutorial,
-      content: this.enhanceContentWithMemoryInsights(tutorial.content, analysis, memoryInsights),
+      content: this.enhanceContentWithMemoryInsights(tutorial.content, analysis, _memoryInsights),
       codeExamples: this.enhanceExamplesWithRealCode(
         tutorial.codeExamples || [],
         analysis,
-        memoryInsights,
+        _memoryInsights,
       ),
     }));
   }
@@ -2261,45 +2252,44 @@ ${contentPlan.explanation
   private async generateMemoryInformedHowToContent(
     howTos: any[],
     analysis: any,
-    memoryInsights: any,
+    _memoryInsights: any,
   ): Promise<any[]> {
     return howTos.map((howTo) => ({
       ...howTo,
-      content: this.enhanceContentWithMemoryInsights(howTo.content, analysis, memoryInsights),
+      content: this.enhanceContentWithMemoryInsights(howTo.content, analysis, _memoryInsights),
     }));
   }
 
   private async generateMemoryInformedReferenceContent(
     reference: any[],
     analysis: any,
-    memoryInsights: any,
+    _memoryInsights: any,
   ): Promise<any[]> {
     return reference.map((ref) => ({
       ...ref,
-      content: this.generateMemoryInformedAPIReference(analysis, memoryInsights),
+      content: this.generateMemoryInformedAPIReference(analysis, _memoryInsights),
     }));
   }
 
   private async generateMemoryInformedExplanationContent(
     explanation: any[],
     analysis: any,
-    memoryInsights: any,
+    _memoryInsights: any,
   ): Promise<any[]> {
     return explanation.map((exp) => ({
       ...exp,
-      content: this.enhanceContentWithMemoryInsights(exp.content, analysis, memoryInsights),
+      content: this.enhanceContentWithMemoryInsights(exp.content, analysis, _memoryInsights),
     }));
   }
 
   private enhanceContentWithMemoryInsights(
     content: string,
     analysis: any,
-    memoryInsights: any,
+    _memoryInsights: any,
   ): string {
     // Replace generic placeholders with real project information
-    const projectName = analysis.metadata?.projectName || 'the project';
     const language = analysis.metadata?.primaryLanguage || 'development';
-    const similarCount = memoryInsights?.similarProjects?.length || 0;
+    const similarCount = _memoryInsights?.similarProjects?.length || 0;
 
     let enhancedContent = content;
 
@@ -2320,7 +2310,7 @@ ${contentPlan.explanation
   private enhanceExamplesWithRealCode(
     examples: string[],
     analysis: any,
-    memoryInsights: any,
+    _memoryInsights: any,
   ): string[] {
     return examples.map((example) => {
       // Replace generic project names with actual project name
@@ -2329,13 +2319,11 @@ ${contentPlan.explanation
     });
   }
 
-  private generateMemoryInformedAPIReference(analysis: any, memoryInsights: any): string {
-    const projectName = analysis.metadata?.projectName || 'Project';
-    const language = analysis.metadata?.primaryLanguage || 'development';
-
+  private generateMemoryInformedAPIReference(analysis: any, _memoryInsights: any): string {
     // Extract actual API structure from project analysis
     const entryPoint = this.findProjectEntryPoint(analysis);
     const packageJson = this.findPackageJson(analysis);
+    const projectName = analysis.metadata?.projectName || 'the project';
 
     let content = `# API Reference\n\n`;
     content += `Complete reference for ${projectName} APIs.\n\n`;
@@ -2406,7 +2394,7 @@ ${contentPlan.explanation
   private generateMemoryInformedHowToPlan(
     analysis: any,
     level: string,
-    memoryInsights: any,
+    _memoryInsights: any,
   ): any[] {
     return this.generateHowToPlan(analysis, level);
   }
@@ -2414,7 +2402,7 @@ ${contentPlan.explanation
   private generateMemoryInformedReferencePlan(
     analysis: any,
     level: string,
-    memoryInsights: any,
+    _memoryInsights: any,
   ): any[] {
     return this.generateReferencePlan(analysis, level);
   }
@@ -2422,16 +2410,16 @@ ${contentPlan.explanation
   private generateMemoryInformedExplanationPlan(
     analysis: any,
     level: string,
-    memoryInsights: any,
+    _memoryInsights: any,
   ): any[] {
     return this.generateExplanationPlan(analysis, level);
   }
 
-  private generateMemoryInformedNodeSetupContent(analysis: any, patterns: any): string {
-    return this.generateNodeSetupContent(analysis);
+  private generateMemoryInformedNodeSetupContent(_analysis: any, _patterns: any): string {
+    return this.generateNodeSetupContent(_analysis);
   }
 
-  private generateMemoryInformedNodeSetupExamples(analysis: any, patterns: any): string[] {
+  private generateMemoryInformedNodeSetupExamples(_analysis: any, _patterns: any): string[] {
     return this.generateNodeSetupExamples();
   }
 
