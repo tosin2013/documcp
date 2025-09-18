@@ -1,8 +1,17 @@
-name: Deploy Jekyll to GitHub Pages
+name: Deploy Documentation
 
 on:
   push:
     branches: [main]
+    paths:
+      - 'docs/**'
+      - 'Dockerfile.docs'
+      - '.github/workflows/deploy-docs.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - 'Dockerfile.docs'
   workflow_dispatch:
 
 permissions:
@@ -11,7 +20,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: "pages"
+  group: pages-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -21,27 +30,38 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Ruby
-        uses: ruby/setup-ruby@v1
+      - name: Setup Pages
+        id: pages
+        uses: actions/configure-pages@v4
         with:
-          ruby-version: '3.1'
-          bundler-cache: true
+          static_site_generator: other
 
-      - name: Build with Jekyll
-        run: bundle exec jekyll build
-        env:
-          JEKYLL_ENV: production
+      - name: Build documentation using Docker
+        run: |
+          # Build the documentation container (same as test-docs-local.sh)
+          docker build -f Dockerfile.docs -t documcp-docs .
+
+          # Create a container and copy the built files out
+          docker create --name docs-extract documcp-docs
+          docker cp docs-extract:/app/docs-site/build ./docs-site-build
+          docker rm docs-extract
+
+          # Verify the build output exists
+          ls -la ./docs-site-build
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v2
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./docs-site-build
 
   deploy:
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v3
+        uses: actions/deploy-pages@v4
