@@ -66,6 +66,9 @@ test-server.js
 # Memory backup files
 backup_*.json
 
+# DocuMCP storage
+.documcp/
+
 # Logs
 logs/
 *.log

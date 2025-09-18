@@ -1669,7 +1669,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
+
+  // Show storage information at startup
+  const storageDir = process.env.DOCUMCP_STORAGE_DIR || `${process.cwd()}/.documcp/memory`;
   console.error('DocuMCP server started successfully');
+  console.error(`Storage location: ${storageDir}`);
 }
 
 main().catch((error) => {

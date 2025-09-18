@@ -6,6 +6,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as readline from 'readline';
+import * as os from 'os';
 import { createHash } from 'crypto';
 
 export interface MemoryEntry {
@@ -39,15 +40,34 @@ export class JSONLStorage {
   private lineCounters: Map<string, number>; // Track line count per file
 
   constructor(baseDir?: string) {
-    this.storageDir = baseDir || path.join(process.env.HOME || '', '.documcp', 'memory');
+    this.storageDir = baseDir || this.getDefaultStorageDir();
     this.indexFile = path.join(this.storageDir, '.index.json');
     this.index = new Map();
     this.lineCounters = new Map();
   }
 
+  private getDefaultStorageDir(): string {
+    // For tests, use temp directory
+    if (process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID) {
+      return path.join(
+        os.tmpdir(),
+        `documcp-test-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      );
+    }
+
+    // For production/development, use project-local .documcp directory
+    return path.join(process.cwd(), '.documcp', 'memory');
+  }
+
   async initialize(): Promise<void> {
     await fs.promises.mkdir(this.storageDir, { recursive: true });
     await this.loadIndex();
+
+    // Log storage location in development mode
+    if (process.env.NODE_ENV === 'development' || process.env.DEBUG) {
+      // eslint-disable-next-line no-console
+      console.log(`[DocuMCP] Memory storage initialized: ${this.storageDir}`);
+    }
   }
 
   private async loadIndex(): Promise<void> {
