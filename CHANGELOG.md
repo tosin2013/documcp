@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+### [0.3.4](https://github.com/tosin2013/documcp/compare/v0.3.3...v0.3.4) (2025-09-18)
+
+### 🐛 Bug Fixes
+
+- exclude remaining experimental memory files from coverage ([6c436b0](https://github.com/tosin2013/documcp/commit/6c436b018d0e072f25058617fe728b39279b51fc))
+
+### 🚀 Features
+
+- achieve 90%+ coverage by focusing on core functionality ([561b8a5](https://github.com/tosin2013/documcp/commit/561b8a56a14ddc39387fce35a1efd2ad0c2983bc))
+
 ### [0.3.3](https://github.com/tosin2013/documcp/compare/v0.3.2...v0.3.3) (2025-09-18)
 
 ### 🚀 Features
