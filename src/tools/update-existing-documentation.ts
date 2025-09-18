@@ -110,8 +110,33 @@ class DocumentationUpdateEngine {
         limit: 1,
       });
 
-      if (memoryRecall.memories?.[0]?.content) {
-        return memoryRecall.memories[0].content;
+      // Handle the memory recall result structure
+      if (memoryRecall && memoryRecall.memories && memoryRecall.memories.length > 0) {
+        const memory = memoryRecall.memories[0];
+
+        // Handle wrapped content structure
+        if (memory.data && memory.data.content && Array.isArray(memory.data.content)) {
+          // Extract the JSON from the first text content
+          const firstContent = memory.data.content[0];
+          if (firstContent && firstContent.type === 'text' && firstContent.text) {
+            try {
+              return JSON.parse(firstContent.text);
+            } catch (parseError) {
+              console.warn('Failed to parse analysis content from memory:', parseError);
+              return memory.data;
+            }
+          }
+        }
+
+        // Try direct content access (legacy format)
+        if (memory.content) {
+          return memory.content;
+        }
+
+        // Try data field
+        if (memory.data) {
+          return memory.data;
+        }
       }
     } catch (error) {
       console.warn('Failed to retrieve from memory system:', error);

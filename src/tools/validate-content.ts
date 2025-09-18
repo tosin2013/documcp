@@ -3,6 +3,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import { handleMemoryRecall } from '../memory/index.js';
 // ESM-compatible dirname replacement - fallback for test environments
 function getDirname(): string {
   // Use process.cwd() as fallback for all environments to avoid import.meta issues
@@ -183,6 +184,44 @@ class ContentAccuracyValidator {
   }
 
   private async loadProjectContext(analysisId: string): Promise<any> {
+    // Try to get analysis from memory system first
+    try {
+      const memoryRecall = await handleMemoryRecall({
+        query: analysisId,
+        type: 'analysis',
+        limit: 1,
+      });
+
+      // Handle the memory recall result structure
+      if (memoryRecall && memoryRecall.memories && memoryRecall.memories.length > 0) {
+        const memory = memoryRecall.memories[0];
+
+        // Handle wrapped content structure
+        if (memory.data && memory.data.content && Array.isArray(memory.data.content)) {
+          // Extract the JSON from the first text content
+          const firstContent = memory.data.content[0];
+          if (firstContent && firstContent.type === 'text' && firstContent.text) {
+            try {
+              return JSON.parse(firstContent.text);
+            } catch (parseError) {
+              console.warn('Failed to parse analysis content from memory:', parseError);
+            }
+          }
+        }
+
+        // Try direct content or data access
+        if (memory.content) {
+          return memory.content;
+        }
+        if (memory.data) {
+          return memory.data;
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to retrieve from memory system:', error);
+    }
+
+    // Fallback to reading from cached analysis file
     try {
       const analysisPath = path.join('.documcp', 'analyses', `${analysisId}.json`);
       const content = await fs.readFile(analysisPath, 'utf-8');
