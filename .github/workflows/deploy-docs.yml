@@ -123,14 +123,6 @@ jobs:
                 ],
               },
             },
-
-            exclude: [
-              "**/node_modules/**",
-              "**/.docusaurus/**",
-              "**/build/**",
-              "**/package.json",
-              "**/package-lock.json",
-            ],
           };
           EOF
 
