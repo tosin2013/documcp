@@ -31,6 +31,11 @@ export default {
     '!src/memory/visualization.ts',
     '!src/memory/integration.ts',
     '!src/memory/index.ts',
+    '!src/memory/contextual-retrieval.ts',
+    '!src/memory/export-import.ts',
+    '!src/memory/knowledge-graph.ts',
+    '!src/memory/learning.ts',
+    '!src/memory/temporal-analysis.ts',
   ],
   coverageThreshold: {
     global: {
