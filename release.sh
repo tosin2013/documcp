@@ -108,7 +108,7 @@ git tag -a "$TAG_NAME" -m "Release $NEW_VERSION
 DocuMCP v$NEW_VERSION - Intelligent MCP server for documentation deployment
 
 Features:
-- Repository analysis and SSG recommendations  
+- Repository analysis and SSG recommendations
 - Automated GitHub Pages deployment workflows
 - Diataxis framework integration
 - Enhanced TODO management system

@@ -5,7 +5,7 @@ import { deployPages } from '../../src/tools/deploy-pages.js';
 
 describe('deployPages', () => {
   const testTempDir = path.join(__dirname, '../../.tmp/test-deploy-pages');
-  
+
   beforeEach(async () => {
     // Create test directory
     await fs.mkdir(testTempDir, { recursive: true });
@@ -30,21 +30,23 @@ describe('deployPages', () => {
     });
 
     it('should validate ssg enum values', async () => {
-      await expect(deployPages({ 
-        repository: 'test-repo', 
-        ssg: 'invalid-ssg' 
-      })).rejects.toThrow();
+      await expect(
+        deployPages({
+          repository: 'test-repo',
+          ssg: 'invalid-ssg',
+        }),
+      ).rejects.toThrow();
     });
 
     it('should accept valid ssg values', async () => {
       const validSSGs = ['jekyll', 'hugo', 'docusaurus', 'mkdocs', 'eleventy'];
-      
+
       for (const ssg of validSSGs) {
         const result = await deployPages({
           repository: testTempDir,
-          ssg
+          ssg,
         });
-        
+
         expect(result.content).toBeDefined();
         const data = JSON.parse(result.content[0].text);
         expect(data.ssg).toBe(ssg);
@@ -54,7 +56,7 @@ describe('deployPages', () => {
     it('should use default branch when not specified', async () => {
       const result = await deployPages({
         repository: testTempDir,
-        ssg: 'jekyll'
+        ssg: 'jekyll',
       });
 
       const data = JSON.parse(result.content[0].text);
@@ -65,7 +67,7 @@ describe('deployPages', () => {
       const result = await deployPages({
         repository: testTempDir,
         ssg: 'jekyll',
-        branch: 'main'
+        branch: 'main',
       });
 
       const data = JSON.parse(result.content[0].text);
@@ -77,15 +79,15 @@ describe('deployPages', () => {
     it('should generate Jekyll workflow', async () => {
       const result = await deployPages({
         repository: testTempDir,
-        ssg: 'jekyll'
+        ssg: 'jekyll',
       });
 
       expect(result.content).toBeDefined();
-      
+
       // Check that workflow file was created
       const workflowPath = path.join(testTempDir, '.github', 'workflows', 'deploy-docs.yml');
       const workflowContent = await fs.readFile(workflowPath, 'utf-8');
-      
+
       expect(workflowContent).toContain('Deploy Jekyll to GitHub Pages');
       expect(workflowContent).toContain('ruby/setup-ruby@v1');
       expect(workflowContent).toContain('bundle exec jekyll build');
@@ -94,14 +96,14 @@ describe('deployPages', () => {
     it('should generate Hugo workflow', async () => {
       const result = await deployPages({
         repository: testTempDir,
-        ssg: 'hugo'
+        ssg: 'hugo',
       });
 
       expect(result.content).toBeDefined();
-      
+
       const workflowPath = path.join(testTempDir, '.github', 'workflows', 'deploy-docs.yml');
       const workflowContent = await fs.readFile(workflowPath, 'utf-8');
-      
+
       expect(workflowContent).toContain('Deploy Hugo to GitHub Pages');
       expect(workflowContent).toContain('peaceiris/actions-hugo@v2');
       expect(workflowContent).toContain('hugo --minify');
@@ -110,14 +112,14 @@ describe('deployPages', () => {
     it('should generate Docusaurus workflow', async () => {
       const result = await deployPages({
         repository: testTempDir,
-        ssg: 'docusaurus'
+        ssg: 'docusaurus',
       });
 
       expect(result.content).toBeDefined();
-      
+
       const workflowPath = path.join(testTempDir, '.github', 'workflows', 'deploy-docs.yml');
       const workflowContent = await fs.readFile(workflowPath, 'utf-8');
-      
+
       expect(workflowContent).toContain('Deploy Docusaurus to GitHub Pages');
       expect(workflowContent).toContain('actions/setup-node@v4');
       expect(workflowContent).toContain('./build');
@@ -126,14 +128,14 @@ describe('deployPages', () => {
     it('should generate MkDocs workflow', async () => {
       const result = await deployPages({
         repository: testTempDir,
-        ssg: 'mkdocs'
+        ssg: 'mkdocs',
       });
 
       expect(result.content).toBeDefined();
-      
+
       const workflowPath = path.join(testTempDir, '.github', 'workflows', 'deploy-docs.yml');
       const workflowContent = await fs.readFile(workflowPath, 'utf-8');
-      
+
       expect(workflowContent).toContain('Deploy MkDocs to GitHub Pages');
       expect(workflowContent).toContain('actions/setup-python@v4');
       expect(workflowContent).toContain('mkdocs gh-deploy');
@@ -142,14 +144,14 @@ describe('deployPages', () => {
     it('should generate Eleventy workflow', async () => {
       const result = await deployPages({
         repository: testTempDir,
-        ssg: 'eleventy'
+        ssg: 'eleventy',
       });
 
       expect(result.content).toBeDefined();
-      
+
       const workflowPath = path.join(testTempDir, '.github', 'workflows', 'deploy-docs.yml');
       const workflowContent = await fs.readFile(workflowPath, 'utf-8');
-      
+
       expect(workflowContent).toContain('Deploy Eleventy to GitHub Pages');
       expect(workflowContent).toContain('actions/setup-node@v4');
       expect(workflowContent).toContain('./_site');
@@ -160,14 +162,14 @@ describe('deployPages', () => {
       const result = await deployPages({
         repository: testTempDir,
         ssg: 'mkdocs',
-        branch: customBranch
+        branch: customBranch,
       });
 
       expect(result.content).toBeDefined();
-      
+
       const workflowPath = path.join(testTempDir, '.github', 'workflows', 'deploy-docs.yml');
       const workflowContent = await fs.readFile(workflowPath, 'utf-8');
-      
+
       expect(workflowContent).toContain(`--branch ${customBranch}`);
     });
 
@@ -175,14 +177,14 @@ describe('deployPages', () => {
       // This tests the fallback logic in generateWorkflow
       const result = await deployPages({
         repository: testTempDir,
-        ssg: 'jekyll' // Using valid SSG but testing fallback logic
+        ssg: 'jekyll', // Using valid SSG but testing fallback logic
       });
 
       expect(result.content).toBeDefined();
-      
+
       const workflowPath = path.join(testTempDir, '.github', 'workflows', 'deploy-docs.yml');
       const workflowContent = await fs.readFile(workflowPath, 'utf-8');
-      
+
       expect(workflowContent).toContain('Deploy Jekyll to GitHub Pages');
     });
   });
@@ -193,16 +195,16 @@ describe('deployPages', () => {
       const result = await deployPages({
         repository: testTempDir,
         ssg: 'jekyll',
-        customDomain
+        customDomain,
       });
 
       expect(result.content).toBeDefined();
-      
+
       // Check CNAME file was created
       const cnamePath = path.join(testTempDir, 'CNAME');
       const cnameContent = await fs.readFile(cnamePath, 'utf-8');
       expect(cnameContent).toBe(customDomain);
-      
+
       // Check response indicates CNAME was created
       const data = JSON.parse(result.content[0].text);
       expect(data.cnameCreated).toBe(true);
@@ -212,15 +214,15 @@ describe('deployPages', () => {
     it('should not create CNAME file when custom domain is not specified', async () => {
       const result = await deployPages({
         repository: testTempDir,
-        ssg: 'jekyll'
+        ssg: 'jekyll',
       });
 
       expect(result.content).toBeDefined();
-      
+
       // Check CNAME file was not created
       const cnamePath = path.join(testTempDir, 'CNAME');
       await expect(fs.access(cnamePath)).rejects.toThrow();
-      
+
       // Check response indicates CNAME was not created
       const data = JSON.parse(result.content[0].text);
       expect(data.cnameCreated).toBe(false);
@@ -232,11 +234,11 @@ describe('deployPages', () => {
       const result = await deployPages({
         repository: testTempDir,
         ssg: 'jekyll',
-        customDomain
+        customDomain,
       });
 
       expect(result.content).toBeDefined();
-      
+
       const data = JSON.parse(result.content[0].text);
       expect(data.customDomain).toBe(customDomain);
       expect(data.cnameCreated).toBe(true);
@@ -245,11 +247,11 @@ describe('deployPages', () => {
     it('should not include custom domain recommendation when not specified', async () => {
       const result = await deployPages({
         repository: testTempDir,
-        ssg: 'jekyll'
+        ssg: 'jekyll',
       });
 
       expect(result.content).toBeDefined();
-      
+
       const data = JSON.parse(result.content[0].text);
       expect(data.customDomain).toBeUndefined();
       expect(data.cnameCreated).toBe(false);
@@ -260,11 +262,11 @@ describe('deployPages', () => {
     it('should handle local repository path', async () => {
       const result = await deployPages({
         repository: testTempDir,
-        ssg: 'jekyll'
+        ssg: 'jekyll',
       });
 
       expect(result.content).toBeDefined();
-      
+
       const data = JSON.parse(result.content[0].text);
       expect(data.repoPath).toBe(testTempDir);
     });
@@ -273,11 +275,11 @@ describe('deployPages', () => {
       const remoteRepo = 'https://github.com/user/repo.git';
       const result = await deployPages({
         repository: remoteRepo,
-        ssg: 'jekyll'
+        ssg: 'jekyll',
       });
 
       expect(result.content).toBeDefined();
-      
+
       const data = JSON.parse(result.content[0].text);
       expect(data.repoPath).toBe('.');
       expect(data.repository).toBe(remoteRepo);
@@ -287,11 +289,11 @@ describe('deployPages', () => {
       const httpRepo = 'http://github.com/user/repo.git';
       const result = await deployPages({
         repository: httpRepo,
-        ssg: 'jekyll'
+        ssg: 'jekyll',
       });
 
       expect(result.content).toBeDefined();
-      
+
       const data = JSON.parse(result.content[0].text);
       expect(data.repoPath).toBe('.');
     });
@@ -301,13 +303,13 @@ describe('deployPages', () => {
     it('should return properly formatted MCP response', async () => {
       const result = await deployPages({
         repository: testTempDir,
-        ssg: 'jekyll'
+        ssg: 'jekyll',
       });
 
       expect(result.content).toBeDefined();
       expect(Array.isArray(result.content)).toBe(true);
       expect(result.content.length).toBeGreaterThan(0);
-      
+
       const data = JSON.parse(result.content[0].text);
       expect(data.repository).toBe(testTempDir);
       expect(data.ssg).toBe('jekyll');
@@ -318,7 +320,7 @@ describe('deployPages', () => {
     it('should include execution metadata', async () => {
       const result = await deployPages({
         repository: testTempDir,
-        ssg: 'jekyll'
+        ssg: 'jekyll',
       });
 
       const data = JSON.parse(result.content[0].text);
@@ -330,13 +332,13 @@ describe('deployPages', () => {
     it('should include deployment recommendations', async () => {
       const result = await deployPages({
         repository: testTempDir,
-        ssg: 'hugo'
+        ssg: 'hugo',
       });
 
       const data = JSON.parse(result.content[0].text);
       expect(data.ssg).toBe('hugo');
       expect(data.workflowPath).toBe('deploy-docs.yml');
-      
+
       // Check that workflow file was created
       const workflowPath = path.join(testTempDir, '.github', 'workflows', 'deploy-docs.yml');
       const workflowContent = await fs.readFile(workflowPath, 'utf-8');
@@ -346,13 +348,13 @@ describe('deployPages', () => {
     it('should include next steps', async () => {
       const result = await deployPages({
         repository: testTempDir,
-        ssg: 'jekyll'
+        ssg: 'jekyll',
       });
 
       const data = JSON.parse(result.content[0].text);
       expect(data.ssg).toBe('jekyll');
       expect(data.workflowPath).toBe('deploy-docs.yml');
-      
+
       // Verify workflow file was created
       const workflowPath = path.join(testTempDir, '.github', 'workflows', 'deploy-docs.yml');
       const stats = await fs.stat(workflowPath);
@@ -364,14 +366,14 @@ describe('deployPages', () => {
     it('should handle file system errors gracefully', async () => {
       // Try to write to a path that doesn't exist and can't be created
       const invalidPath = '/invalid/path/that/cannot/be/created';
-      
+
       const result = await deployPages({
         repository: invalidPath,
-        ssg: 'jekyll'
+        ssg: 'jekyll',
       });
 
       expect(result.content).toBeDefined();
-      
+
       const data = JSON.parse(result.content[0].text);
       expect(data.success).toBe(false);
       expect(data.error).toBeDefined();
@@ -382,10 +384,10 @@ describe('deployPages', () => {
 
     it('should include error metadata in failed responses', async () => {
       const invalidPath = '/invalid/path/that/cannot/be/created';
-      
+
       const result = await deployPages({
         repository: invalidPath,
-        ssg: 'jekyll'
+        ssg: 'jekyll',
       });
 
       const data = JSON.parse(result.content[0].text);
@@ -399,11 +401,11 @@ describe('deployPages', () => {
     it('should create .github/workflows directory structure', async () => {
       const result = await deployPages({
         repository: testTempDir,
-        ssg: 'jekyll'
+        ssg: 'jekyll',
       });
 
       expect(result.content).toBeDefined();
-      
+
       // Check directory structure was created
       const workflowsDir = path.join(testTempDir, '.github', 'workflows');
       const stats = await fs.stat(workflowsDir);
@@ -414,14 +416,14 @@ describe('deployPages', () => {
       // Pre-create the directory
       const workflowsDir = path.join(testTempDir, '.github', 'workflows');
       await fs.mkdir(workflowsDir, { recursive: true });
-      
+
       const result = await deployPages({
         repository: testTempDir,
-        ssg: 'jekyll'
+        ssg: 'jekyll',
       });
 
       expect(result.content).toBeDefined();
-      
+
       const data = JSON.parse(result.content[0].text);
       expect(data.ssg).toBe('jekyll');
       expect(data.workflowPath).toBe('deploy-docs.yml');
@@ -432,12 +434,12 @@ describe('deployPages', () => {
     it('should include proper permissions in workflows', async () => {
       const result = await deployPages({
         repository: testTempDir,
-        ssg: 'docusaurus'
+        ssg: 'docusaurus',
       });
 
       const workflowPath = path.join(testTempDir, '.github', 'workflows', 'deploy-docs.yml');
       const workflowContent = await fs.readFile(workflowPath, 'utf-8');
-      
+
       expect(workflowContent).toContain('permissions:');
       expect(workflowContent).toContain('contents: read');
       expect(workflowContent).toContain('pages: write');
@@ -447,12 +449,12 @@ describe('deployPages', () => {
     it('should include concurrency settings in workflows', async () => {
       const result = await deployPages({
         repository: testTempDir,
-        ssg: 'hugo'
+        ssg: 'hugo',
       });
 
       const workflowPath = path.join(testTempDir, '.github', 'workflows', 'deploy-docs.yml');
       const workflowContent = await fs.readFile(workflowPath, 'utf-8');
-      
+
       expect(workflowContent).toContain('concurrency:');
       expect(workflowContent).toContain('group: "pages"');
       expect(workflowContent).toContain('cancel-in-progress: false');
@@ -461,12 +463,12 @@ describe('deployPages', () => {
     it('should include proper triggers in workflows', async () => {
       const result = await deployPages({
         repository: testTempDir,
-        ssg: 'eleventy'
+        ssg: 'eleventy',
       });
 
       const workflowPath = path.join(testTempDir, '.github', 'workflows', 'deploy-docs.yml');
       const workflowContent = await fs.readFile(workflowPath, 'utf-8');
-      
+
       expect(workflowContent).toContain('on:');
       expect(workflowContent).toContain('push:');
       expect(workflowContent).toContain('branches: [main]');

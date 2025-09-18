@@ -28,7 +28,7 @@ describe('Simple Tool Coverage Tests', () => {
 
   it('should test recommend_ssg tool', async () => {
     const result = await recommendSSG({
-      analysisId: 'test-123'
+      analysisId: 'test-123',
     });
     expect(result.content).toBeDefined();
     expect(result.content.length).toBeGreaterThan(0);
@@ -36,17 +36,17 @@ describe('Simple Tool Coverage Tests', () => {
 
   it('should test generate_config for each SSG', async () => {
     const ssgs = ['docusaurus', 'mkdocs', 'hugo', 'jekyll', 'eleventy'] as const;
-    
+
     for (const ssg of ssgs) {
       const outputPath = path.join(tempDir, ssg);
       const result = await generateConfig({
         ssg,
         projectName: `Test ${ssg}`,
-        outputPath
+        outputPath,
       });
-      
+
       expect(result.content).toBeDefined();
-      
+
       // Verify files were created
       const files = await fs.readdir(outputPath);
       expect(files.length).toBeGreaterThan(0);
@@ -58,11 +58,11 @@ describe('Simple Tool Coverage Tests', () => {
     const result = await setupStructure({
       path: structurePath,
       ssg: 'docusaurus',
-      includeExamples: true
+      includeExamples: true,
     });
-    
+
     expect(result.content).toBeDefined();
-    
+
     // Check Diataxis categories were created
     const categories = ['tutorials', 'how-to', 'reference', 'explanation'];
     for (const category of categories) {
@@ -77,11 +77,11 @@ describe('Simple Tool Coverage Tests', () => {
     const result = await deployPages({
       repository: deployPath,
       ssg: 'docusaurus',
-      branch: 'gh-pages'
+      branch: 'gh-pages',
     });
-    
+
     expect(result.content).toBeDefined();
-    
+
     // Check workflow was created
     const workflowPath = path.join(deployPath, '.github', 'workflows', 'deploy-docs.yml');
     const stat = await fs.stat(workflowPath);
@@ -91,16 +91,16 @@ describe('Simple Tool Coverage Tests', () => {
   it('should test verify_deployment tool', async () => {
     const verifyPath = path.join(tempDir, 'verify-test');
     await fs.mkdir(verifyPath, { recursive: true });
-    
+
     const result = await verifyDeployment({
-      repository: verifyPath
+      repository: verifyPath,
     });
-    
+
     expect(result.content).toBeDefined();
     expect(result.content.length).toBeGreaterThan(0);
-    
+
     // Should contain check results with recommendation icons
-    const fullText = result.content.map(c => c.text).join(' ');
+    const fullText = result.content.map((c) => c.text).join(' ');
     expect(fullText).toContain('🔴'); // Should contain recommendation icons
   });
 
@@ -110,7 +110,7 @@ describe('Simple Tool Coverage Tests', () => {
       await generateConfig({
         ssg: 'docusaurus',
         projectName: 'Test',
-        outputPath: '/invalid/path/that/should/fail'
+        outputPath: '/invalid/path/that/should/fail',
       });
     } catch (error) {
       expect(error).toBeDefined();
@@ -120,7 +120,7 @@ describe('Simple Tool Coverage Tests', () => {
     const result = await setupStructure({
       path: path.join(tempDir, 'new-structure'),
       ssg: 'mkdocs',
-      includeExamples: false
+      includeExamples: false,
     });
     expect(result.content).toBeDefined();
   });

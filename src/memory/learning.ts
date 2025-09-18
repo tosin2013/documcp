@@ -67,7 +67,7 @@ export class IncrementalLearningSystem {
   async learn(
     interaction: MemoryEntry,
     outcome: 'success' | 'failure' | 'neutral',
-    feedback?: Record<string, any>
+    feedback?: Record<string, any>,
   ): Promise<void> {
     if (!this.learningEnabled) return;
 
@@ -101,7 +101,7 @@ export class IncrementalLearningSystem {
    */
   async getImprovedRecommendation(
     projectFeatures: ProjectFeatures,
-    baseRecommendation: any
+    baseRecommendation: any,
   ): Promise<{
     recommendation: any;
     confidence: number;
@@ -118,10 +118,12 @@ export class IncrementalLearningSystem {
       if (preferredSSG !== baseRecommendation.recommended) {
         insights.push({
           type: 'recommendation',
-          message: `Based on ${ssgPattern.sampleSize} similar projects, ${preferredSSG} has a ${(ssgPattern.pattern.successRate * 100).toFixed(0)}% success rate`,
+          message: `Based on ${ssgPattern.sampleSize} similar projects, ${preferredSSG} has a ${(
+            ssgPattern.pattern.successRate * 100
+          ).toFixed(0)}% success rate`,
           confidence: ssgPattern.confidence,
           actionable: true,
-          data: { suggestedSSG: preferredSSG, pattern: ssgPattern }
+          data: { suggestedSSG: preferredSSG, pattern: ssgPattern },
         });
 
         adjustedRecommendation.recommended = preferredSSG;
@@ -140,7 +142,7 @@ export class IncrementalLearningSystem {
           message: `Projects with similar characteristics have ${riskFactors.length} common deployment issues`,
           confidence: deploymentPattern.confidence,
           actionable: true,
-          data: { riskFactors, pattern: deploymentPattern }
+          data: { riskFactors, pattern: deploymentPattern },
         });
 
         adjustedRecommendation.deploymentWarnings = riskFactors;
@@ -151,15 +153,12 @@ export class IncrementalLearningSystem {
     const optimizations = await this.getOptimizationInsights(projectFeatures);
     insights.push(...optimizations);
 
-    const finalConfidence = Math.min(
-      baseRecommendation.confidence + confidenceBoost,
-      1.0
-    );
+    const finalConfidence = Math.min(baseRecommendation.confidence + confidenceBoost, 1.0);
 
     return {
       recommendation: adjustedRecommendation,
       confidence: finalConfidence,
-      insights
+      insights,
     };
   }
 
@@ -177,7 +176,7 @@ export class IncrementalLearningSystem {
       hasTests: Boolean(data.testing?.hasTests),
       hasCI: Boolean(data.ci?.hasCI),
       hasDocs: Boolean(data.documentation?.exists),
-      isOpenSource: Boolean(data.repository?.isPublic)
+      isOpenSource: Boolean(data.repository?.isPublic),
     };
   }
 
@@ -207,7 +206,7 @@ export class IncrementalLearningSystem {
   private async updateSSGPattern(
     features: ProjectFeatures,
     ssg: string,
-    outcome: 'success' | 'failure' | 'neutral'
+    outcome: 'success' | 'failure' | 'neutral',
   ): Promise<void> {
     const patternKey = this.generatePatternKey('ssg_preference', features);
     const existing = this.patterns.get(patternKey);
@@ -232,15 +231,15 @@ export class IncrementalLearningSystem {
         pattern: {
           preferredSSG: ssg,
           successCount: outcome === 'success' ? 1 : 0,
-          successRate: outcome === 'success' ? 1.0 : 0.0
+          successRate: outcome === 'success' ? 1.0 : 0.0,
         },
         confidence: 0.1,
         sampleSize: 1,
         lastUpdated: new Date().toISOString(),
         metadata: {
           projectTypes: [features.language],
-          technologies: features.framework ? [features.framework] : []
-        }
+          technologies: features.framework ? [features.framework] : [],
+        },
       };
 
       this.patterns.set(patternKey, pattern);
@@ -252,7 +251,7 @@ export class IncrementalLearningSystem {
    */
   private async updateDeploymentPattern(
     features: ProjectFeatures,
-    outcome: 'success' | 'failure' | 'neutral'
+    outcome: 'success' | 'failure' | 'neutral',
   ): Promise<void> {
     const patternKey = this.generatePatternKey('deployment_success', features);
     const existing = this.patterns.get(patternKey);
@@ -281,15 +280,15 @@ export class IncrementalLearningSystem {
         pattern: {
           successCount: outcome === 'success' ? 1 : 0,
           successRate: outcome === 'success' ? 1.0 : 0.0,
-          riskFactors
+          riskFactors,
         },
         confidence: 0.1,
         sampleSize: 1,
         lastUpdated: new Date().toISOString(),
         metadata: {
           projectTypes: [features.language],
-          successRate: outcome === 'success' ? 1.0 : 0.0
-        }
+          successRate: outcome === 'success' ? 1.0 : 0.0,
+        },
       };
 
       this.patterns.set(patternKey, pattern);
@@ -301,7 +300,7 @@ export class IncrementalLearningSystem {
    */
   private async updateSimilarityPattern(
     features: ProjectFeatures,
-    _interaction: MemoryEntry
+    _interaction: MemoryEntry,
   ): Promise<void> {
     const patternKey = this.generatePatternKey('project_similarity', features);
     const existing = this.patterns.get(patternKey);
@@ -310,7 +309,7 @@ export class IncrementalLearningSystem {
       language: features.language,
       framework: features.framework,
       size: features.size,
-      complexity: features.complexity
+      complexity: features.complexity,
     };
 
     if (existing) {
@@ -324,14 +323,14 @@ export class IncrementalLearningSystem {
         type: 'project_similarity',
         pattern: {
           characteristics,
-          commonPatterns: []
+          commonPatterns: [],
         },
         confidence: 0.1,
         sampleSize: 1,
         lastUpdated: new Date().toISOString(),
         metadata: {
-          projectTypes: [features.language]
-        }
+          projectTypes: [features.language],
+        },
       };
 
       this.patterns.set(patternKey, pattern);
@@ -343,7 +342,7 @@ export class IncrementalLearningSystem {
    */
   private async updateUserBehaviorPattern(
     features: ProjectFeatures,
-    feedback: Record<string, any>
+    feedback: Record<string, any>,
   ): Promise<void> {
     const patternKey = this.generatePatternKey('user_behavior', features);
     const existing = this.patterns.get(patternKey);
@@ -359,12 +358,12 @@ export class IncrementalLearningSystem {
         type: 'user_behavior',
         pattern: {
           feedback,
-          preferences: {}
+          preferences: {},
         },
         confidence: 0.2,
         sampleSize: 1,
         lastUpdated: new Date().toISOString(),
-        metadata: {}
+        metadata: {},
       };
 
       this.patterns.set(patternKey, pattern);
@@ -380,7 +379,7 @@ export class IncrementalLearningSystem {
       features.language,
       features.framework || 'none',
       features.size,
-      features.complexity
+      features.complexity,
     ];
     return keyParts.join('_').toLowerCase();
   }
@@ -388,7 +387,9 @@ export class IncrementalLearningSystem {
   /**
    * Get SSG preference pattern for similar projects
    */
-  private async getSSGPreferencePattern(features: ProjectFeatures): Promise<LearningPattern | null> {
+  private async getSSGPreferencePattern(
+    features: ProjectFeatures,
+  ): Promise<LearningPattern | null> {
     const patternKey = this.generatePatternKey('ssg_preference', features);
     const pattern = this.patterns.get(patternKey);
 
@@ -428,7 +429,7 @@ export class IncrementalLearningSystem {
         message: 'Adding tests could improve deployment success rate by 25%',
         confidence: 0.8,
         actionable: true,
-        data: { optimization: 'add_tests', impact: 'deployment_success' }
+        data: { optimization: 'add_tests', impact: 'deployment_success' },
       });
     }
 
@@ -438,7 +439,7 @@ export class IncrementalLearningSystem {
         message: 'CI/CD setup recommended for projects of this size',
         confidence: 0.7,
         actionable: true,
-        data: { optimization: 'add_ci', impact: 'development_velocity' }
+        data: { optimization: 'add_ci', impact: 'development_velocity' },
       });
     }
 
@@ -448,7 +449,7 @@ export class IncrementalLearningSystem {
         message: 'Complex projects benefit significantly from comprehensive documentation',
         confidence: 0.9,
         actionable: true,
-        data: { optimization: 'improve_docs', impact: 'maintainability' }
+        data: { optimization: 'improve_docs', impact: 'maintainability' },
       });
     }
 
@@ -478,7 +479,7 @@ export class IncrementalLearningSystem {
   private async updatePatterns(): Promise<void> {
     // Analyze recent memories to update patterns
     const recentMemories = await this.memoryManager.search('', {
-      sortBy: 'timestamp'
+      sortBy: 'timestamp',
     });
 
     const cutoffDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000); // Last 7 days
@@ -517,12 +518,16 @@ export class IncrementalLearningSystem {
   private async persistPatterns(): Promise<void> {
     for (const [, pattern] of this.patterns) {
       if (pattern.sampleSize >= this.minSampleSize) {
-        await this.memoryManager.remember('interaction', {
-          pattern,
-          type: 'learning_pattern'
-        }, {
-          tags: ['learning', 'pattern', pattern.type]
-        });
+        await this.memoryManager.remember(
+          'interaction',
+          {
+            pattern,
+            type: 'learning_pattern',
+          },
+          {
+            tags: ['learning', 'pattern', pattern.type],
+          },
+        );
       }
     }
   }
@@ -549,7 +554,7 @@ export class IncrementalLearningSystem {
       patternsByType: {} as Record<string, number>,
       averageConfidence: 0,
       learningVelocity: 0,
-      insights: [] as string[]
+      insights: [] as string[],
     };
 
     let totalConfidence = 0;
@@ -562,23 +567,29 @@ export class IncrementalLearningSystem {
 
     // Calculate learning velocity (patterns learned in last week)
     const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    stats.learningVelocity = Array.from(this.patterns.values())
-      .filter(p => new Date(p.lastUpdated) > weekAgo).length;
+    stats.learningVelocity = Array.from(this.patterns.values()).filter(
+      (p) => new Date(p.lastUpdated) > weekAgo,
+    ).length;
 
     // Generate insights
     if (stats.totalPatterns > 10) {
-      stats.insights.push(`System has learned ${stats.totalPatterns} patterns with ${(stats.averageConfidence * 100).toFixed(0)}% average confidence`);
+      stats.insights.push(
+        `System has learned ${stats.totalPatterns} patterns with ${(
+          stats.averageConfidence * 100
+        ).toFixed(0)}% average confidence`,
+      );
     }
 
     if (stats.learningVelocity > 0) {
       stats.insights.push(`Learning velocity: ${stats.learningVelocity} new patterns this week`);
     }
 
-    const topPatternType = Object.entries(stats.patternsByType)
-      .sort(([,a], [,b]) => b - a)[0];
+    const topPatternType = Object.entries(stats.patternsByType).sort(([, a], [, b]) => b - a)[0];
 
     if (topPatternType) {
-      stats.insights.push(`Most common pattern type: ${topPatternType[0]} (${topPatternType[1]} patterns)`);
+      stats.insights.push(
+        `Most common pattern type: ${topPatternType[0]} (${topPatternType[1]} patterns)`,
+      );
     }
 
     return stats;

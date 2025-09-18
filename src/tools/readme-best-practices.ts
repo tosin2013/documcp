@@ -6,11 +6,30 @@ import { MCPToolResponse } from '../types/api.js';
 // Input validation schema
 const ReadmeBestPracticesInputSchema = z.object({
   readme_path: z.string().describe('Path to the README file to analyze'),
-  project_type: z.enum(['library', 'application', 'tool', 'documentation', 'framework']).optional().default('library').describe('Type of project for tailored analysis'),
-  generate_template: z.boolean().optional().default(false).describe('Generate README templates and community files'),
-  output_directory: z.string().optional().describe('Directory to write generated templates and community files'),
-  include_community_files: z.boolean().optional().default(true).describe('Generate community health files (CONTRIBUTING.md, CODE_OF_CONDUCT.md, etc.)'),
-  target_audience: z.enum(['beginner', 'intermediate', 'advanced', 'mixed']).optional().default('mixed').describe('Target audience for recommendations'),
+  project_type: z
+    .enum(['library', 'application', 'tool', 'documentation', 'framework'])
+    .optional()
+    .default('library')
+    .describe('Type of project for tailored analysis'),
+  generate_template: z
+    .boolean()
+    .optional()
+    .default(false)
+    .describe('Generate README templates and community files'),
+  output_directory: z
+    .string()
+    .optional()
+    .describe('Directory to write generated templates and community files'),
+  include_community_files: z
+    .boolean()
+    .optional()
+    .default(true)
+    .describe('Generate community health files (CONTRIBUTING.md, CODE_OF_CONDUCT.md, etc.)'),
+  target_audience: z
+    .enum(['beginner', 'intermediate', 'advanced', 'mixed'])
+    .optional()
+    .default('mixed')
+    .describe('Target audience for recommendations'),
 });
 
 type ReadmeBestPracticesInput = z.infer<typeof ReadmeBestPracticesInputSchema>;
@@ -41,13 +60,26 @@ interface BestPracticesReport {
   };
 }
 
-export async function readmeBestPractices(input: Partial<ReadmeBestPracticesInput>): Promise<MCPToolResponse<{ bestPracticesReport: BestPracticesReport; recommendations: string[]; nextSteps: string[] }>> {
+export async function readmeBestPractices(input: Partial<ReadmeBestPracticesInput>): Promise<
+  MCPToolResponse<{
+    bestPracticesReport: BestPracticesReport;
+    recommendations: string[];
+    nextSteps: string[];
+  }>
+> {
   const startTime = Date.now();
-  
+
   try {
     // Validate input with defaults
     const validatedInput = ReadmeBestPracticesInputSchema.parse(input);
-    const { readme_path, project_type, generate_template, output_directory, include_community_files, target_audience } = validatedInput;
+    const {
+      readme_path,
+      project_type,
+      generate_template,
+      output_directory,
+      include_community_files,
+      target_audience,
+    } = validatedInput;
 
     // Read README content
     let readmeContent = '';
@@ -61,40 +93,40 @@ export async function readmeBestPractices(input: Partial<ReadmeBestPracticesInpu
             code: 'README_NOT_FOUND',
             message: 'README file not found. Use generate_template: true to create a new README.',
             details: error instanceof Error ? error.message : 'Unknown error',
-            resolution: 'Set generate_template: true to create a new README from template'
+            resolution: 'Set generate_template: true to create a new README from template',
           },
           metadata: {
             toolVersion: '1.0.0',
             executionTime: Date.now() - startTime,
-            timestamp: new Date().toISOString()
-          }
+            timestamp: new Date().toISOString(),
+          },
         };
       }
     }
 
     // Generate checklist based on project type and content
     const checklist = generateChecklist(readmeContent, project_type, target_audience);
-    
+
     // Calculate overall score
     const { score, grade } = calculateOverallScore(checklist);
-    
+
     // Generate recommendations
     const recommendations = generateRecommendations(checklist, project_type, target_audience);
-    
+
     // Generate templates if requested
     const templates = generate_template ? generateTemplates(project_type, generate_template) : {};
-    
+
     // Generate community files if requested
     const communityFiles = include_community_files ? generateCommunityFiles(project_type) : {};
-    
+
     // Calculate summary metrics
     const summary = calculateSummaryMetrics(checklist);
-    
+
     // Write files if output directory specified
     if (output_directory && generate_template) {
       await writeGeneratedFiles(templates, communityFiles, output_directory, readme_path);
     }
-    
+
     const report: BestPracticesReport = {
       overallScore: score,
       grade,
@@ -102,7 +134,7 @@ export async function readmeBestPractices(input: Partial<ReadmeBestPracticesInpu
       recommendations,
       templates,
       communityFiles,
-      summary
+      summary,
     };
 
     const nextSteps = generateNextSteps(report.checklist, true, output_directory);
@@ -112,16 +144,15 @@ export async function readmeBestPractices(input: Partial<ReadmeBestPracticesInpu
       data: {
         bestPracticesReport: report,
         recommendations,
-        nextSteps
+        nextSteps,
       },
       metadata: {
         toolVersion: '1.0.0',
         executionTime: Date.now() - startTime,
         timestamp: new Date().toISOString(),
-        analysisId: `readme-best-practices-${Date.now()}`
-      }
+        analysisId: `readme-best-practices-${Date.now()}`,
+      },
     };
-
   } catch (error) {
     return {
       success: false,
@@ -129,18 +160,22 @@ export async function readmeBestPractices(input: Partial<ReadmeBestPracticesInpu
         code: 'ANALYSIS_FAILED',
         message: 'Failed to analyze README best practices',
         details: error instanceof Error ? error.message : 'Unknown error',
-        resolution: 'Check README file path and permissions, ensure valid project type'
+        resolution: 'Check README file path and permissions, ensure valid project type',
       },
       metadata: {
         toolVersion: '1.0.0',
         executionTime: Date.now() - startTime,
-        timestamp: new Date().toISOString()
-      }
+        timestamp: new Date().toISOString(),
+      },
     };
   }
 }
 
-function generateChecklist(content: string, projectType: string, _targetAudience: string): ChecklistItem[] {
+function generateChecklist(
+  content: string,
+  projectType: string,
+  _targetAudience: string,
+): ChecklistItem[] {
   const checklist: ChecklistItem[] = [];
   const lines = content.split('\n');
   const lowerContent = content.toLowerCase();
@@ -152,25 +187,30 @@ function generateChecklist(content: string, projectType: string, _targetAudience
     present: /^#\s+.+/m.test(content),
     severity: 'critical',
     description: 'Clear, descriptive project title as main heading',
-    example: '# My Awesome Project'
+    example: '# My Awesome Project',
   });
 
   checklist.push({
     category: 'Essential Sections',
     item: 'One-line Description',
-    present: />\s*.+/.test(content) || lines.some(line => line.trim().length > 20 && line.trim().length < 100 && !line.startsWith('#')),
+    present:
+      />\s*.+/.test(content) ||
+      lines.some(
+        (line) => line.trim().length > 20 && line.trim().length < 100 && !line.startsWith('#'),
+      ),
     severity: 'critical',
     description: 'Brief one-line description of what the project does',
-    example: '> A fast, lightweight JavaScript framework for building web applications'
+    example: '> A fast, lightweight JavaScript framework for building web applications',
   });
 
   checklist.push({
     category: 'Essential Sections',
     item: 'Installation Instructions',
-    present: /install/i.test(lowerContent) && (/npm|yarn|pip|cargo|go get|git clone/i.test(lowerContent)),
+    present:
+      /install/i.test(lowerContent) && /npm|yarn|pip|cargo|go get|git clone/i.test(lowerContent),
     severity: 'critical',
     description: 'Clear installation or setup instructions',
-    example: '```bash\nnpm install package-name\n```'
+    example: '```bash\nnpm install package-name\n```',
   });
 
   checklist.push({
@@ -179,7 +219,7 @@ function generateChecklist(content: string, projectType: string, _targetAudience
     present: /usage|example|quick start|getting started/i.test(lowerContent) && /```/.test(content),
     severity: 'critical',
     description: 'Working code example showing basic usage',
-    example: '```javascript\nconst lib = require("package-name");\nlib.doSomething();\n```'
+    example: '```javascript\nconst lib = require("package-name");\nlib.doSomething();\n```',
   });
 
   // Important Sections
@@ -189,7 +229,7 @@ function generateChecklist(content: string, projectType: string, _targetAudience
     present: /prerequisite|requirement|dependencies|node|python|java|version/i.test(lowerContent),
     severity: 'important',
     description: 'Clear system requirements and dependencies',
-    example: '- Node.js 16+\n- Docker (optional)'
+    example: '- Node.js 16+\n- Docker (optional)',
   });
 
   checklist.push({
@@ -198,7 +238,7 @@ function generateChecklist(content: string, projectType: string, _targetAudience
     present: /license/i.test(lowerContent) || /mit|apache|gpl|bsd/i.test(lowerContent),
     severity: 'important',
     description: 'Clear license information',
-    example: '## License\n\nMIT License - see [LICENSE](LICENSE) file'
+    example: '## License\n\nMIT License - see [LICENSE](LICENSE) file',
   });
 
   checklist.push({
@@ -207,7 +247,7 @@ function generateChecklist(content: string, projectType: string, _targetAudience
     present: /contribut/i.test(lowerContent),
     severity: 'important',
     description: 'Information on how to contribute to the project',
-    example: 'See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines'
+    example: 'See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines',
   });
 
   // Community Health
@@ -217,7 +257,7 @@ function generateChecklist(content: string, projectType: string, _targetAudience
     present: /code of conduct/i.test(lowerContent),
     severity: 'recommended',
     description: 'Link to code of conduct for community projects',
-    example: 'Please read our [Code of Conduct](CODE_OF_CONDUCT.md)'
+    example: 'Please read our [Code of Conduct](CODE_OF_CONDUCT.md)',
   });
 
   checklist.push({
@@ -226,7 +266,7 @@ function generateChecklist(content: string, projectType: string, _targetAudience
     present: /issue template|bug report|feature request/i.test(lowerContent),
     severity: 'recommended',
     description: 'Reference to issue templates for better bug reports',
-    example: 'Use our [issue templates](.github/ISSUE_TEMPLATE/) when reporting bugs'
+    example: 'Use our [issue templates](.github/ISSUE_TEMPLATE/) when reporting bugs',
   });
 
   // Visual Elements
@@ -236,16 +276,18 @@ function generateChecklist(content: string, projectType: string, _targetAudience
     present: /\[!\[.*\]\(.*\)\]\(.*\)/.test(content) || /badge/i.test(lowerContent),
     severity: 'recommended',
     description: 'Status badges for build, version, license, etc.',
-    example: '[![Build Status](badge-url)](link-url)'
+    example: '[![Build Status](badge-url)](link-url)',
   });
 
   checklist.push({
     category: 'Visual Elements',
     item: 'Screenshots/Demo',
-    present: /!\[.*\]\(.*\.(png|jpg|jpeg|gif|webp)\)/i.test(content) || /screenshot|demo|gif/i.test(lowerContent),
+    present:
+      /!\[.*\]\(.*\.(png|jpg|jpeg|gif|webp)\)/i.test(content) ||
+      /screenshot|demo|gif/i.test(lowerContent),
     severity: projectType === 'application' || projectType === 'tool' ? 'important' : 'recommended',
     description: 'Visual demonstration of the project (especially for applications)',
-    example: '![Demo](demo.gif)'
+    example: '![Demo](demo.gif)',
   });
 
   // Content Quality
@@ -255,7 +297,7 @@ function generateChecklist(content: string, projectType: string, _targetAudience
     present: lines.length >= 20 && lines.length <= 300,
     severity: 'important',
     description: 'README length appropriate for project complexity (20-300 lines)',
-    example: 'Keep main README focused, link to detailed docs'
+    example: 'Keep main README focused, link to detailed docs',
   });
 
   checklist.push({
@@ -264,7 +306,7 @@ function generateChecklist(content: string, projectType: string, _targetAudience
     present: (content.match(/^##\s+/gm) || []).length >= 3,
     severity: 'important',
     description: 'Well-organized content with clear section headers',
-    example: '## Installation\n## Usage\n## Contributing'
+    example: '## Installation\n## Usage\n## Contributing',
   });
 
   checklist.push({
@@ -273,7 +315,7 @@ function generateChecklist(content: string, projectType: string, _targetAudience
     present: !/\[.*\]\(\)/.test(content) && !/\[.*\]\(#\)/.test(content),
     severity: 'important',
     description: 'All links should be functional (no empty or placeholder links)',
-    example: '[Documentation](https://example.com/docs)'
+    example: '[Documentation](https://example.com/docs)',
   });
 
   // Project-specific checks
@@ -284,7 +326,7 @@ function generateChecklist(content: string, projectType: string, _targetAudience
       present: /api|methods|functions|reference/i.test(lowerContent),
       severity: 'important',
       description: 'API documentation or link to detailed API reference',
-      example: 'See [API Documentation](docs/api.md) for detailed method reference'
+      example: 'See [API Documentation](docs/api.md) for detailed method reference',
     });
   }
 
@@ -295,7 +337,7 @@ function generateChecklist(content: string, projectType: string, _targetAudience
       present: /config|settings|options|environment/i.test(lowerContent),
       severity: 'important',
       description: 'Configuration and customization options',
-      example: 'See [Configuration Guide](docs/configuration.md)'
+      example: 'See [Configuration Guide](docs/configuration.md)',
     });
   }
 
@@ -307,7 +349,7 @@ function calculateOverallScore(checklist: ChecklistItem[]): { score: number; gra
   let totalScore = 0;
   let maxScore = 0;
 
-  checklist.forEach(item => {
+  checklist.forEach((item) => {
     const weight = weights[item.severity];
     maxScore += weight;
     if (item.present) {
@@ -316,7 +358,7 @@ function calculateOverallScore(checklist: ChecklistItem[]): { score: number; gra
   });
 
   const percentage = maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0;
-  
+
   let grade: string;
   if (percentage >= 90) grade = 'A';
   else if (percentage >= 80) grade = 'B';
@@ -327,46 +369,71 @@ function calculateOverallScore(checklist: ChecklistItem[]): { score: number; gra
   return { score: percentage, grade };
 }
 
-function generateRecommendations(checklist: ChecklistItem[], projectType: string, targetAudience: string): string[] {
+function generateRecommendations(
+  checklist: ChecklistItem[],
+  projectType: string,
+  targetAudience: string,
+): string[] {
   const recommendations: string[] = [];
-  const missing = checklist.filter(item => !item.present);
-  
+  const missing = checklist.filter((item) => !item.present);
+
   // Critical issues first
-  const critical = missing.filter(item => item.severity === 'critical');
+  const critical = missing.filter((item) => item.severity === 'critical');
   if (critical.length > 0) {
-    recommendations.push(`🚨 Critical: Fix ${critical.length} essential sections: ${critical.map(item => item.item).join(', ')}`);
+    recommendations.push(
+      `🚨 Critical: Fix ${critical.length} essential sections: ${critical
+        .map((item) => item.item)
+        .join(', ')}`,
+    );
   }
 
   // Important issues
-  const important = missing.filter(item => item.severity === 'important');
+  const important = missing.filter((item) => item.severity === 'important');
   if (important.length > 0) {
-    recommendations.push(`⚠️ Important: Add ${important.length} key sections: ${important.map(item => item.item).join(', ')}`);
+    recommendations.push(
+      `⚠️ Important: Add ${important.length} key sections: ${important
+        .map((item) => item.item)
+        .join(', ')}`,
+    );
   }
 
   // Project-specific recommendations
   if (projectType === 'library') {
-    recommendations.push('📚 Library Focus: Emphasize installation, basic usage, and API documentation');
+    recommendations.push(
+      '📚 Library Focus: Emphasize installation, basic usage, and API documentation',
+    );
   } else if (projectType === 'application') {
-    recommendations.push('🖥️ Application Focus: Include screenshots, configuration options, and deployment guides');
+    recommendations.push(
+      '🖥️ Application Focus: Include screenshots, configuration options, and deployment guides',
+    );
   }
 
   // Target audience specific recommendations
   if (targetAudience === 'beginner') {
-    recommendations.push('👶 Beginner-Friendly: Use simple language, provide detailed examples, include troubleshooting');
+    recommendations.push(
+      '👶 Beginner-Friendly: Use simple language, provide detailed examples, include troubleshooting',
+    );
   } else if (targetAudience === 'advanced') {
-    recommendations.push('🎯 Advanced Users: Focus on technical details, performance notes, and extensibility');
+    recommendations.push(
+      '🎯 Advanced Users: Focus on technical details, performance notes, and extensibility',
+    );
   }
 
   // General improvements
-  const recommended = missing.filter(item => item.severity === 'recommended');
+  const recommended = missing.filter((item) => item.severity === 'recommended');
   if (recommended.length > 0) {
-    recommendations.push(`✨ Enhancement: Consider adding ${recommended.map(item => item.item).join(', ')}`);
+    recommendations.push(
+      `✨ Enhancement: Consider adding ${recommended.map((item) => item.item).join(', ')}`,
+    );
   }
 
   return recommendations;
 }
 
-function generateTemplates(projectType: string, _generateTemplate: boolean): Record<string, string> {
+function generateTemplates(
+  projectType: string,
+  _generateTemplate: boolean,
+): Record<string, string> {
   const templates: Record<string, string> = {};
 
   if (projectType === 'library') {
@@ -458,7 +525,7 @@ MIT License - see [LICENSE](LICENSE) file for details.
 Brief explanation of the application's purpose and key features:
 
 - 🚀 Feature 1: Description
-- 📊 Feature 2: Description  
+- 📊 Feature 2: Description
 - 🔧 Feature 3: Description
 
 ## Quick Start
@@ -650,7 +717,12 @@ Thank you for helping keep our project secure!
   return files;
 }
 
-async function writeGeneratedFiles(templates: Record<string, string>, communityFiles: Record<string, string>, outputDirectory: string, _originalReadmePath: string): Promise<void> {
+async function writeGeneratedFiles(
+  templates: Record<string, string>,
+  communityFiles: Record<string, string>,
+  outputDirectory: string,
+  _originalReadmePath: string,
+): Promise<void> {
   try {
     // Create output directory
     await mkdir(outputDirectory, { recursive: true });
@@ -670,7 +742,7 @@ async function writeGeneratedFiles(templates: Record<string, string>, communityF
     // Create .github directory structure
     const githubDir = join(outputDirectory, '.github');
     await mkdir(githubDir, { recursive: true });
-    
+
     const issueTemplateDir = join(githubDir, 'ISSUE_TEMPLATE');
     await mkdir(issueTemplateDir, { recursive: true });
 
@@ -757,17 +829,26 @@ Brief description of changes made.
 `;
 
     await writeFile(join(githubDir, 'PULL_REQUEST_TEMPLATE.md'), prTemplate, 'utf-8');
-
   } catch (error) {
-    throw new Error(`Failed to write generated files: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Failed to write generated files: ${
+        error instanceof Error ? error.message : 'Unknown error'
+      }`,
+    );
   }
 }
 
 function calculateSummaryMetrics(checklist: ChecklistItem[]) {
-  const criticalIssues = checklist.filter(item => !item.present && item.severity === 'critical').length;
-  const importantIssues = checklist.filter(item => !item.present && item.severity === 'important').length;
-  const recommendedImprovements = checklist.filter(item => !item.present && item.severity === 'recommended').length;
-  const sectionsPresent = checklist.filter(item => item.present).length;
+  const criticalIssues = checklist.filter(
+    (item) => !item.present && item.severity === 'critical',
+  ).length;
+  const importantIssues = checklist.filter(
+    (item) => !item.present && item.severity === 'important',
+  ).length;
+  const recommendedImprovements = checklist.filter(
+    (item) => !item.present && item.severity === 'recommended',
+  ).length;
+  const sectionsPresent = checklist.filter((item) => item.present).length;
   const totalSections = checklist.length;
 
   // Estimate improvement time based on missing items
@@ -791,13 +872,17 @@ function calculateSummaryMetrics(checklist: ChecklistItem[]) {
     recommendedImprovements,
     sectionsPresent,
     totalSections,
-    estimatedImprovementTime: estimatedTime
+    estimatedImprovementTime: estimatedTime,
   };
 }
 
-function generateNextSteps(checklist: ChecklistItem[], generateTemplate: boolean, outputDirectory?: string): string[] {
+function generateNextSteps(
+  checklist: ChecklistItem[],
+  generateTemplate: boolean,
+  outputDirectory?: string,
+): string[] {
   const nextSteps: string[] = [];
-  const missing = checklist.filter(item => !item.present);
+  const missing = checklist.filter((item) => !item.present);
 
   if (missing.length === 0) {
     nextSteps.push('✅ README follows all best practices - no immediate action needed');
@@ -806,16 +891,16 @@ function generateNextSteps(checklist: ChecklistItem[], generateTemplate: boolean
   }
 
   // Critical issues first
-  const critical = missing.filter(item => item.severity === 'critical');
+  const critical = missing.filter((item) => item.severity === 'critical');
   if (critical.length > 0) {
     nextSteps.push(`🚨 Priority 1: Address ${critical.length} critical issues immediately`);
-    critical.forEach(item => {
+    critical.forEach((item) => {
       nextSteps.push(`   • Add ${item.item}: ${item.description}`);
     });
   }
 
   // Important issues
-  const important = missing.filter(item => item.severity === 'important');
+  const important = missing.filter((item) => item.severity === 'important');
   if (important.length > 0) {
     nextSteps.push(`⚠️ Priority 2: Address ${important.length} important sections within 1 week`);
   }
@@ -824,7 +909,9 @@ function generateNextSteps(checklist: ChecklistItem[], generateTemplate: boolean
   if (generateTemplate && outputDirectory) {
     nextSteps.push(`📝 Review generated templates in ${outputDirectory}/`);
     nextSteps.push('🔄 Customize templates to match your project specifics');
-    nextSteps.push('📋 Use community files (.github templates, CONTRIBUTING.md) to improve project health');
+    nextSteps.push(
+      '📋 Use community files (.github templates, CONTRIBUTING.md) to improve project health',
+    );
   }
 
   // General improvements

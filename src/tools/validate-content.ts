@@ -103,7 +103,7 @@ class ContentAccuracyValidator {
       issues: [],
       uncertainties: [],
       recommendations: [],
-      nextSteps: []
+      nextSteps: [],
     };
 
     // Load project context if analysis ID provided
@@ -113,7 +113,7 @@ class ContentAccuracyValidator {
 
     // Determine if we should analyze application code vs documentation
     const isApplicationValidation = await this.shouldAnalyzeApplicationCode(options.contentPath);
-    
+
     // Perform different types of validation based on request
     if (options.validationType === 'all' || options.validationType === 'accuracy') {
       await this.validateAccuracy(options.contentPath, result);
@@ -136,8 +136,11 @@ class ContentAccuracyValidator {
       result.codeValidation = await this.validateCodeExamples(options.contentPath);
       // Set code example relevance confidence based on code validation results
       if (result.codeValidation) {
-        const successRate = result.codeValidation.exampleResults.length > 0 ? 
-          result.codeValidation.exampleResults.filter(e => e.compilationSuccess).length / result.codeValidation.exampleResults.length : 1;
+        const successRate =
+          result.codeValidation.exampleResults.length > 0
+            ? result.codeValidation.exampleResults.filter((e) => e.compilationSuccess).length /
+              result.codeValidation.exampleResults.length
+            : 1;
         result.confidence.breakdown.codeExampleRelevance = Math.round(successRate * 100);
       }
     } else {
@@ -146,8 +149,11 @@ class ContentAccuracyValidator {
     }
 
     // Set framework version accuracy based on technology detection confidence
-    result.confidence.breakdown.frameworkVersionAccuracy = Math.min(90, result.confidence.breakdown.technologyDetection + 10);
-    
+    result.confidence.breakdown.frameworkVersionAccuracy = Math.min(
+      90,
+      result.confidence.breakdown.technologyDetection + 10,
+    );
+
     // Set architectural assumptions confidence based on file structure and content analysis
     const filesAnalyzed = await this.getMarkdownFiles(options.contentPath);
     const hasStructuredContent = filesAnalyzed.length > 3; // Basic heuristic
@@ -170,9 +176,9 @@ class ContentAccuracyValidator {
         frameworkVersionAccuracy: 0,
         codeExampleRelevance: 0,
         architecturalAssumptions: 0,
-        businessContextAlignment: 0
+        businessContextAlignment: 0,
       },
-      riskFactors: []
+      riskFactors: [],
     };
   }
 
@@ -186,17 +192,17 @@ class ContentAccuracyValidator {
       return {
         metadata: { projectName: 'unknown', primaryLanguage: 'JavaScript' },
         technologies: {},
-        dependencies: { packages: [] }
+        dependencies: { packages: [] },
       };
     }
   }
 
   private async validateAccuracy(contentPath: string, result: ValidationResult): Promise<void> {
     const files = await this.getMarkdownFiles(contentPath);
-    
+
     for (const file of files) {
       const content = await fs.readFile(file, 'utf-8');
-      
+
       // Check for common accuracy issues
       await this.checkTechnicalAccuracy(file, content, result);
       await this.checkFrameworkVersionCompatibility(file, content, result);
@@ -209,16 +215,16 @@ class ContentAccuracyValidator {
   }
 
   private async checkTechnicalAccuracy(
-    filePath: string, 
-    content: string, 
-    result: ValidationResult
+    filePath: string,
+    content: string,
+    result: ValidationResult,
   ): Promise<void> {
     // Check for deprecated patterns
     const deprecatedPatterns = [
       { pattern: /npm install -g/, suggestion: 'Use npx instead of global installs' },
       { pattern: /var\s+\w+/, suggestion: 'Use const or let instead of var' },
       { pattern: /function\(\)/, suggestion: 'Consider using arrow functions' },
-      { pattern: /http:\/\//, suggestion: 'Use HTTPS URLs for security' }
+      { pattern: /http:\/\//, suggestion: 'Use HTTPS URLs for security' },
     ];
 
     for (const { pattern, suggestion } of deprecatedPatterns) {
@@ -230,7 +236,7 @@ class ContentAccuracyValidator {
           description: `Potentially outdated pattern detected: ${pattern.source}`,
           evidence: [content.match(pattern)?.[0] || ''],
           suggestedFix: suggestion,
-          confidence: 80
+          confidence: 80,
         });
       }
     }
@@ -239,7 +245,11 @@ class ContentAccuracyValidator {
     const codeBlocks = this.extractCodeBlocks(content);
     for (const block of codeBlocks) {
       if (block.language === 'javascript' || block.language === 'typescript') {
-        if (block.code.includes('await') && !block.code.includes('try') && !block.code.includes('catch')) {
+        if (
+          block.code.includes('await') &&
+          !block.code.includes('try') &&
+          !block.code.includes('catch')
+        ) {
           result.issues.push({
             type: 'warning',
             category: 'accuracy',
@@ -247,7 +257,7 @@ class ContentAccuracyValidator {
             description: 'Async code without error handling',
             evidence: [block.code.substring(0, 100)],
             suggestedFix: 'Add try-catch blocks for async operations',
-            confidence: 90
+            confidence: 90,
           });
         }
       }
@@ -257,25 +267,25 @@ class ContentAccuracyValidator {
   private async checkFrameworkVersionCompatibility(
     filePath: string,
     content: string,
-    result: ValidationResult
+    result: ValidationResult,
   ): Promise<void> {
     if (!this.projectContext) return;
-    
+
     // Check if mentioned versions align with project dependencies
     const versionPattern = /@(\d+\.\d+\.\d+)/g;
     const matches = content.match(versionPattern);
-    
+
     if (matches) {
       for (const match of matches) {
         const version = match.replace('@', '');
-        
+
         result.uncertainties.push({
           area: 'version-compatibility',
           severity: 'medium',
           description: `Version ${version} mentioned in documentation`,
           potentialImpact: 'May not match actual project dependencies',
           clarificationNeeded: 'Verify version compatibility with project',
-          fallbackStrategy: 'Use generic version-agnostic examples'
+          fallbackStrategy: 'Use generic version-agnostic examples',
         });
       }
     }
@@ -284,23 +294,20 @@ class ContentAccuracyValidator {
   private async checkCommandAccuracy(
     filePath: string,
     content: string,
-    result: ValidationResult
+    result: ValidationResult,
   ): Promise<void> {
     const codeBlocks = this.extractCodeBlocks(content);
-    
+
     for (const block of codeBlocks) {
       if (block.language === 'bash' || block.language === 'sh') {
         // Check for common command issues
-        const commands = block.code.split('\n').filter(line => line.trim() && !line.startsWith('#'));
-        
+        const commands = block.code
+          .split('\n')
+          .filter((line) => line.trim() && !line.startsWith('#'));
+
         for (const command of commands) {
           // Check for potentially dangerous commands
-          const dangerousPatterns = [
-            /rm -rf \//,
-            /sudo rm/,
-            /chmod 777/,
-            /> \/dev\/null 2>&1/
-          ];
+          const dangerousPatterns = [/rm -rf \//, /sudo rm/, /chmod 777/, /> \/dev\/null 2>&1/];
 
           for (const pattern of dangerousPatterns) {
             if (pattern.test(command)) {
@@ -311,7 +318,7 @@ class ContentAccuracyValidator {
                 description: 'Potentially dangerous command in documentation',
                 evidence: [command],
                 suggestedFix: 'Review and provide safer alternative',
-                confidence: 95
+                confidence: 95,
               });
             }
           }
@@ -325,7 +332,7 @@ class ContentAccuracyValidator {
               description: 'Mixed path separators in command',
               evidence: [command],
               suggestedFix: 'Use consistent path separators or provide OS-specific examples',
-              confidence: 85
+              confidence: 85,
             });
           }
         }
@@ -336,7 +343,7 @@ class ContentAccuracyValidator {
   private async checkLinkValidity(
     filePath: string,
     content: string,
-    result: ValidationResult
+    result: ValidationResult,
   ): Promise<void> {
     const linkPattern = /\[([^\]]+)\]\(([^)]+)\)/g;
     const links: Array<{ text: string; url: string }> = [];
@@ -360,11 +367,11 @@ class ContentAccuracyValidator {
             description: `Broken internal link: ${link.url}`,
             evidence: [link.text],
             suggestedFix: 'Fix the link path or create the missing file',
-            confidence: 100
+            confidence: 100,
           });
         }
       }
-      
+
       // Flag external links for manual verification
       if (link.url.startsWith('http')) {
         result.uncertainties.push({
@@ -373,7 +380,7 @@ class ContentAccuracyValidator {
           description: `External link: ${link.url}`,
           potentialImpact: 'Link may become outdated or broken',
           clarificationNeeded: 'Verify link is still valid',
-          fallbackStrategy: 'Archive important external content locally'
+          fallbackStrategy: 'Archive important external content locally',
         });
       }
     }
@@ -385,7 +392,9 @@ class ContentAccuracyValidator {
 
     // Check for missing essential sections
     const requiredSections = ['tutorials', 'how-to', 'reference', 'explanation'];
-    const missingSections = requiredSections.filter(section => !structure.sections.includes(section));
+    const missingSections = requiredSections.filter(
+      (section) => !structure.sections.includes(section),
+    );
 
     if (missingSections.length > 0) {
       result.issues.push({
@@ -395,13 +404,13 @@ class ContentAccuracyValidator {
         description: `Missing Diataxis sections: ${missingSections.join(', ')}`,
         evidence: structure.sections,
         suggestedFix: 'Add missing Diataxis sections for complete documentation',
-        confidence: 100
+        confidence: 100,
       });
     }
 
     // Check content depth in each section
     for (const section of structure.sections) {
-      const sectionFiles = files.filter(f => f.includes(`/${section}/`));
+      const sectionFiles = files.filter((f) => f.includes(`/${section}/`));
       if (sectionFiles.length < 2) {
         result.issues.push({
           type: 'info',
@@ -410,70 +419,86 @@ class ContentAccuracyValidator {
           description: `Limited content in ${section} section`,
           evidence: [`Only ${sectionFiles.length} files`],
           suggestedFix: 'Consider adding more comprehensive coverage',
-          confidence: 75
+          confidence: 75,
         });
       }
     }
 
     // Update completeness confidence
-    result.confidence.breakdown.businessContextAlignment = Math.max(0, 100 - (missingSections.length * 25));
+    result.confidence.breakdown.businessContextAlignment = Math.max(
+      0,
+      100 - missingSections.length * 25,
+    );
   }
 
-  private async validateDiataxisCompliance(contentPath: string, result: ValidationResult): Promise<void> {
+  private async validateDiataxisCompliance(
+    contentPath: string,
+    result: ValidationResult,
+  ): Promise<void> {
     const files = await this.getMarkdownFiles(contentPath);
-    
+
     for (const file of files) {
       const content = await fs.readFile(file, 'utf-8');
       const section = this.identifyDiataxisSection(file);
-      
+
       if (section) {
         await this.checkSectionCompliance(file, content, section, result);
       }
     }
   }
 
-  private async validateApplicationStructureCompliance(contentPath: string, result: ValidationResult): Promise<void> {
+  private async validateApplicationStructureCompliance(
+    contentPath: string,
+    result: ValidationResult,
+  ): Promise<void> {
     // Analyze application source code for Diataxis compliance
     await this.validateSourceCodeDocumentation(contentPath, result);
     await this.validateApplicationArchitecture(contentPath, result);
     await this.validateInlineDocumentationPatterns(contentPath, result);
   }
 
-  private async validateSourceCodeDocumentation(contentPath: string, result: ValidationResult): Promise<void> {
+  private async validateSourceCodeDocumentation(
+    contentPath: string,
+    result: ValidationResult,
+  ): Promise<void> {
     const sourceFiles = await this.getSourceFiles(contentPath);
-    
+
     for (const file of sourceFiles) {
       const content = await fs.readFile(file, 'utf-8');
-      
+
       // Check for proper JSDoc/TSDoc documentation
       await this.checkInlineDocumentationQuality(file, content, result);
-      
+
       // Check for README files and their structure
       if (file.endsWith('README.md')) {
         await this.validateReadmeStructure(file, content, result);
       }
-      
+
       // Check for proper module/class documentation
       await this.checkModuleDocumentation(file, content, result);
     }
   }
 
-  private async validateApplicationArchitecture(contentPath: string, result: ValidationResult): Promise<void> {
+  private async validateApplicationArchitecture(
+    contentPath: string,
+    result: ValidationResult,
+  ): Promise<void> {
     // Check if the application structure supports different types of documentation
     const hasToolsDir = await this.pathExists(path.join(contentPath, 'tools'));
     const hasTypesDir = await this.pathExists(path.join(contentPath, 'types'));
     // Check for workflows directory (currently not used but may be useful for future validation)
     // const hasWorkflowsDir = await this.pathExists(path.join(contentPath, 'workflows'));
-    
+
     if (!hasToolsDir) {
       result.issues.push({
         type: 'warning',
         category: 'compliance',
         location: { file: 'application structure' },
-        description: 'No dedicated tools directory found - may impact reference documentation organization',
+        description:
+          'No dedicated tools directory found - may impact reference documentation organization',
         evidence: ['Missing /tools directory'],
         suggestedFix: 'Organize tools into dedicated directory for better reference documentation',
-        confidence: 80
+        confidence: 80,
       });
     }
 
@@ -485,17 +510,20 @@ class ContentAccuracyValidator {
         description: 'No types directory found - may impact API reference documentation',
         evidence: ['Missing /types directory'],
         suggestedFix: 'Consider organizing types for better API documentation',
-        confidence: 70
+        confidence: 70,
       });
     }
   }
 
-  private async validateInlineDocumentationPatterns(contentPath: string, result: ValidationResult): Promise<void> {
+  private async validateInlineDocumentationPatterns(
+    contentPath: string,
+    result: ValidationResult,
+  ): Promise<void> {
     const sourceFiles = await this.getSourceFiles(contentPath);
-    
+
     for (const file of sourceFiles) {
       const content = await fs.readFile(file, 'utf-8');
-      
+
       // Check for proper function documentation that could support tutorials
       const functions = this.extractFunctions(content);
       for (const func of functions) {
@@ -507,11 +535,11 @@ class ContentAccuracyValidator {
             description: `Exported function '${func.name}' lacks documentation`,
             evidence: [func.signature],
             suggestedFix: 'Add JSDoc/TSDoc documentation to support tutorial and reference content',
-            confidence: 85
+            confidence: 85,
           });
         }
       }
-      
+
       // Check for proper error handling documentation
       const errorPatterns = content.match(/throw new \w*Error/g);
       if (errorPatterns && errorPatterns.length > 0) {
@@ -524,7 +552,7 @@ class ContentAccuracyValidator {
             description: 'Error throwing code found without error documentation',
             evidence: errorPatterns,
             suggestedFix: 'Document error conditions to support troubleshooting guides',
-            confidence: 75
+            confidence: 75,
           });
         }
       }
@@ -533,13 +561,13 @@ class ContentAccuracyValidator {
 
   private identifyDiataxisSection(filePath: string): string | null {
     const sections = ['tutorials', 'how-to', 'reference', 'explanation'];
-    
+
     for (const section of sections) {
       if (filePath.includes(`/${section}/`)) {
         return section;
       }
     }
-    
+
     return null;
   }
 
@@ -547,10 +575,10 @@ class ContentAccuracyValidator {
     filePath: string,
     content: string,
     section: string,
-    result: ValidationResult
+    result: ValidationResult,
   ): Promise<void> {
     const complianceRules = this.getDiataxisComplianceRules(section);
-    
+
     for (const rule of complianceRules) {
       if (!rule.check(content)) {
         result.issues.push({
@@ -560,7 +588,7 @@ class ContentAccuracyValidator {
           description: rule.message,
           evidence: [rule.evidence?.(content) || ''],
           suggestedFix: rule.fix,
-          confidence: rule.confidence
+          confidence: rule.confidence,
         });
       }
     }
@@ -570,66 +598,67 @@ class ContentAccuracyValidator {
     const rules: any = {
       tutorials: [
         {
-          check: (content: string) => content.includes('## Prerequisites') || content.includes('## Requirements'),
+          check: (content: string) =>
+            content.includes('## Prerequisites') || content.includes('## Requirements'),
           message: 'Tutorial should include prerequisites section',
           fix: 'Add a prerequisites or requirements section',
-          confidence: 90
+          confidence: 90,
         },
         {
           check: (content: string) => /step|Step|STEP/.test(content),
           message: 'Tutorial should be organized in clear steps',
           fix: 'Structure content with numbered steps or clear progression',
-          confidence: 85
+          confidence: 85,
         },
         {
           check: (content: string) => content.includes('```'),
           message: 'Tutorial should include practical code examples',
           fix: 'Add code blocks with working examples',
-          confidence: 80
-        }
+          confidence: 80,
+        },
       ],
       'how-to': [
         {
           check: (content: string) => /how to|How to|HOW TO/.test(content),
           message: 'How-to guide should focus on specific tasks',
           fix: 'Frame content around achieving specific goals',
-          confidence: 75
+          confidence: 75,
         },
         {
           check: (content: string) => content.length > 500,
           message: 'How-to guide should provide detailed guidance',
           fix: 'Expand with more detailed instructions',
-          confidence: 70
-        }
+          confidence: 70,
+        },
       ],
       reference: [
         {
           check: (content: string) => /##|###/.test(content),
           message: 'Reference should be well-structured with clear sections',
           fix: 'Add proper headings and organization',
-          confidence: 95
+          confidence: 95,
         },
         {
           check: (content: string) => /\|.*\|/.test(content),
           message: 'Reference should include tables for structured information',
           fix: 'Consider using tables for parameters, options, etc.',
-          confidence: 60
-        }
+          confidence: 60,
+        },
       ],
       explanation: [
         {
           check: (content: string) => content.includes('why') || content.includes('Why'),
           message: 'Explanation should address the "why" behind concepts',
           fix: 'Include rationale and context for decisions/concepts',
-          confidence: 80
+          confidence: 80,
         },
         {
           check: (content: string) => content.length > 800,
           message: 'Explanation should provide in-depth coverage',
           fix: 'Expand with more comprehensive explanation',
-          confidence: 70
-        }
-      ]
+          confidence: 70,
+        },
+      ],
     };
 
     return rules[section] || [];
@@ -642,7 +671,7 @@ class ContentAccuracyValidator {
     for (const file of files) {
       const content = await fs.readFile(file, 'utf-8');
       const codeBlocks = this.extractCodeBlocks(content);
-      
+
       for (const block of codeBlocks) {
         if (this.isValidatableLanguage(block.language)) {
           const validation = await this.validateCodeBlock(block, file);
@@ -652,13 +681,15 @@ class ContentAccuracyValidator {
     }
 
     return {
-      overallSuccess: allExamples.every(e => e.compilationSuccess),
+      overallSuccess: allExamples.every((e) => e.compilationSuccess),
       exampleResults: allExamples,
-      confidence: this.calculateCodeValidationConfidence(allExamples)
+      confidence: this.calculateCodeValidationConfidence(allExamples),
     };
   }
 
-  private extractCodeBlocks(content: string): Array<{ language: string; code: string; id: string }> {
+  private extractCodeBlocks(
+    content: string,
+  ): Array<{ language: string; code: string; id: string }> {
     const codeBlockPattern = /```(\w+)?\n([\s\S]*?)```/g;
     const blocks: Array<{ language: string; code: string; id: string }> = [];
     let match;
@@ -668,7 +699,7 @@ class ContentAccuracyValidator {
       blocks.push({
         language: match[1] || 'text',
         code: match[2].trim(),
-        id: `block-${index++}`
+        id: `block-${index++}`,
       });
     }
 
@@ -682,14 +713,14 @@ class ContentAccuracyValidator {
 
   private async validateCodeBlock(
     block: { language: string; code: string; id: string },
-    filePath: string
+    filePath: string,
   ): Promise<ExampleValidation> {
     const validation: ExampleValidation = {
       example: block.id,
       compilationSuccess: false,
       executionSuccess: false,
       issues: [],
-      confidence: 0
+      confidence: 0,
     };
 
     try {
@@ -710,7 +741,7 @@ class ContentAccuracyValidator {
         description: `Code validation failed: ${error.message}`,
         evidence: [block.code.substring(0, 100)],
         suggestedFix: 'Review and fix syntax errors',
-        confidence: 95
+        confidence: 95,
       });
     }
 
@@ -720,16 +751,16 @@ class ContentAccuracyValidator {
   private async validateTypeScriptCode(code: string, validation: ExampleValidation): Promise<void> {
     // Ensure temp directory exists
     await fs.mkdir(this.tempDir, { recursive: true });
-    
+
     const tempFile = path.join(this.tempDir, `temp-${Date.now()}.ts`);
-    
+
     try {
       // Write code to temporary file
       await fs.writeFile(tempFile, code, 'utf-8');
-      
+
       // Try to compile with TypeScript
       const { stderr } = await execAsync(`npx tsc --noEmit --skipLibCheck ${tempFile}`);
-      
+
       if (stderr && stderr.includes('error')) {
         validation.issues.push({
           type: 'error',
@@ -738,7 +769,7 @@ class ContentAccuracyValidator {
           description: 'TypeScript compilation error',
           evidence: [stderr],
           suggestedFix: 'Fix TypeScript syntax and type errors',
-          confidence: 90
+          confidence: 90,
         });
       } else {
         validation.compilationSuccess = true;
@@ -753,7 +784,7 @@ class ContentAccuracyValidator {
           description: 'TypeScript compilation failed',
           evidence: [error.stderr],
           suggestedFix: 'Fix compilation errors',
-          confidence: 95
+          confidence: 95,
         });
       }
     } finally {
@@ -780,7 +811,7 @@ class ContentAccuracyValidator {
         description: `JavaScript syntax error: ${error.message}`,
         evidence: [code.substring(0, 100)],
         suggestedFix: 'Fix JavaScript syntax errors',
-        confidence: 90
+        confidence: 90,
       });
     }
   }
@@ -798,15 +829,15 @@ class ContentAccuracyValidator {
         description: `Invalid JSON: ${error.message}`,
         evidence: [code.substring(0, 100)],
         suggestedFix: 'Fix JSON syntax errors',
-        confidence: 100
+        confidence: 100,
       });
     }
   }
 
   private async validateBashCode(code: string, validation: ExampleValidation): Promise<void> {
     // Basic bash syntax validation
-    const lines = code.split('\n').filter(line => line.trim() && !line.startsWith('#'));
-    
+    const lines = code.split('\n').filter((line) => line.trim() && !line.startsWith('#'));
+
     for (const line of lines) {
       // Check for basic syntax issues
       if (line.includes('&&') && line.includes('||')) {
@@ -817,10 +848,10 @@ class ContentAccuracyValidator {
           description: 'Complex command chaining may be confusing',
           evidence: [line],
           suggestedFix: 'Consider breaking into separate commands or adding explanation',
-          confidence: 60
+          confidence: 60,
         });
       }
-      
+
       // Check for unquoted variables in dangerous contexts
       if (line.includes('rm') && /\$\w+/.test(line) && !/'.*\$.*'/.test(line)) {
         validation.issues.push({
@@ -830,18 +861,19 @@ class ContentAccuracyValidator {
           description: 'Unquoted variable in potentially dangerous command',
           evidence: [line],
           suggestedFix: 'Quote variables to prevent word splitting',
-          confidence: 80
+          confidence: 80,
         });
       }
     }
-    
-    validation.compilationSuccess = validation.issues.filter(i => i.type === 'error').length === 0;
+
+    validation.compilationSuccess =
+      validation.issues.filter((i) => i.type === 'error').length === 0;
     validation.confidence = validation.compilationSuccess ? 70 : 20;
   }
 
   private calculateCodeValidationConfidence(examples: ExampleValidation[]): number {
     if (examples.length === 0) return 0;
-    
+
     const totalConfidence = examples.reduce((sum, ex) => sum + ex.confidence, 0);
     return Math.round(totalConfidence / examples.length);
   }
@@ -849,26 +881,39 @@ class ContentAccuracyValidator {
   public async getMarkdownFiles(contentPath: string, maxDepth: number = 5): Promise<string[]> {
     const files: string[] = [];
     const excludedDirs = new Set([
-      'node_modules', '.git', 'dist', 'build', '.next', '.nuxt', 
-      'coverage', '.tmp', 'tmp', '.cache', '.vscode', '.idea',
-      'logs', '.logs', '.npm', '.yarn'
+      'node_modules',
+      '.git',
+      'dist',
+      'build',
+      '.next',
+      '.nuxt',
+      'coverage',
+      '.tmp',
+      'tmp',
+      '.cache',
+      '.vscode',
+      '.idea',
+      'logs',
+      '.logs',
+      '.npm',
+      '.yarn',
     ]);
-    
+
     const scan = async (dir: string, currentDepth: number = 0): Promise<void> => {
       if (currentDepth > maxDepth) return;
-      
+
       try {
         const entries = await fs.readdir(dir, { withFileTypes: true });
-        
+
         for (const entry of entries) {
           const fullPath = path.join(dir, entry.name);
-          
+
           if (entry.isDirectory()) {
-            // Skip excluded directories  
+            // Skip excluded directories
             if (excludedDirs.has(entry.name) || entry.name.startsWith('.')) {
               continue;
             }
-            
+
             // Prevent symlink loops
             try {
               const stats = await fs.lstat(fullPath);
@@ -878,11 +923,11 @@ class ContentAccuracyValidator {
             } catch {
               continue;
             }
-            
+
             await scan(fullPath, currentDepth + 1);
           } else if (entry.name.endsWith('.md')) {
             files.push(fullPath);
-            
+
             // Limit total files to prevent memory issues
             if (files.length > 500) {
               console.warn('Markdown file limit reached (500), stopping scan');
@@ -895,39 +940,52 @@ class ContentAccuracyValidator {
         console.warn(`Warning: Could not read directory ${dir}:`, error);
       }
     };
-    
+
     try {
       await scan(contentPath);
     } catch (error) {
       console.warn('Error scanning directory:', error);
     }
-    
+
     return files;
   }
 
   private async getSourceFiles(contentPath: string, maxDepth: number = 5): Promise<string[]> {
     const files: string[] = [];
     const excludedDirs = new Set([
-      'node_modules', '.git', 'dist', 'build', '.next', '.nuxt', 
-      'coverage', '.tmp', 'tmp', '.cache', '.vscode', '.idea',
-      'logs', '.logs', '.npm', '.yarn'
+      'node_modules',
+      '.git',
+      'dist',
+      'build',
+      '.next',
+      '.nuxt',
+      'coverage',
+      '.tmp',
+      'tmp',
+      '.cache',
+      '.vscode',
+      '.idea',
+      'logs',
+      '.logs',
+      '.npm',
+      '.yarn',
     ]);
-    
+
     const scan = async (dir: string, currentDepth: number = 0): Promise<void> => {
       if (currentDepth > maxDepth) return;
-      
+
       try {
         const entries = await fs.readdir(dir, { withFileTypes: true });
-        
+
         for (const entry of entries) {
           const fullPath = path.join(dir, entry.name);
-          
+
           if (entry.isDirectory()) {
             // Skip excluded directories
             if (excludedDirs.has(entry.name) || entry.name.startsWith('.')) {
               continue;
             }
-            
+
             // Prevent symlink loops
             try {
               const stats = await fs.lstat(fullPath);
@@ -937,11 +995,15 @@ class ContentAccuracyValidator {
             } catch {
               continue;
             }
-            
+
             await scan(fullPath, currentDepth + 1);
-          } else if (entry.name.endsWith('.ts') || entry.name.endsWith('.js') || entry.name.endsWith('.md')) {
+          } else if (
+            entry.name.endsWith('.ts') ||
+            entry.name.endsWith('.js') ||
+            entry.name.endsWith('.md')
+          ) {
             files.push(fullPath);
-            
+
             // Limit total files to prevent memory issues
             if (files.length > 1000) {
               console.warn('File limit reached (1000), stopping scan');
@@ -954,13 +1016,13 @@ class ContentAccuracyValidator {
         console.warn(`Warning: Could not read directory ${dir}:`, error);
       }
     };
-    
+
     try {
       await scan(contentPath);
     } catch (error) {
       console.warn('Error scanning directory:', error);
     }
-    
+
     return files;
   }
 
@@ -973,59 +1035,79 @@ class ContentAccuracyValidator {
     }
   }
 
-  private extractFunctions(content: string): Array<{name: string, line: number, signature: string, isExported: boolean, hasDocumentation: boolean}> {
-    const functions: Array<{name: string, line: number, signature: string, isExported: boolean, hasDocumentation: boolean}> = [];
+  private extractFunctions(content: string): Array<{
+    name: string;
+    line: number;
+    signature: string;
+    isExported: boolean;
+    hasDocumentation: boolean;
+  }> {
+    const functions: Array<{
+      name: string;
+      line: number;
+      signature: string;
+      isExported: boolean;
+      hasDocumentation: boolean;
+    }> = [];
     const lines = content.split('\n');
-    
+
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
-      
+
       // Match function declarations and exports
       const functionMatch = line.match(/^(export\s+)?(async\s+)?function\s+(\w+)/);
       const arrowMatch = line.match(/^(export\s+)?(?:const|let|var)\s+(\w+)\s*=\s*(async\s+)?\(/);
-      
+
       if (functionMatch) {
         const name = functionMatch[3];
         const isExported = !!functionMatch[1];
         const hasDocumentation = this.checkForDocumentation(lines, i);
-        
+
         functions.push({
           name,
           line: i + 1,
           signature: line.trim(),
           isExported,
-          hasDocumentation
+          hasDocumentation,
         });
       } else if (arrowMatch) {
         const name = arrowMatch[2];
         const isExported = !!arrowMatch[1];
         const hasDocumentation = this.checkForDocumentation(lines, i);
-        
+
         functions.push({
           name,
           line: i + 1,
           signature: line.trim(),
           isExported,
-          hasDocumentation
+          hasDocumentation,
         });
       }
     }
-    
+
     return functions;
   }
 
-  private async checkInlineDocumentationQuality(_file: string, _content: string, _result: ValidationResult): Promise<void> {
+  private async checkInlineDocumentationQuality(
+    _file: string,
+    _content: string,
+    _result: ValidationResult,
+  ): Promise<void> {
     // Implementation for checking JSDoc/TSDoc quality
     // This could check for proper parameter documentation, return types, etc.
   }
 
-  private async validateReadmeStructure(_file: string, content: string, result: ValidationResult): Promise<void> {
+  private async validateReadmeStructure(
+    _file: string,
+    content: string,
+    result: ValidationResult,
+  ): Promise<void> {
     // Check if README follows good structure
     const hasTitle = /^#\s+/.test(content);
     const hasDescription = content.includes('## Description') || content.includes('## Overview');
     const hasInstallation = content.includes('## Installation') || content.includes('## Setup');
     const hasUsage = content.includes('## Usage') || content.includes('## Getting Started');
-    
+
     if (!hasTitle) {
       result.issues.push({
         type: 'warning',
@@ -1034,7 +1116,7 @@ class ContentAccuracyValidator {
         description: 'README missing clear title',
         evidence: ['No H1 heading found'],
         suggestedFix: 'Add clear title with # heading',
-        confidence: 90
+        confidence: 90,
       });
     }
 
@@ -1045,13 +1127,18 @@ class ContentAccuracyValidator {
         location: { file: 'README.md' },
         description: 'README lacks essential sections (description, installation, usage)',
         evidence: ['Missing standard README sections'],
-        suggestedFix: 'Add sections for description, installation, and usage following Diataxis principles',
-        confidence: 85
+        suggestedFix:
+          'Add sections for description, installation, and usage following Diataxis principles',
+        confidence: 85,
       });
     }
   }
 
-  private async checkModuleDocumentation(_file: string, _content: string, _result: ValidationResult): Promise<void> {
+  private async checkModuleDocumentation(
+    _file: string,
+    _content: string,
+    _result: ValidationResult,
+  ): Promise<void> {
     // Implementation for checking module-level documentation
     // This could check for file-level JSDoc, proper exports documentation, etc.
   }
@@ -1059,12 +1146,12 @@ class ContentAccuracyValidator {
   private checkForDocumentation(lines: string[], functionLineIndex: number): boolean {
     // Look backwards from the function line to find documentation
     let checkIndex = functionLineIndex - 1;
-    
+
     // Skip empty lines
     while (checkIndex >= 0 && lines[checkIndex].trim() === '') {
       checkIndex--;
     }
-    
+
     // Check if we found the end of a JSDoc comment
     if (checkIndex >= 0 && lines[checkIndex].trim() === '*/') {
       // Look backwards to find the start of the JSDoc block
@@ -1080,12 +1167,16 @@ class ContentAccuracyValidator {
         jsDocStart--;
       }
     }
-    
+
     // Also check for single-line JSDoc comments
-    if (checkIndex >= 0 && lines[checkIndex].trim().startsWith('/**') && lines[checkIndex].includes('*/')) {
+    if (
+      checkIndex >= 0 &&
+      lines[checkIndex].trim().startsWith('/**') &&
+      lines[checkIndex].includes('*/')
+    ) {
       return true;
     }
-    
+
     return false;
   }
 
@@ -1093,32 +1184,38 @@ class ContentAccuracyValidator {
     // Check if the path contains application source code vs documentation
     const hasSrcDir = await this.pathExists(path.join(contentPath, 'src'));
     const hasPackageJson = await this.pathExists(path.join(contentPath, 'package.json'));
-    const hasTypescriptFiles = (await this.getSourceFiles(contentPath)).some(file => file.endsWith('.ts'));
-    
+    const hasTypescriptFiles = (await this.getSourceFiles(contentPath)).some((file) =>
+      file.endsWith('.ts'),
+    );
+
     // If path ends with 'src' or is a project root with src/, analyze as application code
-    if (contentPath.endsWith('/src') || contentPath.endsWith('\\src') || (hasSrcDir && hasPackageJson)) {
+    if (
+      contentPath.endsWith('/src') ||
+      contentPath.endsWith('\\src') ||
+      (hasSrcDir && hasPackageJson)
+    ) {
       return true;
     }
-    
+
     // If path contains TypeScript/JavaScript files and package.json, treat as application code
     if (hasTypescriptFiles && hasPackageJson) {
       return true;
     }
-    
+
     // If path is specifically a documentation directory, analyze as documentation
     if (contentPath.includes('/docs') || contentPath.includes('\\docs')) {
       return false;
     }
-    
+
     return false;
   }
 
   private async analyzeDiataxisStructure(contentPath: string): Promise<{ sections: string[] }> {
     const sections: string[] = [];
-    
+
     try {
       const entries = await fs.readdir(contentPath, { withFileTypes: true });
-      
+
       for (const entry of entries) {
         if (entry.isDirectory()) {
           const dirName = entry.name;
@@ -1130,35 +1227,35 @@ class ContentAccuracyValidator {
     } catch {
       // Directory doesn't exist
     }
-    
+
     return { sections };
   }
 
   private updateAccuracyConfidence(result: ValidationResult): void {
-    const errorCount = result.issues.filter(i => i.type === 'error').length;
-    const warningCount = result.issues.filter(i => i.type === 'warning').length;
-    
+    const errorCount = result.issues.filter((i) => i.type === 'error').length;
+    const warningCount = result.issues.filter((i) => i.type === 'warning').length;
+
     // Base confidence starts high and decreases with issues
     let confidence = 95;
     confidence -= errorCount * 20;
     confidence -= warningCount * 5;
     confidence = Math.max(0, confidence);
-    
+
     result.confidence.breakdown.technologyDetection = confidence;
   }
 
   private calculateOverallMetrics(result: ValidationResult): void {
     const breakdown = result.confidence.breakdown;
-    const values = Object.values(breakdown).filter(v => v > 0);
-    
+    const values = Object.values(breakdown).filter((v) => v > 0);
+
     if (values.length > 0) {
       result.confidence.overall = Math.round(values.reduce((a, b) => a + b, 0) / values.length);
     }
-    
+
     // Determine overall success
-    const criticalIssues = result.issues.filter(i => i.type === 'error').length;
+    const criticalIssues = result.issues.filter((i) => i.type === 'error').length;
     result.success = criticalIssues === 0;
-    
+
     // Add risk factors based on issues
     if (criticalIssues > 0) {
       result.confidence.riskFactors.push({
@@ -1166,10 +1263,10 @@ class ContentAccuracyValidator {
         category: 'accuracy',
         description: `${criticalIssues} critical accuracy issues found`,
         impact: 'Users may encounter broken examples or incorrect information',
-        mitigation: 'Fix all critical issues before publication'
+        mitigation: 'Fix all critical issues before publication',
       });
     }
-    
+
     const uncertaintyCount = result.uncertainties.length;
     if (uncertaintyCount > 5) {
       result.confidence.riskFactors.push({
@@ -1177,7 +1274,7 @@ class ContentAccuracyValidator {
         category: 'completeness',
         description: `${uncertaintyCount} areas requiring clarification`,
         impact: 'Documentation may lack specificity for user context',
-        mitigation: 'Address high-priority uncertainties with user input'
+        mitigation: 'Address high-priority uncertainties with user input',
       });
     }
   }
@@ -1185,50 +1282,54 @@ class ContentAccuracyValidator {
   private generateRecommendations(result: ValidationResult, _options: ValidationOptions): void {
     const recommendations: string[] = [];
     const nextSteps: string[] = [];
-    
+
     // Generate recommendations based on issues found
-    const errorCount = result.issues.filter(i => i.type === 'error').length;
+    const errorCount = result.issues.filter((i) => i.type === 'error').length;
     if (errorCount > 0) {
       recommendations.push(`Fix ${errorCount} critical accuracy issues before publication`);
       nextSteps.push('Review and resolve all error-level validation issues');
     }
-    
-    const warningCount = result.issues.filter(i => i.type === 'warning').length;
+
+    const warningCount = result.issues.filter((i) => i.type === 'warning').length;
     if (warningCount > 0) {
       recommendations.push(`Address ${warningCount} potential accuracy concerns`);
       nextSteps.push('Review warning-level issues and apply fixes where appropriate');
     }
-    
-    const uncertaintyCount = result.uncertainties.filter(u => u.severity === 'high' || u.severity === 'critical').length;
+
+    const uncertaintyCount = result.uncertainties.filter(
+      (u) => u.severity === 'high' || u.severity === 'critical',
+    ).length;
     if (uncertaintyCount > 0) {
       recommendations.push(`Clarify ${uncertaintyCount} high-uncertainty areas`);
       nextSteps.push('Gather user input on areas flagged for clarification');
     }
-    
+
     // Code validation recommendations
     if (result.codeValidation && !result.codeValidation.overallSuccess) {
       recommendations.push('Fix code examples that fail compilation or execution tests');
       nextSteps.push('Test all code examples in appropriate development environment');
     }
-    
+
     // Completeness recommendations
-    const missingCompliance = result.issues.filter(i => i.category === 'compliance').length;
+    const missingCompliance = result.issues.filter((i) => i.category === 'compliance').length;
     if (missingCompliance > 0) {
       recommendations.push('Improve Diataxis framework compliance for better user experience');
       nextSteps.push('Restructure content to better align with Diataxis principles');
     }
-    
+
     // General recommendations based on confidence level
     if (result.confidence.overall < 70) {
-      recommendations.push('Overall confidence is below recommended threshold - consider comprehensive review');
+      recommendations.push(
+        'Overall confidence is below recommended threshold - consider comprehensive review',
+      );
       nextSteps.push('Conduct manual review of generated content before publication');
     }
-    
+
     if (recommendations.length === 0) {
       recommendations.push('Content validation passed - ready for publication');
       nextSteps.push('Deploy documentation and monitor for user feedback');
     }
-    
+
     result.recommendations = recommendations;
     result.nextSteps = nextSteps;
   }
@@ -1236,54 +1337,61 @@ class ContentAccuracyValidator {
 
 export const validateDiataxisContent: Tool = {
   name: 'validate_diataxis_content',
-  description: 'Validate the accuracy, completeness, and compliance of generated Diataxis documentation',
+  description:
+    'Validate the accuracy, completeness, and compliance of generated Diataxis documentation',
   inputSchema: {
     type: 'object',
     properties: {
       contentPath: {
         type: 'string',
-        description: 'Path to the documentation directory to validate'
+        description: 'Path to the documentation directory to validate',
       },
       analysisId: {
         type: 'string',
-        description: 'Optional repository analysis ID for context-aware validation'
+        description: 'Optional repository analysis ID for context-aware validation',
       },
       validationType: {
         type: 'string',
         enum: ['accuracy', 'completeness', 'compliance', 'all'],
         default: 'all',
-        description: 'Type of validation to perform'
+        description: 'Type of validation to perform',
       },
       includeCodeValidation: {
         type: 'boolean',
         default: true,
-        description: 'Whether to validate code examples for correctness'
+        description: 'Whether to validate code examples for correctness',
       },
       confidence: {
         type: 'string',
         enum: ['strict', 'moderate', 'permissive'],
         default: 'moderate',
-        description: 'Validation confidence level - stricter levels catch more issues'
-      }
+        description: 'Validation confidence level - stricter levels catch more issues',
+      },
     },
-    required: ['contentPath']
-  }
+    required: ['contentPath'],
+  },
 };
 
 export async function handleValidateDiataxisContent(args: any): Promise<ValidationResult> {
   const validator = new ContentAccuracyValidator();
-  
+
   // Add timeout protection to prevent infinite hangs
   const timeoutMs = 120000; // 2 minutes
   let timeoutHandle: NodeJS.Timeout;
   const timeoutPromise = new Promise<ValidationResult>((_, reject) => {
     timeoutHandle = setTimeout(() => {
-      reject(new Error(`Validation timed out after ${timeoutMs / 1000} seconds. This may be due to a large directory structure. Try validating a smaller subset or specific directory.`));
+      reject(
+        new Error(
+          `Validation timed out after ${
+            timeoutMs / 1000
+          } seconds. This may be due to a large directory structure. Try validating a smaller subset or specific directory.`,
+        ),
+      );
     }, timeoutMs);
   });
-  
+
   const validationPromise = validator.validateContent(args);
-  
+
   try {
     const result = await Promise.race([validationPromise, timeoutPromise]);
     clearTimeout(timeoutHandle!);
@@ -1300,15 +1408,17 @@ export async function handleValidateDiataxisContent(args: any): Promise<Validati
           frameworkVersionAccuracy: 0,
           codeExampleRelevance: 0,
           architecturalAssumptions: 0,
-          businessContextAlignment: 0
+          businessContextAlignment: 0,
         },
-        riskFactors: [{
-          type: 'high',
-          category: 'validation',
-          description: 'Validation process failed or timed out',
-          impact: 'Unable to complete content validation',
-          mitigation: 'Try validating a smaller directory or specific subset of files'
-        }]
+        riskFactors: [
+          {
+            type: 'high',
+            category: 'validation',
+            description: 'Validation process failed or timed out',
+            impact: 'Unable to complete content validation',
+            mitigation: 'Try validating a smaller directory or specific subset of files',
+          },
+        ],
       },
       issues: [],
       uncertainties: [],
@@ -1316,13 +1426,13 @@ export async function handleValidateDiataxisContent(args: any): Promise<Validati
         'Validation failed or timed out',
         'Consider validating smaller directory subsets',
         'Check for very large files or deep directory structures',
-        `Error: ${error.message}`
+        `Error: ${error.message}`,
       ],
       nextSteps: [
         'Verify the content path is correct and accessible',
         'Try validating specific subdirectories instead of the entire project',
-        'Check for circular symlinks or very deep directory structures'
-      ]
+        'Check for circular symlinks or very deep directory structures',
+      ],
     };
   }
 }
@@ -1338,8 +1448,13 @@ interface GeneralValidationResult {
 }
 
 export async function validateGeneralContent(args: any): Promise<GeneralValidationResult> {
-  const { contentPath, validationType = 'all', includeCodeValidation = true, followExternalLinks = false } = args;
-  
+  const {
+    contentPath,
+    validationType = 'all',
+    includeCodeValidation = true,
+    followExternalLinks = false,
+  } = args;
+
   const result: GeneralValidationResult = {
     success: true,
     linksChecked: 0,
@@ -1347,26 +1462,26 @@ export async function validateGeneralContent(args: any): Promise<GeneralValidati
     codeBlocksValidated: 0,
     codeErrors: [],
     recommendations: [],
-    summary: ''
+    summary: '',
   };
 
   try {
     // Get all markdown files
     const validator = new ContentAccuracyValidator();
     const files = await validator.getMarkdownFiles(contentPath);
-    
+
     // Check links if requested
     if (validationType === 'all' || validationType === 'links') {
       for (const file of files) {
         const content = await fs.readFile(file, 'utf-8');
         const links = extractLinksFromMarkdown(content);
-        
+
         for (const link of links) {
           result.linksChecked++;
-          
+
           // Skip external links unless explicitly requested
           if (link.startsWith('http') && !followExternalLinks) continue;
-          
+
           // Check internal links
           if (!link.startsWith('http')) {
             const fullPath = path.resolve(path.dirname(file), link);
@@ -1386,10 +1501,10 @@ export async function validateGeneralContent(args: any): Promise<GeneralValidati
       for (const file of files) {
         const content = await fs.readFile(file, 'utf-8');
         const codeBlocks = extractCodeBlocks(content);
-        
+
         for (const block of codeBlocks) {
           result.codeBlocksValidated++;
-          
+
           // Basic syntax validation
           if (block.language && block.code.trim()) {
             if (block.language === 'javascript' || block.language === 'js') {
@@ -1423,10 +1538,15 @@ export async function validateGeneralContent(args: any): Promise<GeneralValidati
     }
 
     // Create summary
-    result.summary = `Validated ${files.length} files, ${result.linksChecked} links, ${result.codeBlocksValidated} code blocks. ${result.success ? 'PASSED' : `ISSUES FOUND: ${result.brokenLinks.length + result.codeErrors.length}`}`;
+    result.summary = `Validated ${files.length} files, ${result.linksChecked} links, ${
+      result.codeBlocksValidated
+    } code blocks. ${
+      result.success
+        ? 'PASSED'
+        : `ISSUES FOUND: ${result.brokenLinks.length + result.codeErrors.length}`
+    }`;
 
     return result;
-
   } catch (error) {
     result.success = false;
     result.recommendations.push(`Validation failed: ${error}`);
@@ -1440,11 +1560,11 @@ function extractLinksFromMarkdown(content: string): string[] {
   const linkRegex = /\[([^\]]*)\]\(([^)]+)\)/g;
   const links: string[] = [];
   let match;
-  
+
   while ((match = linkRegex.exec(content)) !== null) {
     links.push(match[2]); // The URL part
   }
-  
+
   return links;
 }
 
@@ -1453,13 +1573,13 @@ function extractCodeBlocks(content: string): { language: string; code: string }[
   const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
   const blocks: { language: string; code: string }[] = [];
   let match;
-  
+
   while ((match = codeBlockRegex.exec(content)) !== null) {
     blocks.push({
       language: match[1] || 'text',
-      code: match[2]
+      code: match[2],
     });
   }
-  
+
   return blocks;
 }

@@ -28,7 +28,7 @@ export async function analyzeProjectContext(projectPath: string): Promise<Projec
     hasTests: false,
     hasCI: false,
     readmeExists: false,
-    documentationGaps: []
+    documentationGaps: [],
   };
 
   // Check for README
@@ -40,10 +40,10 @@ export async function analyzeProjectContext(projectPath: string): Promise<Projec
     try {
       const packageJson = JSON.parse(await fs.readFile(packageJsonPath, 'utf-8'));
       const deps = { ...packageJson.dependencies, ...packageJson.devDependencies };
-      
+
       context.projectType = 'node_application';
       context.languages.push('JavaScript');
-      
+
       // Detect frameworks
       if (deps['react']) context.frameworks.push('React');
       if (deps['vue']) context.frameworks.push('Vue');
@@ -53,7 +53,7 @@ export async function analyzeProjectContext(projectPath: string): Promise<Projec
       if (deps['nuxt']) context.frameworks.push('Nuxt.js');
       if (deps['svelte']) context.frameworks.push('Svelte');
       if (deps['typescript']) context.languages.push('TypeScript');
-      
+
       // Detect package manager
       if (await fileExists(join(projectPath, 'yarn.lock'))) {
         context.packageManager = 'yarn';
@@ -69,9 +69,11 @@ export async function analyzeProjectContext(projectPath: string): Promise<Projec
   }
 
   // Check for Python projects
-  if (await fileExists(join(projectPath, 'requirements.txt')) || 
-      await fileExists(join(projectPath, 'pyproject.toml')) ||
-      await fileExists(join(projectPath, 'setup.py'))) {
+  if (
+    (await fileExists(join(projectPath, 'requirements.txt'))) ||
+    (await fileExists(join(projectPath, 'pyproject.toml'))) ||
+    (await fileExists(join(projectPath, 'setup.py')))
+  ) {
     context.projectType = 'python_application';
     context.languages.push('Python');
   }
@@ -103,7 +105,7 @@ export async function analyzeProjectContext(projectPath: string): Promise<Projec
 export async function generateTechnicalWriterPrompts(
   promptType: string,
   projectPath: string,
-  args: Record<string, any> = {}
+  args: Record<string, any> = {},
 ): Promise<PromptMessage[]> {
   const context = await analyzeProjectContext(projectPath);
 
@@ -125,15 +127,21 @@ export async function generateTechnicalWriterPrompts(
   }
 }
 
-function generateTutorialWriterPrompt(context: ProjectContext, args: Record<string, any>): PromptMessage[] {
+function generateTutorialWriterPrompt(
+  context: ProjectContext,
+  args: Record<string, any>,
+): PromptMessage[] {
   const targetAudience = args.target_audience || 'beginners';
   const learningGoal = args.learning_goal || 'get started with the project';
 
-  return [{
-    role: 'user',
-    content: {
-      type: 'text',
-      text: `Create a comprehensive tutorial for a ${context.projectType} project following Diataxis framework principles.
+  return [
+    {
+      role: 'user',
+      content: {
+        type: 'text',
+        text: `Create a comprehensive tutorial for a ${
+          context.projectType
+        } project following Diataxis framework principles.
 
 **Project Context:**
 - Type: ${context.projectType}
@@ -162,20 +170,27 @@ function generateTutorialWriterPrompt(context: ProjectContext, args: Record<stri
 - Reference setup_development_environment for environment setup
 - Consider validate_tutorial_steps for step verification
 
-Please create a tutorial that teaches through guided practice:`
-    }
-  }];
+Please create a tutorial that teaches through guided practice:`,
+      },
+    },
+  ];
 }
 
-function generateHowToGuideWriterPrompt(context: ProjectContext, args: Record<string, any>): PromptMessage[] {
+function generateHowToGuideWriterPrompt(
+  context: ProjectContext,
+  args: Record<string, any>,
+): PromptMessage[] {
   const problemToSolve = args.problem || 'common development task';
   const userExperience = args.user_experience || 'intermediate';
 
-  return [{
-    role: 'user',
-    content: {
-      type: 'text',
-      text: `Create a practical how-to guide for a ${context.projectType} project following Diataxis framework principles.
+  return [
+    {
+      role: 'user',
+      content: {
+        type: 'text',
+        text: `Create a practical how-to guide for a ${
+          context.projectType
+        } project following Diataxis framework principles.
 
 **Project Context:**
 - Type: ${context.projectType}
@@ -204,20 +219,27 @@ function generateHowToGuideWriterPrompt(context: ProjectContext, args: Record<st
 - Reference best_practices for recommended approaches
 - Consider validate_solution for testing guidance
 
-Please create a how-to guide that solves real problems:`
-    }
-  }];
+Please create a how-to guide that solves real problems:`,
+      },
+    },
+  ];
 }
 
-function generateReferenceWriterPrompt(context: ProjectContext, args: Record<string, any>): PromptMessage[] {
+function generateReferenceWriterPrompt(
+  context: ProjectContext,
+  args: Record<string, any>,
+): PromptMessage[] {
   const referenceType = args.reference_type || 'API';
   const completeness = args.completeness || 'comprehensive';
 
-  return [{
-    role: 'user',
-    content: {
-      type: 'text',
-      text: `Create comprehensive reference documentation for a ${context.projectType} project following Diataxis framework principles.
+  return [
+    {
+      role: 'user',
+      content: {
+        type: 'text',
+        text: `Create comprehensive reference documentation for a ${
+          context.projectType
+        } project following Diataxis framework principles.
 
 **Project Context:**
 - Type: ${context.projectType}
@@ -246,20 +268,27 @@ function generateReferenceWriterPrompt(context: ProjectContext, args: Record<str
 - Reference code_analysis for implementation details
 - Consider validate_completeness for coverage verification
 
-Please create reference documentation that serves as the authoritative source:`
-    }
-  }];
+Please create reference documentation that serves as the authoritative source:`,
+      },
+    },
+  ];
 }
 
-function generateExplanationWriterPrompt(context: ProjectContext, args: Record<string, any>): PromptMessage[] {
+function generateExplanationWriterPrompt(
+  context: ProjectContext,
+  args: Record<string, any>,
+): PromptMessage[] {
   const conceptToExplain = args.concept || 'system architecture';
   const depth = args.depth || 'detailed';
 
-  return [{
-    role: 'user',
-    content: {
-      type: 'text',
-      text: `Create in-depth explanation documentation for a ${context.projectType} project following Diataxis framework principles.
+  return [
+    {
+      role: 'user',
+      content: {
+        type: 'text',
+        text: `Create in-depth explanation documentation for a ${
+          context.projectType
+        } project following Diataxis framework principles.
 
 **Project Context:**
 - Type: ${context.projectType}
@@ -288,20 +317,27 @@ function generateExplanationWriterPrompt(context: ProjectContext, args: Record<s
 - Reference design_patterns for architectural insights
 - Consider validate_understanding for comprehension checks
 
-Please create explanatory content that builds deep understanding:`
-    }
-  }];
+Please create explanatory content that builds deep understanding:`,
+      },
+    },
+  ];
 }
 
-function generateDiataxisOrganizerPrompt(context: ProjectContext, args: Record<string, any>): PromptMessage[] {
+function generateDiataxisOrganizerPrompt(
+  context: ProjectContext,
+  args: Record<string, any>,
+): PromptMessage[] {
   const currentDocs = args.current_docs || 'mixed documentation';
   const priority = args.priority || 'user needs';
 
-  return [{
-    role: 'user',
-    content: {
-      type: 'text',
-      text: `Organize existing documentation for a ${context.projectType} project using Diataxis framework principles.
+  return [
+    {
+      role: 'user',
+      content: {
+        type: 'text',
+        text: `Organize existing documentation for a ${
+          context.projectType
+        } project using Diataxis framework principles.
 
 **Project Context:**
 - Type: ${context.projectType}
@@ -329,19 +365,26 @@ function generateDiataxisOrganizerPrompt(context: ProjectContext, args: Record<s
 - Reference content_classification for categorization
 - Consider validate_organization for structure verification
 
-Please organize documentation according to Diataxis principles:`
-    }
-  }];
+Please organize documentation according to Diataxis principles:`,
+      },
+    },
+  ];
 }
 
-function generateReadmeOptimizerPrompt(context: ProjectContext, args: Record<string, any>): PromptMessage[] {
+function generateReadmeOptimizerPrompt(
+  context: ProjectContext,
+  args: Record<string, any>,
+): PromptMessage[] {
   const optimizationFocus = args.optimization_focus || 'general';
-  
-  return [{
-    role: 'user',
-    content: {
-      type: 'text',
-      text: `Optimize existing README content for a ${context.projectType} project using Diataxis-aware principles.
+
+  return [
+    {
+      role: 'user',
+      content: {
+        type: 'text',
+        text: `Optimize existing README content for a ${
+          context.projectType
+        } project using Diataxis-aware principles.
 
 **Project Context:**
 - Type: ${context.projectType}
@@ -369,9 +412,10 @@ function generateReadmeOptimizerPrompt(context: ProjectContext, args: Record<str
 - Reference diataxis_principles for content organization
 - Consider validate_readme_structure for optimization verification
 
-Please optimize the README with Diataxis awareness:`
-    }
-  }];
+Please optimize the README with Diataxis awareness:`,
+      },
+    },
+  ];
 }
 
 // Helper functions
@@ -387,15 +431,15 @@ async function fileExists(path: string): Promise<boolean> {
 async function hasTestFiles(projectPath: string): Promise<boolean> {
   try {
     const files = await fs.readdir(projectPath, { recursive: true });
-    return files.some(file => 
-      typeof file === 'string' && (
-        file.includes('test') || 
-        file.includes('spec') || 
-        file.endsWith('.test.js') || 
-        file.endsWith('.test.ts') ||
-        file.endsWith('.spec.js') || 
-        file.endsWith('.spec.ts')
-      )
+    return files.some(
+      (file) =>
+        typeof file === 'string' &&
+        (file.includes('test') ||
+          file.includes('spec') ||
+          file.endsWith('.test.js') ||
+          file.endsWith('.test.ts') ||
+          file.endsWith('.spec.js') ||
+          file.endsWith('.spec.ts')),
     );
   } catch {
     return false;
@@ -409,9 +453,9 @@ async function hasCIConfig(projectPath: string): Promise<boolean> {
     'circle.yml',
     '.circleci/config.yml',
     'travis.yml',
-    '.travis.yml'
+    '.travis.yml',
   ];
-  
+
   for (const file of ciFiles) {
     if (await fileExists(join(projectPath, file))) {
       return true;
@@ -420,13 +464,16 @@ async function hasCIConfig(projectPath: string): Promise<boolean> {
   return false;
 }
 
-async function identifyDocumentationGaps(projectPath: string, context: ProjectContext): Promise<string[]> {
+async function identifyDocumentationGaps(
+  projectPath: string,
+  context: ProjectContext,
+): Promise<string[]> {
   const gaps: string[] = [];
-  
+
   if (!context.readmeExists) {
     gaps.push('readme');
   }
-  
+
   // Check for common documentation files
   const docFiles = [
     'CONTRIBUTING.md',
@@ -434,14 +481,14 @@ async function identifyDocumentationGaps(projectPath: string, context: ProjectCo
     'LICENSE',
     'docs/api.md',
     'docs/tutorial.md',
-    'docs/installation.md'
+    'docs/installation.md',
   ];
-  
+
   for (const docFile of docFiles) {
     if (!(await fileExists(join(projectPath, docFile)))) {
       gaps.push(docFile.toLowerCase().replace('.md', '').replace('docs/', ''));
     }
   }
-  
+
   return gaps;
 }

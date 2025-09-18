@@ -50,7 +50,7 @@ export async function generateConfig(args: unknown): Promise<{ content: any[] }>
       projectName,
       projectDescription,
       outputPath,
-      filesCreated: configFiles.map(f => f.path),
+      filesCreated: configFiles.map((f) => f.path),
       totalFiles: configFiles.length,
     };
 
@@ -115,7 +115,7 @@ async function generateDocusaurusConfig(
   favicon: 'img/favicon.ico',
   organizationName: 'your-org',
   projectName: '${projectName.toLowerCase().replace(/\\s+/g, '-')}',
-  
+
   presets: [
     [
       'classic',
@@ -267,22 +267,22 @@ title = '${projectName}'
 
 [params]
   description = '${projectDescription}'
-  
+
 [[menu.main]]
   name = 'Tutorials'
   url = '/tutorials/'
   weight = 10
-  
+
 [[menu.main]]
   name = 'How-To'
   url = '/how-to/'
   weight = 20
-  
+
 [[menu.main]]
   name = 'Reference'
   url = '/reference/'
   weight = 30
-  
+
 [[menu.main]]
   name = 'Explanation'
   url = '/explanation/'
@@ -349,7 +349,7 @@ async function generateEleventyConfig(
       path: '.eleventy.js',
       content: `module.exports = function(eleventyConfig) {
   eleventyConfig.addPassthroughCopy("css");
-  
+
   return {
     dir: {
       input: "src",

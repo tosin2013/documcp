@@ -12,7 +12,11 @@ const inputSchema = z.object({
   ssg: z.enum(['jekyll', 'hugo', 'docusaurus', 'mkdocs', 'eleventy']),
   port: z.number().optional().default(3000).describe('Port for local server'),
   timeout: z.number().optional().default(60).describe('Timeout in seconds for build process'),
-  skipBuild: z.boolean().optional().default(false).describe('Skip build step and only start server'),
+  skipBuild: z
+    .boolean()
+    .optional()
+    .default(false)
+    .describe('Skip build step and only start server'),
 });
 
 interface LocalTestResult {
@@ -101,16 +105,18 @@ export async function testLocalDeployment(args: unknown): Promise<{ content: any
     // Step 1: Check if configuration exists
     const configExists = await checkConfigurationExists(repositoryPath, config);
     if (!configExists) {
-      testResult.recommendations.push(`Missing configuration file. Expected one of: ${config.configFiles.join(', ')}`);
+      testResult.recommendations.push(
+        `Missing configuration file. Expected one of: ${config.configFiles.join(', ')}`,
+      );
       testResult.nextSteps.push('Run generate_config tool to create configuration');
     }
 
     // Step 2: Install dependencies if needed
     if (config.installCommand && !skipBuild) {
       try {
-        const { stderr } = await execAsync(config.installCommand, { 
+        const { stderr } = await execAsync(config.installCommand, {
           cwd: repositoryPath,
-          timeout: timeout * 1000 
+          timeout: timeout * 1000,
         });
         if (stderr && !stderr.includes('npm WARN')) {
           testResult.recommendations.push('Dependency installation warnings detected');
@@ -124,20 +130,20 @@ export async function testLocalDeployment(args: unknown): Promise<{ content: any
     // Step 3: Build the site (unless skipped)
     if (!skipBuild) {
       try {
-        const { stdout, stderr } = await execAsync(config.buildCommand, { 
+        const { stdout, stderr } = await execAsync(config.buildCommand, {
           cwd: repositoryPath,
-          timeout: timeout * 1000 
+          timeout: timeout * 1000,
         });
         testResult.buildSuccess = true;
         testResult.buildOutput = stdout;
-        
+
         if (stderr && stderr.trim()) {
           testResult.buildErrors = stderr;
           if (stderr.includes('error') || stderr.includes('Error')) {
             testResult.recommendations.push('Build completed with errors - review build output');
           }
         }
-        
+
         // Check if build directory was created
         const buildDirExists = await checkBuildOutput(repositoryPath, config.buildDir);
         if (!buildDirExists) {
@@ -161,14 +167,20 @@ export async function testLocalDeployment(args: unknown): Promise<{ content: any
       const serverResult = await startLocalServer(config, port, repositoryPath, 10); // 10 second timeout for server start
       testResult.serverStarted = serverResult.started;
       testResult.localUrl = serverResult.url;
-      
+
       if (testResult.serverStarted) {
-        testResult.recommendations.push('Local server started successfully - test manually at the provided URL');
+        testResult.recommendations.push(
+          'Local server started successfully - test manually at the provided URL',
+        );
         testResult.nextSteps.push('Verify content loads correctly in browser');
         testResult.nextSteps.push('Test navigation and responsive design');
       } else {
-        testResult.recommendations.push('Could not automatically start local server - run manually using the provided script');
-        testResult.nextSteps.push('Start server manually and verify it works before GitHub deployment');
+        testResult.recommendations.push(
+          'Could not automatically start local server - run manually using the provided script',
+        );
+        testResult.nextSteps.push(
+          'Start server manually and verify it works before GitHub deployment',
+        );
       }
     }
 
@@ -177,7 +189,9 @@ export async function testLocalDeployment(args: unknown): Promise<{ content: any
       testResult.recommendations.push('Local deployment test successful - ready for GitHub Pages');
       testResult.nextSteps.push('Run deploy_pages tool to set up GitHub Actions workflow');
     } else if (testResult.buildSuccess && !testResult.serverStarted) {
-      testResult.recommendations.push('Build successful but server test incomplete - manual verification needed');
+      testResult.recommendations.push(
+        'Build successful but server test incomplete - manual verification needed',
+      );
       testResult.nextSteps.push('Test server manually before deploying to GitHub');
     }
 
@@ -193,14 +207,16 @@ export async function testLocalDeployment(args: unknown): Promise<{ content: any
         {
           type: testResult.buildSuccess ? 'info' : 'warning',
           title: 'Local Deployment Test Complete',
-          description: `Build ${testResult.buildSuccess ? 'succeeded' : 'failed'}, Server ${testResult.serverStarted ? 'started' : 'failed to start'}`,
+          description: `Build ${testResult.buildSuccess ? 'succeeded' : 'failed'}, Server ${
+            testResult.serverStarted ? 'started' : 'failed to start'
+          }`,
         },
       ],
-      nextSteps: testResult.nextSteps.map(step => ({
+      nextSteps: testResult.nextSteps.map((step) => ({
         action: step,
         toolRequired: getRecommendedTool(step),
         description: step,
-        priority: testResult.buildSuccess ? 'medium' : 'high' as const,
+        priority: testResult.buildSuccess ? 'medium' : ('high' as const),
       })),
     };
 
@@ -249,11 +265,16 @@ async function checkBuildOutput(repoPath: string, buildDir: string): Promise<boo
   return false;
 }
 
-async function startLocalServer(config: SSGConfig, port: number, repoPath: string, timeout: number): Promise<{ started: boolean; url?: string }> {
+async function startLocalServer(
+  config: SSGConfig,
+  port: number,
+  repoPath: string,
+  timeout: number,
+): Promise<{ started: boolean; url?: string }> {
   return new Promise((resolve) => {
     let serverProcess: any = null;
     let resolved = false;
-    
+
     const cleanup = () => {
       if (serverProcess && !serverProcess.killed) {
         try {
@@ -264,7 +285,7 @@ async function startLocalServer(config: SSGConfig, port: number, repoPath: strin
               serverProcess.kill('SIGKILL');
             }
           }, 1000);
-          
+
           // Clear the timeout if process exits normally
           serverProcess.on('exit', () => {
             clearTimeout(forceKillTimeout);
@@ -289,7 +310,7 @@ async function startLocalServer(config: SSGConfig, port: number, repoPath: strin
 
     try {
       let command = config.serveCommand;
-      
+
       // Modify serve command to use custom port for some SSGs
       if (config.serveCommand.includes('jekyll serve')) {
         command = `${config.serveCommand} --port ${port}`;
@@ -311,41 +332,41 @@ async function startLocalServer(config: SSGConfig, port: number, repoPath: strin
 
       serverProcess.stdout?.on('data', (data: Buffer) => {
         const output = data.toString();
-        
+
         // Check for server start indicators
-        if (!serverStarted && (
-          output.includes('Server running') ||
-          output.includes('Serving on') ||
-          output.includes('Local:') ||
-          output.includes('localhost:') ||
-          output.includes(`http://127.0.0.1:${port}`) ||
-          output.includes(`http://localhost:${port}`)
-        )) {
+        if (
+          !serverStarted &&
+          (output.includes('Server running') ||
+            output.includes('Serving on') ||
+            output.includes('Local:') ||
+            output.includes('localhost:') ||
+            output.includes(`http://127.0.0.1:${port}`) ||
+            output.includes(`http://localhost:${port}`))
+        ) {
           serverStarted = true;
           clearTimeout(serverTimeout);
-          
-          safeResolve({ 
-            started: true, 
-            url: `http://localhost:${port}` 
+
+          safeResolve({
+            started: true,
+            url: `http://localhost:${port}`,
           });
         }
       });
 
       serverProcess.stderr?.on('data', (data: Buffer) => {
         const error = data.toString();
-        
+
         // Some servers output startup info to stderr
-        if (!serverStarted && (
-          error.includes('Serving on') ||
-          error.includes('Local:') ||
-          error.includes('localhost:')
-        )) {
+        if (
+          !serverStarted &&
+          (error.includes('Serving on') || error.includes('Local:') || error.includes('localhost:'))
+        ) {
           serverStarted = true;
           clearTimeout(serverTimeout);
-          
-          safeResolve({ 
-            started: true, 
-            url: `http://localhost:${port}` 
+
+          safeResolve({
+            started: true,
+            url: `http://localhost:${port}`,
           });
         }
       });
@@ -361,7 +382,6 @@ async function startLocalServer(config: SSGConfig, port: number, repoPath: strin
           safeResolve({ started: false });
         }
       });
-
     } catch (_error) {
       clearTimeout(serverTimeout);
       safeResolve({ started: false });
@@ -369,7 +389,12 @@ async function startLocalServer(config: SSGConfig, port: number, repoPath: strin
   });
 }
 
-function generateTestScript(ssg: string, config: SSGConfig, port: number, repoPath: string): string {
+function generateTestScript(
+  ssg: string,
+  config: SSGConfig,
+  port: number,
+  repoPath: string,
+): string {
   const commands: string[] = [
     `# Local Deployment Test Script for ${ssg}`,
     `# Generated on ${new Date().toISOString()}`,
@@ -393,7 +418,7 @@ function generateTestScript(ssg: string, config: SSGConfig, port: number, repoPa
   // Add serve command with custom port
   commands.push(`# Start local server`);
   let serveCommand = config.serveCommand;
-  
+
   if (serveCommand.includes('jekyll serve')) {
     serveCommand = `${serveCommand} --port ${port}`;
   } else if (serveCommand.includes('hugo server')) {
@@ -403,7 +428,7 @@ function generateTestScript(ssg: string, config: SSGConfig, port: number, repoPa
   } else if (serveCommand.includes('--serve')) {
     serveCommand = `${serveCommand} --port ${port}`;
   }
-  
+
   commands.push(serveCommand);
   commands.push(``);
   commands.push(`# Open in browser:`);

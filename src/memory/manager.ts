@@ -25,7 +25,7 @@ export class MemoryManager extends EventEmitter {
   private storage: JSONLStorage;
   private context: MemoryContext | null = null;
   private cache: Map<string, MemoryEntry>;
-  private readonly maxCacheSize = 1000;
+  private readonly maxCacheSize = 200; // Reduced cache size for better memory efficiency
 
   constructor(storageDir?: string) {
     super();
@@ -46,7 +46,7 @@ export class MemoryManager extends EventEmitter {
   async remember(
     type: MemoryEntry['type'],
     data: Record<string, any>,
-    metadata?: Partial<MemoryEntry['metadata']>
+    metadata?: Partial<MemoryEntry['metadata']>,
   ): Promise<MemoryEntry> {
     const entry = await this.storage.append({
       type,
@@ -55,8 +55,8 @@ export class MemoryManager extends EventEmitter {
       metadata: {
         ...metadata,
         projectId: this.context?.projectId,
-        repository: this.context?.repository || metadata?.repository
-      }
+        repository: this.context?.repository || metadata?.repository,
+      },
     });
 
     this.addToCache(entry);
@@ -80,13 +80,35 @@ export class MemoryManager extends EventEmitter {
 
   async search(
     query: string | Partial<MemoryEntry['metadata']>,
-    options?: MemorySearchOptions
+    options?: MemorySearchOptions,
   ): Promise<MemoryEntry[]> {
     let filter: any = {};
 
     if (typeof query === 'string') {
-      // Text-based search - would integrate with embeddings in Issue #49
-      filter.tags = [query];
+      // Text-based search - search in multiple fields
+      // Try to match projectId first, then tags
+      const results: MemoryEntry[] = [];
+
+      // Search by projectId
+      const projectResults = await this.storage.query({ projectId: query });
+      results.push(...projectResults);
+
+      // Search by tags (excluding already found entries)
+      const tagResults = await this.storage.query({ tags: [query] });
+      const existingIds = new Set(results.map((r) => r.id));
+      results.push(...tagResults.filter((r) => !existingIds.has(r.id)));
+
+      // Apply sorting and grouping if requested
+      let finalResults = results;
+      if (options?.sortBy) {
+        finalResults = this.sortResults(finalResults, options.sortBy);
+      }
+
+      if (options?.groupBy) {
+        return this.groupResults(finalResults, options.groupBy);
+      }
+
+      return finalResults;
     } else {
       filter = { ...query };
     }
@@ -117,7 +139,7 @@ export class MemoryManager extends EventEmitter {
       ...existing,
       ...updates,
       id: existing.id,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
 
     await this.storage.delete(id);
@@ -151,7 +173,7 @@ export class MemoryManager extends EventEmitter {
     // Find by same type
     const typeMemories = await this.storage.query({
       type: entry.type,
-      limit: limit * 2
+      limit: limit * 2,
     });
     related.push(...typeMemories.filter((m: any) => m.id !== entry.id));
 
@@ -159,15 +181,16 @@ export class MemoryManager extends EventEmitter {
     if (entry.metadata.tags && entry.metadata.tags.length > 0) {
       const tagMemories = await this.storage.query({
         tags: entry.metadata.tags,
-        limit: limit * 2
+        limit: limit * 2,
       });
       related.push(...tagMemories.filter((m: any) => m.id !== entry.id));
     }
 
     // Deduplicate and limit
-    const uniqueRelated = Array.from(
-      new Map(related.map((m: any) => [m.id, m])).values()
-    ).slice(0, limit);
+    const uniqueRelated = Array.from(new Map(related.map((m: any) => [m.id, m])).values()).slice(
+      0,
+      limit,
+    );
 
     return uniqueRelated;
   }
@@ -180,7 +203,7 @@ export class MemoryManager extends EventEmitter {
     const stats = await this.storage.getStatistics();
     const memories = await this.storage.query({
       startDate: timeRange?.start,
-      endDate: timeRange?.end
+      endDate: timeRange?.end,
     });
 
     const patterns = this.extractPatterns(memories);
@@ -189,7 +212,7 @@ export class MemoryManager extends EventEmitter {
     return {
       patterns,
       insights,
-      statistics: stats
+      statistics: stats,
     };
   }
 
@@ -198,7 +221,7 @@ export class MemoryManager extends EventEmitter {
       mostCommonSSG: {},
       projectTypes: {},
       deploymentSuccess: { success: 0, failed: 0 },
-      timeDistribution: {}
+      timeDistribution: {},
     };
 
     for (const memory of memories) {
@@ -230,22 +253,24 @@ export class MemoryManager extends EventEmitter {
 
     // SSG preference insight
     if (Object.keys(patterns.mostCommonSSG).length > 0) {
-      const topSSG = Object.entries(patterns.mostCommonSSG)
-        .sort(([,a]: any, [,b]: any) => b - a)[0];
+      const topSSG = Object.entries(patterns.mostCommonSSG).sort(
+        ([, a]: any, [, b]: any) => b - a,
+      )[0];
       insights.push(`Most frequently used SSG: ${topSSG[0]} (${topSSG[1]} projects)`);
     }
 
     // Deployment success rate
     const total = patterns.deploymentSuccess.success + patterns.deploymentSuccess.failed;
     if (total > 0) {
-      const successRate = (patterns.deploymentSuccess.success / total * 100).toFixed(1);
+      const successRate = ((patterns.deploymentSuccess.success / total) * 100).toFixed(1);
       insights.push(`Deployment success rate: ${successRate}%`);
     }
 
     // Activity patterns
     if (Object.keys(patterns.timeDistribution).length > 0) {
-      const peakHour = Object.entries(patterns.timeDistribution)
-        .sort(([,a]: any, [,b]: any) => b - a)[0];
+      const peakHour = Object.entries(patterns.timeDistribution).sort(
+        ([, a]: any, [, b]: any) => b - a,
+      )[0];
       insights.push(`Peak activity hour: ${peakHour[0]}:00`);
     }
 
@@ -258,12 +283,12 @@ export class MemoryManager extends EventEmitter {
 
   private sortResults(
     results: MemoryEntry[],
-    sortBy: 'relevance' | 'timestamp' | 'type'
+    sortBy: 'relevance' | 'timestamp' | 'type',
   ): MemoryEntry[] {
     switch (sortBy) {
       case 'timestamp':
-        return results.sort((a, b) =>
-          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+        return results.sort(
+          (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
         );
       case 'type':
         return results.sort((a, b) => a.type.localeCompare(b.type));
@@ -272,10 +297,7 @@ export class MemoryManager extends EventEmitter {
     }
   }
 
-  private groupResults(
-    results: MemoryEntry[],
-    groupBy: 'type' | 'project' | 'date'
-  ): any {
+  private groupResults(results: MemoryEntry[], groupBy: 'type' | 'project' | 'date'): any {
     const grouped: Record<string, MemoryEntry[]> = {};
 
     for (const entry of results) {
@@ -304,17 +326,30 @@ export class MemoryManager extends EventEmitter {
   }
 
   private addToCache(entry: MemoryEntry): void {
-    if (this.cache.size >= this.maxCacheSize) {
+    // More aggressive cache eviction to prevent memory growth
+    while (this.cache.size >= this.maxCacheSize) {
       const firstKey = this.cache.keys().next().value;
       if (firstKey) {
         this.cache.delete(firstKey);
       }
     }
-    this.cache.set(entry.id, entry);
+
+    // Store a shallow copy to avoid retaining large objects
+    const cacheEntry = {
+      id: entry.id,
+      timestamp: entry.timestamp,
+      type: entry.type,
+      data: entry.data,
+      metadata: entry.metadata,
+      tags: entry.tags,
+    };
+
+    this.cache.set(entry.id, cacheEntry as MemoryEntry);
   }
 
-  async export(format: 'json' | 'csv' = 'json'): Promise<string> {
-    const allMemories = await this.storage.query({});
+  async export(format: 'json' | 'csv' = 'json', projectId?: string): Promise<string> {
+    const filter = projectId ? { projectId } : {};
+    const allMemories = await this.storage.query(filter);
 
     if (format === 'json') {
       return JSON.stringify(allMemories, null, 2);
@@ -327,7 +362,7 @@ export class MemoryManager extends EventEmitter {
         m.type,
         m.metadata?.projectId || '',
         m.metadata?.repository || '',
-        m.metadata?.ssg || ''
+        m.metadata?.ssg || '',
       ]);
 
       return [headers, ...rows].map((r: any) => r.join(',')).join('\n');
@@ -355,8 +390,8 @@ export class MemoryManager extends EventEmitter {
             metadata: {
               projectId: values[3],
               repository: values[4],
-              ssg: values[5]
-            }
+              ssg: values[5],
+            },
           });
         }
       }
@@ -364,7 +399,8 @@ export class MemoryManager extends EventEmitter {
 
     let imported = 0;
     for (const entry of entries) {
-      await this.storage.append(entry);
+      // Use store to preserve the original ID when importing
+      await this.storage.store(entry);
       imported++;
     }
 
@@ -375,7 +411,7 @@ export class MemoryManager extends EventEmitter {
   async cleanup(olderThan?: Date): Promise<number> {
     const cutoff = olderThan || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000); // 30 days
     const oldMemories = await this.storage.query({
-      endDate: cutoff.toISOString()
+      endDate: cutoff.toISOString(),
     });
 
     let deleted = 0;
@@ -394,6 +430,13 @@ export class MemoryManager extends EventEmitter {
     await this.storage.close();
     this.cache.clear();
     this.emit('closed');
+  }
+
+  /**
+   * Get the storage instance for use with other systems
+   */
+  getStorage(): JSONLStorage {
+    return this.storage;
   }
 }
 

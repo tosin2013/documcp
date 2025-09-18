@@ -36,13 +36,13 @@ export class JSONLStorage {
   private readonly storageDir: string;
   private readonly indexFile: string;
   private index: Map<string, { file: string; line: number; size: number }>;
-  private fileHandles: Map<string, fs.promises.FileHandle>;
+  private lineCounters: Map<string, number>; // Track line count per file
 
   constructor(baseDir?: string) {
     this.storageDir = baseDir || path.join(process.env.HOME || '', '.documcp', 'memory');
     this.indexFile = path.join(this.storageDir, '.index.json');
     this.index = new Map();
-    this.fileHandles = new Map();
+    this.lineCounters = new Map();
   }
 
   async initialize(): Promise<void> {
@@ -53,16 +53,29 @@ export class JSONLStorage {
   private async loadIndex(): Promise<void> {
     try {
       const indexData = await fs.promises.readFile(this.indexFile, 'utf-8');
-      const entries = JSON.parse(indexData);
-      this.index = new Map(entries);
+      const data = JSON.parse(indexData);
+
+      // Handle both old format (just entries) and new format (with line counters)
+      if (Array.isArray(data)) {
+        this.index = new Map(data);
+        // Rebuild line counters for existing data
+        await this.rebuildLineCounters();
+      } else {
+        this.index = new Map(data.entries || []);
+        this.lineCounters = new Map(Object.entries(data.lineCounters || {}));
+      }
     } catch (error) {
       this.index = new Map();
+      this.lineCounters = new Map();
     }
   }
 
   private async saveIndex(): Promise<void> {
-    const entries = Array.from(this.index.entries());
-    await fs.promises.writeFile(this.indexFile, JSON.stringify(entries, null, 2));
+    const data = {
+      entries: Array.from(this.index.entries()),
+      lineCounters: Object.fromEntries(this.lineCounters.entries()),
+    };
+    await fs.promises.writeFile(this.indexFile, JSON.stringify(data, null, 2));
   }
 
   private getFileName(type: MemoryEntry['type'], timestamp: string): string {
@@ -91,7 +104,7 @@ export class JSONLStorage {
       ...entry,
       id,
       checksum,
-      timestamp: entry.timestamp || new Date().toISOString()
+      timestamp: entry.timestamp || new Date().toISOString(),
     };
 
     const fileName = this.getFileName(completeEntry.type, completeEntry.timestamp);
@@ -100,12 +113,15 @@ export class JSONLStorage {
     const line = JSON.stringify(completeEntry);
     await fs.promises.appendFile(filePath, line + '\n');
 
-    const lineNumber = await this.countLines(filePath);
+    // Efficiently track line numbers using a counter
+    const currentLineCount = this.lineCounters.get(fileName) || 0;
+    const lineNumber = currentLineCount + 1;
+    this.lineCounters.set(fileName, lineNumber);
 
     this.index.set(id, {
       file: fileName,
       line: lineNumber,
-      size: Buffer.byteLength(line)
+      size: Buffer.byteLength(line),
     });
 
     await this.saveIndex();
@@ -119,7 +135,7 @@ export class JSONLStorage {
     const filePath = path.join(this.storageDir, location.file);
     const stream = readline.createInterface({
       input: fs.createReadStream(filePath),
-      crlfDelay: Infinity
+      crlfDelay: Infinity,
     });
 
     let lineNumber = 0;
@@ -127,7 +143,11 @@ export class JSONLStorage {
       lineNumber++;
       if (lineNumber === location.line) {
         stream.close();
-        return JSON.parse(line);
+        try {
+          return JSON.parse(line);
+        } catch (error) {
+          return null;
+        }
       }
     }
 
@@ -151,18 +171,26 @@ export class JSONLStorage {
       const filePath = path.join(this.storageDir, file);
       const stream = readline.createInterface({
         input: fs.createReadStream(filePath),
-        crlfDelay: Infinity
+        crlfDelay: Infinity,
       });
 
       for await (const line of stream) {
-        const entry: MemoryEntry = JSON.parse(line);
+        if (line.trim() === '') continue; // Skip empty lines
 
-        if (this.matchesFilter(entry, filter)) {
-          results.push(entry);
-          if (filter.limit && results.length >= filter.limit) {
-            stream.close();
-            return results;
+        try {
+          const entry: MemoryEntry = JSON.parse(line);
+
+          // Only include entries that are still in the index (not soft-deleted)
+          if (this.index.has(entry.id) && this.matchesFilter(entry, filter)) {
+            results.push(entry);
+            if (filter.limit && results.length >= filter.limit) {
+              stream.close();
+              return results;
+            }
           }
+        } catch (error) {
+          // Skip invalid JSON lines
+          continue;
         }
       }
     }
@@ -172,10 +200,12 @@ export class JSONLStorage {
 
   private async getRelevantFiles(filter: any): Promise<string[]> {
     const files = await fs.promises.readdir(this.storageDir);
-    return files.filter(f => f.endsWith('.jsonl')).filter(file => {
-      if (!filter.type) return true;
-      return file.startsWith(filter.type);
-    });
+    return files
+      .filter((f) => f.endsWith('.jsonl'))
+      .filter((file) => {
+        if (!filter.type) return true;
+        return file.startsWith(filter.type);
+      });
   }
 
   private matchesFilter(entry: MemoryEntry, filter: any): boolean {
@@ -214,7 +244,7 @@ export class JSONLStorage {
 
       const stream = readline.createInterface({
         input: fs.createReadStream(filePath),
-        crlfDelay: Infinity
+        crlfDelay: Infinity,
       });
 
       for await (const line of stream) {
@@ -236,7 +266,7 @@ export class JSONLStorage {
   private async countLines(filePath: string): Promise<number> {
     const stream = readline.createInterface({
       input: fs.createReadStream(filePath),
-      crlfDelay: Infinity
+      crlfDelay: Infinity,
     });
 
     let count = 0;
@@ -257,11 +287,11 @@ export class JSONLStorage {
       totalEntries: this.index.size,
       byType: {} as Record<string, number>,
       byMonth: {} as Record<string, number>,
-      totalSize: 0
+      totalSize: 0,
     };
 
     const files = await fs.promises.readdir(this.storageDir);
-    for (const file of files.filter(f => f.endsWith('.jsonl'))) {
+    for (const file of files.filter((f) => f.endsWith('.jsonl'))) {
       const filePath = path.join(this.storageDir, file);
       const fileStats = await fs.promises.stat(filePath);
       stats.totalSize += fileStats.size;
@@ -311,13 +341,44 @@ export class JSONLStorage {
   }
 
   /**
-   * Store a new memory entry (alias for append)
+   * Store a new memory entry (preserves ID if provided)
    */
   async store(entry: MemoryEntry): Promise<MemoryEntry> {
     const entryToStore = {
       ...entry,
-      tags: entry.tags || entry.metadata?.tags || []
+      tags: entry.tags || entry.metadata?.tags || [],
     };
+
+    // If the entry already has an ID, use it directly instead of generating a new one
+    if (entry.id) {
+      const checksum = this.generateChecksum(entry.data);
+      const completeEntry: MemoryEntry = {
+        ...entryToStore,
+        checksum,
+        timestamp: entry.timestamp || new Date().toISOString(),
+      };
+
+      const fileName = this.getFileName(completeEntry.type, completeEntry.timestamp);
+      const filePath = path.join(this.storageDir, fileName);
+
+      const line = JSON.stringify(completeEntry);
+      await fs.promises.appendFile(filePath, line + '\n');
+
+      // Efficiently track line numbers using a counter
+      const currentLineCount = this.lineCounters.get(fileName) || 0;
+      const lineNumber = currentLineCount + 1;
+      this.lineCounters.set(fileName, lineNumber);
+
+      this.index.set(entry.id, {
+        file: fileName,
+        line: lineNumber,
+        size: Buffer.byteLength(line),
+      });
+
+      await this.saveIndex();
+      return completeEntry;
+    }
+
     return this.append(entryToStore);
   }
 
@@ -328,13 +389,13 @@ export class JSONLStorage {
     this.index.clear();
 
     const files = await fs.promises.readdir(this.storageDir);
-    const jsonlFiles = files.filter(f => f.endsWith('.jsonl'));
+    const jsonlFiles = files.filter((f) => f.endsWith('.jsonl'));
 
     for (const file of jsonlFiles) {
       const filePath = path.join(this.storageDir, file);
       const stream = readline.createInterface({
         input: fs.createReadStream(filePath),
-        crlfDelay: Infinity
+        crlfDelay: Infinity,
       });
 
       let lineNumber = 0;
@@ -346,7 +407,7 @@ export class JSONLStorage {
           this.index.set(entry.id, {
             file,
             line: lineNumber,
-            size
+            size,
           });
 
           lineNumber++;
@@ -360,11 +421,32 @@ export class JSONLStorage {
     await this.saveIndex();
   }
 
-  async close(): Promise<void> {
-    for (const handle of this.fileHandles.values()) {
-      await handle.close();
+  private async rebuildLineCounters(): Promise<void> {
+    this.lineCounters.clear();
+
+    // Get all unique file names from the index
+    const fileNames = new Set<string>();
+    for (const [, location] of this.index) {
+      fileNames.add(location.file);
     }
-    this.fileHandles.clear();
+
+    // Count lines for each file
+    for (const fileName of fileNames) {
+      const filePath = path.join(this.storageDir, fileName);
+      try {
+        const lineCount = await this.countLines(filePath);
+        this.lineCounters.set(fileName, lineCount);
+      } catch (error) {
+        // File might not exist, set to 0
+        this.lineCounters.set(fileName, 0);
+      }
+    }
+  }
+
+  async close(): Promise<void> {
+    // Clear the index and line counters to free memory
+    this.index.clear();
+    this.lineCounters.clear();
   }
 }
 

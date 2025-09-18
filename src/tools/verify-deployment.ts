@@ -21,7 +21,7 @@ export async function verifyDeployment(args: unknown): Promise<{ content: any[] 
 
   try {
     const checks: DeploymentCheck[] = [];
-    
+
     // Determine repository path
     const repoPath = repository.startsWith('http') ? '.' : repository;
 
@@ -29,10 +29,10 @@ export async function verifyDeployment(args: unknown): Promise<{ content: any[] 
     const workflowPath = path.join(repoPath, '.github', 'workflows');
     try {
       const workflows = await fs.readdir(workflowPath);
-      const deployWorkflow = workflows.find(f => 
-        f.includes('deploy') || f.includes('pages') || f.includes('docs')
+      const deployWorkflow = workflows.find(
+        (f) => f.includes('deploy') || f.includes('pages') || f.includes('docs'),
       );
-      
+
       if (deployWorkflow) {
         checks.push({
           check: 'GitHub Actions Workflow',
@@ -59,15 +59,15 @@ export async function verifyDeployment(args: unknown): Promise<{ content: any[] 
     // Check 2: Documentation source files exist
     const docsPaths = ['docs', 'documentation', 'site', 'content'];
     let docsFound = false;
-    
+
     for (const docsPath of docsPaths) {
       try {
         const fullPath = path.join(repoPath, docsPath);
         const stats = await fs.stat(fullPath);
         if (stats.isDirectory()) {
           const files = await fs.readdir(fullPath);
-          const mdFiles = files.filter(f => f.endsWith('.md') || f.endsWith('.mdx'));
-          
+          const mdFiles = files.filter((f) => f.endsWith('.md') || f.endsWith('.mdx'));
+
           if (mdFiles.length > 0) {
             docsFound = true;
             checks.push({
@@ -82,7 +82,7 @@ export async function verifyDeployment(args: unknown): Promise<{ content: any[] 
         // Directory doesn't exist, continue checking
       }
     }
-    
+
     if (!docsFound) {
       checks.push({
         check: 'Documentation Source Files',
@@ -101,7 +101,7 @@ export async function verifyDeployment(args: unknown): Promise<{ content: any[] 
       '_config.yml',
       '.eleventy.js',
     ];
-    
+
     let configFound = false;
     for (const config of configPatterns) {
       try {
@@ -117,7 +117,7 @@ export async function verifyDeployment(args: unknown): Promise<{ content: any[] 
         // File doesn't exist, continue
       }
     }
-    
+
     if (!configFound) {
       checks.push({
         check: 'SSG Configuration',
@@ -130,7 +130,7 @@ export async function verifyDeployment(args: unknown): Promise<{ content: any[] 
     // Check 4: Build output directory
     const buildDirs = ['_site', 'build', 'dist', 'public', 'out'];
     let buildFound = false;
-    
+
     for (const buildDir of buildDirs) {
       try {
         const buildPath = path.join(repoPath, buildDir);
@@ -148,7 +148,7 @@ export async function verifyDeployment(args: unknown): Promise<{ content: any[] 
         // Directory doesn't exist
       }
     }
-    
+
     if (!buildFound) {
       checks.push({
         check: 'Build Output',
@@ -169,9 +169,9 @@ export async function verifyDeployment(args: unknown): Promise<{ content: any[] 
     }
 
     // Generate summary
-    const passCount = checks.filter(c => c.status === 'pass').length;
-    const failCount = checks.filter(c => c.status === 'fail').length;
-    const warningCount = checks.filter(c => c.status === 'warning').length;
+    const passCount = checks.filter((c) => c.status === 'pass').length;
+    const failCount = checks.filter((c) => c.status === 'fail').length;
+    const warningCount = checks.filter((c) => c.status === 'warning').length;
 
     let overallStatus = 'Ready for deployment';
     if (failCount > 0) {
@@ -209,14 +209,18 @@ export async function verifyDeployment(args: unknown): Promise<{ content: any[] 
         },
       ],
       nextSteps: checks
-        .filter(check => check.recommendation)
-        .map(check => ({
+        .filter((check) => check.recommendation)
+        .map((check) => ({
           action: check.recommendation!,
-          toolRequired: check.recommendation!.includes('deploy_pages') ? 'deploy_pages' : 
-                      check.recommendation!.includes('setup_structure') ? 'setup_structure' : 
-                      check.recommendation!.includes('generate_config') ? 'generate_config' : 'manual',
+          toolRequired: check.recommendation!.includes('deploy_pages')
+            ? 'deploy_pages'
+            : check.recommendation!.includes('setup_structure')
+              ? 'setup_structure'
+              : check.recommendation!.includes('generate_config')
+                ? 'generate_config'
+                : 'manual',
           description: check.message,
-          priority: check.status === 'fail' ? 'high' : 'medium' as const,
+          priority: check.status === 'fail' ? 'high' : ('medium' as const),
         })),
     };
 

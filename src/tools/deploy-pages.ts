@@ -17,7 +17,7 @@ export async function deployPages(args: unknown): Promise<{ content: any[] }> {
   try {
     // Determine repository path (local or remote)
     const repoPath = repository.startsWith('http') ? '.' : repository;
-    
+
     // Create .github/workflows directory
     const workflowsDir = path.join(repoPath, '.github', 'workflows');
     await fs.mkdir(workflowsDir, { recursive: true });
@@ -59,11 +59,15 @@ export async function deployPages(args: unknown): Promise<{ content: any[] }> {
           title: 'Deployment Workflow Created',
           description: `GitHub Actions workflow configured for ${ssg} deployment to ${branch} branch`,
         },
-        ...(customDomain ? [{
-          type: 'info' as const,
-          title: 'Custom Domain Configured',
-          description: `CNAME file created for ${customDomain}`,
-        }] : []),
+        ...(customDomain
+          ? [
+              {
+                type: 'info' as const,
+                title: 'Custom Domain Configured',
+                description: `CNAME file created for ${customDomain}`,
+              },
+            ]
+          : []),
       ],
       nextSteps: [
         {
@@ -124,19 +128,19 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-          
+
       - name: Install dependencies
         run: npm ci
-        
+
       - name: Build website
         run: npm run build
-        
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v2
         with:
@@ -168,16 +172,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
-          
+
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
-          
+
       - name: Build and Deploy
         run: mkdocs gh-deploy --force --branch ${branch}`,
 
@@ -205,16 +209,16 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
-          
+
       - name: Setup Hugo
         uses: peaceiris/actions-hugo@v2
         with:
           hugo-version: 'latest'
           extended: true
-          
+
       - name: Build
         run: hugo --minify
-        
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v2
         with:
@@ -253,18 +257,18 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        
+
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.1'
           bundler-cache: true
-          
+
       - name: Build with Jekyll
         run: bundle exec jekyll build
         env:
           JEKYLL_ENV: production
-          
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v2
 
@@ -301,19 +305,19 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-          
+
       - name: Install dependencies
         run: npm ci
-        
+
       - name: Build site
         run: npm run build
-        
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v2
         with:

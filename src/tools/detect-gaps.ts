@@ -14,7 +14,12 @@ const inputSchema = z.object({
 
 interface DocumentationGap {
   category: 'tutorials' | 'how-to' | 'reference' | 'explanation' | 'general';
-  gapType: 'missing_section' | 'incomplete_content' | 'outdated_info' | 'missing_examples' | 'poor_structure';
+  gapType:
+    | 'missing_section'
+    | 'incomplete_content'
+    | 'outdated_info'
+    | 'missing_examples'
+    | 'poor_structure';
   description: string;
   priority: 'critical' | 'high' | 'medium' | 'low';
   recommendation: string;
@@ -49,7 +54,12 @@ interface GapAnalysisResult {
 
 export async function detectDocumentationGaps(args: unknown): Promise<{ content: any[] }> {
   const startTime = Date.now();
-  const { repositoryPath, documentationPath, analysisId: existingAnalysisId, depth } = inputSchema.parse(args);
+  const {
+    repositoryPath,
+    documentationPath,
+    analysisId: existingAnalysisId,
+    depth,
+  } = inputSchema.parse(args);
 
   try {
     // Step 1: Get or perform repository analysis
@@ -57,20 +67,20 @@ export async function detectDocumentationGaps(args: unknown): Promise<{ content:
     let repositoryAnalysis: any;
 
     if (!analysisId) {
-      const analysisResult = await analyzeRepository({ 
-        path: repositoryPath, 
-        depth 
+      const analysisResult = await analyzeRepository({
+        path: repositoryPath,
+        depth,
       });
-      
+
       if (analysisResult.content && analysisResult.content[0]) {
         // The analyze_repository tool returns the analysis data directly as JSON text
         repositoryAnalysis = JSON.parse(analysisResult.content[0].text);
-        
+
         // Check if the analysis was successful
         if (repositoryAnalysis.success === false) {
           throw new Error('Repository analysis failed');
         }
-        
+
         analysisId = repositoryAnalysis.id; // Use the 'id' field from the analysis
       } else {
         throw new Error('Repository analysis failed - no content returned');
@@ -81,8 +91,10 @@ export async function detectDocumentationGaps(args: unknown): Promise<{ content:
     }
 
     // Step 2: Analyze existing documentation structure
-    const documentationAnalysis = await analyzeExistingDocumentation(documentationPath || path.join(repositoryPath, 'docs'));
-    
+    const documentationAnalysis = await analyzeExistingDocumentation(
+      documentationPath || path.join(repositoryPath, 'docs'),
+    );
+
     // Step 3: Perform content validation if documentation exists
     let validationResult: any = null;
     if (documentationAnalysis.exists && documentationPath) {
@@ -92,9 +104,9 @@ export async function detectDocumentationGaps(args: unknown): Promise<{ content:
           analysisId: analysisId,
           validationType: 'all',
           includeCodeValidation: true,
-          confidence: 'moderate'
+          confidence: 'moderate',
         });
-        
+
         if (validation && (validation as any).content && (validation as any).content[0]) {
           const validationData = JSON.parse((validation as any).content[0].text);
           if (validationData.success) {
@@ -108,14 +120,18 @@ export async function detectDocumentationGaps(args: unknown): Promise<{ content:
     }
 
     // Step 4: Identify gaps based on project analysis
-    const gaps = identifyDocumentationGaps(repositoryAnalysis, documentationAnalysis, validationResult);
-    
+    const gaps = identifyDocumentationGaps(
+      repositoryAnalysis,
+      documentationAnalysis,
+      validationResult,
+    );
+
     // Step 5: Generate recommendations
     const recommendations = generateRecommendations(gaps, repositoryAnalysis);
-    
+
     // Step 6: Calculate coverage scores
     const contentCoverage = calculateContentCoverage(documentationAnalysis, gaps);
-    
+
     const gapAnalysis: GapAnalysisResult = {
       repositoryPath,
       documentationPath,
@@ -138,12 +154,17 @@ export async function detectDocumentationGaps(args: unknown): Promise<{ content:
       },
       recommendations: [
         {
-          type: gapAnalysis.overallScore < 60 ? 'critical' : gapAnalysis.overallScore < 80 ? 'warning' : 'info',
+          type:
+            gapAnalysis.overallScore < 60
+              ? 'critical'
+              : gapAnalysis.overallScore < 80
+                ? 'warning'
+                : 'info',
           title: 'Documentation Gap Analysis Complete',
           description: `Found ${gaps.length} gaps. Overall documentation score: ${gapAnalysis.overallScore}%`,
         },
       ],
-      nextSteps: recommendations.immediate.map(rec => ({
+      nextSteps: recommendations.immediate.map((rec) => ({
         action: rec,
         toolRequired: getRecommendedTool(rec),
         description: rec,
@@ -194,9 +215,9 @@ async function analyzeExistingDocumentation(docsPath: string) {
         if (categoryStats.isDirectory()) {
           structure[category as keyof typeof structure].exists = true;
           const files = await fs.readdir(categoryPath);
-          const mdFiles = files.filter(f => f.endsWith('.md') || f.endsWith('.mdx'));
+          const mdFiles = files.filter((f) => f.endsWith('.md') || f.endsWith('.mdx'));
           structure[category as keyof typeof structure].files = mdFiles;
-          allFiles.push(...mdFiles.map(f => path.join(category, f)));
+          allFiles.push(...mdFiles.map((f) => path.join(category, f)));
         }
       } catch {
         // Category doesn't exist
@@ -205,7 +226,7 @@ async function analyzeExistingDocumentation(docsPath: string) {
 
     // Also check root level files
     const rootFiles = await fs.readdir(docsPath);
-    const rootMdFiles = rootFiles.filter(f => f.endsWith('.md') || f.endsWith('.mdx'));
+    const rootMdFiles = rootFiles.filter((f) => f.endsWith('.md') || f.endsWith('.mdx'));
     allFiles.push(...rootMdFiles);
 
     return {
@@ -222,7 +243,7 @@ async function analyzeExistingDocumentation(docsPath: string) {
 function identifyDocumentationGaps(
   repoAnalysis: any,
   docsAnalysis: any,
-  validationResult: any
+  validationResult: any,
 ): DocumentationGap[] {
   const gaps: DocumentationGap[] = [];
 
@@ -334,41 +355,45 @@ function identifyDocumentationGaps(
 
 function hasApiDocumentation(docsAnalysis: any): boolean {
   const allFiles = docsAnalysis.files || [];
-  return allFiles.some((file: string) => 
-    file.toLowerCase().includes('api') || 
-    file.toLowerCase().includes('endpoint') ||
-    file.toLowerCase().includes('swagger') ||
-    file.toLowerCase().includes('openapi')
+  return allFiles.some(
+    (file: string) =>
+      file.toLowerCase().includes('api') ||
+      file.toLowerCase().includes('endpoint') ||
+      file.toLowerCase().includes('swagger') ||
+      file.toLowerCase().includes('openapi'),
   );
 }
 
 function hasInstallationGuide(docsAnalysis: any): boolean {
   const allFiles = docsAnalysis.files || [];
-  return allFiles.some((file: string) => 
-    file.toLowerCase().includes('install') ||
-    file.toLowerCase().includes('setup') ||
-    file.toLowerCase().includes('getting-started') ||
-    file.toLowerCase().includes('quickstart')
+  return allFiles.some(
+    (file: string) =>
+      file.toLowerCase().includes('install') ||
+      file.toLowerCase().includes('setup') ||
+      file.toLowerCase().includes('getting-started') ||
+      file.toLowerCase().includes('quickstart'),
   );
 }
 
 function hasDockerDocumentation(docsAnalysis: any): boolean {
   const allFiles = docsAnalysis.files || [];
-  return allFiles.some((file: string) => 
-    file.toLowerCase().includes('docker') ||
-    file.toLowerCase().includes('container') ||
-    file.toLowerCase().includes('compose')
+  return allFiles.some(
+    (file: string) =>
+      file.toLowerCase().includes('docker') ||
+      file.toLowerCase().includes('container') ||
+      file.toLowerCase().includes('compose'),
   );
 }
 
 function hasCICDDocumentation(docsAnalysis: any): boolean {
   const allFiles = docsAnalysis.files || [];
-  return allFiles.some((file: string) => 
-    file.toLowerCase().includes('ci') ||
-    file.toLowerCase().includes('cd') ||
-    file.toLowerCase().includes('deploy') ||
-    file.toLowerCase().includes('workflow') ||
-    file.toLowerCase().includes('pipeline')
+  return allFiles.some(
+    (file: string) =>
+      file.toLowerCase().includes('ci') ||
+      file.toLowerCase().includes('cd') ||
+      file.toLowerCase().includes('deploy') ||
+      file.toLowerCase().includes('workflow') ||
+      file.toLowerCase().includes('pipeline'),
   );
 }
 
@@ -377,22 +402,22 @@ function generateRecommendations(gaps: DocumentationGap[], _repoAnalysis: any) {
   const shortTerm: string[] = [];
   const longTerm: string[] = [];
 
-  const criticalGaps = gaps.filter(g => g.priority === 'critical');
-  const highGaps = gaps.filter(g => g.priority === 'high');
-  const mediumGaps = gaps.filter(g => g.priority === 'medium');
+  const criticalGaps = gaps.filter((g) => g.priority === 'critical');
+  const highGaps = gaps.filter((g) => g.priority === 'high');
+  const mediumGaps = gaps.filter((g) => g.priority === 'medium');
 
   // Immediate (Critical gaps)
-  criticalGaps.forEach(gap => {
+  criticalGaps.forEach((gap) => {
     immediate.push(gap.recommendation);
   });
 
   // Short-term (High priority gaps)
-  highGaps.forEach(gap => {
+  highGaps.forEach((gap) => {
     shortTerm.push(gap.recommendation);
   });
 
   // Long-term (Medium/Low priority gaps)
-  mediumGaps.forEach(gap => {
+  mediumGaps.forEach((gap) => {
     longTerm.push(gap.recommendation);
   });
 
@@ -408,12 +433,13 @@ function calculateContentCoverage(docsAnalysis: any, gaps: DocumentationGap[]) {
   const categories = ['tutorials', 'howTo', 'reference', 'explanation'];
   const coverage: any = {};
 
-  categories.forEach(category => {
+  categories.forEach((category) => {
     const categoryKey = category === 'howTo' ? 'how-to' : category;
-    const hasContent = docsAnalysis.structure?.[categoryKey]?.exists && 
-                     docsAnalysis.structure[categoryKey].files.length > 0;
-    const hasGaps = gaps.some(g => g.category === categoryKey);
-    
+    const hasContent =
+      docsAnalysis.structure?.[categoryKey]?.exists &&
+      docsAnalysis.structure[categoryKey].files.length > 0;
+    const hasGaps = gaps.some((g) => g.category === categoryKey);
+
     if (hasContent && !hasGaps) {
       coverage[category] = 100;
     } else if (hasContent && hasGaps) {
@@ -427,50 +453,51 @@ function calculateContentCoverage(docsAnalysis: any, gaps: DocumentationGap[]) {
 }
 
 function calculateOverallScore(gaps: DocumentationGap[], contentCoverage: any): number {
-  const coverageScore = Object.values(contentCoverage).reduce((acc: number, val: any) => acc + val, 0) / 4;
+  const coverageScore =
+    Object.values(contentCoverage).reduce((acc: number, val: any) => acc + val, 0) / 4;
   const gapPenalty = gaps.length * 5; // Each gap reduces score by 5
-  const criticalPenalty = gaps.filter(g => g.priority === 'critical').length * 15; // Critical gaps have higher penalty
-  
+  const criticalPenalty = gaps.filter((g) => g.priority === 'critical').length * 15; // Critical gaps have higher penalty
+
   return Math.max(0, Math.min(100, coverageScore - gapPenalty - criticalPenalty));
 }
 
 function identifyStrengths(docsAnalysis: any, validationResult: any): string[] {
   const strengths: string[] = [];
-  
+
   if (docsAnalysis.hasRootIndex) {
     strengths.push('Has main documentation index file');
   }
-  
+
   const existingSections = Object.entries(docsAnalysis.structure || {})
     .filter(([_, data]: [string, any]) => data.exists && data.files.length > 0)
     .map(([section]) => section);
-    
+
   if (existingSections.length > 0) {
     strengths.push(`Well-organized sections: ${existingSections.join(', ')}`);
   }
-  
+
   if (validationResult?.overallScore > 80) {
     strengths.push('High-quality existing content');
   }
-  
+
   return strengths;
 }
 
 function identifyMissingStructure(docsAnalysis: any) {
   const missingDirectories: string[] = [];
   const missingFiles: string[] = [];
-  
+
   const expectedDirectories = ['tutorials', 'how-to', 'reference', 'explanation'];
-  expectedDirectories.forEach(dir => {
+  expectedDirectories.forEach((dir) => {
     if (!docsAnalysis.structure?.[dir]?.exists) {
       missingDirectories.push(dir);
     }
   });
-  
+
   if (!docsAnalysis.hasRootIndex) {
     missingFiles.push('index.md');
   }
-  
+
   return { directories: missingDirectories, files: missingFiles };
 }
 

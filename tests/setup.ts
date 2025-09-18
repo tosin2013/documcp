@@ -4,10 +4,10 @@
 Object.defineProperty(globalThis, 'import', {
   value: {
     meta: {
-      url: 'file:///test/mock.js'
-    }
+      url: 'file:///test/mock.js',
+    },
   },
-  configurable: true
+  configurable: true,
 });
 
 // Increase timeout for integration tests

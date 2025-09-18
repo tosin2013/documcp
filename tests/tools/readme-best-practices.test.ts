@@ -5,7 +5,7 @@ import { join } from 'path';
 
 describe('readmeBestPractices', () => {
   const testDir = join(process.cwd(), 'test-readme-best-practices-temp');
-  
+
   beforeEach(async () => {
     // Create test directory
     await mkdir(testDir, { recursive: true });
@@ -23,7 +23,9 @@ describe('readmeBestPractices', () => {
   describe('Basic Functionality', () => {
     test('should analyze README best practices with default parameters', async () => {
       const readmePath = join(testDir, 'README.md');
-      await writeFile(readmePath, `# Test Library
+      await writeFile(
+        readmePath,
+        `# Test Library
 
 ## Description
 This is a test library for analyzing best practices.
@@ -46,10 +48,11 @@ Please read CONTRIBUTING.md.
 
 ## License
 MIT License
-`);
+`,
+      );
 
       const result = await readmeBestPractices({
-        readme_path: readmePath
+        readme_path: readmePath,
       });
 
       expect(result.success).toBe(true);
@@ -64,7 +67,7 @@ MIT License
 
       const result = await readmeBestPractices({
         readme_path: readmePath,
-        project_type: 'application'
+        project_type: 'application',
       });
 
       expect(result.success).toBe(true);
@@ -79,7 +82,7 @@ MIT License
         readme_path: join(testDir, 'nonexistent.md'),
         generate_template: true,
         output_directory: outputDir,
-        project_type: 'library'
+        project_type: 'library',
       });
 
       expect(result.success).toBe(true);
@@ -92,7 +95,7 @@ MIT License
 
       const result = await readmeBestPractices({
         readme_path: readmePath,
-        target_audience: 'advanced'
+        target_audience: 'advanced',
       });
 
       expect(result.success).toBe(true);
@@ -104,7 +107,7 @@ MIT License
     test('should handle missing README file without template generation', async () => {
       const result = await readmeBestPractices({
         readme_path: join(testDir, 'nonexistent.md'),
-        generate_template: false
+        generate_template: false,
       });
 
       expect(result.success).toBe(false);
@@ -118,7 +121,7 @@ MIT License
 
       const result = await readmeBestPractices({
         readme_path: readmePath,
-        project_type: 'invalid_type' as any
+        project_type: 'invalid_type' as any,
       });
 
       expect(result.success).toBe(false);
@@ -131,7 +134,7 @@ MIT License
 
       const result = await readmeBestPractices({
         readme_path: readmePath,
-        target_audience: 'invalid_audience' as any
+        target_audience: 'invalid_audience' as any,
       });
 
       expect(result.success).toBe(false);
@@ -142,7 +145,9 @@ MIT License
   describe('Best Practices Analysis', () => {
     test('should evaluate checklist items', async () => {
       const readmePath = join(testDir, 'README.md');
-      await writeFile(readmePath, `# Complete Library
+      await writeFile(
+        readmePath,
+        `# Complete Library
 
 ## Table of Contents
 - [Installation](#installation)
@@ -171,11 +176,12 @@ MIT License
 
 ## Support
 Support information.
-`);
+`,
+      );
 
       const result = await readmeBestPractices({
         readme_path: readmePath,
-        project_type: 'library'
+        project_type: 'library',
       });
 
       expect(result.success).toBe(true);
@@ -189,7 +195,7 @@ Support information.
       await writeFile(readmePath, '# Basic Project\n\nMinimal content.');
 
       const result = await readmeBestPractices({
-        readme_path: readmePath
+        readme_path: readmePath,
       });
 
       expect(result.success).toBe(true);
@@ -203,7 +209,7 @@ Support information.
       await writeFile(readmePath, '# Incomplete Project');
 
       const result = await readmeBestPractices({
-        readme_path: readmePath
+        readme_path: readmePath,
       });
 
       expect(result.success).toBe(true);
@@ -215,17 +221,20 @@ Support information.
 
     test('should provide summary metrics', async () => {
       const readmePath = join(testDir, 'README.md');
-      await writeFile(readmePath, `# Project
+      await writeFile(
+        readmePath,
+        `# Project
 
 ## Description
 Basic description.
 
 ## Installation
 Install steps.
-`);
+`,
+      );
 
       const result = await readmeBestPractices({
-        readme_path: readmePath
+        readme_path: readmePath,
       });
 
       expect(result.success).toBe(true);
@@ -247,7 +256,7 @@ Install steps.
         generate_template: true,
         output_directory: outputDir,
         project_type: 'tool',
-        include_community_files: true
+        include_community_files: true,
       });
 
       expect(result.success).toBe(true);
@@ -262,7 +271,7 @@ Install steps.
         readme_path: join(testDir, 'missing.md'),
         generate_template: true,
         output_directory: outputDir,
-        include_community_files: false
+        include_community_files: false,
       });
 
       expect(result.success).toBe(true);
@@ -276,7 +285,7 @@ Install steps.
       await writeFile(readmePath, '# Test Project');
 
       const result = await readmeBestPractices({
-        readme_path: readmePath
+        readme_path: readmePath,
       });
 
       expect(result.success).toBeDefined();
@@ -292,7 +301,7 @@ Install steps.
       await writeFile(readmePath, '# Test Project');
 
       const result = await readmeBestPractices({
-        readme_path: readmePath
+        readme_path: readmePath,
       });
 
       // Test that the result can be formatted without errors

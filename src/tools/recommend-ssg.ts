@@ -16,30 +16,32 @@ export interface SSGRecommendation {
 
 const inputSchema = z.object({
   analysisId: z.string(),
-  preferences: z.object({
-    priority: z.enum(['simplicity', 'features', 'performance']).optional(),
-    ecosystem: z.enum(['javascript', 'python', 'ruby', 'go', 'any']).optional(),
-  }).optional(),
+  preferences: z
+    .object({
+      priority: z.enum(['simplicity', 'features', 'performance']).optional(),
+      ecosystem: z.enum(['javascript', 'python', 'ruby', 'go', 'any']).optional(),
+    })
+    .optional(),
 });
 
 export async function recommendSSG(args: unknown): Promise<{ content: any[] }> {
   const startTime = Date.now();
   const { analysisId, preferences } = inputSchema.parse(args);
-  
+
   // TODO: Use preferences in recommendation logic - currently mocked
   // Available: preferences?.priority, preferences?.ecosystem
   const prioritizeSimplicity = preferences?.priority === 'simplicity';
   const ecosystemPreference = preferences?.ecosystem;
-  
+
   try {
     // TODO: Retrieve analysis from cache/context
     // Preferences integration: simplicity=${prioritizeSimplicity}, ecosystem=${ecosystemPreference}
     // For now, we'll create a mock recommendation
-    
+
     // Simple logic using preferences
     const baseRecommendation = prioritizeSimplicity ? 'jekyll' : 'docusaurus';
     const finalRecommendation = ecosystemPreference === 'python' ? 'mkdocs' : baseRecommendation;
-    
+
     const recommendation: SSGRecommendation = {
       recommended: finalRecommendation,
       confidence: 0.85,
@@ -58,7 +60,7 @@ export async function recommendSSG(args: unknown): Promise<{ content: any[] }> {
         },
         {
           name: 'Hugo',
-          score: 0.70,
+          score: 0.7,
           pros: ['Extremely fast builds', 'No dependencies'],
           cons: ['Steeper learning curve', 'Go templating may be unfamiliar'],
         },
@@ -78,7 +80,9 @@ export async function recommendSSG(args: unknown): Promise<{ content: any[] }> {
         {
           type: 'info',
           title: 'SSG Recommendation',
-          description: `${recommendation.recommended} recommended with ${(recommendation.confidence * 100).toFixed(0)}% confidence`,
+          description: `${recommendation.recommended} recommended with ${(
+            recommendation.confidence * 100
+          ).toFixed(0)}% confidence`,
         },
       ],
       nextSteps: [

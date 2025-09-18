@@ -14,7 +14,7 @@ export const GenerateReadmeTemplateSchema = z.object({
   includeScreenshots: z.boolean().default(false),
   includeBadges: z.boolean().default(true),
   includeContributing: z.boolean().default(true),
-  outputPath: z.string().optional()
+  outputPath: z.string().optional(),
 });
 
 export type GenerateReadmeTemplateInput = z.infer<typeof GenerateReadmeTemplateSchema>;
@@ -48,48 +48,52 @@ export class ReadmeTemplateGenerator {
         {
           title: 'Header',
           content: '# {{projectName}}\n\n> {{description}}',
-          required: true
+          required: true,
         },
         {
           title: 'Badges',
           content: '{{badges}}',
-          required: false
+          required: false,
         },
         {
           title: 'TL;DR',
-          content: '## TL;DR\n\nWhat it does in 2-3 sentences. Who should use it.\n\n- ✅ Perfect for X use cases\n- ✅ Solves Y problems\n- ❌ Not suitable for Z (consider [alternative] instead)',
-          required: true
+          content:
+            '## TL;DR\n\nWhat it does in 2-3 sentences. Who should use it.\n\n- ✅ Perfect for X use cases\n- ✅ Solves Y problems\n- ❌ Not suitable for Z (consider [alternative] instead)',
+          required: true,
         },
         {
           title: 'Quick Start',
-          content: '## Quick Start\n\n### Install\n\n```bash\nnpm install {{projectName}}\n```\n\n### Use\n\n```javascript\nconst {{camelCaseName}} = require(\'{{projectName}}\');\n\n// Basic usage example\nconst result = {{camelCaseName}}.doSomething();\nconsole.log(result);\n```',
-          required: true
+          content:
+            "## Quick Start\n\n### Install\n\n```bash\nnpm install {{projectName}}\n```\n\n### Use\n\n```javascript\nconst {{camelCaseName}} = require('{{projectName}}');\n\n// Basic usage example\nconst result = {{camelCaseName}}.doSomething();\nconsole.log(result);\n```",
+          required: true,
         },
         {
           title: 'API Documentation',
-          content: '## API Documentation\n\n[Link to full API documentation]\n\n### Core Methods\n\n#### `methodName(param)`\n\n- **param** `{Type}` - Description\n- **Returns** `{Type}` - Description\n\nExample:\n```javascript\n// Example usage\n```',
-          required: true
+          content:
+            '## API Documentation\n\n[Link to full API documentation]\n\n### Core Methods\n\n#### `methodName(param)`\n\n- **param** `{Type}` - Description\n- **Returns** `{Type}` - Description\n\nExample:\n```javascript\n// Example usage\n```',
+          required: true,
         },
         {
           title: 'Contributing',
-          content: '## Contributing\n\nWe welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.\n\n### Development Setup\n\n```bash\ngit clone https://github.com/{{author}}/{{projectName}}.git\ncd {{projectName}}\nnpm install\nnpm test\n```',
-          required: false
+          content:
+            '## Contributing\n\nWe welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.\n\n### Development Setup\n\n```bash\ngit clone https://github.com/{{author}}/{{projectName}}.git\ncd {{projectName}}\nnpm install\nnpm test\n```',
+          required: false,
         },
         {
           title: 'License',
           content: '## License\n\n{{license}} © {{author}}',
-          required: true
-        }
+          required: true,
+        },
       ],
       badges: [
         '[![npm version](https://badge.fury.io/js/{{projectName}}.svg)](https://badge.fury.io/js/{{projectName}})',
         '[![Build Status](https://travis-ci.org/{{author}}/{{projectName}}.svg?branch=main)](https://travis-ci.org/{{author}}/{{projectName}})',
-        '[![License: {{license}}](https://img.shields.io/badge/License-{{license}}-yellow.svg)](https://opensource.org/licenses/{{license}})'
+        '[![License: {{license}}](https://img.shields.io/badge/License-{{license}}-yellow.svg)](https://opensource.org/licenses/{{license}})',
       ],
       metadata: {
         type: 'library',
-        estimatedLength: 150
-      }
+        estimatedLength: 150,
+      },
     });
 
     // Application Template
@@ -98,52 +102,57 @@ export class ReadmeTemplateGenerator {
         {
           title: 'Header',
           content: '# {{projectName}}\n\n> {{description}}',
-          required: true
+          required: true,
         },
         {
           title: 'Screenshot',
           content: '{{screenshot}}',
-          required: false
+          required: false,
         },
         {
           title: 'What This Does',
-          content: '## What This Does\n\n{{projectName}} helps you:\n\n- 🎯 **Feature 1** - Brief explanation\n- ⚡ **Feature 2** - Brief explanation\n- 🔧 **Feature 3** - Brief explanation',
-          required: true
+          content:
+            '## What This Does\n\n{{projectName}} helps you:\n\n- 🎯 **Feature 1** - Brief explanation\n- ⚡ **Feature 2** - Brief explanation\n- 🔧 **Feature 3** - Brief explanation',
+          required: true,
         },
         {
           title: 'Quick Start',
-          content: '## Quick Start\n\n### Prerequisites\n\n- Node.js 18+ \n- npm or yarn\n- [Additional requirements]\n\n### Install & Run\n\n```bash\ngit clone https://github.com/{{author}}/{{projectName}}.git\ncd {{projectName}}\nnpm install\nnpm start\n```\n\nOpen http://localhost:3000 in your browser.',
-          required: true
+          content:
+            '## Quick Start\n\n### Prerequisites\n\n- Node.js 18+ \n- npm or yarn\n- [Additional requirements]\n\n### Install & Run\n\n```bash\ngit clone https://github.com/{{author}}/{{projectName}}.git\ncd {{projectName}}\nnpm install\nnpm start\n```\n\nOpen http://localhost:3000 in your browser.',
+          required: true,
         },
         {
           title: 'Configuration',
-          content: '## Configuration\n\nCreate a `.env` file in the root directory:\n\n```env\n# Required settings\nPORT=3000\nNODE_ENV=development\n\n# Optional settings\nDATABASE_URL=your_database_url\nAPI_KEY=your_api_key\n```\n\nSee [Configuration Guide](docs/configuration.md) for all options.',
-          required: true
+          content:
+            '## Configuration\n\nCreate a `.env` file in the root directory:\n\n```env\n# Required settings\nPORT=3000\nNODE_ENV=development\n\n# Optional settings\nDATABASE_URL=your_database_url\nAPI_KEY=your_api_key\n```\n\nSee [Configuration Guide](docs/configuration.md) for all options.',
+          required: true,
         },
         {
           title: 'Usage',
-          content: '## Usage\n\n### Basic Operations\n\n1. **Step 1** - Description\n2. **Step 2** - Description\n3. **Step 3** - Description\n\n### Advanced Features\n\n[Link to advanced documentation]',
-          required: true
+          content:
+            '## Usage\n\n### Basic Operations\n\n1. **Step 1** - Description\n2. **Step 2** - Description\n3. **Step 3** - Description\n\n### Advanced Features\n\n[Link to advanced documentation]',
+          required: true,
         },
         {
           title: 'Contributing',
-          content: '## Contributing\n\nSee [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and contribution guidelines.',
-          required: false
+          content:
+            '## Contributing\n\nSee [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and contribution guidelines.',
+          required: false,
         },
         {
           title: 'License',
           content: '## License\n\n{{license}} © {{author}}',
-          required: true
-        }
+          required: true,
+        },
       ],
       badges: [
         '[![Build Status](https://github.com/{{author}}/{{projectName}}/workflows/CI/badge.svg)](https://github.com/{{author}}/{{projectName}}/actions)',
-        '[![License: {{license}}](https://img.shields.io/badge/License-{{license}}-blue.svg)](LICENSE)'
+        '[![License: {{license}}](https://img.shields.io/badge/License-{{license}}-blue.svg)](LICENSE)',
       ],
       metadata: {
         type: 'application',
-        estimatedLength: 200
-      }
+        estimatedLength: 200,
+      },
     });
 
     // CLI Tool Template
@@ -152,47 +161,52 @@ export class ReadmeTemplateGenerator {
         {
           title: 'Header',
           content: '# {{projectName}}\n\n> {{description}}',
-          required: true
+          required: true,
         },
         {
           title: 'Installation',
-          content: '## Installation\n\n```bash\n# Global installation\nnpm install -g {{projectName}}\n\n# Or use with npx\nnpx {{projectName}} --help\n```',
-          required: true
+          content:
+            '## Installation\n\n```bash\n# Global installation\nnpm install -g {{projectName}}\n\n# Or use with npx\nnpx {{projectName}} --help\n```',
+          required: true,
         },
         {
           title: 'Usage',
-          content: '## Usage\n\n### Basic Commands\n\n```bash\n# Basic usage\n{{projectName}} [options] [arguments]\n\n# Show help\n{{projectName}} --help\n\n# Show version\n{{projectName}} --version\n```\n\n### Examples\n\n```bash\n# Example 1\n{{projectName}} command --option value\n\n# Example 2\n{{projectName}} another-command file.txt\n```',
-          required: true
+          content:
+            '## Usage\n\n### Basic Commands\n\n```bash\n# Basic usage\n{{projectName}} [options] [arguments]\n\n# Show help\n{{projectName}} --help\n\n# Show version\n{{projectName}} --version\n```\n\n### Examples\n\n```bash\n# Example 1\n{{projectName}} command --option value\n\n# Example 2\n{{projectName}} another-command file.txt\n```',
+          required: true,
         },
         {
           title: 'Options',
-          content: '## Options\n\n| Option | Description | Default |\n|--------|-------------|----------|\n| `-h, --help` | Show help | |\n| `-v, --version` | Show version | |\n| `--config <path>` | Config file path | `./config.json` |\n| `--verbose` | Verbose output | `false` |',
-          required: true
+          content:
+            '## Options\n\n| Option | Description | Default |\n|--------|-------------|----------|\n| `-h, --help` | Show help | |\n| `-v, --version` | Show version | |\n| `--config <path>` | Config file path | `./config.json` |\n| `--verbose` | Verbose output | `false` |',
+          required: true,
         },
         {
           title: 'Configuration',
-          content: '## Configuration\n\nCreate a config file:\n\n```json\n{\n  "setting1": "value1",\n  "setting2": "value2"\n}\n```',
-          required: false
+          content:
+            '## Configuration\n\nCreate a config file:\n\n```json\n{\n  "setting1": "value1",\n  "setting2": "value2"\n}\n```',
+          required: false,
         },
         {
           title: 'Contributing',
-          content: '## Contributing\n\nSee [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines.',
-          required: false
+          content:
+            '## Contributing\n\nSee [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines.',
+          required: false,
         },
         {
           title: 'License',
           content: '## License\n\n{{license}} © {{author}}',
-          required: true
-        }
+          required: true,
+        },
       ],
       badges: [
         '[![npm version](https://badge.fury.io/js/{{projectName}}.svg)](https://www.npmjs.com/package/{{projectName}})',
-        '[![License: {{license}}](https://img.shields.io/badge/License-{{license}}-green.svg)](LICENSE)'
+        '[![License: {{license}}](https://img.shields.io/badge/License-{{license}}-green.svg)](LICENSE)',
       ],
       metadata: {
         type: 'cli-tool',
-        estimatedLength: 180
-      }
+        estimatedLength: 180,
+      },
     });
   }
 
@@ -222,16 +236,18 @@ export class ReadmeTemplateGenerator {
   }
 
   private processBadges(badges: string[], input: GenerateReadmeTemplateInput): string {
-    return badges
-      .map(badge => this.replaceVariables(badge, input))
-      .join('\n');
+    return badges.map((badge) => this.replaceVariables(badge, input)).join('\n');
   }
 
   private processScreenshot(input: GenerateReadmeTemplateInput): string {
     return `![${input.projectName} Screenshot](docs/screenshot.png)\n\n*Add a screenshot or demo GIF here*`;
   }
 
-  private processSection(content: string, input: GenerateReadmeTemplateInput, camelCaseName: string): string {
+  private processSection(
+    content: string,
+    input: GenerateReadmeTemplateInput,
+    camelCaseName: string,
+  ): string {
     let processed = this.replaceVariables(content, input);
     processed = processed.replace(/\{\{camelCaseName\}\}/g, camelCaseName);
     return processed;
@@ -247,8 +263,8 @@ export class ReadmeTemplateGenerator {
 
   private toCamelCase(str: string): string {
     return str
-      .replace(/[-_\s]+(.)?/g, (_, c) => c ? c.toUpperCase() : '')
-      .replace(/^./, c => c.toLowerCase());
+      .replace(/[-_\s]+(.)?/g, (_, c) => (c ? c.toUpperCase() : ''))
+      .replace(/^./, (c) => c.toLowerCase());
   }
 
   getAvailableTemplates(): TemplateType[] {
@@ -271,10 +287,10 @@ export async function generateReadmeTemplate(input: GenerateReadmeTemplateInput)
 }> {
   const validatedInput = GenerateReadmeTemplateSchema.parse(input);
   const generator = new ReadmeTemplateGenerator();
-  
+
   const content = generator.generateTemplate(validatedInput);
   const templateInfo = generator.getTemplateInfo(validatedInput.templateType);
-  
+
   if (!templateInfo) {
     throw new Error(`Template type "${validatedInput.templateType}" not found`);
   }
@@ -290,7 +306,7 @@ export async function generateReadmeTemplate(input: GenerateReadmeTemplateInput)
     metadata: {
       templateType: validatedInput.templateType,
       estimatedLength: templateInfo.estimatedLength,
-      sectionsIncluded: content.split('##').length - 1
-    }
+      sectionsIncluded: content.split('##').length - 1,
+    },
   };
 }

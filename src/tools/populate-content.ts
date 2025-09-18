@@ -110,32 +110,32 @@ class ContentPopulationEngine {
   async populateContent(options: PopulationOptions): Promise<PopulationResult> {
     // 1. Retrieve and validate repository analysis
     const analysis = await this.getRepositoryAnalysis(options.analysisId);
-    
+
     // 2. Generate content plan based on project characteristics
     const contentPlan = await this.generateContentPlan(analysis, options.populationLevel);
-    
+
     // 3. Generate content for each Diataxis category
     const tutorials = await this.generateTutorialContent(contentPlan.tutorials, analysis);
     const howTos = await this.generateHowToContent(contentPlan.howToGuides, analysis);
     const reference = await this.generateReferenceContent(contentPlan.reference, analysis);
     const explanation = await this.generateExplanationContent(contentPlan.explanation, analysis);
-    
+
     // 4. Write content to documentation structure
     const filesCreated = await this.writeContentToStructure(
       options.docsPath,
       { tutorials, howTos, reference, explanation },
-      options.preserveExisting
+      options.preserveExisting,
     );
-    
+
     // 5. Generate cross-references and navigation updates
     await this.updateNavigationAndCrossReferences(options.docsPath, contentPlan);
-    
+
     return {
       success: true,
       filesCreated,
       contentPlan,
       populationMetrics: this.calculatePopulationMetrics(filesCreated, contentPlan),
-      nextSteps: this.generateNextSteps(analysis, contentPlan)
+      nextSteps: this.generateNextSteps(analysis, contentPlan),
     };
   }
 
@@ -143,7 +143,7 @@ class ContentPopulationEngine {
     // In a real implementation, this would retrieve from a persistent store
     // For now, we'll read from a cached analysis file if it exists
     const analysisPath = path.join('.documcp', 'analyses', `${analysisId}.json`);
-    
+
     try {
       const content = await fs.readFile(analysisPath, 'utf-8');
       return JSON.parse(content);
@@ -158,24 +158,24 @@ class ContentPopulationEngine {
       metadata: {
         projectName: 'documcp',
         primaryLanguage: 'TypeScript',
-        ecosystem: 'Node.js'
+        ecosystem: 'Node.js',
       },
       technologies: {
         runtime: 'Node.js',
         framework: null,
         testing: ['Jest'],
         database: null,
-        deployment: ['GitHub Actions']
+        deployment: ['GitHub Actions'],
       },
       dependencies: {
         packages: ['@modelcontextprotocol/sdk', 'typescript', 'jest'],
-        ecosystem: 'npm'
+        ecosystem: 'npm',
       },
       structure: {
         hasTests: true,
         hasDocs: true,
-        hasCI: true
-      }
+        hasCI: true,
+      },
     };
   }
 
@@ -184,18 +184,18 @@ class ContentPopulationEngine {
       tutorials: [],
       howToGuides: [],
       reference: [],
-      explanation: []
+      explanation: [],
     };
 
     // Generate tutorials based on project type
     plan.tutorials = this.generateTutorialPlan(analysis, level);
-    
+
     // Generate how-to guides for common tasks
     plan.howToGuides = this.generateHowToPlan(analysis, level);
-    
+
     // Generate reference documentation
     plan.reference = this.generateReferencePlan(analysis, level);
-    
+
     // Generate explanation content
     plan.explanation = this.generateExplanationPlan(analysis, level);
 
@@ -204,13 +204,13 @@ class ContentPopulationEngine {
 
   private generateTutorialPlan(analysis: any, _level: string): TutorialContent[] {
     const tutorials: TutorialContent[] = [];
-    
+
     // Always include getting started
     tutorials.push({
       title: `Getting Started with ${analysis.metadata.projectName}`,
       description: `Learn ${analysis.metadata.primaryLanguage} development with ${analysis.metadata.projectName}`,
       content: this.generateGettingStartedContent(analysis),
-      codeExamples: this.generateGettingStartedExamples(analysis)
+      codeExamples: this.generateGettingStartedExamples(analysis),
     });
 
     // Add technology-specific tutorials
@@ -219,7 +219,7 @@ class ContentPopulationEngine {
         title: 'Setting Up Your Development Environment',
         description: 'Configure Node.js and TypeScript for development',
         content: this.generateNodeSetupContent(analysis),
-        codeExamples: this.generateNodeSetupExamples()
+        codeExamples: this.generateNodeSetupExamples(),
       });
     }
 
@@ -229,7 +229,7 @@ class ContentPopulationEngine {
         title: 'Writing and Running Tests',
         description: 'Learn how to test your code effectively',
         content: this.generateTestingTutorialContent(analysis),
-        codeExamples: this.generateTestingExamples(analysis)
+        codeExamples: this.generateTestingExamples(analysis),
       });
     }
 
@@ -241,7 +241,7 @@ class ContentPopulationEngine {
         title: `Containerizing ${analysis.metadata.projectName} with ${containerTech.name}`,
         description: `Learn how to containerize your application using ${containerTech.name}`,
         content: this.generateContainerTutorialContent(analysis, containerTech),
-        codeExamples: this.generateContainerExamples(analysis, containerTech)
+        codeExamples: this.generateContainerExamples(analysis, containerTech),
       });
     }
 
@@ -251,7 +251,7 @@ class ContentPopulationEngine {
         title: `Deploying to ${orchestrationTech.name}`,
         description: `Deploy your application to ${orchestrationTech.name}`,
         content: this.generateOrchestrationTutorialContent(analysis, orchestrationTech),
-        codeExamples: this.generateOrchestrationExamples(analysis, orchestrationTech)
+        codeExamples: this.generateOrchestrationExamples(analysis, orchestrationTech),
       });
     }
 
@@ -261,17 +261,17 @@ class ContentPopulationEngine {
         title: 'Python Virtual Environment Setup',
         description: 'Set up isolated Python development environment',
         content: this.generatePythonEnvironmentContent(analysis),
-        codeExamples: this.generatePythonEnvironmentExamples()
+        codeExamples: this.generatePythonEnvironmentExamples(),
       });
 
       // Python framework-specific tutorials
       const pythonFrameworks = this.detectPythonFrameworks(analysis);
-      pythonFrameworks.forEach(framework => {
+      pythonFrameworks.forEach((framework) => {
         tutorials.push({
           title: `Building Applications with ${framework.name}`,
           description: `Complete guide to ${framework.name} development`,
           content: this.generatePythonFrameworkTutorialContent(analysis, framework),
-          codeExamples: this.generatePythonFrameworkExamples(framework)
+          codeExamples: this.generatePythonFrameworkExamples(framework),
         });
       });
     }
@@ -281,23 +281,23 @@ class ContentPopulationEngine {
 
   private generateHowToPlan(analysis: any, _level: string): any[] {
     const howTos: any[] = [];
-    
+
     // Common development tasks
     howTos.push({
       title: 'How to Add a New Feature',
-      content: this.generateFeatureGuideContent(analysis)
+      content: this.generateFeatureGuideContent(analysis),
     });
 
     howTos.push({
       title: 'How to Debug Common Issues',
-      content: this.generateDebuggingGuideContent(analysis)
+      content: this.generateDebuggingGuideContent(analysis),
     });
 
     // Deployment guides if CI detected
     if (analysis.structure.hasCI) {
       howTos.push({
         title: 'How to Deploy Your Application',
-        content: this.generateDeploymentGuideContent(analysis)
+        content: this.generateDeploymentGuideContent(analysis),
       });
     }
 
@@ -306,23 +306,23 @@ class ContentPopulationEngine {
 
   private generateReferencePlan(analysis: any, _level: string): any[] {
     const reference: any[] = [];
-    
+
     // API reference
     reference.push({
       title: 'API Reference',
-      content: this.generateAPIReference(analysis)
+      content: this.generateAPIReference(analysis),
     });
 
     // Configuration reference
     reference.push({
       title: 'Configuration Options',
-      content: this.generateConfigReference(analysis)
+      content: this.generateConfigReference(analysis),
     });
 
     // CLI reference if applicable
     reference.push({
       title: 'Command Line Interface',
-      content: this.generateCLIReference(analysis)
+      content: this.generateCLIReference(analysis),
     });
 
     return reference;
@@ -330,23 +330,23 @@ class ContentPopulationEngine {
 
   private generateExplanationPlan(analysis: any, _level: string): any[] {
     const explanations: any[] = [];
-    
+
     // Architecture overview
     explanations.push({
       title: 'Architecture Overview',
-      content: this.generateArchitectureContent(analysis)
+      content: this.generateArchitectureContent(analysis),
     });
 
     // Design decisions
     explanations.push({
       title: 'Design Decisions',
-      content: this.generateDesignDecisionsContent(analysis)
+      content: this.generateDesignDecisionsContent(analysis),
     });
 
     // Technology choices
     explanations.push({
       title: 'Technology Stack',
-      content: this.generateTechnologyStackContent(analysis)
+      content: this.generateTechnologyStackContent(analysis),
     });
 
     return explanations;
@@ -416,7 +416,7 @@ const app = initialize({
 });
 
 app.start();`,
-      
+
       `// Example: TypeScript configuration
 {
   "compilerOptions": {
@@ -427,7 +427,7 @@ app.start();`,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   }
-}`
+}`,
     ];
   }
 
@@ -505,13 +505,13 @@ Create a \`.vscode/launch.json\` file:
     "test": "jest",
     "lint": "eslint src --ext .ts"
   }
-}`
+}`,
     ];
   }
 
   private generateTestingTutorialContent(_analysis: any): string {
     const testFramework = _analysis.technologies.testing?.[0] || 'Jest';
-    
+
     return `# Writing and Running Tests
 
 Learn how to write effective tests for your ${_analysis.metadata.projectName} code using ${testFramework}.
@@ -533,10 +533,10 @@ describe('Example Module', () => {
   it('should perform expected behavior', () => {
     // Arrange
     const input = 'test';
-    
+
     // Act
     const result = exampleFunction(input);
-    
+
     // Assert
     expect(result).toBe('expected output');
   });
@@ -607,14 +607,14 @@ describe('API Endpoints', () => {
       const response = await request(app)
         .get('/api/health')
         .expect(200);
-      
+
       expect(response.body).toEqual({
         status: 'healthy',
         timestamp: expect.any(String)
       });
     });
   });
-});`
+});`,
     ];
   }
 
@@ -1368,7 +1368,10 @@ Complete overview of technologies used in ${_analysis.metadata.projectName}.
 - **lint-staged**: Pre-commit checks
 
 ### Testing
-${_analysis.technologies.testing?.map((t: string) => `- **${t}**: Testing framework`).join('\\n') || '- **Jest**: Testing framework'}
+${
+  _analysis.technologies.testing?.map((t: string) => `- **${t}**: Testing framework`).join('\\n') ||
+  '- **Jest**: Testing framework'
+}
 - **Supertest**: API testing
 - **Coverage tools**: Code coverage reporting
 
@@ -1380,7 +1383,11 @@ ${_analysis.technologies.testing?.map((t: string) => `- **${t}**: Testing framew
 - **GitHub Actions**: CI/CD pipelines
 
 ### Deployment
-${_analysis.technologies.deployment?.map((t: string) => `- **${t}**: Deployment platform`).join('\\n') || '- **Docker**: Containerization'}
+${
+  _analysis.technologies.deployment
+    ?.map((t: string) => `- **${t}**: Deployment platform`)
+    .join('\\n') || '- **Docker**: Containerization'
+}
 - **GitHub Pages**: Documentation hosting
 
 ### Monitoring
@@ -1403,13 +1410,17 @@ ${JSON.stringify(_analysis.dependencies.packages?.slice(0, 5) || [], null, 2)}
 
 ## Database & Storage
 
-${_analysis.technologies.database ? `### Database
+${
+  _analysis.technologies.database
+    ? `### Database
 - **${_analysis.technologies.database}**: Primary database
 - **Migration tools**: Database versioning
-- **ORMs/Query builders**: Data access layer` : `### Storage
+- **ORMs/Query builders**: Data access layer`
+    : `### Storage
 - File system for local development
 - Cloud storage for production
-- Caching layers for performance`}
+- Caching layers for performance`
+}
 
 ## External Services
 
@@ -1497,7 +1508,7 @@ ${_analysis.technologies.database ? `### Database
   private async writeContentToStructure(
     docsPath: string,
     content: any,
-    preserveExisting: boolean
+    preserveExisting: boolean,
   ): Promise<number> {
     let filesCreated = 0;
 
@@ -1512,7 +1523,7 @@ ${_analysis.technologies.database ? `### Database
     for (const tutorial of content.tutorials) {
       const fileName = this.slugify(tutorial.title) + '.md';
       const filePath = path.join(docsPath, 'tutorials', fileName);
-      
+
       if (preserveExisting) {
         try {
           await fs.access(filePath);
@@ -1521,7 +1532,7 @@ ${_analysis.technologies.database ? `### Database
           // File doesn't exist, proceed to write
         }
       }
-      
+
       await fs.writeFile(filePath, tutorial.content, 'utf-8');
       filesCreated++;
     }
@@ -1530,7 +1541,7 @@ ${_analysis.technologies.database ? `### Database
     for (const howTo of content.howTos) {
       const fileName = this.slugify(howTo.title) + '.md';
       const filePath = path.join(docsPath, 'how-to', fileName);
-      
+
       if (preserveExisting) {
         try {
           await fs.access(filePath);
@@ -1539,7 +1550,7 @@ ${_analysis.technologies.database ? `### Database
           // File doesn't exist, proceed with creation
         }
       }
-      
+
       await fs.writeFile(filePath, howTo.content, 'utf-8');
       filesCreated++;
     }
@@ -1548,7 +1559,7 @@ ${_analysis.technologies.database ? `### Database
     for (const ref of content.reference) {
       const fileName = this.slugify(ref.title) + '.md';
       const filePath = path.join(docsPath, 'reference', fileName);
-      
+
       if (preserveExisting) {
         try {
           await fs.access(filePath);
@@ -1557,7 +1568,7 @@ ${_analysis.technologies.database ? `### Database
           // File doesn't exist, proceed with creation
         }
       }
-      
+
       await fs.writeFile(filePath, ref.content, 'utf-8');
       filesCreated++;
     }
@@ -1566,7 +1577,7 @@ ${_analysis.technologies.database ? `### Database
     for (const exp of content.explanation) {
       const fileName = this.slugify(exp.title) + '.md';
       const filePath = path.join(docsPath, 'explanation', fileName);
-      
+
       if (preserveExisting) {
         try {
           await fs.access(filePath);
@@ -1575,7 +1586,7 @@ ${_analysis.technologies.database ? `### Database
           // File doesn't exist, proceed with creation
         }
       }
-      
+
       await fs.writeFile(filePath, exp.content, 'utf-8');
       filesCreated++;
     }
@@ -1583,7 +1594,10 @@ ${_analysis.technologies.database ? `### Database
     return filesCreated;
   }
 
-  private async updateNavigationAndCrossReferences(docsPath: string, contentPlan: ContentPlan): Promise<void> {
+  private async updateNavigationAndCrossReferences(
+    docsPath: string,
+    contentPlan: ContentPlan,
+  ): Promise<void> {
     // Create main index file with navigation
     const indexContent = `# Documentation
 
@@ -1592,29 +1606,37 @@ Welcome to the documentation! This comprehensive guide is organized following th
 ## 📚 Learning-Oriented: Tutorials
 
 Start here if you're new to the project:
-${contentPlan.tutorials.map(t => `- [${t.title}](tutorials/${this.slugify(t.title)}.md)`).join('\\n')}
+${contentPlan.tutorials
+  .map((t) => `- [${t.title}](tutorials/${this.slugify(t.title)}.md)`)
+  .join('\\n')}
 
 ## 🔧 Task-Oriented: How-To Guides
 
 Practical guides for specific tasks:
-${contentPlan.howToGuides.map(h => `- [${h.title}](how-to/${this.slugify(h.title)}.md)`).join('\\n')}
+${contentPlan.howToGuides
+  .map((h) => `- [${h.title}](how-to/${this.slugify(h.title)}.md)`)
+  .join('\\n')}
 
 ## 📖 Information-Oriented: Reference
 
 Detailed technical reference:
-${contentPlan.reference.map(r => `- [${r.title}](reference/${this.slugify(r.title)}.md)`).join('\\n')}
+${contentPlan.reference
+  .map((r) => `- [${r.title}](reference/${this.slugify(r.title)}.md)`)
+  .join('\\n')}
 
 ## 💡 Understanding-Oriented: Explanation
 
 Conceptual documentation and background:
-${contentPlan.explanation.map(e => `- [${e.title}](explanation/${this.slugify(e.title)}.md)`).join('\\n')}
+${contentPlan.explanation
+  .map((e) => `- [${e.title}](explanation/${this.slugify(e.title)}.md)`)
+  .join('\\n')}
 `;
 
     await fs.writeFile(path.join(docsPath, 'index.md'), indexContent, 'utf-8');
   }
 
   private calculatePopulationMetrics(filesCreated: number, contentPlan: ContentPlan): any {
-    const totalPlanned = 
+    const totalPlanned =
       contentPlan.tutorials.length +
       contentPlan.howToGuides.length +
       contentPlan.reference.length +
@@ -1623,7 +1645,7 @@ ${contentPlan.explanation.map(e => `- [${e.title}](explanation/${this.slugify(e.
     return {
       coverage: (filesCreated / totalPlanned) * 100,
       completeness: 85, // Example metric
-      projectSpecificity: 75 // Example metric
+      projectSpecificity: 75, // Example metric
     };
   }
 
@@ -1634,7 +1656,7 @@ ${contentPlan.explanation.map(e => `- [${e.title}](explanation/${this.slugify(e.
       'Validate technical accuracy of code examples',
       'Add screenshots and diagrams where helpful',
       'Test all commands and code snippets',
-      'Set up automated documentation deployment'
+      'Set up automated documentation deployment',
     ];
   }
 
@@ -1655,33 +1677,37 @@ ${contentPlan.explanation.map(e => `- [${e.title}](explanation/${this.slugify(e.
       cicd: this.detectCICD(analysis),
       configuration: this.detectConfigManagement(analysis),
       monitoring: this.detectMonitoring(analysis),
-      security: this.detectSecurity(analysis)
+      security: this.detectSecurity(analysis),
     };
   }
 
   private detectContainerization(analysis: any): ContainerTechnology[] {
     const detected: ContainerTechnology[] = [];
     const files = analysis.files || [];
-    
+
     // Docker detection
-    if (files.some((f: any) => f.name === 'Dockerfile') || 
-        files.some((f: any) => f.name === 'docker-compose.yml') ||
-        files.some((f: any) => f.name === 'docker-compose.yaml')) {
+    if (
+      files.some((f: any) => f.name === 'Dockerfile') ||
+      files.some((f: any) => f.name === 'docker-compose.yml') ||
+      files.some((f: any) => f.name === 'docker-compose.yaml')
+    ) {
       detected.push({
         name: 'docker',
         version: this.extractDockerVersion(analysis),
         configFiles: this.getDockerFiles(analysis),
-        usage: 'containerization'
+        usage: 'containerization',
       });
     }
 
     // Podman detection
-    if (files.some((f: any) => f.name === 'Containerfile') ||
-        files.some((f: any) => f.name === 'podman-compose.yml')) {
+    if (
+      files.some((f: any) => f.name === 'Containerfile') ||
+      files.some((f: any) => f.name === 'podman-compose.yml')
+    ) {
       detected.push({
         name: 'podman',
         configFiles: this.getPodmanFiles(analysis),
-        usage: 'containerization'
+        usage: 'containerization',
       });
     }
 
@@ -1691,22 +1717,24 @@ ${contentPlan.explanation.map(e => `- [${e.title}](explanation/${this.slugify(e.
   private detectOrchestration(analysis: any): OrchestrationTechnology[] {
     const detected: OrchestrationTechnology[] = [];
     const files = analysis.files || [];
-    
+
     // Kubernetes detection
     if (files.some((f: any) => f.path?.includes('k8s/') || f.path?.includes('kubernetes/'))) {
       detected.push({
         name: 'kubernetes',
         manifests: this.getKubernetesManifests(analysis),
         resources: this.analyzeKubernetesResources(analysis),
-        namespaces: this.extractNamespaces(analysis)
+        namespaces: this.extractNamespaces(analysis),
       });
     }
 
     // OpenShift detection
-    if (files.some((f: any) => f.path?.includes('.s2i/')) ||
-        this.hasFileContent(analysis, 'kind: DeploymentConfig')) {
+    if (
+      files.some((f: any) => f.path?.includes('.s2i/')) ||
+      this.hasFileContent(analysis, 'kind: DeploymentConfig')
+    ) {
       detected.push({
-        name: 'openshift'
+        name: 'openshift',
       });
     }
 
@@ -1716,19 +1744,21 @@ ${contentPlan.explanation.map(e => `- [${e.title}](explanation/${this.slugify(e.
   private detectCICD(analysis: any): CICDTechnology[] {
     const detected: CICDTechnology[] = [];
     const files = analysis.files || [];
-    
+
     // GitHub Actions detection
     if (files.some((f: any) => f.path?.includes('.github/workflows/'))) {
       detected.push({
-        name: 'github-actions'
+        name: 'github-actions',
       });
     }
 
     // Tekton detection
-    if (files.some((f: any) => f.path?.includes('.tekton/')) ||
-        this.hasFileContent(analysis, 'apiVersion: tekton.dev')) {
+    if (
+      files.some((f: any) => f.path?.includes('.tekton/')) ||
+      this.hasFileContent(analysis, 'apiVersion: tekton.dev')
+    ) {
       detected.push({
-        name: 'tekton'
+        name: 'tekton',
       });
     }
 
@@ -1738,22 +1768,24 @@ ${contentPlan.explanation.map(e => `- [${e.title}](explanation/${this.slugify(e.
   private detectConfigManagement(analysis: any): ConfigManagementTechnology[] {
     const detected: ConfigManagementTechnology[] = [];
     const files = analysis.files || [];
-    
+
     // Ansible detection
-    if (files.some((f: any) => f.name === 'ansible.cfg') ||
-        files.some((f: any) => f.path?.includes('playbooks/')) ||
-        files.some((f: any) => f.path?.includes('roles/'))) {
+    if (
+      files.some((f: any) => f.name === 'ansible.cfg') ||
+      files.some((f: any) => f.path?.includes('playbooks/')) ||
+      files.some((f: any) => f.path?.includes('roles/'))
+    ) {
       detected.push({
         name: 'ansible',
         playbooks: this.getAnsiblePlaybooks(analysis),
-        roles: this.getAnsibleRoles(analysis)
+        roles: this.getAnsibleRoles(analysis),
       });
     }
 
     // Terraform detection
     if (files.some((f: any) => f.name?.endsWith('.tf'))) {
       detected.push({
-        name: 'terraform'
+        name: 'terraform',
       });
     }
 
@@ -1762,7 +1794,7 @@ ${contentPlan.explanation.map(e => `- [${e.title}](explanation/${this.slugify(e.
 
   private detectMonitoring(analysis: any): MonitoringTechnology[] {
     const detected: MonitoringTechnology[] = [];
-    
+
     if (this.hasFileContent(analysis, 'prometheus')) {
       detected.push({ name: 'prometheus' });
     }
@@ -1776,7 +1808,7 @@ ${contentPlan.explanation.map(e => `- [${e.title}](explanation/${this.slugify(e.
 
   private detectSecurity(analysis: any): SecurityTechnology[] {
     const detected: SecurityTechnology[] = [];
-    
+
     if (this.hasFileContent(analysis, 'falco')) {
       detected.push({ name: 'falco' });
     }
@@ -1788,7 +1820,7 @@ ${contentPlan.explanation.map(e => `- [${e.title}](explanation/${this.slugify(e.
   private detectPythonFrameworks(analysis: any): any[] {
     const frameworks: any[] = [];
     const dependencies = analysis.dependencies?.packages || [];
-    
+
     if (dependencies.includes('django')) {
       frameworks.push({ name: 'django', type: 'web-framework' });
     }
@@ -1852,16 +1884,19 @@ ${contentPlan.explanation.map(e => `- [${e.title}](explanation/${this.slugify(e.
 
   private getAnsibleRoles(analysis: any): string[] {
     const files = analysis.files || [];
-    return files
-      .filter((f: any) => f.path?.includes('roles/'))
-      .map((f: any) => f.name);
+    return files.filter((f: any) => f.path?.includes('roles/')).map((f: any) => f.name);
   }
 
   // Content generation methods for new features
-  private generateContainerTutorialContent(_analysis: any, _containerTech: ContainerTechnology): string {
+  private generateContainerTutorialContent(
+    _analysis: any,
+    _containerTech: ContainerTechnology,
+  ): string {
     return `# Containerizing ${_analysis.metadata.projectName} with ${_containerTech.name}
 
-Learn how to package your ${_analysis.metadata.primaryLanguage} application into a container for consistent deployment across environments.
+Learn how to package your ${
+      _analysis.metadata.primaryLanguage
+    } application into a container for consistent deployment across environments.
 
 ## Prerequisites
 
@@ -1875,7 +1910,9 @@ Containers provide a lightweight, portable way to package applications with all 
 
 ## Creating a ${_containerTech.name === 'docker' ? 'Dockerfile' : 'Containerfile'}
 
-1. Create a ${_containerTech.name === 'docker' ? 'Dockerfile' : 'Containerfile'} in your project root:
+1. Create a ${
+      _containerTech.name === 'docker' ? 'Dockerfile' : 'Containerfile'
+    } in your project root:
 
 \`\`\`dockerfile
 ${this.generateContainerFileContent(_analysis, _containerTech)}
@@ -1908,10 +1945,15 @@ ${_containerTech.name} run -p 3000:3000 ${_analysis.metadata.projectName}:latest
 `;
   }
 
-  private generateOrchestrationTutorialContent(_analysis: any, _orchestrationTech: OrchestrationTechnology): string {
+  private generateOrchestrationTutorialContent(
+    _analysis: any,
+    _orchestrationTech: OrchestrationTechnology,
+  ): string {
     return `# Deploying ${_analysis.metadata.projectName} to ${_orchestrationTech.name}
 
-Deploy your containerized application to ${_orchestrationTech.name} for scalable, production-ready hosting.
+Deploy your containerized application to ${
+      _orchestrationTech.name
+    } for scalable, production-ready hosting.
 
 ## Prerequisites
 
@@ -1921,7 +1963,9 @@ Deploy your containerized application to ${_orchestrationTech.name} for scalable
 
 ## Understanding ${_orchestrationTech.name}
 
-${_orchestrationTech.name} is a container orchestration platform that automates deployment, scaling, and management of containerized applications.
+${
+  _orchestrationTech.name
+} is a container orchestration platform that automates deployment, scaling, and management of containerized applications.
 
 ## Creating Deployment Manifests
 
@@ -2053,7 +2097,7 @@ deactivate
     } else if (framework.name === 'flask') {
       return this.generateFlaskTutorialContent(_analysis);
     }
-    
+
     return `# Building Applications with ${framework.name}
 
 Learn how to build applications using ${framework.name}.
@@ -2102,7 +2146,7 @@ python manage.py startapp core
 
 Django follows the MTV (Model-View-Template) pattern:
 - **Models**: Define your data structure
-- **Views**: Handle business logic and user interactions  
+- **Views**: Handle business logic and user interactions
 - **Templates**: Control presentation layer
 
 ## Creating Your First Model
@@ -2115,7 +2159,7 @@ class Item(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
-    
+
     def __str__(self):
         return self.name
 \`\`\`
@@ -2285,10 +2329,10 @@ from flask import Flask
 def create_app():
     app = Flask(__name__)
     app.config.from_object('config.Config')
-    
+
     from app.main import bp as main_bp
     app.register_blueprint(main_bp)
-    
+
     return app
 \`\`\`
 
@@ -2310,9 +2354,12 @@ Popular Flask extensions:
   }
 
   // Helper methods for container content generation
-  private generateContainerFileContent(_analysis: any, _containerTech: ContainerTechnology): string {
+  private generateContainerFileContent(
+    _analysis: any,
+    _containerTech: ContainerTechnology,
+  ): string {
     const language = _analysis.metadata.primaryLanguage?.toLowerCase();
-    
+
     if (language === 'python') {
       return `FROM python:3.11-slim
 
@@ -2394,7 +2441,7 @@ spec:
       targetPort: 3000
   type: LoadBalancer`;
     }
-    
+
     return '';
   }
 
@@ -2402,25 +2449,28 @@ spec:
     return [
       `# Build the container image
 ${_containerTech.name} build -t ${_analysis.metadata.projectName}:latest .`,
-      
+
       `# Run the container locally
 ${_containerTech.name} run -p 3000:3000 -d ${_analysis.metadata.projectName}:latest`,
-      
+
       `# View running containers
-${_containerTech.name} ps`
+${_containerTech.name} ps`,
     ];
   }
 
-  private generateOrchestrationExamples(_analysis: any, _orchestrationTech: OrchestrationTechnology): string[] {
+  private generateOrchestrationExamples(
+    _analysis: any,
+    _orchestrationTech: OrchestrationTechnology,
+  ): string[] {
     return [
       `# Deploy the application
 kubectl apply -f k8s/`,
-      
+
       `# Check deployment status
 kubectl get deployments`,
-      
+
       `# View application logs
-kubectl logs -f deployment/${_analysis.metadata.projectName}`
+kubectl logs -f deployment/${_analysis.metadata.projectName}`,
     ];
   }
 
@@ -2428,12 +2478,12 @@ kubectl logs -f deployment/${_analysis.metadata.projectName}`
     return [
       `# Create virtual environment
 python -m venv venv`,
-      
+
       `# Activate environment (Linux/macOS)
 source venv/bin/activate`,
-      
+
       `# Install dependencies
-pip install -r requirements.txt`
+pip install -r requirements.txt`,
     ];
   }
 
@@ -2442,15 +2492,15 @@ pip install -r requirements.txt`
       return [
         `# Create Django project
 django-admin startproject myproject`,
-        
+
         `# Run development server
 python manage.py runserver`,
-        
+
         `# Create superuser
-python manage.py createsuperuser`
+python manage.py createsuperuser`,
       ];
     }
-    
+
     return [];
   }
 }
@@ -2464,36 +2514,36 @@ export const populateDiataxisContent: Tool = {
     properties: {
       analysisId: {
         type: 'string',
-        description: 'Repository analysis ID from analyze_repository tool'
+        description: 'Repository analysis ID from analyze_repository tool',
       },
       docsPath: {
         type: 'string',
-        description: 'Path to documentation directory'
+        description: 'Path to documentation directory',
       },
       populationLevel: {
         type: 'string',
         enum: ['basic', 'comprehensive', 'intelligent'],
         default: 'comprehensive',
-        description: 'Level of content generation detail'
+        description: 'Level of content generation detail',
       },
       includeProjectSpecific: {
         type: 'boolean',
         default: true,
-        description: 'Generate project-specific examples and code'
+        description: 'Generate project-specific examples and code',
       },
       preserveExisting: {
         type: 'boolean',
         default: true,
-        description: 'Preserve any existing content'
+        description: 'Preserve any existing content',
       },
       technologyFocus: {
         type: 'array',
         items: { type: 'string' },
-        description: 'Specific technologies to emphasize in content'
-      }
+        description: 'Specific technologies to emphasize in content',
+      },
     },
-    required: ['analysisId', 'docsPath']
-  }
+    required: ['analysisId', 'docsPath'],
+  },
 };
 
 export async function handlePopulateDiataxisContent(args: any): Promise<PopulationResult> {
