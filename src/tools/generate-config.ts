@@ -104,7 +104,7 @@ async function generateDocusaurusConfig(
 ): Promise<Array<{ path: string; content: string }>> {
   return [
     {
-      path: 'docs-site/docusaurus.config.js',
+      path: 'docusaurus.config.js',
       content: `module.exports = {
   title: '${projectName}',
   tagline: '${projectDescription}',
@@ -155,7 +155,7 @@ async function generateDocusaurusConfig(
 };`,
     },
     {
-      path: 'docs-site/package.json',
+      path: 'package.json',
       content: JSON.stringify(
         {
           name: `${projectName.toLowerCase().replace(/\\s+/g, '-')}-docs`,
@@ -188,7 +188,7 @@ async function generateDocusaurusConfig(
       ),
     },
     {
-      path: 'docs-site/sidebars.js',
+      path: 'sidebars.js',
       content: `/**
  * Creating a sidebar enables you to:
  - create an ordered group of docs
@@ -241,7 +241,7 @@ const sidebars = {
 module.exports = sidebars;`,
     },
     {
-      path: 'docs-site/src/css/custom.css',
+      path: 'src/css/custom.css',
       content: `/**
  * Any CSS included here will be global. The classic template
  * bundles Infima by default. Infima is a CSS framework designed to
