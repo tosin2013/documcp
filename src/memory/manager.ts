@@ -347,8 +347,9 @@ export class MemoryManager extends EventEmitter {
     this.cache.set(entry.id, cacheEntry as MemoryEntry);
   }
 
-  async export(format: 'json' | 'csv' = 'json'): Promise<string> {
-    const allMemories = await this.storage.query({});
+  async export(format: 'json' | 'csv' = 'json', projectId?: string): Promise<string> {
+    const filter = projectId ? { projectId } : {};
+    const allMemories = await this.storage.query(filter);
 
     if (format === 'json') {
       return JSON.stringify(allMemories, null, 2);
@@ -398,7 +399,8 @@ export class MemoryManager extends EventEmitter {
 
     let imported = 0;
     for (const entry of entries) {
-      await this.storage.append(entry);
+      // Use store to preserve the original ID when importing
+      await this.storage.store(entry);
       imported++;
     }
 

@@ -204,8 +204,9 @@ describe('JSONLStorage', () => {
       // Index should contain entry information
       const indexContent = await fs.readFile(indexPath, 'utf-8');
       const indexData = JSON.parse(indexContent);
-      expect(Array.isArray(indexData)).toBe(true);
-      expect(indexData.length).toBeGreaterThan(0);
+      expect(typeof indexData).toBe('object');
+      expect(Array.isArray(indexData.entries)).toBe(true);
+      expect(indexData.entries.length).toBeGreaterThan(0);
     });
   });
 

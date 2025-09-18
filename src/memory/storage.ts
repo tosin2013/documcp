@@ -143,7 +143,11 @@ export class JSONLStorage {
       lineNumber++;
       if (lineNumber === location.line) {
         stream.close();
-        return JSON.parse(line);
+        try {
+          return JSON.parse(line);
+        } catch (error) {
+          return null;
+        }
       }
     }
 
@@ -171,14 +175,22 @@ export class JSONLStorage {
       });
 
       for await (const line of stream) {
-        const entry: MemoryEntry = JSON.parse(line);
+        if (line.trim() === '') continue; // Skip empty lines
 
-        if (this.matchesFilter(entry, filter)) {
-          results.push(entry);
-          if (filter.limit && results.length >= filter.limit) {
-            stream.close();
-            return results;
+        try {
+          const entry: MemoryEntry = JSON.parse(line);
+
+          // Only include entries that are still in the index (not soft-deleted)
+          if (this.index.has(entry.id) && this.matchesFilter(entry, filter)) {
+            results.push(entry);
+            if (filter.limit && results.length >= filter.limit) {
+              stream.close();
+              return results;
+            }
           }
+        } catch (error) {
+          // Skip invalid JSON lines
+          continue;
         }
       }
     }

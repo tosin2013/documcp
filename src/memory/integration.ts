@@ -8,26 +8,28 @@ import { MemoryEntry } from './storage.js';
 
 let memoryManager: MemoryManager | null = null;
 
-export async function initializeMemory(): Promise<MemoryManager> {
+export async function initializeMemory(storageDir?: string): Promise<MemoryManager> {
   if (!memoryManager) {
-    memoryManager = new MemoryManager();
+    memoryManager = new MemoryManager(storageDir);
     await memoryManager.initialize();
 
-    // Set up event listeners
-    memoryManager.on('memory-created', (entry: MemoryEntry) => {
-      // eslint-disable-next-line no-console
-      console.log(`[Memory] Created: ${entry.id} (${entry.type})`);
-    });
+    // Set up event listeners (debug logging disabled in production)
+    if (process.env.NODE_ENV === 'development') {
+      memoryManager.on('memory-created', (entry: MemoryEntry) => {
+        // eslint-disable-next-line no-console
+        console.log(`[Memory] Created: ${entry.id} (${entry.type})`);
+      });
 
-    memoryManager.on('memory-updated', (entry: MemoryEntry) => {
-      // eslint-disable-next-line no-console
-      console.log(`[Memory] Updated: ${entry.id}`);
-    });
+      memoryManager.on('memory-updated', (entry: MemoryEntry) => {
+        // eslint-disable-next-line no-console
+        console.log(`[Memory] Updated: ${entry.id}`);
+      });
 
-    memoryManager.on('memory-deleted', (id: string) => {
-      // eslint-disable-next-line no-console
-      console.log(`[Memory] Deleted: ${id}`);
-    });
+      memoryManager.on('memory-deleted', (id: string) => {
+        // eslint-disable-next-line no-console
+        console.log(`[Memory] Deleted: ${id}`);
+      });
+    }
   }
 
   return memoryManager;
@@ -221,9 +223,12 @@ export async function cleanupOldMemories(daysToKeep: number = 30): Promise<numbe
   return await manager.cleanup(cutoffDate);
 }
 
-export async function exportMemories(format: 'json' | 'csv' = 'json'): Promise<string> {
+export async function exportMemories(
+  format: 'json' | 'csv' = 'json',
+  projectId?: string,
+): Promise<string> {
   const manager = await initializeMemory();
-  return await manager.export(format);
+  return await manager.export(format, projectId);
 }
 
 export async function importMemories(
@@ -241,4 +246,14 @@ export async function getMemoryStatistics(): Promise<any> {
 
 export function getMemoryManager(): MemoryManager | null {
   return memoryManager;
+}
+
+export async function resetMemoryManager(storageDir?: string): Promise<void> {
+  if (memoryManager) {
+    await memoryManager.close();
+  }
+  memoryManager = null;
+  if (storageDir) {
+    await initializeMemory(storageDir);
+  }
 }

@@ -16,6 +16,7 @@ import {
   exportMemories,
   importMemories,
   cleanupOldMemories,
+  resetMemoryManager,
 } from '../../src/memory/integration.js';
 
 describe('Memory MCP Tool Persistence', () => {
@@ -29,12 +30,14 @@ describe('Memory MCP Tool Persistence', () => {
     );
     await fs.mkdir(tempDir, { recursive: true });
 
-    memoryManager = new MemoryManager(tempDir);
-    await memoryManager.initialize();
+    // Reset the global memory manager to use the test directory
+    await resetMemoryManager(tempDir);
+    memoryManager = (await initializeMemory())!;
   });
 
   afterEach(async () => {
     try {
+      await resetMemoryManager(); // Reset to default
       await fs.rm(tempDir, { recursive: true, force: true });
     } catch (error) {
       // Ignore cleanup errors
@@ -292,27 +295,41 @@ describe('Memory MCP Tool Persistence', () => {
       memoryManager.setContext({ projectId: 'export-test' });
 
       // Create comprehensive tool data
-      await rememberAnalysis('/test/export-project', {
+      const analysisId = await rememberAnalysis('/test/export-project', {
         projectId: 'export-test',
         language: { primary: 'go' },
         framework: { name: 'gin' },
         exportTest: true,
       });
 
-      await rememberRecommendation('analysis-id', {
-        recommended: 'hugo',
-        confidence: 0.95,
-        exportTest: true,
-      });
+      await memoryManager.remember(
+        'recommendation',
+        {
+          recommended: 'hugo',
+          confidence: 0.95,
+          exportTest: true,
+        },
+        {
+          ssg: 'hugo',
+          tags: ['recommendation', 'hugo'],
+        },
+      );
 
-      await rememberDeployment('github.com/test/export-project', {
+      // Temporarily store deployment with correct project context
+      const deploymentData = {
         ssg: 'hugo',
         status: 'success',
         exportTest: true,
+      };
+
+      await memoryManager.remember('deployment', deploymentData, {
+        repository: 'github.com/test/export-project',
+        ssg: deploymentData.ssg,
+        tags: ['deployment', deploymentData.status, deploymentData.ssg],
       });
 
-      // Export memories
-      const exportedData = await exportMemories('json');
+      // Export memories for this project only
+      const exportedData = await exportMemories('json', 'export-test');
 
       expect(exportedData).toBeDefined();
       expect(typeof exportedData).toBe('string');
@@ -322,6 +339,7 @@ describe('Memory MCP Tool Persistence', () => {
       expect(Array.isArray(parsed)).toBe(true);
 
       const exportTestMemories = parsed.filter((m: any) => m.data.exportTest === true);
+
       expect(exportTestMemories.length).toBe(3);
 
       // Verify different memory types are present
@@ -417,8 +435,8 @@ describe('Memory MCP Tool Persistence', () => {
 
       expect(sourceIds.length).toBe(3);
 
-      // Export from source
-      const exportedData = await exportMemories('json');
+      // Export from source (migration project only)
+      const exportedData = await exportMemories('json', 'migration-project');
 
       // Create target environment (new directory)
       const targetDir = path.join(tempDir, 'target-environment');
@@ -452,22 +470,41 @@ describe('Memory MCP Tool Persistence', () => {
       const oldTimestamp = new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString(); // 45 days ago
       const recentTimestamp = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(); // 5 days ago
 
-      await memoryManager.remember('analysis', {
-        projectId: 'cleanup-test',
-        age: 'old',
+      // Create entries directly via storage to control timestamps
+      await memoryManager.getStorage().append({
+        type: 'analysis',
         timestamp: oldTimestamp,
+        data: {
+          projectId: 'cleanup-test',
+          age: 'old',
+        },
+        metadata: {
+          projectId: 'cleanup-test',
+        },
       });
 
-      await memoryManager.remember('analysis', {
-        projectId: 'cleanup-test',
-        age: 'recent',
+      await memoryManager.getStorage().append({
+        type: 'analysis',
         timestamp: recentTimestamp,
+        data: {
+          projectId: 'cleanup-test',
+          age: 'recent',
+        },
+        metadata: {
+          projectId: 'cleanup-test',
+        },
       });
 
-      await memoryManager.remember('recommendation', {
-        recommended: 'hugo',
-        age: 'old',
+      await memoryManager.getStorage().append({
+        type: 'recommendation',
         timestamp: oldTimestamp,
+        data: {
+          recommended: 'hugo',
+          age: 'old',
+        },
+        metadata: {
+          projectId: 'cleanup-test',
+        },
       });
 
       // Verify all memories exist before cleanup
