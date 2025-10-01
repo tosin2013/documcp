@@ -11,17 +11,17 @@ This directory contains the Architectural Decision Records for the DocuMCP proje
 
 ## ADR Index
 
-| ADR | Title | Status | Date | Summary |
-|-----|-------|--------|------|---------|
-| [001](001-mcp-server-architecture.md) | MCP Server Architecture using TypeScript SDK | Accepted | 2025-01-14 | Core server architecture decision using TypeScript MCP SDK with modular, stateless design |
-| [002](002-repository-analysis-engine.md) | Multi-Layered Repository Analysis Engine Design | Accepted | 2025-01-14 | Comprehensive repository analysis through multiple layers: file system, language ecosystem, content, metadata, and complexity assessment |
-| [003](003-static-site-generator-recommendation-engine.md) | Static Site Generator Recommendation Engine Design | Accepted | 2025-01-14 | Multi-criteria decision analysis framework for intelligent SSG recommendations with confidence scoring |
-| [004](004-diataxis-framework-integration.md) | Diataxis Framework Integration for Documentation Structure | Accepted | 2025-01-14 | Integration of Diataxis framework as foundational information architecture for all generated documentation |
-| [005](005-github-pages-deployment-automation.md) | GitHub Pages Deployment Automation Architecture | Accepted | 2025-01-14 | Comprehensive deployment orchestration with SSG-specific workflows, security best practices, and performance optimization |
-| [006](006-mcp-tools-api-design.md) | MCP Tools API Design and Interface Specification | Accepted | 2025-01-14 | Six core MCP tools providing comprehensive documentation workflow coverage with robust validation and error handling |
-| [007](007-mcp-prompts-and-resources-integration.md) | MCP Prompts and Resources Integration for AI Assistance | Proposed | 2025-01-14 | Native MCP prompts and resources for guided workflows and content access, leveraging built-in protocol capabilities |
-| [008](008-intelligent-content-population-engine.md) | Intelligent Content Population Engine for Diataxis Documentation | Proposed | 2025-01-23 | Project-aware content generation engine that transforms repository analysis into contextually relevant Diataxis documentation |
-| [009](009-content-accuracy-validation-framework.md) | Content Accuracy and Validation Framework for Generated Documentation | Proposed | 2025-01-23 | Comprehensive accuracy assurance system with confidence scoring, reality-check validation, and interactive correction workflows |
+| ADR                                                       | Title                                                                 | Status   | Date       | Summary                                                                                                                                  |
+| --------------------------------------------------------- | --------------------------------------------------------------------- | -------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| [001](001-mcp-server-architecture.md)                     | MCP Server Architecture using TypeScript SDK                          | Accepted | 2025-01-14 | Core server architecture decision using TypeScript MCP SDK with modular, stateless design                                                |
+| [002](002-repository-analysis-engine.md)                  | Multi-Layered Repository Analysis Engine Design                       | Accepted | 2025-01-14 | Comprehensive repository analysis through multiple layers: file system, language ecosystem, content, metadata, and complexity assessment |
+| [003](003-static-site-generator-recommendation-engine.md) | Static Site Generator Recommendation Engine Design                    | Accepted | 2025-01-14 | Multi-criteria decision analysis framework for intelligent SSG recommendations with confidence scoring                                   |
+| [004](004-diataxis-framework-integration.md)              | Diataxis Framework Integration for Documentation Structure            | Accepted | 2025-01-14 | Integration of Diataxis framework as foundational information architecture for all generated documentation                               |
+| [005](005-github-pages-deployment-automation.md)          | GitHub Pages Deployment Automation Architecture                       | Accepted | 2025-01-14 | Comprehensive deployment orchestration with SSG-specific workflows, security best practices, and performance optimization                |
+| [006](006-mcp-tools-api-design.md)                        | MCP Tools API Design and Interface Specification                      | Accepted | 2025-01-14 | Six core MCP tools providing comprehensive documentation workflow coverage with robust validation and error handling                     |
+| [007](007-mcp-prompts-and-resources-integration.md)       | MCP Prompts and Resources Integration for AI Assistance               | Proposed | 2025-01-14 | Native MCP prompts and resources for guided workflows and content access, leveraging built-in protocol capabilities                      |
+| [008](008-intelligent-content-population-engine.md)       | Intelligent Content Population Engine for Diataxis Documentation      | Proposed | 2025-01-23 | Project-aware content generation engine that transforms repository analysis into contextually relevant Diataxis documentation            |
+| [009](009-content-accuracy-validation-framework.md)       | Content Accuracy and Validation Framework for Generated Documentation | Proposed | 2025-01-23 | Comprehensive accuracy assurance system with confidence scoring, reality-check validation, and interactive correction workflows          |
 
 ## ADR Process
 
@@ -30,6 +30,7 @@ This project follows the Architectural Decision Record (ADR) process as defined 
 ### ADR Template
 
 Each ADR follows a consistent structure:
+
 - **Status**: Proposed, Accepted, Deprecated, or Superseded
 - **Context**: The situation and requirements that led to the decision
 - **Decision**: The actual architectural decision made
@@ -42,24 +43,29 @@ Each ADR follows a consistent structure:
 Our ADRs are organized into the following categories:
 
 #### Foundation Architecture (ADRs 001-002)
+
 - Core server architecture and technology choices
 - Repository analysis engine design
 
 #### Intelligence & Recommendation (ADRs 003)
+
 - Static site generator recommendation algorithms
 - Decision-making frameworks
 
 #### Content & Structure (ADRs 004, 008, 009)
+
 - Documentation framework integration
 - Information architecture decisions
 - Intelligent content population and generation
 - Content accuracy and validation frameworks
 
 #### Deployment & Integration (ADRs 005-006)
+
 - GitHub Pages deployment automation
 - MCP tools API design
 
 #### AI & Assistance (ADR 007)
+
 - MCP prompts and resources for guided workflows
 
 ## Key Architectural Principles
@@ -67,26 +73,31 @@ Our ADRs are organized into the following categories:
 Based on our ADRs, DocuMCP follows these core architectural principles:
 
 ### 1. **Methodological Pragmatism**
+
 - Evidence-based decision making with explicit confidence scoring
 - Systematic verification processes for all recommendations
 - Clear acknowledgment of limitations and uncertainty
 
 ### 2. **Standards Compliance**
+
 - Full adherence to MCP specification requirements
 - Industry best practices for static site generation
 - Proven frameworks like Diataxis for information architecture
 
 ### 3. **Modular Design**
+
 - Clear separation of concerns between analysis, recommendation, generation, and deployment
 - Extensible architecture supporting future enhancements
 - Stateless operation for consistency and reliability
 
 ### 4. **Intelligent Automation**
+
 - Deep repository analysis for informed decision making
 - Context-aware configuration generation
 - Performance-optimized deployment workflows
 
 ### 5. **Developer Experience**
+
 - Intuitive MCP tools API with comprehensive validation
 - Clear error messages and troubleshooting guidance
 - Progressive complexity from simple to advanced use cases

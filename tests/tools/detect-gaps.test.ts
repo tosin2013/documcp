@@ -1,20 +1,20 @@
-import { promises as fs } from 'fs';
-import path from 'path';
-import { tmpdir } from 'os';
+import { promises as fs } from "fs";
+import path from "path";
+import { tmpdir } from "os";
 
 // Mock dependencies that don't involve filesystem
 const mockAnalyzeRepository = jest.fn();
 const mockValidateContent = jest.fn();
 
-jest.mock('../../src/tools/analyze-repository.js', () => ({
+jest.mock("../../src/tools/analyze-repository.js", () => ({
   analyzeRepository: mockAnalyzeRepository,
 }));
 
-jest.mock('../../src/tools/validate-content.js', () => ({
+jest.mock("../../src/tools/validate-content.js", () => ({
   handleValidateDiataxisContent: mockValidateContent,
 }));
 
-jest.mock('../../src/utils/code-scanner.js', () => ({
+jest.mock("../../src/utils/code-scanner.js", () => ({
   CodeScanner: jest.fn().mockImplementation(() => ({
     analyzeRepository: jest.fn().mockResolvedValue({
       summary: {
@@ -27,17 +27,29 @@ jest.mock('../../src/utils/code-scanner.js', () => ({
         constants: 2,
         apiEndpoints: 1,
       },
-      files: ['src/test.ts'],
+      files: ["src/test.ts"],
       functions: [
-        { name: 'testFunction', filePath: 'src/test.ts', line: 1, exported: true, hasJSDoc: false },
+        {
+          name: "testFunction",
+          filePath: "src/test.ts",
+          line: 1,
+          exported: true,
+          hasJSDoc: false,
+        },
       ],
       classes: [
-        { name: 'TestClass', filePath: 'src/test.ts', line: 5, exported: true, hasJSDoc: false },
+        {
+          name: "TestClass",
+          filePath: "src/test.ts",
+          line: 5,
+          exported: true,
+          hasJSDoc: false,
+        },
       ],
       interfaces: [
         {
-          name: 'TestInterface',
-          filePath: 'src/test.ts',
+          name: "TestInterface",
+          filePath: "src/test.ts",
           line: 10,
           exported: true,
           hasJSDoc: false,
@@ -57,13 +69,19 @@ jest.mock('../../src/utils/code-scanner.js', () => ({
 async function createTestDirectory(name: string): Promise<string> {
   const testDir = path.join(
     tmpdir(),
-    'documcp-test-' + Date.now() + '-' + Math.random().toString(36).substring(7),
+    "documcp-test-" +
+      Date.now() +
+      "-" +
+      Math.random().toString(36).substring(7),
   );
   await fs.mkdir(testDir, { recursive: true });
   return testDir;
 }
 
-async function createTestFile(filePath: string, content: string): Promise<void> {
+async function createTestFile(
+  filePath: string,
+  content: string,
+): Promise<void> {
   await fs.mkdir(path.dirname(filePath), { recursive: true });
   await fs.writeFile(filePath, content);
 }
@@ -77,22 +95,22 @@ async function cleanupTestDirectory(dirPath: string): Promise<void> {
 }
 
 // Now import the module under test
-import { detectDocumentationGaps } from '../../src/tools/detect-gaps.js';
+import { detectDocumentationGaps } from "../../src/tools/detect-gaps.js";
 
-describe('detectDocumentationGaps (Real Filesystem)', () => {
+describe("detectDocumentationGaps (Real Filesystem)", () => {
   const mockRepositoryAnalysis = {
-    id: 'analysis_123',
+    id: "analysis_123",
     structure: {
       hasTests: true,
       hasCI: true,
       hasDocs: true,
     },
     dependencies: {
-      ecosystem: 'javascript',
-      packages: ['react', 'express'],
+      ecosystem: "javascript",
+      packages: ["react", "express"],
     },
     hasApiEndpoints: true,
-    packageManager: 'npm',
+    packageManager: "npm",
     hasDocker: true,
     hasCICD: true,
   };
@@ -100,10 +118,14 @@ describe('detectDocumentationGaps (Real Filesystem)', () => {
   const mockValidationResult = {
     success: true,
     confidence: { overall: 85 },
-    issues: [{ type: 'warning', description: 'Missing API examples' }],
+    issues: [{ type: "warning", description: "Missing API examples" }],
     validationResults: [
-      { status: 'pass', message: 'Good structure' },
-      { status: 'fail', message: 'Missing references', recommendation: 'Add API docs' },
+      { status: "pass", message: "Good structure" },
+      {
+        status: "fail",
+        message: "Missing references",
+        recommendation: "Add API docs",
+      },
     ],
   };
 
@@ -114,14 +136,14 @@ describe('detectDocumentationGaps (Real Filesystem)', () => {
     jest.clearAllMocks();
 
     // Create a fresh test directory for each test
-    testRepoDir = await createTestDirectory('test-repo');
+    testRepoDir = await createTestDirectory("test-repo");
     createdDirs.push(testRepoDir);
 
     // Default successful repository analysis
     mockAnalyzeRepository.mockResolvedValue({
       content: [
         {
-          type: 'text',
+          type: "text",
           text: JSON.stringify(mockRepositoryAnalysis),
         },
       ],
@@ -131,7 +153,7 @@ describe('detectDocumentationGaps (Real Filesystem)', () => {
     mockValidateContent.mockResolvedValue({
       content: [
         {
-          type: 'text',
+          type: "text",
           text: JSON.stringify({ success: true, data: mockValidationResult }),
         },
       ],
@@ -144,13 +166,13 @@ describe('detectDocumentationGaps (Real Filesystem)', () => {
     createdDirs.length = 0;
   });
 
-  describe('basic functionality', () => {
-    it('should detect gaps in repository without documentation', async () => {
+  describe("basic functionality", () => {
+    it("should detect gaps in repository without documentation", async () => {
       // No docs directory created - test repo is empty
 
       const result = await detectDocumentationGaps({
         repositoryPath: testRepoDir,
-        depth: 'quick',
+        depth: "quick",
       });
 
       expect(result.content).toBeDefined();
@@ -158,98 +180,119 @@ describe('detectDocumentationGaps (Real Filesystem)', () => {
       const data = JSON.parse(result.content[0].text);
 
       expect(data.repositoryPath).toBe(testRepoDir);
-      expect(data.analysisId).toBe('analysis_123');
+      expect(data.analysisId).toBe("analysis_123");
       expect(data.overallScore).toBe(0);
       expect(data.gaps).toContainEqual(
         expect.objectContaining({
-          category: 'general',
-          gapType: 'missing_section',
-          description: 'No documentation directory found',
-          priority: 'critical',
+          category: "general",
+          gapType: "missing_section",
+          description: "No documentation directory found",
+          priority: "critical",
         }),
       );
     });
 
-    it('should detect missing Diataxis sections', async () => {
+    it("should detect missing Diataxis sections", async () => {
       // Create docs directory with some sections but missing tutorials and how-to
-      const docsDir = path.join(testRepoDir, 'docs');
+      const docsDir = path.join(testRepoDir, "docs");
       await fs.mkdir(docsDir);
-      await createTestFile(path.join(docsDir, 'index.md'), '# Main Documentation');
+      await createTestFile(
+        path.join(docsDir, "index.md"),
+        "# Main Documentation",
+      );
 
       // Create reference and explanation sections
-      await fs.mkdir(path.join(docsDir, 'reference'));
-      await createTestFile(path.join(docsDir, 'reference', 'api.md'), '# API Reference');
-      await fs.mkdir(path.join(docsDir, 'explanation'));
-      await createTestFile(path.join(docsDir, 'explanation', 'concepts.md'), '# Concepts');
+      await fs.mkdir(path.join(docsDir, "reference"));
+      await createTestFile(
+        path.join(docsDir, "reference", "api.md"),
+        "# API Reference",
+      );
+      await fs.mkdir(path.join(docsDir, "explanation"));
+      await createTestFile(
+        path.join(docsDir, "explanation", "concepts.md"),
+        "# Concepts",
+      );
 
       // tutorials and how-to are missing
 
       const result = await detectDocumentationGaps({
         repositoryPath: testRepoDir,
         documentationPath: docsDir,
-        depth: 'standard',
+        depth: "standard",
       });
 
       const data = JSON.parse(result.content[0].text);
 
       expect(data.gaps).toContainEqual(
         expect.objectContaining({
-          category: 'tutorials',
-          gapType: 'missing_section',
-          priority: 'high',
+          category: "tutorials",
+          gapType: "missing_section",
+          priority: "high",
         }),
       );
       expect(data.gaps).toContainEqual(
         expect.objectContaining({
-          category: 'how-to',
-          gapType: 'missing_section',
-          priority: 'medium',
+          category: "how-to",
+          gapType: "missing_section",
+          priority: "medium",
         }),
       );
     });
 
-    it('should identify existing documentation strengths', async () => {
+    it("should identify existing documentation strengths", async () => {
       // Create comprehensive docs structure
-      const docsDir = path.join(testRepoDir, 'docs');
+      const docsDir = path.join(testRepoDir, "docs");
       await fs.mkdir(docsDir);
-      await createTestFile(path.join(docsDir, 'README.md'), '# Project Documentation');
+      await createTestFile(
+        path.join(docsDir, "README.md"),
+        "# Project Documentation",
+      );
 
       // Create all Diataxis sections
-      await fs.mkdir(path.join(docsDir, 'tutorials'));
+      await fs.mkdir(path.join(docsDir, "tutorials"));
       await createTestFile(
-        path.join(docsDir, 'tutorials', 'getting-started.md'),
-        '# Getting Started',
+        path.join(docsDir, "tutorials", "getting-started.md"),
+        "# Getting Started",
       );
-      await fs.mkdir(path.join(docsDir, 'how-to'));
-      await createTestFile(path.join(docsDir, 'how-to', 'deployment.md'), '# How to Deploy');
-      await fs.mkdir(path.join(docsDir, 'reference'));
-      await createTestFile(path.join(docsDir, 'reference', 'api.md'), '# API Reference');
-      await fs.mkdir(path.join(docsDir, 'explanation'));
-      await createTestFile(path.join(docsDir, 'explanation', 'architecture.md'), '# Architecture');
+      await fs.mkdir(path.join(docsDir, "how-to"));
+      await createTestFile(
+        path.join(docsDir, "how-to", "deployment.md"),
+        "# How to Deploy",
+      );
+      await fs.mkdir(path.join(docsDir, "reference"));
+      await createTestFile(
+        path.join(docsDir, "reference", "api.md"),
+        "# API Reference",
+      );
+      await fs.mkdir(path.join(docsDir, "explanation"));
+      await createTestFile(
+        path.join(docsDir, "explanation", "architecture.md"),
+        "# Architecture",
+      );
 
       const result = await detectDocumentationGaps({
         repositoryPath: testRepoDir,
         documentationPath: docsDir,
-        depth: 'comprehensive',
+        depth: "comprehensive",
       });
 
       const data = JSON.parse(result.content[0].text);
 
-      expect(data.strengths).toContain('Has main documentation index file');
+      expect(data.strengths).toContain("Has main documentation index file");
       expect(data.strengths).toContain(
-        'Well-organized sections: tutorials, how-to, reference, explanation',
+        "Well-organized sections: tutorials, how-to, reference, explanation",
       );
       expect(data.overallScore).toBeGreaterThan(50); // Adjust expectation to match actual scoring
     });
   });
 
-  describe('error handling', () => {
-    it('should handle repository analysis failure', async () => {
+  describe("error handling", () => {
+    it("should handle repository analysis failure", async () => {
       mockAnalyzeRepository.mockResolvedValue({
         content: [
           {
-            type: 'text',
-            text: JSON.stringify({ success: false, error: 'Analysis failed' }),
+            type: "text",
+            text: JSON.stringify({ success: false, error: "Analysis failed" }),
           },
         ],
       });
@@ -258,13 +301,13 @@ describe('detectDocumentationGaps (Real Filesystem)', () => {
         repositoryPath: testRepoDir,
       });
 
-      expect(result.content[0].text).toContain('GAP_DETECTION_FAILED');
-      expect(result).toHaveProperty('isError', true);
+      expect(result.content[0].text).toContain("GAP_DETECTION_FAILED");
+      expect(result).toHaveProperty("isError", true);
     });
 
-    it('should handle file system errors gracefully', async () => {
+    it("should handle file system errors gracefully", async () => {
       // Create a docs directory but then make it inaccessible
-      const docsDir = path.join(testRepoDir, 'docs');
+      const docsDir = path.join(testRepoDir, "docs");
       await fs.mkdir(docsDir);
 
       const result = await detectDocumentationGaps({
@@ -273,21 +316,21 @@ describe('detectDocumentationGaps (Real Filesystem)', () => {
       });
 
       const data = JSON.parse(result.content[0].text);
-      expect(data.analysisId).toBe('analysis_123');
+      expect(data.analysisId).toBe("analysis_123");
       expect(data.gaps).toBeInstanceOf(Array);
     });
   });
 
-  describe('input validation', () => {
-    it('should require repositoryPath', async () => {
+  describe("input validation", () => {
+    it("should require repositoryPath", async () => {
       await expect(detectDocumentationGaps({} as any)).rejects.toThrow();
     });
 
-    it('should handle invalid depth parameter', async () => {
+    it("should handle invalid depth parameter", async () => {
       await expect(
         detectDocumentationGaps({
           repositoryPath: testRepoDir,
-          depth: 'invalid' as any,
+          depth: "invalid" as any,
         }),
       ).rejects.toThrow();
     });

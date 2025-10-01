@@ -1,10 +1,10 @@
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import { promises as fs } from 'fs';
-import { join } from 'path';
-import { analyzeReadme } from '../../src/tools/analyze-readme.js';
-import { tmpdir } from 'os';
+import { describe, it, expect, beforeEach, afterEach } from "@jest/globals";
+import { promises as fs } from "fs";
+import { join } from "path";
+import { analyzeReadme } from "../../src/tools/analyze-readme.js";
+import { tmpdir } from "os";
 
-describe('analyze_readme', () => {
+describe("analyze_readme", () => {
   let testDir: string;
   let readmePath: string;
 
@@ -12,7 +12,7 @@ describe('analyze_readme', () => {
     // Create temporary test directory
     testDir = join(tmpdir(), `test-readme-${Date.now()}`);
     await fs.mkdir(testDir, { recursive: true });
-    readmePath = join(testDir, 'README.md');
+    readmePath = join(testDir, "README.md");
   });
 
   afterEach(async () => {
@@ -24,26 +24,26 @@ describe('analyze_readme', () => {
     }
   });
 
-  describe('input validation', () => {
-    it('should require project_path parameter', async () => {
+  describe("input validation", () => {
+    it("should require project_path parameter", async () => {
       const result = await analyzeReadme({});
 
       expect(result.success).toBe(false);
-      expect(result.error?.code).toBe('ANALYSIS_FAILED');
+      expect(result.error?.code).toBe("ANALYSIS_FAILED");
     });
 
-    it('should handle non-existent project directory', async () => {
+    it("should handle non-existent project directory", async () => {
       const result = await analyzeReadme({
-        project_path: '/non/existent/path',
+        project_path: "/non/existent/path",
       });
 
       expect(result.success).toBe(false);
-      expect(result.error?.code).toBe('README_NOT_FOUND');
+      expect(result.error?.code).toBe("README_NOT_FOUND");
     });
   });
 
-  describe('README detection', () => {
-    it('should find README.md file', async () => {
+  describe("README detection", () => {
+    it("should find README.md file", async () => {
       const readmeContent = `# Test Project\n\n> A simple test project\n\n## Installation\n\n\`\`\`bash\nnpm install\n\`\`\`\n\n## Usage\n\nExample usage here.`;
       await fs.writeFile(readmePath, readmeContent);
 
@@ -55,9 +55,9 @@ describe('analyze_readme', () => {
       expect(result.data?.analysis).toBeDefined();
     });
 
-    it('should find alternative README file names', async () => {
+    it("should find alternative README file names", async () => {
       const readmeContent = `# Test Project\n\nBasic content`;
-      await fs.writeFile(join(testDir, 'readme.md'), readmeContent);
+      await fs.writeFile(join(testDir, "readme.md"), readmeContent);
 
       const result = await analyzeReadme({
         project_path: testDir,
@@ -67,9 +67,11 @@ describe('analyze_readme', () => {
     });
   });
 
-  describe('length analysis', () => {
-    it('should analyze README length correctly', async () => {
-      const longReadme = Array(400).fill('# Section\n\nContent here.\n').join('\n');
+  describe("length analysis", () => {
+    it("should analyze README length correctly", async () => {
+      const longReadme = Array(400)
+        .fill("# Section\n\nContent here.\n")
+        .join("\n");
       await fs.writeFile(readmePath, longReadme);
 
       const result = await analyzeReadme({
@@ -79,10 +81,12 @@ describe('analyze_readme', () => {
 
       expect(result.success).toBe(true);
       expect(result.data?.analysis.lengthAnalysis.exceedsTarget).toBe(true);
-      expect(result.data?.analysis.lengthAnalysis.reductionNeeded).toBeGreaterThan(0);
+      expect(
+        result.data?.analysis.lengthAnalysis.reductionNeeded,
+      ).toBeGreaterThan(0);
     });
 
-    it('should handle README within target length', async () => {
+    it("should handle README within target length", async () => {
       const shortReadme = `# Project\n\n## Quick Start\n\nInstall and use.`;
       await fs.writeFile(readmePath, shortReadme);
 
@@ -97,8 +101,8 @@ describe('analyze_readme', () => {
     });
   });
 
-  describe('structure analysis', () => {
-    it('should evaluate scannability score', async () => {
+  describe("structure analysis", () => {
+    it("should evaluate scannability score", async () => {
       const wellStructuredReadme = `# Project Title
 
 > Clear description
@@ -130,11 +134,15 @@ Guidelines here.`;
       });
 
       expect(result.success).toBe(true);
-      expect(result.data?.analysis.structureAnalysis.scannabilityScore).toBeGreaterThan(50);
-      expect(result.data?.analysis.structureAnalysis.headingHierarchy.length).toBeGreaterThan(0);
+      expect(
+        result.data?.analysis.structureAnalysis.scannabilityScore,
+      ).toBeGreaterThan(50);
+      expect(
+        result.data?.analysis.structureAnalysis.headingHierarchy.length,
+      ).toBeGreaterThan(0);
     });
 
-    it('should detect poor structure', async () => {
+    it("should detect poor structure", async () => {
       const poorStructure = `ProjectTitle\nSome text without proper headings or spacing.More text.Even more text without breaks.`;
       await fs.writeFile(readmePath, poorStructure);
 
@@ -143,12 +151,14 @@ Guidelines here.`;
       });
 
       expect(result.success).toBe(true);
-      expect(result.data?.analysis.structureAnalysis.scannabilityScore).toBeLessThan(50);
+      expect(
+        result.data?.analysis.structureAnalysis.scannabilityScore,
+      ).toBeLessThan(50);
     });
   });
 
-  describe('content analysis', () => {
-    it('should detect TL;DR section', async () => {
+  describe("content analysis", () => {
+    it("should detect TL;DR section", async () => {
       const readmeWithTldr = `# Project\n\n## TL;DR\n\nQuick overview here.\n\n## Details\n\nMore info.`;
       await fs.writeFile(readmePath, readmeWithTldr);
 
@@ -160,7 +170,7 @@ Guidelines here.`;
       expect(result.data?.analysis.contentAnalysis.hasTldr).toBe(true);
     });
 
-    it('should detect quick start section', async () => {
+    it("should detect quick start section", async () => {
       const readmeWithQuickStart = `# Project\n\n## Quick Start\n\nGet started quickly.\n\n## Installation\n\nDetailed setup.`;
       await fs.writeFile(readmePath, readmeWithQuickStart);
 
@@ -172,7 +182,7 @@ Guidelines here.`;
       expect(result.data?.analysis.contentAnalysis.hasQuickStart).toBe(true);
     });
 
-    it('should count code blocks and links', async () => {
+    it("should count code blocks and links", async () => {
       const readmeWithCodeAndLinks = `# Project
 
 ## Installation
@@ -201,23 +211,33 @@ See [documentation](https://example.com) and [API reference](https://api.example
     });
   });
 
-  describe('community readiness', () => {
-    it('should detect community files', async () => {
+  describe("community readiness", () => {
+    it("should detect community files", async () => {
       const readmeContent = `# Project\n\nSee [CONTRIBUTING.md](CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).`;
       await fs.writeFile(readmePath, readmeContent);
-      await fs.writeFile(join(testDir, 'CONTRIBUTING.md'), 'Contributing guidelines');
-      await fs.writeFile(join(testDir, 'CODE_OF_CONDUCT.md'), 'Code of conduct');
+      await fs.writeFile(
+        join(testDir, "CONTRIBUTING.md"),
+        "Contributing guidelines",
+      );
+      await fs.writeFile(
+        join(testDir, "CODE_OF_CONDUCT.md"),
+        "Code of conduct",
+      );
 
       const result = await analyzeReadme({
         project_path: testDir,
       });
 
       expect(result.success).toBe(true);
-      expect(result.data?.analysis.communityReadiness.hasContributing).toBe(true);
-      expect(result.data?.analysis.communityReadiness.hasCodeOfConduct).toBe(true);
+      expect(result.data?.analysis.communityReadiness.hasContributing).toBe(
+        true,
+      );
+      expect(result.data?.analysis.communityReadiness.hasCodeOfConduct).toBe(
+        true,
+      );
     });
 
-    it('should count badges', async () => {
+    it("should count badges", async () => {
       const readmeWithBadges = `# Project
 
 [![Build Status](https://travis-ci.org/user/repo.svg?branch=main)](https://travis-ci.org/user/repo)
@@ -236,48 +256,50 @@ Description here.`;
     });
   });
 
-  describe('optimization opportunities', () => {
-    it('should identify length reduction opportunities', async () => {
+  describe("optimization opportunities", () => {
+    it("should identify length reduction opportunities", async () => {
       const longReadme = Array(500)
-        .fill('# Section\n\nLong content here that exceeds target length.\n')
-        .join('\n');
+        .fill("# Section\n\nLong content here that exceeds target length.\n")
+        .join("\n");
       await fs.writeFile(readmePath, longReadme);
 
       const result = await analyzeReadme({
         project_path: testDir,
         max_length_target: 200,
-        optimization_level: 'aggressive',
+        optimization_level: "aggressive",
       });
 
       expect(result.success).toBe(true);
-      expect(result.data?.analysis.optimizationOpportunities.length).toBeGreaterThan(0);
+      expect(
+        result.data?.analysis.optimizationOpportunities.length,
+      ).toBeGreaterThan(0);
       expect(
         result.data?.analysis.optimizationOpportunities.some(
-          (op) => op.type === 'length_reduction',
+          (op) => op.type === "length_reduction",
         ),
       ).toBe(true);
     });
 
-    it('should identify content enhancement opportunities', async () => {
+    it("should identify content enhancement opportunities", async () => {
       const basicReadme = `# Project\n\nBasic description.\n\n## Installation\n\nnpm install`;
       await fs.writeFile(readmePath, basicReadme);
 
       const result = await analyzeReadme({
         project_path: testDir,
-        target_audience: 'community_contributors',
+        target_audience: "community_contributors",
       });
 
       expect(result.success).toBe(true);
       expect(
         result.data?.analysis.optimizationOpportunities.some(
-          (op) => op.type === 'content_enhancement',
+          (op) => op.type === "content_enhancement",
         ),
       ).toBe(true);
     });
   });
 
-  describe('scoring system', () => {
-    it('should calculate overall score', async () => {
+  describe("scoring system", () => {
+    it("should calculate overall score", async () => {
       const goodReadme = `# Excellent Project
 
 > Clear, concise description of what this project does
@@ -318,7 +340,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 MIT © Author`;
 
       await fs.writeFile(readmePath, goodReadme);
-      await fs.writeFile(join(testDir, 'CONTRIBUTING.md'), 'Guidelines');
+      await fs.writeFile(join(testDir, "CONTRIBUTING.md"), "Guidelines");
 
       const result = await analyzeReadme({
         project_path: testDir,
@@ -328,7 +350,7 @@ MIT © Author`;
       expect(result.data?.analysis.overallScore).toBeGreaterThan(70);
     });
 
-    it('should provide lower score for poor README', async () => {
+    it("should provide lower score for poor README", async () => {
       const poorReadme = `ProjectName\nSome description\nInstall it\nUse it`;
       await fs.writeFile(readmePath, poorReadme);
 
@@ -341,15 +363,15 @@ MIT © Author`;
     });
   });
 
-  describe('recommendations and next steps', () => {
-    it('should provide relevant recommendations', async () => {
+  describe("recommendations and next steps", () => {
+    it("should provide relevant recommendations", async () => {
       const basicReadme = `# Project\n\nDescription`;
       await fs.writeFile(readmePath, basicReadme);
 
       const result = await analyzeReadme({
         project_path: testDir,
-        target_audience: 'community_contributors',
-        optimization_level: 'moderate',
+        target_audience: "community_contributors",
+        optimization_level: "moderate",
       });
 
       expect(result.success).toBe(true);
@@ -357,30 +379,32 @@ MIT © Author`;
       expect(result.data?.nextSteps.length).toBeGreaterThan(0);
     });
 
-    it('should tailor recommendations to target audience', async () => {
+    it("should tailor recommendations to target audience", async () => {
       const readmeContent = `# Enterprise Tool\n\nBasic description`;
       await fs.writeFile(readmePath, readmeContent);
 
       const result = await analyzeReadme({
         project_path: testDir,
-        target_audience: 'enterprise_users',
+        target_audience: "enterprise_users",
       });
 
       expect(result.success).toBe(true);
       expect(
         result.data?.analysis.recommendations.some(
           (rec) =>
-            rec.includes('enterprise') || rec.includes('security') || rec.includes('support'),
+            rec.includes("enterprise") ||
+            rec.includes("security") ||
+            rec.includes("support"),
         ),
       ).toBe(true);
     });
   });
 
-  describe('project context detection', () => {
-    it('should detect JavaScript project', async () => {
+  describe("project context detection", () => {
+    it("should detect JavaScript project", async () => {
       const readmeContent = `# JS Project\n\nA JavaScript project`;
       await fs.writeFile(readmePath, readmeContent);
-      await fs.writeFile(join(testDir, 'package.json'), '{"name": "test"}');
+      await fs.writeFile(join(testDir, "package.json"), '{"name": "test"}');
 
       const result = await analyzeReadme({
         project_path: testDir,
@@ -391,7 +415,7 @@ MIT © Author`;
       expect(result.data?.analysis).toBeDefined();
     });
 
-    it('should handle projects without specific type indicators', async () => {
+    it("should handle projects without specific type indicators", async () => {
       const readmeContent = `# Generic Project\n\nSome project`;
       await fs.writeFile(readmePath, readmeContent);
 

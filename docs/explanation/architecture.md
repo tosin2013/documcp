@@ -74,7 +74,9 @@ interface MCPTool {
 }
 
 // Example tool implementation
-export async function analyzeRepository(args: AnalysisArgs): Promise<AnalysisResult> {
+export async function analyzeRepository(
+  args: AnalysisArgs,
+): Promise<AnalysisResult> {
   // Isolated business logic
   return performAnalysis(args);
 }
@@ -114,7 +116,7 @@ The main server (`src/index.ts`) implements the MCP protocol specification:
 ```typescript
 const server = new Server(
   {
-    name: 'documcp',
+    name: "documcp",
     version: packageJson.version,
   },
   {
@@ -389,11 +391,11 @@ interface ValidationEngine {
 
 ```typescript
 enum ErrorCategory {
-  VALIDATION = 'validation', // Input validation failures
-  FILESYSTEM = 'filesystem', // File system access issues
-  NETWORK = 'network', // GitHub API, external requests
-  PROCESSING = 'processing', // Business logic errors
-  CONFIGURATION = 'configuration', // Setup and config issues
+  VALIDATION = "validation", // Input validation failures
+  FILESYSTEM = "filesystem", // File system access issues
+  NETWORK = "network", // GitHub API, external requests
+  PROCESSING = "processing", // Business logic errors
+  CONFIGURATION = "configuration", // Setup and config issues
 }
 ```
 
@@ -483,7 +485,13 @@ case 'new_tool': {
 
 ```typescript
 // 1. Extend SSG enum
-type SSGType = 'jekyll' | 'hugo' | 'docusaurus' | 'mkdocs' | 'eleventy' | 'new-ssg';
+type SSGType =
+  | "jekyll"
+  | "hugo"
+  | "docusaurus"
+  | "mkdocs"
+  | "eleventy"
+  | "new-ssg";
 
 // 2. Add scoring logic
 function scoreNewSSG(analysis: Analysis): number {

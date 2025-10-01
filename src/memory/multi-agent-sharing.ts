@@ -6,10 +6,10 @@
  * creating a collaborative knowledge network for enhanced learning and recommendations.
  */
 
-import { MemoryManager } from './manager.js';
-import { MemoryEntry } from './storage.js';
-import { EventEmitter } from 'events';
-import * as crypto from 'crypto';
+import { MemoryManager } from "./manager.js";
+import { MemoryEntry } from "./storage.js";
+import { EventEmitter } from "events";
+import * as crypto from "crypto";
 
 export interface AgentIdentity {
   id: string;
@@ -17,7 +17,7 @@ export interface AgentIdentity {
   version: string;
   capabilities: string[];
   lastSeen: string;
-  trustLevel: 'untrusted' | 'low' | 'medium' | 'high' | 'trusted';
+  trustLevel: "untrusted" | "low" | "medium" | "high" | "trusted";
   specializations: string[];
 }
 
@@ -33,7 +33,11 @@ export interface SharedMemory {
   };
   transformations: Array<{
     agentId: string;
-    transformationType: 'anonymization' | 'aggregation' | 'enrichment' | 'validation';
+    transformationType:
+      | "anonymization"
+      | "aggregation"
+      | "enrichment"
+      | "validation";
     appliedAt: string;
     details: Record<string, any>;
   }>;
@@ -43,7 +47,7 @@ export interface SyncRequest {
   id: string;
   fromAgent: string;
   toAgent: string;
-  requestType: 'full_sync' | 'incremental' | 'selective' | 'validation';
+  requestType: "full_sync" | "incremental" | "selective" | "validation";
   criteria?: {
     types?: string[];
     tags?: string[];
@@ -51,15 +55,23 @@ export interface SyncRequest {
     minTrustLevel?: number;
   };
   requestedAt: string;
-  status: 'pending' | 'in_progress' | 'completed' | 'failed';
+  status: "pending" | "in_progress" | "completed" | "failed";
 }
 
 export interface ConflictResolution {
   conflictId: string;
-  conflictType: 'duplicate' | 'contradiction' | 'version_mismatch' | 'trust_dispute';
+  conflictType:
+    | "duplicate"
+    | "contradiction"
+    | "version_mismatch"
+    | "trust_dispute";
   involvedEntries: string[];
   involvedAgents: string[];
-  resolutionStrategy: 'merge' | 'prioritize_trusted' | 'manual_review' | 'temporal_precedence';
+  resolutionStrategy:
+    | "merge"
+    | "prioritize_trusted"
+    | "manual_review"
+    | "temporal_precedence";
   resolvedAt?: string;
   resolution?: {
     action: string;
@@ -70,7 +82,7 @@ export interface ConflictResolution {
 
 export interface CollaborativeInsight {
   id: string;
-  type: 'trend' | 'pattern' | 'anomaly' | 'consensus' | 'disagreement';
+  type: "trend" | "pattern" | "anomaly" | "consensus" | "disagreement";
   description: string;
   evidence: string[];
   contributingAgents: string[];
@@ -90,7 +102,10 @@ export class MultiAgentMemorySharing extends EventEmitter {
   private collaborativeInsights: Map<string, CollaborativeInsight>;
   private syncInterval: NodeJS.Timeout | null = null;
 
-  constructor(memoryManager: MemoryManager, agentIdentity: Partial<AgentIdentity>) {
+  constructor(
+    memoryManager: MemoryManager,
+    agentIdentity: Partial<AgentIdentity>,
+  ) {
     super();
     this.memoryManager = memoryManager;
     this.agentId = agentIdentity.id || this.generateAgentId();
@@ -103,11 +118,15 @@ export class MultiAgentMemorySharing extends EventEmitter {
     // Register self
     this.registerAgent({
       id: this.agentId,
-      name: agentIdentity.name || 'DocuMCP Agent',
-      version: agentIdentity.version || '1.0.0',
-      capabilities: agentIdentity.capabilities || ['analysis', 'recommendation', 'deployment'],
+      name: agentIdentity.name || "DocuMCP Agent",
+      version: agentIdentity.version || "1.0.0",
+      capabilities: agentIdentity.capabilities || [
+        "analysis",
+        "recommendation",
+        "deployment",
+      ],
       lastSeen: new Date().toISOString(),
-      trustLevel: 'trusted',
+      trustLevel: "trusted",
       specializations: agentIdentity.specializations || [],
     });
   }
@@ -123,7 +142,7 @@ export class MultiAgentMemorySharing extends EventEmitter {
     // Start periodic sync
     this.startPeriodicSync();
 
-    this.emit('initialized', { agentId: this.agentId });
+    this.emit("initialized", { agentId: this.agentId });
   }
 
   /**
@@ -136,7 +155,7 @@ export class MultiAgentMemorySharing extends EventEmitter {
     });
 
     await this.persistAgentRegistry();
-    this.emit('agent-registered', agent);
+    this.emit("agent-registered", agent);
   }
 
   /**
@@ -174,9 +193,9 @@ export class MultiAgentMemorySharing extends EventEmitter {
     if (options?.anonymize) {
       sharedMemory.transformations.push({
         agentId: this.agentId,
-        transformationType: 'anonymization',
+        transformationType: "anonymization",
         appliedAt: new Date().toISOString(),
-        details: { level: 'standard', preserveStructure: true },
+        details: { level: "standard", preserveStructure: true },
       });
     }
 
@@ -185,7 +204,7 @@ export class MultiAgentMemorySharing extends EventEmitter {
     // Create sync requests for target agents
     if (targetAgents) {
       for (const targetAgent of targetAgents) {
-        await this.createSyncRequest(targetAgent, 'selective', {
+        await this.createSyncRequest(targetAgent, "selective", {
           memoryIds: [memoryId],
         });
       }
@@ -195,7 +214,7 @@ export class MultiAgentMemorySharing extends EventEmitter {
     }
 
     await this.persistSharedMemories();
-    this.emit('memory-shared', { memoryId, sharedMemory });
+    this.emit("memory-shared", { memoryId, sharedMemory });
 
     return sharedMemory;
   }
@@ -213,7 +232,7 @@ export class MultiAgentMemorySharing extends EventEmitter {
   }> {
     // Validate source agent trust level
     const sourceAgentInfo = this.knownAgents.get(sourceAgent);
-    if (!sourceAgentInfo || sourceAgentInfo.trustLevel === 'untrusted') {
+    if (!sourceAgentInfo || sourceAgentInfo.trustLevel === "untrusted") {
       return { accepted: false };
     }
 
@@ -227,16 +246,23 @@ export class MultiAgentMemorySharing extends EventEmitter {
         await this.resolveConflict(conflict);
       }
 
-      this.emit('conflict-detected', { conflicts, sharedMemory });
+      this.emit("conflict-detected", { conflicts, sharedMemory });
     }
 
     // Integrate the shared memory
-    const integrationResult = await this.integrateSharedMemory(sharedMemory, sourceAgent);
+    const integrationResult = await this.integrateSharedMemory(
+      sharedMemory,
+      sourceAgent,
+    );
 
     // Update sharing metadata
     sharedMemory.sharingMetadata.accessCount++;
 
-    this.emit('memory-received', { sharedMemory, sourceAgent, integrationResult });
+    this.emit("memory-received", {
+      sharedMemory,
+      sourceAgent,
+      integrationResult,
+    });
 
     return {
       accepted: true,
@@ -250,8 +276,8 @@ export class MultiAgentMemorySharing extends EventEmitter {
    */
   async requestSync(
     targetAgent: string,
-    syncType: SyncRequest['requestType'] = 'incremental',
-    criteria?: SyncRequest['criteria'],
+    syncType: SyncRequest["requestType"] = "incremental",
+    criteria?: SyncRequest["criteria"],
   ): Promise<SyncRequest> {
     const syncRequest: SyncRequest = {
       id: this.generateSyncId(),
@@ -260,13 +286,13 @@ export class MultiAgentMemorySharing extends EventEmitter {
       requestType: syncType,
       criteria,
       requestedAt: new Date().toISOString(),
-      status: 'pending',
+      status: "pending",
     };
 
     this.syncRequests.set(syncRequest.id, syncRequest);
     await this.persistSyncRequests();
 
-    this.emit('sync-requested', syncRequest);
+    this.emit("sync-requested", syncRequest);
     return syncRequest;
   }
 
@@ -280,27 +306,33 @@ export class MultiAgentMemorySharing extends EventEmitter {
   }> {
     // Validate requesting agent
     const requestingAgent = this.knownAgents.get(syncRequest.fromAgent);
-    if (!requestingAgent || requestingAgent.trustLevel === 'untrusted') {
-      return { approved: false, reason: 'Untrusted agent' };
+    if (!requestingAgent || requestingAgent.trustLevel === "untrusted") {
+      return { approved: false, reason: "Untrusted agent" };
     }
 
     // Update request status
-    syncRequest.status = 'in_progress';
+    syncRequest.status = "in_progress";
     this.syncRequests.set(syncRequest.id, syncRequest);
 
     try {
       // Get memories based on sync type and criteria
       const memories = await this.getMemoriesForSync(syncRequest);
 
-      syncRequest.status = 'completed';
-      this.emit('sync-completed', { syncRequest, memoriesCount: memories.length });
+      syncRequest.status = "completed";
+      this.emit("sync-completed", {
+        syncRequest,
+        memoriesCount: memories.length,
+      });
 
       return { approved: true, memories };
     } catch (error) {
-      syncRequest.status = 'failed';
-      this.emit('sync-failed', { syncRequest, error });
+      syncRequest.status = "failed";
+      this.emit("sync-failed", { syncRequest, error });
 
-      return { approved: false, reason: error instanceof Error ? error.message : 'Unknown error' };
+      return {
+        approved: false,
+        reason: error instanceof Error ? error.message : "Unknown error",
+      };
     }
   }
 
@@ -332,7 +364,7 @@ export class MultiAgentMemorySharing extends EventEmitter {
     }
 
     await this.persistCollaborativeInsights();
-    this.emit('insights-generated', { count: insights.length });
+    this.emit("insights-generated", { count: insights.length });
 
     return insights;
   }
@@ -352,40 +384,47 @@ export class MultiAgentMemorySharing extends EventEmitter {
 
     // Check data consistency
     if (!this.validateDataStructure(sharedMemory.originalEntry)) {
-      issues.push('Invalid data structure');
+      issues.push("Invalid data structure");
       confidence *= 0.7;
     }
 
     // Cross-validate with local memories
-    const similarMemories = await this.findSimilarLocalMemories(sharedMemory.originalEntry);
+    const similarMemories = await this.findSimilarLocalMemories(
+      sharedMemory.originalEntry,
+    );
     if (similarMemories.length > 0) {
       const consistencyScore = this.calculateConsistency(
         sharedMemory.originalEntry,
         similarMemories,
       );
       if (consistencyScore < 0.8) {
-        issues.push('Inconsistent with local knowledge');
+        issues.push("Inconsistent with local knowledge");
         confidence *= consistencyScore;
       }
     }
 
     // Check source agent reliability
-    const sourceAgent = this.knownAgents.get(sharedMemory.sharingMetadata.sourceAgent);
+    const sourceAgent = this.knownAgents.get(
+      sharedMemory.sharingMetadata.sourceAgent,
+    );
     if (sourceAgent) {
-      if (sourceAgent.trustLevel === 'low') {
+      if (sourceAgent.trustLevel === "low") {
         confidence *= 0.8;
-        recommendations.push('Verify with additional sources');
-      } else if (sourceAgent.trustLevel === 'high' || sourceAgent.trustLevel === 'trusted') {
+        recommendations.push("Verify with additional sources");
+      } else if (
+        sourceAgent.trustLevel === "high" ||
+        sourceAgent.trustLevel === "trusted"
+      ) {
         confidence *= 1.1;
       }
     }
 
     // Validate transformations
     for (const transformation of sharedMemory.transformations) {
-      if (transformation.transformationType === 'anonymization') {
+      if (transformation.transformationType === "anonymization") {
         // Check if anonymization preserved essential information
         if (!this.validateAnonymization(transformation)) {
-          issues.push('Anonymization may have removed critical information');
+          issues.push("Anonymization may have removed critical information");
           confidence *= 0.9;
         }
       }
@@ -413,11 +452,12 @@ export class MultiAgentMemorySharing extends EventEmitter {
   } {
     const trustDistribution: Record<string, number> = {};
     for (const agent of this.knownAgents.values()) {
-      trustDistribution[agent.trustLevel] = (trustDistribution[agent.trustLevel] || 0) + 1;
+      trustDistribution[agent.trustLevel] =
+        (trustDistribution[agent.trustLevel] || 0) + 1;
     }
 
     const activeSyncs = Array.from(this.syncRequests.values()).filter(
-      (req) => req.status === 'pending' || req.status === 'in_progress',
+      (req) => req.status === "pending" || req.status === "in_progress",
     ).length;
 
     const resolvedConflicts = Array.from(this.conflicts.values()).filter(
@@ -426,7 +466,7 @@ export class MultiAgentMemorySharing extends EventEmitter {
 
     // Calculate network health (0-1)
     const trustedAgents = Array.from(this.knownAgents.values()).filter(
-      (agent) => agent.trustLevel === 'high' || agent.trustLevel === 'trusted',
+      (agent) => agent.trustLevel === "high" || agent.trustLevel === "trusted",
     ).length;
     const totalAgents = this.knownAgents.size;
     const networkHealth = totalAgents > 0 ? trustedAgents / totalAgents : 0;
@@ -445,14 +485,17 @@ export class MultiAgentMemorySharing extends EventEmitter {
   // Private helper methods
 
   private generateAgentId(): string {
-    return `agent_${crypto.randomBytes(8).toString('hex')}`;
+    return `agent_${crypto.randomBytes(8).toString("hex")}`;
   }
 
   private generateSyncId(): string {
-    return `sync_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
+    return `sync_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`;
   }
 
-  private anonymizeIfRequired(memory: MemoryEntry, anonymize?: boolean): MemoryEntry {
+  private anonymizeIfRequired(
+    memory: MemoryEntry,
+    anonymize?: boolean,
+  ): MemoryEntry {
     if (!anonymize) return memory;
 
     // Create anonymized copy
@@ -460,11 +503,15 @@ export class MultiAgentMemorySharing extends EventEmitter {
 
     // Remove/hash sensitive information
     if (anonymized.metadata.repository) {
-      anonymized.metadata.repository = this.hashSensitiveData(anonymized.metadata.repository);
+      anonymized.metadata.repository = this.hashSensitiveData(
+        anonymized.metadata.repository,
+      );
     }
 
     if (anonymized.metadata.projectId) {
-      anonymized.metadata.projectId = this.hashSensitiveData(anonymized.metadata.projectId);
+      anonymized.metadata.projectId = this.hashSensitiveData(
+        anonymized.metadata.projectId,
+      );
     }
 
     // Remove file paths and specific identifiers
@@ -476,20 +523,26 @@ export class MultiAgentMemorySharing extends EventEmitter {
   }
 
   private hashSensitiveData(data: string): string {
-    return crypto.createHash('sha256').update(data).digest('hex').substring(0, 16);
+    return crypto
+      .createHash("sha256")
+      .update(data)
+      .digest("hex")
+      .substring(0, 16);
   }
 
   private calculateInitialTrustScore(memory: MemoryEntry): number {
     let score = 0.5; // Base score
 
     // Boost for successful outcomes
-    if (memory.data.status === 'success') score += 0.2;
+    if (memory.data.status === "success") score += 0.2;
 
     // Boost for rich metadata
     if (memory.metadata.tags && memory.metadata.tags.length > 2) score += 0.1;
 
     // Boost for recent data
-    const daysSince = (Date.now() - new Date(memory.timestamp).getTime()) / (1000 * 60 * 60 * 24);
+    const daysSince =
+      (Date.now() - new Date(memory.timestamp).getTime()) /
+      (1000 * 60 * 60 * 24);
     if (daysSince <= 30) score += 0.1;
 
     // Boost for complete data
@@ -498,19 +551,28 @@ export class MultiAgentMemorySharing extends EventEmitter {
     return Math.min(score, 1.0);
   }
 
-  private async detectConflicts(sharedMemory: SharedMemory): Promise<ConflictResolution[]> {
+  private async detectConflicts(
+    sharedMemory: SharedMemory,
+  ): Promise<ConflictResolution[]> {
     const conflicts: ConflictResolution[] = [];
 
     // Check for duplicates
-    const similarLocal = await this.findSimilarLocalMemories(sharedMemory.originalEntry);
+    const similarLocal = await this.findSimilarLocalMemories(
+      sharedMemory.originalEntry,
+    );
     for (const similar of similarLocal) {
       if (this.isLikelyDuplicate(sharedMemory.originalEntry, similar)) {
         conflicts.push({
-          conflictId: `conflict_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`,
-          conflictType: 'duplicate',
+          conflictId: `conflict_${Date.now()}_${crypto
+            .randomBytes(4)
+            .toString("hex")}`,
+          conflictType: "duplicate",
           involvedEntries: [sharedMemory.originalEntry.id, similar.id],
-          involvedAgents: [sharedMemory.sharingMetadata.sourceAgent, this.agentId],
-          resolutionStrategy: 'merge',
+          involvedAgents: [
+            sharedMemory.sharingMetadata.sourceAgent,
+            this.agentId,
+          ],
+          resolutionStrategy: "merge",
         });
       }
     }
@@ -521,18 +583,18 @@ export class MultiAgentMemorySharing extends EventEmitter {
   private async resolveConflict(conflict: ConflictResolution): Promise<void> {
     // Implement conflict resolution based on strategy
     switch (conflict.resolutionStrategy) {
-      case 'merge':
+      case "merge":
         await this.mergeConflictingEntries(conflict);
         break;
-      case 'prioritize_trusted':
+      case "prioritize_trusted":
         await this.prioritizeTrustedSource(conflict);
         break;
-      case 'temporal_precedence':
+      case "temporal_precedence":
         await this.useTemporalPrecedence(conflict);
         break;
       default:
         // Mark for manual review
-        conflict.resolutionStrategy = 'manual_review';
+        conflict.resolutionStrategy = "manual_review";
     }
 
     conflict.resolvedAt = new Date().toISOString();
@@ -546,7 +608,7 @@ export class MultiAgentMemorySharing extends EventEmitter {
     // Add transformation for integration
     sharedMemory.transformations.push({
       agentId: this.agentId,
-      transformationType: 'enrichment',
+      transformationType: "enrichment",
       appliedAt: new Date().toISOString(),
       details: { integratedFrom: sourceAgent },
     });
@@ -558,7 +620,11 @@ export class MultiAgentMemorySharing extends EventEmitter {
         ...sharedMemory.originalEntry.metadata,
         sharedFrom: sourceAgent,
         integratedAt: new Date().toISOString(),
-        tags: [...(sharedMemory.originalEntry.metadata.tags || []), 'shared', 'collaborative'],
+        tags: [
+          ...(sharedMemory.originalEntry.metadata.tags || []),
+          "shared",
+          "collaborative",
+        ],
       },
     };
 
@@ -568,11 +634,15 @@ export class MultiAgentMemorySharing extends EventEmitter {
       enrichedEntry.metadata,
     );
 
-    return 'integrated_successfully';
+    return "integrated_successfully";
   }
 
-  private async getMemoriesForSync(syncRequest: SyncRequest): Promise<SharedMemory[]> {
-    const allMemories = await this.memoryManager.search('', { sortBy: 'timestamp' });
+  private async getMemoriesForSync(
+    syncRequest: SyncRequest,
+  ): Promise<SharedMemory[]> {
+    const allMemories = await this.memoryManager.search("", {
+      sortBy: "timestamp",
+    });
     let filteredMemories = allMemories;
 
     // Apply criteria filtering
@@ -585,7 +655,10 @@ export class MultiAgentMemorySharing extends EventEmitter {
 
       if (syncRequest.criteria.tags) {
         filteredMemories = filteredMemories.filter(
-          (m) => m.metadata.tags?.some((tag) => syncRequest.criteria!.tags!.includes(tag)),
+          (m) =>
+            m.metadata.tags?.some((tag) =>
+              syncRequest.criteria!.tags!.includes(tag),
+            ),
         );
       }
 
@@ -638,12 +711,19 @@ export class MultiAgentMemorySharing extends EventEmitter {
     return Boolean(entry.id && entry.timestamp && entry.type && entry.data);
   }
 
-  private async findSimilarLocalMemories(entry: MemoryEntry): Promise<MemoryEntry[]> {
+  private async findSimilarLocalMemories(
+    entry: MemoryEntry,
+  ): Promise<MemoryEntry[]> {
     // Find similar memories in local storage
-    return this.memoryManager.search(entry.metadata.projectId || '', { sortBy: 'timestamp' });
+    return this.memoryManager.search(entry.metadata.projectId || "", {
+      sortBy: "timestamp",
+    });
   }
 
-  private calculateConsistency(_entry: MemoryEntry, _similar: MemoryEntry[]): number {
+  private calculateConsistency(
+    _entry: MemoryEntry,
+    _similar: MemoryEntry[],
+  ): number {
     // Calculate consistency score (placeholder)
     return 0.8;
   }
@@ -658,23 +738,34 @@ export class MultiAgentMemorySharing extends EventEmitter {
     return (
       entry1.type === entry2.type &&
       entry1.metadata.projectId === entry2.metadata.projectId &&
-      Math.abs(new Date(entry1.timestamp).getTime() - new Date(entry2.timestamp).getTime()) < 60000
+      Math.abs(
+        new Date(entry1.timestamp).getTime() -
+          new Date(entry2.timestamp).getTime(),
+      ) < 60000
     ); // 1 minute
   }
 
-  private async mergeConflictingEntries(_conflict: ConflictResolution): Promise<void> {
+  private async mergeConflictingEntries(
+    _conflict: ConflictResolution,
+  ): Promise<void> {
     // Merge conflicting entries (placeholder)
   }
 
-  private async prioritizeTrustedSource(_conflict: ConflictResolution): Promise<void> {
+  private async prioritizeTrustedSource(
+    _conflict: ConflictResolution,
+  ): Promise<void> {
     // Prioritize trusted source (placeholder)
   }
 
-  private async useTemporalPrecedence(_conflict: ConflictResolution): Promise<void> {
+  private async useTemporalPrecedence(
+    _conflict: ConflictResolution,
+  ): Promise<void> {
     // Use temporal precedence (placeholder)
   }
 
-  private async broadcastToTrustedAgents(_sharedMemory: SharedMemory): Promise<void> {
+  private async broadcastToTrustedAgents(
+    _sharedMemory: SharedMemory,
+  ): Promise<void> {
     // Broadcast to trusted agents (placeholder)
   }
 
@@ -721,7 +812,7 @@ export class MultiAgentMemorySharing extends EventEmitter {
 
   private async createSyncRequest(
     _targetAgent: string,
-    _type: SyncRequest['requestType'],
+    _type: SyncRequest["requestType"],
     _options: any,
   ): Promise<void> {
     // Create sync request (placeholder)
@@ -740,7 +831,7 @@ export class MultiAgentMemorySharing extends EventEmitter {
     await this.persistSyncRequests();
     await this.persistCollaborativeInsights();
 
-    this.emit('shutdown', { agentId: this.agentId });
+    this.emit("shutdown", { agentId: this.agentId });
   }
 }
 

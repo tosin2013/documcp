@@ -4,10 +4,10 @@
  * Part of Issue #55 - Advanced Memory Components Unit Tests
  */
 
-import { promises as fs } from 'fs';
-import path from 'path';
-import os from 'os';
-import { MemoryManager } from '../../src/memory/manager.js';
+import { promises as fs } from "fs";
+import path from "path";
+import os from "os";
+import { MemoryManager } from "../../src/memory/manager.js";
 import {
   TemporalMemoryAnalysis,
   TimeWindow,
@@ -15,9 +15,9 @@ import {
   TemporalMetrics,
   TemporalQuery,
   TemporalInsight,
-} from '../../src/memory/temporal-analysis.js';
+} from "../../src/memory/temporal-analysis.js";
 
-describe('TemporalMemoryAnalysis', () => {
+describe("TemporalMemoryAnalysis", () => {
   let tempDir: string;
   let memoryManager: MemoryManager;
   let temporalAnalysis: TemporalMemoryAnalysis;
@@ -26,7 +26,9 @@ describe('TemporalMemoryAnalysis', () => {
     // Create unique temp directory for each test
     tempDir = path.join(
       os.tmpdir(),
-      `temporal-analysis-test-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      `temporal-analysis-test-${Date.now()}-${Math.random()
+        .toString(36)
+        .substr(2, 9)}`,
     );
     await fs.mkdir(tempDir, { recursive: true });
 
@@ -63,16 +65,16 @@ describe('TemporalMemoryAnalysis', () => {
     }
   });
 
-  describe('Temporal Analysis Initialization', () => {
-    test('should create temporal analysis system instance', () => {
+  describe("Temporal Analysis Initialization", () => {
+    test("should create temporal analysis system instance", () => {
       expect(temporalAnalysis).toBeDefined();
       expect(temporalAnalysis).toBeInstanceOf(TemporalMemoryAnalysis);
     });
 
-    test('should analyze temporal patterns', async () => {
+    test("should analyze temporal patterns", async () => {
       // Add some test memories
-      await memoryManager.remember('analysis', {
-        projectPath: '/test/project',
+      await memoryManager.remember("analysis", {
+        projectPath: "/test/project",
         timestamp: new Date().toISOString(),
       });
 
@@ -81,35 +83,35 @@ describe('TemporalMemoryAnalysis', () => {
       expect(Array.isArray(patterns)).toBe(true);
     });
 
-    test('should get temporal metrics', async () => {
+    test("should get temporal metrics", async () => {
       // Add test memory
-      await memoryManager.remember('deployment', {
-        status: 'success',
+      await memoryManager.remember("deployment", {
+        status: "success",
         timestamp: new Date().toISOString(),
       });
 
       // Test temporal metrics
       const metrics = await temporalAnalysis.getTemporalMetrics();
       expect(metrics).toBeDefined();
-      expect(typeof metrics.activityLevel).toBe('number');
+      expect(typeof metrics.activityLevel).toBe("number");
     });
 
-    test('should predict future activity', async () => {
+    test("should predict future activity", async () => {
       // Add test memories
-      await memoryManager.remember('analysis', { test: 'data1' });
-      await memoryManager.remember('analysis', { test: 'data2' });
+      await memoryManager.remember("analysis", { test: "data1" });
+      await memoryManager.remember("analysis", { test: "data2" });
 
       // Test prediction
       const prediction = await temporalAnalysis.predictFutureActivity();
       expect(prediction).toBeDefined();
-      expect(typeof prediction.nextActivity.confidence).toBe('number');
+      expect(typeof prediction.nextActivity.confidence).toBe("number");
     });
 
-    test('should get temporal insights', async () => {
+    test("should get temporal insights", async () => {
       // Add test memory
-      await memoryManager.remember('recommendation', {
-        type: 'ssg',
-        recommendation: 'use-hugo',
+      await memoryManager.remember("recommendation", {
+        type: "ssg",
+        recommendation: "use-hugo",
       });
 
       // Test insights
@@ -118,16 +120,16 @@ describe('TemporalMemoryAnalysis', () => {
     });
   });
 
-  describe('Temporal Query Support', () => {
-    test('should handle temporal queries with parameters', async () => {
+  describe("Temporal Query Support", () => {
+    test("should handle temporal queries with parameters", async () => {
       // Add test data
-      await memoryManager.remember('analysis', { framework: 'react' });
-      await memoryManager.remember('deployment', { status: 'success' });
+      await memoryManager.remember("analysis", { framework: "react" });
+      await memoryManager.remember("deployment", { status: "success" });
 
       const query: TemporalQuery = {
-        granularity: 'day',
-        aggregation: 'count',
-        filters: { types: ['analysis'] },
+        granularity: "day",
+        aggregation: "count",
+        filters: { types: ["analysis"] },
       };
 
       const patterns = await temporalAnalysis.analyzeTemporalPatterns(query);
@@ -138,8 +140,8 @@ describe('TemporalMemoryAnalysis', () => {
     });
   });
 
-  describe('Error Handling', () => {
-    test('should handle empty data gracefully', async () => {
+  describe("Error Handling", () => {
+    test("should handle empty data gracefully", async () => {
       // Test with no memories
       const patterns = await temporalAnalysis.analyzeTemporalPatterns();
       expect(Array.isArray(patterns)).toBe(true);
@@ -150,14 +152,16 @@ describe('TemporalMemoryAnalysis', () => {
       expect(metrics.activityLevel).toBe(0);
     });
 
-    test('should handle invalid query parameters', async () => {
+    test("should handle invalid query parameters", async () => {
       const invalidQuery = {
-        granularity: 'invalid' as any,
-        aggregation: 'count' as any,
+        granularity: "invalid" as any,
+        aggregation: "count" as any,
       };
 
       // Should not throw but handle gracefully
-      await expect(temporalAnalysis.analyzeTemporalPatterns(invalidQuery)).resolves.toBeDefined();
+      await expect(
+        temporalAnalysis.analyzeTemporalPatterns(invalidQuery),
+      ).resolves.toBeDefined();
     });
   });
 });

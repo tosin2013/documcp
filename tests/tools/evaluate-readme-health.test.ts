@@ -1,9 +1,9 @@
-import { evaluateReadmeHealth } from '../../src/tools/evaluate-readme-health.js';
-import { writeFile, mkdir, rm } from 'fs/promises';
-import { join } from 'path';
+import { evaluateReadmeHealth } from "../../src/tools/evaluate-readme-health.js";
+import { writeFile, mkdir, rm } from "fs/promises";
+import { join } from "path";
 
-describe('evaluateReadmeHealth', () => {
-  const testDir = join(process.cwd(), 'test-readme-temp');
+describe("evaluateReadmeHealth", () => {
+  const testDir = join(process.cwd(), "test-readme-temp");
 
   beforeEach(async () => {
     // Create test directory
@@ -19,9 +19,9 @@ describe('evaluateReadmeHealth', () => {
     }
   });
 
-  describe('Basic Functionality', () => {
-    test('should evaluate README health with default parameters', async () => {
-      const readmePath = join(testDir, 'README.md');
+  describe("Basic Functionality", () => {
+    test("should evaluate README health with default parameters", async () => {
+      const readmePath = join(testDir, "README.md");
       await writeFile(
         readmePath,
         `# Test Project
@@ -56,29 +56,34 @@ MIT License
       expect(result.isError).toBe(false);
 
       // Check that it contains health report data
-      const healthData = result.content.find((c) => c.text.includes('healthReport'));
+      const healthData = result.content.find((c) =>
+        c.text.includes("healthReport"),
+      );
       expect(healthData).toBeDefined();
     });
 
-    test('should handle different project types', async () => {
-      const readmePath = join(testDir, 'README.md');
-      await writeFile(readmePath, '# Enterprise Tool\n\nA professional enterprise tool.');
+    test("should handle different project types", async () => {
+      const readmePath = join(testDir, "README.md");
+      await writeFile(
+        readmePath,
+        "# Enterprise Tool\n\nA professional enterprise tool.",
+      );
 
       const result = await evaluateReadmeHealth({
         readme_path: readmePath,
-        project_type: 'enterprise_tool',
+        project_type: "enterprise_tool",
       });
 
       expect(result.content).toBeDefined();
       expect(result.isError).toBe(false);
     });
 
-    test('should include repository context when provided', async () => {
-      const readmePath = join(testDir, 'README.md');
-      await writeFile(readmePath, '# Project with Repo Context');
+    test("should include repository context when provided", async () => {
+      const readmePath = join(testDir, "README.md");
+      await writeFile(readmePath, "# Project with Repo Context");
 
       // Create a simple repository structure
-      await writeFile(join(testDir, 'package.json'), '{"name": "test"}');
+      await writeFile(join(testDir, "package.json"), '{"name": "test"}');
 
       const result = await evaluateReadmeHealth({
         readme_path: readmePath,
@@ -90,32 +95,34 @@ MIT License
     });
   });
 
-  describe('Error Handling', () => {
-    test('should handle missing README file', async () => {
+  describe("Error Handling", () => {
+    test("should handle missing README file", async () => {
       const result = await evaluateReadmeHealth({
-        readme_path: join(testDir, 'nonexistent.md'),
+        readme_path: join(testDir, "nonexistent.md"),
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0].text).toContain('Failed to evaluate README health');
+      expect(result.content[0].text).toContain(
+        "Failed to evaluate README health",
+      );
     });
 
-    test('should handle invalid project type', async () => {
-      const readmePath = join(testDir, 'README.md');
-      await writeFile(readmePath, '# Test');
+    test("should handle invalid project type", async () => {
+      const readmePath = join(testDir, "README.md");
+      await writeFile(readmePath, "# Test");
 
       const result = await evaluateReadmeHealth({
         readme_path: readmePath,
-        project_type: 'invalid_type' as any,
+        project_type: "invalid_type" as any,
       });
 
       expect(result.isError).toBe(true);
     });
   });
 
-  describe('Health Report Structure', () => {
-    test('should include all required health components', async () => {
-      const readmePath = join(testDir, 'README.md');
+  describe("Health Report Structure", () => {
+    test("should include all required health components", async () => {
+      const readmePath = join(testDir, "README.md");
       await writeFile(
         readmePath,
         `# Complete Project
@@ -145,7 +152,9 @@ MIT
         readme_path: readmePath,
       });
 
-      const dataContent = result.content.find((c) => c.text.includes('healthReport'));
+      const dataContent = result.content.find((c) =>
+        c.text.includes("healthReport"),
+      );
       expect(dataContent).toBeDefined();
 
       const data = JSON.parse(dataContent!.text);
@@ -157,31 +166,35 @@ MIT
       expect(data.healthReport.components.contentQuality).toBeDefined();
     });
 
-    test('should provide grade and score', async () => {
-      const readmePath = join(testDir, 'README.md');
-      await writeFile(readmePath, '# Basic Project\n\nMinimal content.');
+    test("should provide grade and score", async () => {
+      const readmePath = join(testDir, "README.md");
+      await writeFile(readmePath, "# Basic Project\n\nMinimal content.");
 
       const result = await evaluateReadmeHealth({
         readme_path: readmePath,
       });
 
-      const dataContent = result.content.find((c) => c.text.includes('healthReport'));
+      const dataContent = result.content.find((c) =>
+        c.text.includes("healthReport"),
+      );
       const data = JSON.parse(dataContent!.text);
 
       expect(data.healthReport.overallScore).toBeGreaterThanOrEqual(0);
       expect(data.healthReport.overallScore).toBeLessThanOrEqual(100);
-      expect(['A', 'B', 'C', 'D', 'F']).toContain(data.healthReport.grade);
+      expect(["A", "B", "C", "D", "F"]).toContain(data.healthReport.grade);
     });
 
-    test('should include recommendations and next steps', async () => {
-      const readmePath = join(testDir, 'README.md');
-      await writeFile(readmePath, '# Incomplete Project');
+    test("should include recommendations and next steps", async () => {
+      const readmePath = join(testDir, "README.md");
+      await writeFile(readmePath, "# Incomplete Project");
 
       const result = await evaluateReadmeHealth({
         readme_path: readmePath,
       });
 
-      const dataContent = result.content.find((c) => c.text.includes('recommendations'));
+      const dataContent = result.content.find((c) =>
+        c.text.includes("recommendations"),
+      );
       expect(dataContent).toBeDefined();
 
       const data = JSON.parse(dataContent!.text);
@@ -192,10 +205,10 @@ MIT
     });
   });
 
-  describe('Response Format', () => {
-    test('should return properly formatted MCP response', async () => {
-      const readmePath = join(testDir, 'README.md');
-      await writeFile(readmePath, '# Test Project');
+  describe("Response Format", () => {
+    test("should return properly formatted MCP response", async () => {
+      const readmePath = join(testDir, "README.md");
+      await writeFile(readmePath, "# Test Project");
 
       const result = await evaluateReadmeHealth({
         readme_path: readmePath,
@@ -206,22 +219,24 @@ MIT
       expect(result.content.length).toBeGreaterThan(0);
 
       // Should include execution metadata
-      const metadataContent = result.content.find((c) => c.text.includes('Execution completed'));
+      const metadataContent = result.content.find((c) =>
+        c.text.includes("Execution completed"),
+      );
       expect(metadataContent).toBeDefined();
     });
   });
 
-  describe('Repository Context Analysis', () => {
-    test('should analyze repository context when path is provided', async () => {
-      const readmePath = join(testDir, 'README.md');
-      await writeFile(readmePath, '# Project with Context');
+  describe("Repository Context Analysis", () => {
+    test("should analyze repository context when path is provided", async () => {
+      const readmePath = join(testDir, "README.md");
+      await writeFile(readmePath, "# Project with Context");
 
       // Create repository files
-      await writeFile(join(testDir, 'CODE_OF_CONDUCT.md'), '# Code of Conduct');
-      await writeFile(join(testDir, 'CONTRIBUTING.md'), '# Contributing');
-      await writeFile(join(testDir, 'SECURITY.md'), '# Security Policy');
-      await mkdir(join(testDir, '.github'), { recursive: true });
-      await writeFile(join(testDir, 'package.json'), '{"name": "test"}');
+      await writeFile(join(testDir, "CODE_OF_CONDUCT.md"), "# Code of Conduct");
+      await writeFile(join(testDir, "CONTRIBUTING.md"), "# Contributing");
+      await writeFile(join(testDir, "SECURITY.md"), "# Security Policy");
+      await mkdir(join(testDir, ".github"), { recursive: true });
+      await writeFile(join(testDir, "package.json"), '{"name": "test"}');
 
       const result = await evaluateReadmeHealth({
         readme_path: readmePath,
@@ -229,26 +244,28 @@ MIT
       });
 
       expect(result.isError).toBe(false);
-      const dataContent = result.content.find((c) => c.text.includes('healthReport'));
+      const dataContent = result.content.find((c) =>
+        c.text.includes("healthReport"),
+      );
       expect(dataContent).toBeDefined();
     });
 
-    test('should handle repository context analysis errors gracefully', async () => {
-      const readmePath = join(testDir, 'README.md');
-      await writeFile(readmePath, '# Project');
+    test("should handle repository context analysis errors gracefully", async () => {
+      const readmePath = join(testDir, "README.md");
+      await writeFile(readmePath, "# Project");
 
       const result = await evaluateReadmeHealth({
         readme_path: readmePath,
-        repository_path: '/nonexistent/path',
+        repository_path: "/nonexistent/path",
       });
 
       expect(result.isError).toBe(false); // Should not fail, just return null context
     });
   });
 
-  describe('Community Health Evaluation', () => {
-    test('should detect code of conduct references', async () => {
-      const readmePath = join(testDir, 'README.md');
+  describe("Community Health Evaluation", () => {
+    test("should detect code of conduct references", async () => {
+      const readmePath = join(testDir, "README.md");
       await writeFile(
         readmePath,
         `# Project
@@ -261,18 +278,21 @@ Please read our [Code of Conduct](CODE_OF_CONDUCT.md) before contributing.
         readme_path: readmePath,
       });
 
-      const dataContent = result.content.find((c) => c.text.includes('healthReport'));
+      const dataContent = result.content.find((c) =>
+        c.text.includes("healthReport"),
+      );
       const data = JSON.parse(dataContent!.text);
 
-      const conductCheck = data.healthReport.components.communityHealth.details.find(
-        (d: any) => d.check === 'Code of Conduct linked',
-      );
+      const conductCheck =
+        data.healthReport.components.communityHealth.details.find(
+          (d: any) => d.check === "Code of Conduct linked",
+        );
       expect(conductCheck.passed).toBe(true);
       expect(conductCheck.points).toBe(5);
     });
 
-    test('should detect contributing guidelines', async () => {
-      const readmePath = join(testDir, 'README.md');
+    test("should detect contributing guidelines", async () => {
+      const readmePath = join(testDir, "README.md");
       await writeFile(
         readmePath,
         `# Project
@@ -285,17 +305,20 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
         readme_path: readmePath,
       });
 
-      const dataContent = result.content.find((c) => c.text.includes('healthReport'));
+      const dataContent = result.content.find((c) =>
+        c.text.includes("healthReport"),
+      );
       const data = JSON.parse(dataContent!.text);
 
-      const contributingCheck = data.healthReport.components.communityHealth.details.find(
-        (d: any) => d.check === 'Contributing guidelines visible',
-      );
+      const contributingCheck =
+        data.healthReport.components.communityHealth.details.find(
+          (d: any) => d.check === "Contributing guidelines visible",
+        );
       expect(contributingCheck.passed).toBe(true);
     });
 
-    test('should detect security policy references', async () => {
-      const readmePath = join(testDir, 'README.md');
+    test("should detect security policy references", async () => {
+      const readmePath = join(testDir, "README.md");
       await writeFile(
         readmePath,
         `# Project
@@ -308,17 +331,20 @@ Report security issues via our [Security Policy](SECURITY.md).
         readme_path: readmePath,
       });
 
-      const dataContent = result.content.find((c) => c.text.includes('healthReport'));
+      const dataContent = result.content.find((c) =>
+        c.text.includes("healthReport"),
+      );
       const data = JSON.parse(dataContent!.text);
 
-      const securityCheck = data.healthReport.components.communityHealth.details.find(
-        (d: any) => d.check === 'Security policy linked',
-      );
+      const securityCheck =
+        data.healthReport.components.communityHealth.details.find(
+          (d: any) => d.check === "Security policy linked",
+        );
       expect(securityCheck.passed).toBe(true);
     });
 
-    test('should detect support channels', async () => {
-      const readmePath = join(testDir, 'README.md');
+    test("should detect support channels", async () => {
+      const readmePath = join(testDir, "README.md");
       await writeFile(
         readmePath,
         `# Project
@@ -331,19 +357,22 @@ Join our Discord community for support and discussions.
         readme_path: readmePath,
       });
 
-      const dataContent = result.content.find((c) => c.text.includes('healthReport'));
+      const dataContent = result.content.find((c) =>
+        c.text.includes("healthReport"),
+      );
       const data = JSON.parse(dataContent!.text);
 
-      const supportCheck = data.healthReport.components.communityHealth.details.find(
-        (d: any) => d.check === 'Support channels provided',
-      );
+      const supportCheck =
+        data.healthReport.components.communityHealth.details.find(
+          (d: any) => d.check === "Support channels provided",
+        );
       expect(supportCheck.passed).toBe(true);
     });
   });
 
-  describe('Accessibility Evaluation', () => {
-    test('should detect proper spacing and structure', async () => {
-      const readmePath = join(testDir, 'README.md');
+  describe("Accessibility Evaluation", () => {
+    test("should detect proper spacing and structure", async () => {
+      const readmePath = join(testDir, "README.md");
       await writeFile(
         readmePath,
         `# Project
@@ -374,17 +403,20 @@ MIT License
         readme_path: readmePath,
       });
 
-      const dataContent = result.content.find((c) => c.text.includes('healthReport'));
+      const dataContent = result.content.find((c) =>
+        c.text.includes("healthReport"),
+      );
       const data = JSON.parse(dataContent!.text);
 
-      const spacingCheck = data.healthReport.components.accessibility.details.find(
-        (d: any) => d.check === 'Scannable structure with proper spacing',
-      );
+      const spacingCheck =
+        data.healthReport.components.accessibility.details.find(
+          (d: any) => d.check === "Scannable structure with proper spacing",
+        );
       expect(spacingCheck.passed).toBe(true);
     });
 
-    test('should detect heading hierarchy', async () => {
-      const readmePath = join(testDir, 'README.md');
+    test("should detect heading hierarchy", async () => {
+      const readmePath = join(testDir, "README.md");
       await writeFile(
         readmePath,
         `# Main Title
@@ -403,17 +435,20 @@ MIT License
         readme_path: readmePath,
       });
 
-      const dataContent = result.content.find((c) => c.text.includes('healthReport'));
+      const dataContent = result.content.find((c) =>
+        c.text.includes("healthReport"),
+      );
       const data = JSON.parse(dataContent!.text);
 
-      const headingCheck = data.healthReport.components.accessibility.details.find(
-        (d: any) => d.check === 'Clear heading hierarchy',
-      );
+      const headingCheck =
+        data.healthReport.components.accessibility.details.find(
+          (d: any) => d.check === "Clear heading hierarchy",
+        );
       expect(headingCheck.passed).toBe(true);
     });
 
-    test('should detect images with alt text', async () => {
-      const readmePath = join(testDir, 'README.md');
+    test("should detect images with alt text", async () => {
+      const readmePath = join(testDir, "README.md");
       await writeFile(
         readmePath,
         `# Project
@@ -427,17 +462,20 @@ MIT License
         readme_path: readmePath,
       });
 
-      const dataContent = result.content.find((c) => c.text.includes('healthReport'));
+      const dataContent = result.content.find((c) =>
+        c.text.includes("healthReport"),
+      );
       const data = JSON.parse(dataContent!.text);
 
-      const altTextCheck = data.healthReport.components.accessibility.details.find(
-        (d: any) => d.check === 'Alt text for images',
-      );
+      const altTextCheck =
+        data.healthReport.components.accessibility.details.find(
+          (d: any) => d.check === "Alt text for images",
+        );
       expect(altTextCheck.passed).toBe(true);
     });
 
-    test('should detect images without alt text', async () => {
-      const readmePath = join(testDir, 'README.md');
+    test("should detect images without alt text", async () => {
+      const readmePath = join(testDir, "README.md");
       await writeFile(
         readmePath,
         `# Project
@@ -450,17 +488,20 @@ MIT License
         readme_path: readmePath,
       });
 
-      const dataContent = result.content.find((c) => c.text.includes('healthReport'));
+      const dataContent = result.content.find((c) =>
+        c.text.includes("healthReport"),
+      );
       const data = JSON.parse(dataContent!.text);
 
-      const altTextCheck = data.healthReport.components.accessibility.details.find(
-        (d: any) => d.check === 'Alt text for images',
-      );
+      const altTextCheck =
+        data.healthReport.components.accessibility.details.find(
+          (d: any) => d.check === "Alt text for images",
+        );
       expect(altTextCheck.passed).toBe(false);
     });
 
-    test('should detect inclusive language violations', async () => {
-      const readmePath = join(testDir, 'README.md');
+    test("should detect inclusive language violations", async () => {
+      const readmePath = join(testDir, "README.md");
       await writeFile(
         readmePath,
         `# Project
@@ -473,17 +514,20 @@ Hey guys, this project uses a master branch and maintains a whitelist of contrib
         readme_path: readmePath,
       });
 
-      const dataContent = result.content.find((c) => c.text.includes('healthReport'));
+      const dataContent = result.content.find((c) =>
+        c.text.includes("healthReport"),
+      );
       const data = JSON.parse(dataContent!.text);
 
-      const inclusiveCheck = data.healthReport.components.accessibility.details.find(
-        (d: any) => d.check === 'Inclusive language',
-      );
+      const inclusiveCheck =
+        data.healthReport.components.accessibility.details.find(
+          (d: any) => d.check === "Inclusive language",
+        );
       expect(inclusiveCheck.passed).toBe(false);
     });
 
-    test('should pass inclusive language check with good content', async () => {
-      const readmePath = join(testDir, 'README.md');
+    test("should pass inclusive language check with good content", async () => {
+      const readmePath = join(testDir, "README.md");
       await writeFile(
         readmePath,
         `# Project
@@ -496,19 +540,22 @@ Welcome team! This project uses the main branch and maintains an allowlist of co
         readme_path: readmePath,
       });
 
-      const dataContent = result.content.find((c) => c.text.includes('healthReport'));
+      const dataContent = result.content.find((c) =>
+        c.text.includes("healthReport"),
+      );
       const data = JSON.parse(dataContent!.text);
 
-      const inclusiveCheck = data.healthReport.components.accessibility.details.find(
-        (d: any) => d.check === 'Inclusive language',
-      );
+      const inclusiveCheck =
+        data.healthReport.components.accessibility.details.find(
+          (d: any) => d.check === "Inclusive language",
+        );
       expect(inclusiveCheck.passed).toBe(true);
     });
   });
 
-  describe('Onboarding Evaluation', () => {
-    test('should detect quick start sections', async () => {
-      const readmePath = join(testDir, 'README.md');
+  describe("Onboarding Evaluation", () => {
+    test("should detect quick start sections", async () => {
+      const readmePath = join(testDir, "README.md");
       await writeFile(
         readmePath,
         `# Project
@@ -523,17 +570,20 @@ Get up and running in minutes!
         readme_path: readmePath,
       });
 
-      const dataContent = result.content.find((c) => c.text.includes('healthReport'));
+      const dataContent = result.content.find((c) =>
+        c.text.includes("healthReport"),
+      );
       const data = JSON.parse(dataContent!.text);
 
-      const quickStartCheck = data.healthReport.components.onboarding.details.find(
-        (d: any) => d.check === 'Quick start section',
-      );
+      const quickStartCheck =
+        data.healthReport.components.onboarding.details.find(
+          (d: any) => d.check === "Quick start section",
+        );
       expect(quickStartCheck.passed).toBe(true);
     });
 
-    test('should detect prerequisites', async () => {
-      const readmePath = join(testDir, 'README.md');
+    test("should detect prerequisites", async () => {
+      const readmePath = join(testDir, "README.md");
       await writeFile(
         readmePath,
         `# Project
@@ -549,17 +599,19 @@ Get up and running in minutes!
         readme_path: readmePath,
       });
 
-      const dataContent = result.content.find((c) => c.text.includes('healthReport'));
+      const dataContent = result.content.find((c) =>
+        c.text.includes("healthReport"),
+      );
       const data = JSON.parse(dataContent!.text);
 
       const prereqCheck = data.healthReport.components.onboarding.details.find(
-        (d: any) => d.check === 'Prerequisites clearly listed',
+        (d: any) => d.check === "Prerequisites clearly listed",
       );
       expect(prereqCheck.passed).toBe(true);
     });
 
-    test('should detect first contribution guidance', async () => {
-      const readmePath = join(testDir, 'README.md');
+    test("should detect first contribution guidance", async () => {
+      const readmePath = join(testDir, "README.md");
       await writeFile(
         readmePath,
         `# Project
@@ -574,17 +626,20 @@ Welcome first-time contributors! Here's how to get started.
         readme_path: readmePath,
       });
 
-      const dataContent = result.content.find((c) => c.text.includes('healthReport'));
+      const dataContent = result.content.find((c) =>
+        c.text.includes("healthReport"),
+      );
       const data = JSON.parse(dataContent!.text);
 
-      const firstContribCheck = data.healthReport.components.onboarding.details.find(
-        (d: any) => d.check === 'First contribution guide',
-      );
+      const firstContribCheck =
+        data.healthReport.components.onboarding.details.find(
+          (d: any) => d.check === "First contribution guide",
+        );
       expect(firstContribCheck.passed).toBe(true);
     });
 
-    test('should detect good first issues', async () => {
-      const readmePath = join(testDir, 'README.md');
+    test("should detect good first issues", async () => {
+      const readmePath = join(testDir, "README.md");
       await writeFile(
         readmePath,
         `# Project
@@ -597,55 +652,65 @@ Check out our good first issues for beginners!
         readme_path: readmePath,
       });
 
-      const dataContent = result.content.find((c) => c.text.includes('healthReport'));
+      const dataContent = result.content.find((c) =>
+        c.text.includes("healthReport"),
+      );
       const data = JSON.parse(dataContent!.text);
 
-      const goodFirstCheck = data.healthReport.components.onboarding.details.find(
-        (d: any) => d.check === 'Good first issues mentioned',
-      );
+      const goodFirstCheck =
+        data.healthReport.components.onboarding.details.find(
+          (d: any) => d.check === "Good first issues mentioned",
+        );
       expect(goodFirstCheck.passed).toBe(true);
     });
   });
 
-  describe('Content Quality Evaluation', () => {
-    test('should evaluate adequate content length', async () => {
-      const readmePath = join(testDir, 'README.md');
+  describe("Content Quality Evaluation", () => {
+    test("should evaluate adequate content length", async () => {
+      const readmePath = join(testDir, "README.md");
       const content =
-        '# Project\n\n' + 'This is a well-sized README with adequate content. '.repeat(20);
+        "# Project\n\n" +
+        "This is a well-sized README with adequate content. ".repeat(20);
       await writeFile(readmePath, content);
 
       const result = await evaluateReadmeHealth({
         readme_path: readmePath,
       });
 
-      const dataContent = result.content.find((c) => c.text.includes('healthReport'));
+      const dataContent = result.content.find((c) =>
+        c.text.includes("healthReport"),
+      );
       const data = JSON.parse(dataContent!.text);
 
-      const lengthCheck = data.healthReport.components.contentQuality.details.find(
-        (d: any) => d.check === 'Adequate content length',
-      );
+      const lengthCheck =
+        data.healthReport.components.contentQuality.details.find(
+          (d: any) => d.check === "Adequate content length",
+        );
       expect(lengthCheck.passed).toBe(true);
     });
 
-    test('should detect insufficient content length', async () => {
-      const readmePath = join(testDir, 'README.md');
-      await writeFile(readmePath, '# Project\n\nToo short.');
+    test("should detect insufficient content length", async () => {
+      const readmePath = join(testDir, "README.md");
+      await writeFile(readmePath, "# Project\n\nToo short.");
 
       const result = await evaluateReadmeHealth({
         readme_path: readmePath,
       });
 
-      const dataContent = result.content.find((c) => c.text.includes('healthReport'));
+      const dataContent = result.content.find((c) =>
+        c.text.includes("healthReport"),
+      );
       const data = JSON.parse(dataContent!.text);
 
-      const lengthCheck = data.healthReport.components.contentQuality.details.find(
-        (d: any) => d.check === 'Adequate content length',
-      );
+      const lengthCheck =
+        data.healthReport.components.contentQuality.details.find(
+          (d: any) => d.check === "Adequate content length",
+        );
       expect(lengthCheck.passed).toBe(false);
     });
 
-    test('should detect code examples', async () => {
-      const readmePath = join(testDir, 'README.md');
+    test("should detect code examples", async () => {
+      const readmePath = join(testDir, "README.md");
       await writeFile(
         readmePath,
         `# Project
@@ -669,17 +734,20 @@ project.run();
         readme_path: readmePath,
       });
 
-      const dataContent = result.content.find((c) => c.text.includes('healthReport'));
+      const dataContent = result.content.find((c) =>
+        c.text.includes("healthReport"),
+      );
       const data = JSON.parse(dataContent!.text);
 
-      const codeCheck = data.healthReport.components.contentQuality.details.find(
-        (d: any) => d.check === 'Code examples provided',
-      );
+      const codeCheck =
+        data.healthReport.components.contentQuality.details.find(
+          (d: any) => d.check === "Code examples provided",
+        );
       expect(codeCheck.passed).toBe(true);
     });
 
-    test('should detect external links', async () => {
-      const readmePath = join(testDir, 'README.md');
+    test("should detect external links", async () => {
+      const readmePath = join(testDir, "README.md");
       await writeFile(
         readmePath,
         `# Project
@@ -693,17 +761,20 @@ Check out our [documentation](https://docs.example.com),
         readme_path: readmePath,
       });
 
-      const dataContent = result.content.find((c) => c.text.includes('healthReport'));
+      const dataContent = result.content.find((c) =>
+        c.text.includes("healthReport"),
+      );
       const data = JSON.parse(dataContent!.text);
 
-      const linksCheck = data.healthReport.components.contentQuality.details.find(
-        (d: any) => d.check === 'External links present',
-      );
+      const linksCheck =
+        data.healthReport.components.contentQuality.details.find(
+          (d: any) => d.check === "External links present",
+        );
       expect(linksCheck.passed).toBe(true);
     });
 
-    test('should evaluate project description clarity', async () => {
-      const readmePath = join(testDir, 'README.md');
+    test("should evaluate project description clarity", async () => {
+      const readmePath = join(testDir, "README.md");
       const longContent = `# Project
 
 ## Description
@@ -730,19 +801,22 @@ Comprehensive usage examples and documentation with code samples.
         readme_path: readmePath,
       });
 
-      const dataContent = result.content.find((c) => c.text.includes('healthReport'));
+      const dataContent = result.content.find((c) =>
+        c.text.includes("healthReport"),
+      );
       const data = JSON.parse(dataContent!.text);
 
-      const clarityCheck = data.healthReport.components.contentQuality.details.find(
-        (d: any) => d.check === 'Project description clarity',
-      );
+      const clarityCheck =
+        data.healthReport.components.contentQuality.details.find(
+          (d: any) => d.check === "Project description clarity",
+        );
       expect(clarityCheck.passed).toBe(true);
     });
   });
 
-  describe('Grade Calculation', () => {
-    test('should assign grade A for 90%+ score', async () => {
-      const readmePath = join(testDir, 'README.md');
+  describe("Grade Calculation", () => {
+    test("should assign grade A for 90%+ score", async () => {
+      const readmePath = join(testDir, "README.md");
       // Create comprehensive README that should score high
       await writeFile(
         readmePath,
@@ -812,59 +886,69 @@ MIT License
         readme_path: readmePath,
       });
 
-      const dataContent = result.content.find((c) => c.text.includes('healthReport'));
+      const dataContent = result.content.find((c) =>
+        c.text.includes("healthReport"),
+      );
       const data = JSON.parse(dataContent!.text);
 
       expect(data.healthReport.overallScore).toBeGreaterThanOrEqual(90);
-      expect(data.healthReport.grade).toBe('A');
+      expect(data.healthReport.grade).toBe("A");
     });
 
-    test('should assign grade F for very low scores', async () => {
-      const readmePath = join(testDir, 'README.md');
-      await writeFile(readmePath, '# Bad\n\nMinimal.');
+    test("should assign grade F for very low scores", async () => {
+      const readmePath = join(testDir, "README.md");
+      await writeFile(readmePath, "# Bad\n\nMinimal.");
 
       const result = await evaluateReadmeHealth({
         readme_path: readmePath,
       });
 
-      const dataContent = result.content.find((c) => c.text.includes('healthReport'));
+      const dataContent = result.content.find((c) =>
+        c.text.includes("healthReport"),
+      );
       const data = JSON.parse(dataContent!.text);
 
       expect(data.healthReport.overallScore).toBeLessThan(60);
-      expect(data.healthReport.grade).toBe('F');
+      expect(data.healthReport.grade).toBe("F");
     });
   });
 
-  describe('Recommendations and Critical Issues', () => {
-    test('should identify critical issues for low-scoring components', async () => {
-      const readmePath = join(testDir, 'README.md');
-      await writeFile(readmePath, '# Minimal Project\n\nVery basic content.');
+  describe("Recommendations and Critical Issues", () => {
+    test("should identify critical issues for low-scoring components", async () => {
+      const readmePath = join(testDir, "README.md");
+      await writeFile(readmePath, "# Minimal Project\n\nVery basic content.");
 
       const result = await evaluateReadmeHealth({
         readme_path: readmePath,
       });
 
-      const dataContent = result.content.find((c) => c.text.includes('healthReport'));
+      const dataContent = result.content.find((c) =>
+        c.text.includes("healthReport"),
+      );
       const data = JSON.parse(dataContent!.text);
 
       expect(data.healthReport.criticalIssues.length).toBeGreaterThan(0);
       expect(
-        data.healthReport.criticalIssues.some((issue: string) => issue.includes('Critical:')),
+        data.healthReport.criticalIssues.some((issue: string) =>
+          issue.includes("Critical:"),
+        ),
       ).toBe(true);
     });
 
-    test('should generate appropriate recommendations', async () => {
-      const readmePath = join(testDir, 'README.md');
+    test("should generate appropriate recommendations", async () => {
+      const readmePath = join(testDir, "README.md");
       await writeFile(
         readmePath,
-        '# Project\n\nBasic project with minimal content that will fail most health checks.',
+        "# Project\n\nBasic project with minimal content that will fail most health checks.",
       );
 
       const result = await evaluateReadmeHealth({
         readme_path: readmePath,
       });
 
-      const dataContent = result.content.find((c) => c.text.includes('healthReport'));
+      const dataContent = result.content.find((c) =>
+        c.text.includes("healthReport"),
+      );
       const data = JSON.parse(dataContent!.text);
 
       // Should have recommendations since most checks will fail with minimal content
@@ -872,8 +956,8 @@ MIT License
       expect(data.healthReport.recommendations.length).toBeLessThanOrEqual(10);
     });
 
-    test('should identify strengths in well-structured components', async () => {
-      const readmePath = join(testDir, 'README.md');
+    test("should identify strengths in well-structured components", async () => {
+      const readmePath = join(testDir, "README.md");
       await writeFile(
         readmePath,
         `# Project
@@ -908,16 +992,18 @@ app.start();
         readme_path: readmePath,
       });
 
-      const dataContent = result.content.find((c) => c.text.includes('healthReport'));
+      const dataContent = result.content.find((c) =>
+        c.text.includes("healthReport"),
+      );
       const data = JSON.parse(dataContent!.text);
 
       expect(data.healthReport.strengths.length).toBeGreaterThan(0);
     });
   });
 
-  describe('Time Estimation', () => {
-    test('should estimate time in minutes for quick fixes', async () => {
-      const readmePath = join(testDir, 'README.md');
+  describe("Time Estimation", () => {
+    test("should estimate time in minutes for quick fixes", async () => {
+      const readmePath = join(testDir, "README.md");
       await writeFile(
         readmePath,
         `# Excellent Project
@@ -973,22 +1059,29 @@ MIT License
         readme_path: readmePath,
       });
 
-      const dataContent = result.content.find((c) => c.text.includes('healthReport'));
+      const dataContent = result.content.find((c) =>
+        c.text.includes("healthReport"),
+      );
       const data = JSON.parse(dataContent!.text);
 
       // Should have very few recommendations, resulting in minutes
       expect(data.healthReport.estimatedImprovementTime).toMatch(/\d+ minutes/);
     });
 
-    test('should estimate time in hours for moderate improvements', async () => {
-      const readmePath = join(testDir, 'README.md');
-      await writeFile(readmePath, '# Project\n\nBasic project needing improvements.');
+    test("should estimate time in hours for moderate improvements", async () => {
+      const readmePath = join(testDir, "README.md");
+      await writeFile(
+        readmePath,
+        "# Project\n\nBasic project needing improvements.",
+      );
 
       const result = await evaluateReadmeHealth({
         readme_path: readmePath,
       });
 
-      const dataContent = result.content.find((c) => c.text.includes('healthReport'));
+      const dataContent = result.content.find((c) =>
+        c.text.includes("healthReport"),
+      );
       const data = JSON.parse(dataContent!.text);
 
       // Should have enough recommendations to warrant hours
@@ -996,94 +1089,123 @@ MIT License
     });
   });
 
-  describe('Next Steps Generation', () => {
-    test('should prioritize critical issues in next steps', async () => {
-      const readmePath = join(testDir, 'README.md');
-      await writeFile(readmePath, '# Minimal\n\nBad.');
+  describe("Next Steps Generation", () => {
+    test("should prioritize critical issues in next steps", async () => {
+      const readmePath = join(testDir, "README.md");
+      await writeFile(readmePath, "# Minimal\n\nBad.");
 
       const result = await evaluateReadmeHealth({
         readme_path: readmePath,
       });
 
-      const dataContent = result.content.find((c) => c.text.includes('nextSteps'));
+      const dataContent = result.content.find((c) =>
+        c.text.includes("nextSteps"),
+      );
       const data = JSON.parse(dataContent!.text);
 
-      expect(data.nextSteps.some((step: string) => step.includes('critical issues'))).toBe(true);
+      expect(
+        data.nextSteps.some((step: string) => step.includes("critical issues")),
+      ).toBe(true);
     });
 
-    test('should suggest targeting 85+ score for low-scoring READMEs', async () => {
-      const readmePath = join(testDir, 'README.md');
-      await writeFile(readmePath, '# Project\n\nNeeds improvement.');
+    test("should suggest targeting 85+ score for low-scoring READMEs", async () => {
+      const readmePath = join(testDir, "README.md");
+      await writeFile(readmePath, "# Project\n\nNeeds improvement.");
 
       const result = await evaluateReadmeHealth({
         readme_path: readmePath,
       });
 
-      const dataContent = result.content.find((c) => c.text.includes('nextSteps'));
+      const dataContent = result.content.find((c) =>
+        c.text.includes("nextSteps"),
+      );
       const data = JSON.parse(dataContent!.text);
 
-      expect(data.nextSteps.some((step: string) => step.includes('85+ health score'))).toBe(true);
+      expect(
+        data.nextSteps.some((step: string) =>
+          step.includes("85+ health score"),
+        ),
+      ).toBe(true);
     });
 
-    test('should always include re-evaluation step', async () => {
-      const readmePath = join(testDir, 'README.md');
-      await writeFile(readmePath, '# Any Project');
+    test("should always include re-evaluation step", async () => {
+      const readmePath = join(testDir, "README.md");
+      await writeFile(readmePath, "# Any Project");
 
       const result = await evaluateReadmeHealth({
         readme_path: readmePath,
       });
 
-      const dataContent = result.content.find((c) => c.text.includes('nextSteps'));
+      const dataContent = result.content.find((c) =>
+        c.text.includes("nextSteps"),
+      );
       const data = JSON.parse(dataContent!.text);
 
-      expect(data.nextSteps.some((step: string) => step.includes('Re-evaluate'))).toBe(true);
+      expect(
+        data.nextSteps.some((step: string) => step.includes("Re-evaluate")),
+      ).toBe(true);
     });
   });
 
-  describe('Project Type Variations', () => {
-    test('should handle enterprise_tool project type', async () => {
-      const readmePath = join(testDir, 'README.md');
-      await writeFile(readmePath, '# Enterprise Tool\n\nProfessional enterprise solution.');
+  describe("Project Type Variations", () => {
+    test("should handle enterprise_tool project type", async () => {
+      const readmePath = join(testDir, "README.md");
+      await writeFile(
+        readmePath,
+        "# Enterprise Tool\n\nProfessional enterprise solution.",
+      );
 
       const result = await evaluateReadmeHealth({
         readme_path: readmePath,
-        project_type: 'enterprise_tool',
+        project_type: "enterprise_tool",
       });
 
       expect(result.isError).toBe(false);
-      const dataContent = result.content.find((c) => c.text.includes('projectType'));
+      const dataContent = result.content.find((c) =>
+        c.text.includes("projectType"),
+      );
       const data = JSON.parse(dataContent!.text);
-      expect(data.projectType).toBe('enterprise_tool');
+      expect(data.projectType).toBe("enterprise_tool");
     });
 
-    test('should handle personal_project project type', async () => {
-      const readmePath = join(testDir, 'README.md');
-      await writeFile(readmePath, '# Personal Project\n\nMy personal coding project.');
+    test("should handle personal_project project type", async () => {
+      const readmePath = join(testDir, "README.md");
+      await writeFile(
+        readmePath,
+        "# Personal Project\n\nMy personal coding project.",
+      );
 
       const result = await evaluateReadmeHealth({
         readme_path: readmePath,
-        project_type: 'personal_project',
+        project_type: "personal_project",
       });
 
       expect(result.isError).toBe(false);
-      const dataContent = result.content.find((c) => c.text.includes('projectType'));
+      const dataContent = result.content.find((c) =>
+        c.text.includes("projectType"),
+      );
       const data = JSON.parse(dataContent!.text);
-      expect(data.projectType).toBe('personal_project');
+      expect(data.projectType).toBe("personal_project");
     });
 
-    test('should handle documentation project type', async () => {
-      const readmePath = join(testDir, 'README.md');
-      await writeFile(readmePath, '# Documentation Project\n\nComprehensive documentation.');
+    test("should handle documentation project type", async () => {
+      const readmePath = join(testDir, "README.md");
+      await writeFile(
+        readmePath,
+        "# Documentation Project\n\nComprehensive documentation.",
+      );
 
       const result = await evaluateReadmeHealth({
         readme_path: readmePath,
-        project_type: 'documentation',
+        project_type: "documentation",
       });
 
       expect(result.isError).toBe(false);
-      const dataContent = result.content.find((c) => c.text.includes('projectType'));
+      const dataContent = result.content.find((c) =>
+        c.text.includes("projectType"),
+      );
       const data = JSON.parse(dataContent!.text);
-      expect(data.projectType).toBe('documentation');
+      expect(data.projectType).toBe("documentation");
     });
   });
 });

@@ -73,7 +73,7 @@ name: Deploy Docusaurus
 on:
   push:
     branches: [main]
-    paths: ['docs/**', 'docusaurus.config.js']
+    paths: ["docs/**", "docusaurus.config.js"]
 
 permissions:
   contents: read
@@ -94,8 +94,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -109,7 +109,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './build'
+          path: "./build"
 
       - name: Deploy to GitHub Pages
         id: deployment
@@ -124,7 +124,7 @@ name: Deploy Hugo
 on:
   push:
     branches: [main]
-    paths: ['content/**', 'config.yml', 'themes/**']
+    paths: ["content/**", "config.yml", "themes/**"]
 
 permissions:
   contents: read
@@ -144,7 +144,7 @@ jobs:
       - name: Setup Hugo
         uses: peaceiris/actions-hugo@v2
         with:
-          hugo-version: 'latest'
+          hugo-version: "latest"
           extended: true
 
       - name: Build
@@ -156,7 +156,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './public'
+          path: "./public"
 
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v4
@@ -170,7 +170,7 @@ name: Deploy MkDocs
 on:
   push:
     branches: [main]
-    paths: ['docs/**', 'mkdocs.yml']
+    paths: ["docs/**", "mkdocs.yml"]
 
 permissions:
   contents: read
@@ -188,7 +188,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.x'
+          python-version: "3.x"
 
       - name: Install dependencies
         run: |
@@ -203,7 +203,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './site'
+          path: "./site"
 
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v4
@@ -229,7 +229,7 @@ protection_rules:
     required_status_checks:
       strict: true
       contexts:
-        - 'Deploy Documentation'
+        - "Deploy Documentation"
     enforce_admins: false
     required_pull_request_reviews:
       required_approving_review_count: 1
@@ -440,10 +440,10 @@ Add analytics to track usage:
 const config = {
   presets: [
     [
-      'classic',
+      "classic",
       {
         gtag: {
-          trackingID: 'G-XXXXXXXXXX',
+          trackingID: "G-XXXXXXXXXX",
           anonymizeIP: true,
         },
       },

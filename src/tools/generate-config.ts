@@ -1,18 +1,21 @@
-import { promises as fs } from 'fs';
-import path from 'path';
-import { z } from 'zod';
-import { MCPToolResponse, formatMCPResponse } from '../types/api.js';
+import { promises as fs } from "fs";
+import path from "path";
+import { z } from "zod";
+import { MCPToolResponse, formatMCPResponse } from "../types/api.js";
 
 const inputSchema = z.object({
-  ssg: z.enum(['jekyll', 'hugo', 'docusaurus', 'mkdocs', 'eleventy']),
+  ssg: z.enum(["jekyll", "hugo", "docusaurus", "mkdocs", "eleventy"]),
   projectName: z.string(),
   projectDescription: z.string().optional(),
   outputPath: z.string(),
 });
 
-export async function generateConfig(args: unknown): Promise<{ content: any[] }> {
+export async function generateConfig(
+  args: unknown,
+): Promise<{ content: any[] }> {
   const startTime = Date.now();
-  const { ssg, projectName, projectDescription, outputPath } = inputSchema.parse(args);
+  const { ssg, projectName, projectDescription, outputPath } =
+    inputSchema.parse(args);
 
   try {
     // Ensure output directory exists
@@ -21,20 +24,35 @@ export async function generateConfig(args: unknown): Promise<{ content: any[] }>
     let configFiles: Array<{ path: string; content: string }> = [];
 
     switch (ssg) {
-      case 'docusaurus':
-        configFiles = await generateDocusaurusConfig(projectName, projectDescription || '');
+      case "docusaurus":
+        configFiles = await generateDocusaurusConfig(
+          projectName,
+          projectDescription || "",
+        );
         break;
-      case 'mkdocs':
-        configFiles = await generateMkDocsConfig(projectName, projectDescription || '');
+      case "mkdocs":
+        configFiles = await generateMkDocsConfig(
+          projectName,
+          projectDescription || "",
+        );
         break;
-      case 'hugo':
-        configFiles = await generateHugoConfig(projectName, projectDescription || '');
+      case "hugo":
+        configFiles = await generateHugoConfig(
+          projectName,
+          projectDescription || "",
+        );
         break;
-      case 'jekyll':
-        configFiles = await generateJekyllConfig(projectName, projectDescription || '');
+      case "jekyll":
+        configFiles = await generateJekyllConfig(
+          projectName,
+          projectDescription || "",
+        );
         break;
-      case 'eleventy':
-        configFiles = await generateEleventyConfig(projectName, projectDescription || '');
+      case "eleventy":
+        configFiles = await generateEleventyConfig(
+          projectName,
+          projectDescription || "",
+        );
         break;
     }
 
@@ -58,23 +76,23 @@ export async function generateConfig(args: unknown): Promise<{ content: any[] }>
       success: true,
       data: configResult,
       metadata: {
-        toolVersion: '1.0.0',
+        toolVersion: "1.0.0",
         executionTime: Date.now() - startTime,
         timestamp: new Date().toISOString(),
       },
       recommendations: [
         {
-          type: 'info',
-          title: 'Configuration Complete',
+          type: "info",
+          title: "Configuration Complete",
           description: `Generated ${configFiles.length} configuration files for ${ssg}`,
         },
       ],
       nextSteps: [
         {
-          action: 'Setup Documentation Structure',
-          toolRequired: 'setup_structure',
+          action: "Setup Documentation Structure",
+          toolRequired: "setup_structure",
           description: `Create Diataxis-compliant documentation structure`,
-          priority: 'high',
+          priority: "high",
         },
       ],
     };
@@ -84,12 +102,12 @@ export async function generateConfig(args: unknown): Promise<{ content: any[] }>
     const errorResponse: MCPToolResponse = {
       success: false,
       error: {
-        code: 'CONFIG_GENERATION_FAILED',
+        code: "CONFIG_GENERATION_FAILED",
         message: `Failed to generate config: ${error}`,
-        resolution: 'Ensure output path is writable and SSG type is supported',
+        resolution: "Ensure output path is writable and SSG type is supported",
       },
       metadata: {
-        toolVersion: '1.0.0',
+        toolVersion: "1.0.0",
         executionTime: Date.now() - startTime,
         timestamp: new Date().toISOString(),
       },
@@ -104,7 +122,7 @@ async function generateDocusaurusConfig(
 ): Promise<Array<{ path: string; content: string }>> {
   return [
     {
-      path: 'docusaurus.config.js',
+      path: "docusaurus.config.js",
       content: `module.exports = {
   title: '${projectName}',
   tagline: '${projectDescription}',
@@ -114,7 +132,7 @@ async function generateDocusaurusConfig(
   onBrokenMarkdownLinks: 'warn',
   favicon: 'img/favicon.ico',
   organizationName: 'your-org',
-  projectName: '${projectName.toLowerCase().replace(/\\s+/g, '-')}',
+  projectName: '${projectName.toLowerCase().replace(/\\s+/g, "-")}',
 
   presets: [
     [
@@ -155,32 +173,32 @@ async function generateDocusaurusConfig(
 };`,
     },
     {
-      path: 'package.json',
+      path: "package.json",
       content: JSON.stringify(
         {
-          name: `${projectName.toLowerCase().replace(/\\s+/g, '-')}-docs`,
-          version: '0.0.0',
+          name: `${projectName.toLowerCase().replace(/\\s+/g, "-")}-docs`,
+          version: "0.0.0",
           private: true,
           scripts: {
-            docusaurus: 'docusaurus',
-            start: 'docusaurus start',
-            build: 'docusaurus build',
-            swizzle: 'docusaurus swizzle',
-            deploy: 'docusaurus deploy',
-            clear: 'docusaurus clear',
-            serve: 'docusaurus serve --port 3001',
+            docusaurus: "docusaurus",
+            start: "docusaurus start",
+            build: "docusaurus build",
+            swizzle: "docusaurus swizzle",
+            deploy: "docusaurus deploy",
+            clear: "docusaurus clear",
+            serve: "docusaurus serve --port 3001",
           },
           dependencies: {
-            '@docusaurus/core': '^3.0.0',
-            '@docusaurus/preset-classic': '^3.0.0',
-            '@mdx-js/react': '^3.0.0',
-            clsx: '^2.0.0',
-            'prism-react-renderer': '^2.1.0',
-            react: '^18.0.0',
-            'react-dom': '^18.0.0',
+            "@docusaurus/core": "^3.0.0",
+            "@docusaurus/preset-classic": "^3.0.0",
+            "@mdx-js/react": "^3.0.0",
+            clsx: "^2.0.0",
+            "prism-react-renderer": "^2.1.0",
+            react: "^18.0.0",
+            "react-dom": "^18.0.0",
           },
           devDependencies: {
-            '@docusaurus/types': '^3.0.0',
+            "@docusaurus/types": "^3.0.0",
           },
         },
         null,
@@ -188,7 +206,7 @@ async function generateDocusaurusConfig(
       ),
     },
     {
-      path: 'sidebars.js',
+      path: "sidebars.js",
       content: `/**
  * Creating a sidebar enables you to:
  - create an ordered group of docs
@@ -241,7 +259,7 @@ const sidebars = {
 module.exports = sidebars;`,
     },
     {
-      path: 'src/css/custom.css',
+      path: "src/css/custom.css",
       content: `/**
  * Any CSS included here will be global. The classic template
  * bundles Infima by default. Infima is a CSS framework designed to
@@ -274,7 +292,7 @@ module.exports = sidebars;`,
 }`,
     },
     {
-      path: 'Dockerfile.docs',
+      path: "Dockerfile.docs",
       content: `# Documentation testing container
 # Generated by DocuMCP
 FROM node:20-alpine
@@ -307,7 +325,7 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \\
 CMD ["sh", "-c", "cd docs-site && npm run serve"]`,
     },
     {
-      path: 'test-docs-local.sh',
+      path: "test-docs-local.sh",
       content: `#!/bin/bash
 # Containerized documentation testing script
 # Generated by DocuMCP
@@ -358,7 +376,7 @@ echo ""
 $CONTAINER_CMD run --rm -p 3001:3001 --name documcp-docs-test documcp-docs`,
     },
     {
-      path: 'docker-compose.docs.yml',
+      path: "docker-compose.docs.yml",
       content: `# Docker Compose for documentation testing
 # Generated by DocuMCP
 version: '3.8'
@@ -383,7 +401,7 @@ services:
       - NODE_ENV=production`,
     },
     {
-      path: '.dockerignore',
+      path: ".dockerignore",
       content: `# Documentation container ignore file
 # Generated by DocuMCP
 
@@ -433,7 +451,7 @@ async function generateMkDocsConfig(
 ): Promise<Array<{ path: string; content: string }>> {
   return [
     {
-      path: 'mkdocs.yml',
+      path: "mkdocs.yml",
       content: `site_name: ${projectName}
 site_description: ${projectDescription}
 site_url: https://your-domain.com
@@ -486,7 +504,7 @@ nav:
     - Architecture: explanation/architecture.md`,
     },
     {
-      path: 'requirements.txt',
+      path: "requirements.txt",
       content: `mkdocs>=1.5.0
 mkdocs-material>=9.0.0
 mkdocs-mermaid2-plugin>=1.0.0`,
@@ -500,7 +518,7 @@ async function generateHugoConfig(
 ): Promise<Array<{ path: string; content: string }>> {
   return [
     {
-      path: 'hugo.toml',
+      path: "hugo.toml",
       content: `baseURL = 'https://your-domain.com/'
 languageCode = 'en-us'
 title = '${projectName}'
@@ -537,7 +555,7 @@ async function generateJekyllConfig(
 ): Promise<Array<{ path: string; content: string }>> {
   return [
     {
-      path: '_config.yml',
+      path: "_config.yml",
       content: `title: ${projectName}
 description: ${projectDescription}
 baseurl: ""
@@ -565,7 +583,7 @@ collections:
     permalink: /explanation/:name`,
     },
     {
-      path: 'Gemfile',
+      path: "Gemfile",
       content: `source "https://rubygems.org"
 
 gem "jekyll", "~> 4.3"
@@ -586,7 +604,7 @@ async function generateEleventyConfig(
 ): Promise<Array<{ path: string; content: string }>> {
   return [
     {
-      path: '.eleventy.js',
+      path: ".eleventy.js",
       content: `module.exports = function(eleventyConfig) {
   eleventyConfig.addPassthroughCopy("css");
 
@@ -604,19 +622,19 @@ async function generateEleventyConfig(
 };`,
     },
     {
-      path: 'package.json',
+      path: "package.json",
       content: JSON.stringify(
         {
-          name: projectName.toLowerCase().replace(/\\s+/g, '-'),
-          version: '1.0.0',
+          name: projectName.toLowerCase().replace(/\\s+/g, "-"),
+          version: "1.0.0",
           description: projectDescription,
           scripts: {
-            build: 'eleventy',
-            serve: 'eleventy --serve',
-            debug: 'DEBUG=* eleventy',
+            build: "eleventy",
+            serve: "eleventy --serve",
+            debug: "DEBUG=* eleventy",
           },
           devDependencies: {
-            '@11ty/eleventy': '^2.0.0',
+            "@11ty/eleventy": "^2.0.0",
           },
         },
         null,

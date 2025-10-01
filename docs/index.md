@@ -33,3 +33,4 @@ Detailed technical reference:
 Conceptual documentation and background:
 
 - [DocuMCP Architecture Overview](explanation/architecture.md)
+- [Phase 2: Intelligence & Learning System](phase-2-intelligence.md) - Historical data, user preferences, and deployment analytics

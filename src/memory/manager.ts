@@ -3,8 +3,8 @@
  * Implements Issue #46: Memory Management Module
  */
 
-import { JSONLStorage, MemoryEntry } from './storage.js';
-import { EventEmitter } from 'events';
+import { JSONLStorage, MemoryEntry } from "./storage.js";
+import { EventEmitter } from "events";
 
 export interface MemoryContext {
   projectId: string;
@@ -17,8 +17,8 @@ export interface MemoryContext {
 export interface MemorySearchOptions {
   semantic?: boolean;
   fuzzy?: boolean;
-  sortBy?: 'relevance' | 'timestamp' | 'type';
-  groupBy?: 'type' | 'project' | 'date';
+  sortBy?: "relevance" | "timestamp" | "type";
+  groupBy?: "type" | "project" | "date";
 }
 
 export class MemoryManager extends EventEmitter {
@@ -35,18 +35,18 @@ export class MemoryManager extends EventEmitter {
 
   async initialize(): Promise<void> {
     await this.storage.initialize();
-    this.emit('initialized');
+    this.emit("initialized");
   }
 
   setContext(context: MemoryContext): void {
     this.context = context;
-    this.emit('context-changed', context);
+    this.emit("context-changed", context);
   }
 
   async remember(
-    type: MemoryEntry['type'],
+    type: MemoryEntry["type"],
     data: Record<string, any>,
-    metadata?: Partial<MemoryEntry['metadata']>,
+    metadata?: Partial<MemoryEntry["metadata"]>,
   ): Promise<MemoryEntry> {
     const entry = await this.storage.append({
       type,
@@ -60,7 +60,7 @@ export class MemoryManager extends EventEmitter {
     });
 
     this.addToCache(entry);
-    this.emit('memory-created', entry);
+    this.emit("memory-created", entry);
 
     return entry;
   }
@@ -79,12 +79,12 @@ export class MemoryManager extends EventEmitter {
   }
 
   async search(
-    query: string | Partial<MemoryEntry['metadata']>,
+    query: string | Partial<MemoryEntry["metadata"]>,
     options?: MemorySearchOptions,
   ): Promise<MemoryEntry[]> {
     let filter: any = {};
 
-    if (typeof query === 'string') {
+    if (typeof query === "string") {
       // Text-based search - search in multiple fields
       // Try to match projectId first, then tags
       const results: MemoryEntry[] = [];
@@ -131,7 +131,10 @@ export class MemoryManager extends EventEmitter {
     return results;
   }
 
-  async update(id: string, updates: Partial<MemoryEntry>): Promise<MemoryEntry | null> {
+  async update(
+    id: string,
+    updates: Partial<MemoryEntry>,
+  ): Promise<MemoryEntry | null> {
     const existing = await this.recall(id);
     if (!existing) return null;
 
@@ -148,7 +151,7 @@ export class MemoryManager extends EventEmitter {
     this.cache.delete(id);
     this.addToCache(newEntry);
 
-    this.emit('memory-updated', newEntry);
+    this.emit("memory-updated", newEntry);
     return newEntry;
   }
 
@@ -156,17 +159,22 @@ export class MemoryManager extends EventEmitter {
     const result = await this.storage.delete(id);
     if (result) {
       this.cache.delete(id);
-      this.emit('memory-deleted', id);
+      this.emit("memory-deleted", id);
     }
     return result;
   }
 
-  async getRelated(entry: MemoryEntry, limit: number = 10): Promise<MemoryEntry[]> {
+  async getRelated(
+    entry: MemoryEntry,
+    limit: number = 10,
+  ): Promise<MemoryEntry[]> {
     const related: MemoryEntry[] = [];
 
     // Find by same project
     if (entry.metadata.projectId) {
-      const projectMemories = await this.search({ projectId: entry.metadata.projectId });
+      const projectMemories = await this.search({
+        projectId: entry.metadata.projectId,
+      });
       related.push(...projectMemories.filter((m: any) => m.id !== entry.id));
     }
 
@@ -187,10 +195,9 @@ export class MemoryManager extends EventEmitter {
     }
 
     // Deduplicate and limit
-    const uniqueRelated = Array.from(new Map(related.map((m: any) => [m.id, m])).values()).slice(
-      0,
-      limit,
-    );
+    const uniqueRelated = Array.from(
+      new Map(related.map((m: any) => [m.id, m])).values(),
+    ).slice(0, limit);
 
     return uniqueRelated;
   }
@@ -232,17 +239,18 @@ export class MemoryManager extends EventEmitter {
       }
 
       // Deployment patterns
-      if (memory.type === 'deployment') {
-        if (memory.data.status === 'success') {
+      if (memory.type === "deployment") {
+        if (memory.data.status === "success") {
           patterns.deploymentSuccess.success++;
-        } else if (memory.data.status === 'failed') {
+        } else if (memory.data.status === "failed") {
           patterns.deploymentSuccess.failed++;
         }
       }
 
       // Time patterns
       const hour = new Date(memory.timestamp).getHours();
-      patterns.timeDistribution[hour] = (patterns.timeDistribution[hour] || 0) + 1;
+      patterns.timeDistribution[hour] =
+        (patterns.timeDistribution[hour] || 0) + 1;
     }
 
     return patterns;
@@ -256,13 +264,19 @@ export class MemoryManager extends EventEmitter {
       const topSSG = Object.entries(patterns.mostCommonSSG).sort(
         ([, a]: any, [, b]: any) => b - a,
       )[0];
-      insights.push(`Most frequently used SSG: ${topSSG[0]} (${topSSG[1]} projects)`);
+      insights.push(
+        `Most frequently used SSG: ${topSSG[0]} (${topSSG[1]} projects)`,
+      );
     }
 
     // Deployment success rate
-    const total = patterns.deploymentSuccess.success + patterns.deploymentSuccess.failed;
+    const total =
+      patterns.deploymentSuccess.success + patterns.deploymentSuccess.failed;
     if (total > 0) {
-      const successRate = ((patterns.deploymentSuccess.success / total) * 100).toFixed(1);
+      const successRate = (
+        (patterns.deploymentSuccess.success / total) *
+        100
+      ).toFixed(1);
       insights.push(`Deployment success rate: ${successRate}%`);
     }
 
@@ -276,44 +290,50 @@ export class MemoryManager extends EventEmitter {
 
     // Storage insights
     const sizeMB = (stats.totalSize / 1024 / 1024).toFixed(2);
-    insights.push(`Total memory storage: ${sizeMB} MB across ${stats.totalEntries} entries`);
+    insights.push(
+      `Total memory storage: ${sizeMB} MB across ${stats.totalEntries} entries`,
+    );
 
     return insights;
   }
 
   private sortResults(
     results: MemoryEntry[],
-    sortBy: 'relevance' | 'timestamp' | 'type',
+    sortBy: "relevance" | "timestamp" | "type",
   ): MemoryEntry[] {
     switch (sortBy) {
-      case 'timestamp':
+      case "timestamp":
         return results.sort(
-          (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+          (a, b) =>
+            new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
         );
-      case 'type':
+      case "type":
         return results.sort((a, b) => a.type.localeCompare(b.type));
       default:
         return results;
     }
   }
 
-  private groupResults(results: MemoryEntry[], groupBy: 'type' | 'project' | 'date'): any {
+  private groupResults(
+    results: MemoryEntry[],
+    groupBy: "type" | "project" | "date",
+  ): any {
     const grouped: Record<string, MemoryEntry[]> = {};
 
     for (const entry of results) {
       let key: string;
       switch (groupBy) {
-        case 'type':
+        case "type":
           key = entry.type;
           break;
-        case 'project':
-          key = entry.metadata.projectId || 'unknown';
+        case "project":
+          key = entry.metadata.projectId || "unknown";
           break;
-        case 'date':
-          key = entry.timestamp.split('T')[0];
+        case "date":
+          key = entry.timestamp.split("T")[0];
           break;
         default:
-          key = 'all';
+          key = "all";
       }
 
       if (!grouped[key]) {
@@ -347,45 +367,55 @@ export class MemoryManager extends EventEmitter {
     this.cache.set(entry.id, cacheEntry as MemoryEntry);
   }
 
-  async export(format: 'json' | 'csv' = 'json', projectId?: string): Promise<string> {
+  async export(
+    format: "json" | "csv" = "json",
+    projectId?: string,
+  ): Promise<string> {
     const filter = projectId ? { projectId } : {};
     const allMemories = await this.storage.query(filter);
 
-    if (format === 'json') {
+    if (format === "json") {
       return JSON.stringify(allMemories, null, 2);
     } else {
       // CSV export
-      const headers = ['id', 'timestamp', 'type', 'projectId', 'repository', 'ssg'];
+      const headers = [
+        "id",
+        "timestamp",
+        "type",
+        "projectId",
+        "repository",
+        "ssg",
+      ];
       const rows = allMemories.map((m: any) => [
         m.id,
         m.timestamp,
         m.type,
-        m.metadata?.projectId || '',
-        m.metadata?.repository || '',
-        m.metadata?.ssg || '',
+        m.metadata?.projectId || "",
+        m.metadata?.repository || "",
+        m.metadata?.ssg || "",
       ]);
 
-      return [headers, ...rows].map((r: any) => r.join(',')).join('\n');
+      return [headers, ...rows].map((r: any) => r.join(",")).join("\n");
     }
   }
 
-  async import(data: string, format: 'json' | 'csv' = 'json'): Promise<number> {
+  async import(data: string, format: "json" | "csv" = "json"): Promise<number> {
     let entries: MemoryEntry[] = [];
 
-    if (format === 'json') {
+    if (format === "json") {
       entries = JSON.parse(data);
     } else {
       // CSV import - simplified for now
-      const lines = data.split('\n');
-      const headers = lines[0].split(',');
+      const lines = data.split("\n");
+      const headers = lines[0].split(",");
 
       for (let i = 1; i < lines.length; i++) {
-        const values = lines[i].split(',');
+        const values = lines[i].split(",");
         if (values.length === headers.length) {
           entries.push({
             id: values[0],
             timestamp: values[1],
-            type: values[2] as MemoryEntry['type'],
+            type: values[2] as MemoryEntry["type"],
             data: {},
             metadata: {
               projectId: values[3],
@@ -404,7 +434,7 @@ export class MemoryManager extends EventEmitter {
       imported++;
     }
 
-    this.emit('import-complete', imported);
+    this.emit("import-complete", imported);
     return imported;
   }
 
@@ -422,14 +452,14 @@ export class MemoryManager extends EventEmitter {
     }
 
     await this.storage.compact();
-    this.emit('cleanup-complete', deleted);
+    this.emit("cleanup-complete", deleted);
     return deleted;
   }
 
   async close(): Promise<void> {
     await this.storage.close();
     this.cache.clear();
-    this.emit('closed');
+    this.emit("closed");
   }
 
   /**

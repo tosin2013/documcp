@@ -3,10 +3,13 @@
  * Combines Issues #47 and #48 for intelligent memory management
  */
 
-import { MemoryManager } from './manager.js';
-import { MemoryEntry } from './storage.js';
-import IncrementalLearningSystem, { ProjectFeatures, LearningInsight } from './learning.js';
-import KnowledgeGraph, { RecommendationPath } from './knowledge-graph.js';
+import { MemoryManager } from "./manager.js";
+import { MemoryEntry } from "./storage.js";
+import IncrementalLearningSystem, {
+  ProjectFeatures,
+  LearningInsight,
+} from "./learning.js";
+import KnowledgeGraph, { RecommendationPath } from "./knowledge-graph.js";
 
 export interface EnhancedRecommendation {
   baseRecommendation: any;
@@ -27,7 +30,7 @@ export interface IntelligentAnalysis {
   analysis: any;
   patterns: string[];
   predictions: Array<{
-    type: 'success_rate' | 'optimal_ssg' | 'potential_issues';
+    type: "success_rate" | "optimal_ssg" | "potential_issues";
     prediction: string;
     confidence: number;
   }>;
@@ -35,7 +38,7 @@ export interface IntelligentAnalysis {
   learningData: {
     similarProjects: number;
     confidenceLevel: number;
-    dataQuality: 'low' | 'medium' | 'high';
+    dataQuality: "low" | "medium" | "high";
   };
 }
 
@@ -59,7 +62,7 @@ export class EnhancedMemoryManager extends MemoryManager {
       this.initialized = true;
 
       // Set up automatic learning from new memories
-      this.on('memory-created', this.handleNewMemory.bind(this));
+      this.on("memory-created", this.handleNewMemory.bind(this));
     }
   }
 
@@ -81,10 +84,11 @@ export class EnhancedMemoryManager extends MemoryManager {
 
     // Get knowledge graph-based recommendations
     const candidateSSGs = this.extractCandidateSSGs(baseRecommendation);
-    const graphRecommendations = await this.knowledgeGraph.getGraphBasedRecommendation(
-      projectFeatures,
-      candidateSSGs,
-    );
+    const graphRecommendations =
+      await this.knowledgeGraph.getGraphBasedRecommendation(
+        projectFeatures,
+        candidateSSGs,
+      );
 
     // Combine insights and reasoning
     const allInsights = [...learningResult.insights];
@@ -96,7 +100,7 @@ export class EnhancedMemoryManager extends MemoryManager {
       reasoning.push(...topRecommendation.reasoning);
 
       allInsights.push({
-        type: 'recommendation',
+        type: "recommendation",
         message: `Knowledge graph analysis suggests ${topRecommendation.to.label} based on similar successful projects`,
         confidence: topRecommendation.confidence,
         actionable: true,
@@ -113,7 +117,10 @@ export class EnhancedMemoryManager extends MemoryManager {
 
     // Determine final recommendation
     const finalRecommendation = learningResult.recommendation;
-    if (graphRecommendations.length > 0 && graphRecommendations[0].confidence > 0.8) {
+    if (
+      graphRecommendations.length > 0 &&
+      graphRecommendations[0].confidence > 0.8
+    ) {
       const graphChoice = graphRecommendations[0].to.label;
       if (graphChoice !== finalRecommendation.recommended) {
         finalRecommendation.graphSuggestion = graphChoice;
@@ -155,7 +162,10 @@ export class EnhancedMemoryManager extends MemoryManager {
     const patterns = await this.findProjectPatterns(projectFeatures);
 
     // Generate predictions
-    const predictions = await this.generatePredictions(projectFeatures, patterns);
+    const predictions = await this.generatePredictions(
+      projectFeatures,
+      patterns,
+    );
 
     // Generate recommendations
     const recommendations = await this.generateIntelligentRecommendations(
@@ -197,7 +207,7 @@ export class EnhancedMemoryManager extends MemoryManager {
         await this.knowledgeGraph.saveToMemory();
       }
     } catch (error) {
-      console.error('Error in automatic learning:', error);
+      console.error("Error in automatic learning:", error);
     }
   }
 
@@ -206,7 +216,7 @@ export class EnhancedMemoryManager extends MemoryManager {
    */
   private extractProjectFeatures(analysis: any): ProjectFeatures {
     return {
-      language: analysis.language?.primary || 'unknown',
+      language: analysis.language?.primary || "unknown",
       framework: analysis.framework?.name,
       size: this.categorizeProjectSize(analysis.stats?.files || 0),
       complexity: this.categorizeProjectComplexity(analysis),
@@ -218,13 +228,17 @@ export class EnhancedMemoryManager extends MemoryManager {
     };
   }
 
-  private categorizeProjectSize(fileCount: number): 'small' | 'medium' | 'large' {
-    if (fileCount < 50) return 'small';
-    if (fileCount < 200) return 'medium';
-    return 'large';
+  private categorizeProjectSize(
+    fileCount: number,
+  ): "small" | "medium" | "large" {
+    if (fileCount < 50) return "small";
+    if (fileCount < 200) return "medium";
+    return "large";
   }
 
-  private categorizeProjectComplexity(analysis: any): 'simple' | 'moderate' | 'complex' {
+  private categorizeProjectComplexity(
+    analysis: any,
+  ): "simple" | "moderate" | "complex" {
     let complexity = 0;
 
     if (analysis.dependencies?.count > 20) complexity++;
@@ -233,9 +247,9 @@ export class EnhancedMemoryManager extends MemoryManager {
     if (analysis.ci?.workflows?.length > 2) complexity++;
     if (analysis.architecture?.patterns?.length > 3) complexity++;
 
-    if (complexity <= 1) return 'simple';
-    if (complexity <= 3) return 'moderate';
-    return 'complex';
+    if (complexity <= 1) return "simple";
+    if (complexity <= 3) return "moderate";
+    return "complex";
   }
 
   /**
@@ -245,7 +259,9 @@ export class EnhancedMemoryManager extends MemoryManager {
     const candidates = [baseRecommendation.recommended];
 
     if (baseRecommendation.alternatives) {
-      candidates.push(...baseRecommendation.alternatives.map((alt: any) => alt.name || alt));
+      candidates.push(
+        ...baseRecommendation.alternatives.map((alt: any) => alt.name || alt),
+      );
     }
 
     return [...new Set(candidates)].filter(Boolean);
@@ -284,7 +300,9 @@ export class EnhancedMemoryManager extends MemoryManager {
   /**
    * Count patterns relevant to project features
    */
-  private async countRelevantPatterns(features: ProjectFeatures): Promise<number> {
+  private async countRelevantPatterns(
+    features: ProjectFeatures,
+  ): Promise<number> {
     const tags = [features.language, features.framework, features.size].filter(
       (tag): tag is string => Boolean(tag),
     );
@@ -323,15 +341,20 @@ export class EnhancedMemoryManager extends MemoryManager {
       const ssgCounts = new Map<string, number>();
       for (const memory of similarMemories) {
         if (memory.metadata.ssg) {
-          ssgCounts.set(memory.metadata.ssg, (ssgCounts.get(memory.metadata.ssg) || 0) + 1);
+          ssgCounts.set(
+            memory.metadata.ssg,
+            (ssgCounts.get(memory.metadata.ssg) || 0) + 1,
+          );
         }
       }
 
       if (ssgCounts.size > 0) {
-        const topSSG = Array.from(ssgCounts.entries()).sort(([, a], [, b]) => b - a)[0];
+        const topSSG = Array.from(ssgCounts.entries()).sort(
+          ([, a], [, b]) => b - a,
+        )[0];
 
         patterns.push({
-          type: 'ssg_preference',
+          type: "ssg_preference",
           description: `${topSSG[0]} is commonly used with ${features.language} (${topSSG[1]}/${similarMemories.length} projects)`,
           confidence: topSSG[1] / similarMemories.length,
           frequency: topSSG[1],
@@ -339,17 +362,19 @@ export class EnhancedMemoryManager extends MemoryManager {
       }
 
       // Pattern: Success rate analysis
-      const deploymentMemories = similarMemories.filter((m) => m.type === 'deployment');
+      const deploymentMemories = similarMemories.filter(
+        (m) => m.type === "deployment",
+      );
       if (deploymentMemories.length >= 2) {
         const successRate =
-          deploymentMemories.filter((m) => m.data.status === 'success').length /
+          deploymentMemories.filter((m) => m.data.status === "success").length /
           deploymentMemories.length;
 
         patterns.push({
-          type: 'success_rate',
-          description: `Similar ${features.language} projects have ${(successRate * 100).toFixed(
-            0,
-          )}% deployment success rate`,
+          type: "success_rate",
+          description: `Similar ${features.language} projects have ${(
+            successRate * 100
+          ).toFixed(0)}% deployment success rate`,
           confidence: Math.min(deploymentMemories.length / 10, 1.0),
           frequency: deploymentMemories.length,
         });
@@ -367,53 +392,55 @@ export class EnhancedMemoryManager extends MemoryManager {
     patterns: Array<{ type: string; description: string; confidence: number }>,
   ): Promise<
     Array<{
-      type: 'success_rate' | 'optimal_ssg' | 'potential_issues';
+      type: "success_rate" | "optimal_ssg" | "potential_issues";
       prediction: string;
       confidence: number;
     }>
   > {
     const predictions: Array<{
-      type: 'success_rate' | 'optimal_ssg' | 'potential_issues';
+      type: "success_rate" | "optimal_ssg" | "potential_issues";
       prediction: string;
       confidence: number;
     }> = [];
 
     // Predict success rate
-    const successPattern = patterns.find((p) => p.type === 'success_rate');
+    const successPattern = patterns.find((p) => p.type === "success_rate");
     if (successPattern) {
       predictions.push({
-        type: 'success_rate',
+        type: "success_rate",
         prediction: `Expected deployment success rate: ${
-          successPattern.description.match(/(\d+)%/)?.[1] || 'unknown'
+          successPattern.description.match(/(\d+)%/)?.[1] || "unknown"
         }%`,
         confidence: successPattern.confidence,
       });
     }
 
     // Predict optimal SSG
-    const ssgPattern = patterns.find((p) => p.type === 'ssg_preference');
+    const ssgPattern = patterns.find((p) => p.type === "ssg_preference");
     if (ssgPattern) {
-      const ssg = ssgPattern.description.split(' ')[0];
+      const ssg = ssgPattern.description.split(" ")[0];
       predictions.push({
-        type: 'optimal_ssg',
+        type: "optimal_ssg",
         prediction: `${ssg} is likely the optimal choice based on similar projects`,
         confidence: ssgPattern.confidence,
       });
     }
 
     // Predict potential issues
-    if (!features.hasTests && features.size !== 'small') {
+    if (!features.hasTests && features.size !== "small") {
       predictions.push({
-        type: 'potential_issues',
-        prediction: 'Deployment issues likely due to lack of tests in medium/large project',
+        type: "potential_issues",
+        prediction:
+          "Deployment issues likely due to lack of tests in medium/large project",
         confidence: 0.7,
       });
     }
 
-    if (!features.hasCI && features.complexity === 'complex') {
+    if (!features.hasCI && features.complexity === "complex") {
       predictions.push({
-        type: 'potential_issues',
-        prediction: 'Complex project without CI/CD may face integration challenges',
+        type: "potential_issues",
+        prediction:
+          "Complex project without CI/CD may face integration challenges",
         confidence: 0.6,
       });
     }
@@ -427,38 +454,50 @@ export class EnhancedMemoryManager extends MemoryManager {
   private async generateIntelligentRecommendations(
     features: ProjectFeatures,
     patterns: Array<{ type: string; description: string; confidence: number }>,
-    predictions: Array<{ type: string; prediction: string; confidence: number }>,
+    predictions: Array<{
+      type: string;
+      prediction: string;
+      confidence: number;
+    }>,
   ): Promise<string[]> {
     const recommendations: string[] = [];
 
     // Recommendations based on patterns
-    const ssgPattern = patterns.find((p) => p.type === 'ssg_preference');
+    const ssgPattern = patterns.find((p) => p.type === "ssg_preference");
     if (ssgPattern && ssgPattern.confidence > 0.7) {
-      const ssg = ssgPattern.description.split(' ')[0];
+      const ssg = ssgPattern.description.split(" ")[0];
       recommendations.push(
         `Consider ${ssg} - it's proven successful for similar ${features.language} projects`,
       );
     }
 
     // Recommendations based on predictions
-    const issuesPrediction = predictions.find((p) => p.type === 'potential_issues');
+    const issuesPrediction = predictions.find(
+      (p) => p.type === "potential_issues",
+    );
     if (issuesPrediction && issuesPrediction.confidence > 0.6) {
-      if (issuesPrediction.prediction.includes('tests')) {
-        recommendations.push('Set up automated testing before deployment to improve success rate');
+      if (issuesPrediction.prediction.includes("tests")) {
+        recommendations.push(
+          "Set up automated testing before deployment to improve success rate",
+        );
       }
-      if (issuesPrediction.prediction.includes('CI/CD')) {
-        recommendations.push('Implement CI/CD pipeline to handle project complexity');
+      if (issuesPrediction.prediction.includes("CI/CD")) {
+        recommendations.push(
+          "Implement CI/CD pipeline to handle project complexity",
+        );
       }
     }
 
     // Recommendations based on features
-    if (features.complexity === 'complex' && !features.hasDocs) {
-      recommendations.push('Invest in comprehensive documentation for this complex project');
+    if (features.complexity === "complex" && !features.hasDocs) {
+      recommendations.push(
+        "Invest in comprehensive documentation for this complex project",
+      );
     }
 
-    if (features.isOpenSource && features.size === 'large') {
+    if (features.isOpenSource && features.size === "large") {
       recommendations.push(
-        'Consider community-friendly documentation tools for large open-source project',
+        "Consider community-friendly documentation tools for large open-source project",
       );
     }
 
@@ -471,10 +510,10 @@ export class EnhancedMemoryManager extends MemoryManager {
   private async assessLearningData(features: ProjectFeatures): Promise<{
     similarProjects: number;
     confidenceLevel: number;
-    dataQuality: 'low' | 'medium' | 'high';
+    dataQuality: "low" | "medium" | "high";
   }> {
-    const tags = [features.language, features.framework].filter((tag): tag is string =>
-      Boolean(tag),
+    const tags = [features.language, features.framework].filter(
+      (tag): tag is string => Boolean(tag),
     );
     const similarMemories = await this.search({
       tags,
@@ -493,13 +532,13 @@ export class EnhancedMemoryManager extends MemoryManager {
       confidenceLevel = 0.2;
     }
 
-    let dataQuality: 'low' | 'medium' | 'high';
+    let dataQuality: "low" | "medium" | "high";
     if (similarProjects >= 8 && confidenceLevel >= 0.8) {
-      dataQuality = 'high';
+      dataQuality = "high";
     } else if (similarProjects >= 3 && confidenceLevel >= 0.5) {
-      dataQuality = 'medium';
+      dataQuality = "medium";
     } else {
-      dataQuality = 'low';
+      dataQuality = "low";
     }
 
     return {
@@ -512,19 +551,21 @@ export class EnhancedMemoryManager extends MemoryManager {
   /**
    * Infer outcome from memory entry
    */
-  private inferOutcome(memory: MemoryEntry): 'success' | 'failure' | 'neutral' | null {
-    if (memory.type === 'deployment') {
-      if (memory.data.status === 'success') return 'success';
-      if (memory.data.status === 'failed') return 'failure';
+  private inferOutcome(
+    memory: MemoryEntry,
+  ): "success" | "failure" | "neutral" | null {
+    if (memory.type === "deployment") {
+      if (memory.data.status === "success") return "success";
+      if (memory.data.status === "failed") return "failure";
     }
 
-    if (memory.type === 'recommendation' && memory.data.feedback) {
+    if (memory.type === "recommendation" && memory.data.feedback) {
       const rating = memory.data.feedback.rating || memory.data.feedback.score;
-      if (rating > 3) return 'success';
-      if (rating < 3) return 'failure';
+      if (rating > 3) return "success";
+      if (rating < 3) return "failure";
     }
 
-    return 'neutral';
+    return "neutral";
   }
 
   /**
@@ -537,15 +578,16 @@ export class EnhancedMemoryManager extends MemoryManager {
       totalMemories: number;
       enhancedRecommendations: number;
       accuracyImprovement: number;
-      systemMaturity: 'nascent' | 'developing' | 'mature';
+      systemMaturity: "nascent" | "developing" | "mature";
     };
   }> {
     const learningStats = await this.learningSystem.getStatistics();
     const graphStats = this.knowledgeGraph.getStatistics();
 
-    const totalMemories = (await this.search('')).length;
+    const totalMemories = (await this.search("")).length;
     const graphStatsResult = await graphStats;
-    const enhancedRecommendations = learningStats.totalPatterns + graphStatsResult.nodeCount;
+    const enhancedRecommendations =
+      learningStats.totalPatterns + graphStatsResult.nodeCount;
 
     // Estimate accuracy improvement based on data volume
     let accuracyImprovement = 0;
@@ -554,13 +596,13 @@ export class EnhancedMemoryManager extends MemoryManager {
     }
 
     // Determine system maturity
-    let systemMaturity: 'nascent' | 'developing' | 'mature';
+    let systemMaturity: "nascent" | "developing" | "mature";
     if (totalMemories >= 100 && learningStats.totalPatterns >= 20) {
-      systemMaturity = 'mature';
+      systemMaturity = "mature";
     } else if (totalMemories >= 20 && learningStats.totalPatterns >= 5) {
-      systemMaturity = 'developing';
+      systemMaturity = "developing";
     } else {
-      systemMaturity = 'nascent';
+      systemMaturity = "nascent";
     }
 
     return {

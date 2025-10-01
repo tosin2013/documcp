@@ -4,7 +4,6 @@ description: "Verify and fix npm package publishing configuration in release wor
 labels: ["bug", "release", "npm", "high-priority"]
 assignees:
   - "tosinakinosho"
-
 ---
 
 ## 🚨 Problem Description
@@ -12,12 +11,14 @@ assignees:
 The release workflow is configured to publish to npm, but the package "documcp" is not found on the npm registry, indicating either publication failures or configuration issues.
 
 **Current Behavior:**
+
 - Release workflow includes npm publish step
 - NPM_TOKEN secret is presumably configured
 - However, package is not accessible on npm registry
 - No error handling or verification for publication failures
 
 **Impact:**
+
 - Users cannot install via `npm install documcp`
 - Release process is incomplete
 - Missing distribution channel for the package
@@ -32,13 +33,16 @@ The release workflow is configured to publish to npm, but the package "documcp" 
 ## 🔧 Solution Proposal
 
 ### Phase 1: Investigation
+
 1. **Verify NPM_TOKEN secret** exists in GitHub repository settings
 2. **Check npm registry access** with current token
 3. **Test publication locally** using dry-run mode
 4. **Review npm account permissions** and package ownership
 
 ### Phase 2: Implementation
+
 1. **Add publication verification** step to release workflow:
+
    ```yaml
    - name: Verify npm publication
      run: |
@@ -46,6 +50,7 @@ The release workflow is configured to publish to npm, but the package "documcp" 
    ```
 
 2. **Implement error handling** for publication failures:
+
    ```yaml
    - name: Publish to npm
      run: npm publish || echo "Publication failed"
@@ -56,6 +61,7 @@ The release workflow is configured to publish to npm, but the package "documcp" 
 3. **Add retry mechanism** for transient failures
 
 ### Phase 3: Validation
+
 1. **Test complete release flow** from tag to publication
 2. **Verify package accessibility** on npm registry
 3. **Test installation** via `npm install documcp`
@@ -72,11 +78,13 @@ The release workflow is configured to publish to npm, but the package "documcp" 
 ## 🔍 Technical Details
 
 **Relevant Files:**
+
 - `.github/workflows/release.yml` (lines 122-126)
 - `package.json` (publish configuration)
 - GitHub repository secrets (NPM_TOKEN)
 
 **Dependencies:**
+
 - Requires valid npm account with publish permissions
 - Needs NPM_TOKEN secret with publish access
 - May require package namespace configuration

@@ -1,22 +1,22 @@
 // Comprehensive tests for all MCP tools to achieve 80% coverage
-import { promises as fs } from 'fs';
-import path from 'path';
-import os from 'os';
-import tmp from 'tmp';
-import { analyzeRepository } from '../../src/tools/analyze-repository';
-import { recommendSSG } from '../../src/tools/recommend-ssg';
-import { generateConfig } from '../../src/tools/generate-config';
-import { setupStructure } from '../../src/tools/setup-structure';
-import { deployPages } from '../../src/tools/deploy-pages';
-import { verifyDeployment } from '../../src/tools/verify-deployment';
-import { evaluateReadmeHealth } from '../../src/tools/evaluate-readme-health';
-import { readmeBestPractices } from '../../src/tools/readme-best-practices';
+import { promises as fs } from "fs";
+import path from "path";
+import os from "os";
+import tmp from "tmp";
+import { analyzeRepository } from "../../src/tools/analyze-repository";
+import { recommendSSG } from "../../src/tools/recommend-ssg";
+import { generateConfig } from "../../src/tools/generate-config";
+import { setupStructure } from "../../src/tools/setup-structure";
+import { deployPages } from "../../src/tools/deploy-pages";
+import { verifyDeployment } from "../../src/tools/verify-deployment";
+import { evaluateReadmeHealth } from "../../src/tools/evaluate-readme-health";
+import { readmeBestPractices } from "../../src/tools/readme-best-practices";
 
-describe('All MCP Tools Coverage Tests', () => {
+describe("All MCP Tools Coverage Tests", () => {
   let tempDir: string;
 
   beforeAll(async () => {
-    tempDir = path.join(os.tmpdir(), 'documcp-coverage-tests');
+    tempDir = path.join(os.tmpdir(), "documcp-coverage-tests");
     await fs.mkdir(tempDir, { recursive: true });
   });
 
@@ -28,74 +28,93 @@ describe('All MCP Tools Coverage Tests', () => {
     }
   });
 
-  describe('analyze_repository', () => {
-    it('should analyze JavaScript project', async () => {
+  describe("analyze_repository", () => {
+    it("should analyze JavaScript project", async () => {
       const jsRepo = await createJSRepo();
-      const result = await analyzeRepository({ path: jsRepo, depth: 'standard' });
+      const result = await analyzeRepository({
+        path: jsRepo,
+        depth: "standard",
+      });
 
       expect(result.content).toBeDefined();
       const analysisData = JSON.parse(
         result.content.find((c) => c.text.includes('"ecosystem"'))!.text,
       );
-      expect(analysisData.dependencies.ecosystem).toBe('javascript');
+      expect(analysisData.dependencies.ecosystem).toBe("javascript");
     });
 
-    it('should analyze Python project', async () => {
+    it("should analyze Python project", async () => {
       const pyRepo = await createPythonRepo();
-      const result = await analyzeRepository({ path: pyRepo, depth: 'standard' });
+      const result = await analyzeRepository({
+        path: pyRepo,
+        depth: "standard",
+      });
 
       expect(result.content).toBeDefined();
       const analysisData = JSON.parse(
         result.content.find((c) => c.text.includes('"ecosystem"'))!.text,
       );
-      expect(analysisData.dependencies.ecosystem).toBe('python');
+      expect(analysisData.dependencies.ecosystem).toBe("python");
     });
 
-    it('should handle different depths', async () => {
+    it("should handle different depths", async () => {
       const repo = await createJSRepo();
 
-      const quickResult = await analyzeRepository({ path: repo, depth: 'quick' });
-      const deepResult = await analyzeRepository({ path: repo, depth: 'deep' });
+      const quickResult = await analyzeRepository({
+        path: repo,
+        depth: "quick",
+      });
+      const deepResult = await analyzeRepository({ path: repo, depth: "deep" });
 
       expect(quickResult.content).toBeDefined();
       expect(deepResult.content).toBeDefined();
     });
 
-    it('should detect CI/CD workflows', async () => {
+    it("should detect CI/CD workflows", async () => {
       const ciRepo = await createRepoWithCI();
-      const result = await analyzeRepository({ path: ciRepo, depth: 'standard' });
+      const result = await analyzeRepository({
+        path: ciRepo,
+        depth: "standard",
+      });
 
-      const analysisData = JSON.parse(result.content.find((c) => c.text.includes('"hasCI"'))!.text);
+      const analysisData = JSON.parse(
+        result.content.find((c) => c.text.includes('"hasCI"'))!.text,
+      );
       expect(analysisData.structure.hasCI).toBe(true);
     });
 
-    it('should handle repository without dependencies', async () => {
+    it("should handle repository without dependencies", async () => {
       const emptyRepo = await createEmptyRepo();
-      const result = await analyzeRepository({ path: emptyRepo, depth: 'standard' });
+      const result = await analyzeRepository({
+        path: emptyRepo,
+        depth: "standard",
+      });
 
       const analysisData = JSON.parse(
         result.content.find((c) => c.text.includes('"ecosystem"'))!.text,
       );
-      expect(analysisData.dependencies.ecosystem).toBe('unknown');
+      expect(analysisData.dependencies.ecosystem).toBe("unknown");
     });
   });
 
-  describe('recommend_ssg', () => {
-    it('should provide recommendation with confidence', async () => {
-      const result = await recommendSSG({ analysisId: 'test-123' });
+  describe("recommend_ssg", () => {
+    it("should provide recommendation with confidence", async () => {
+      const result = await recommendSSG({ analysisId: "test-123" });
 
       expect(result.content).toBeDefined();
-      const recData = JSON.parse(result.content.find((c) => c.text.includes('"confidence"'))!.text);
+      const recData = JSON.parse(
+        result.content.find((c) => c.text.includes('"confidence"'))!.text,
+      );
       expect(recData.confidence).toBeGreaterThan(0);
       expect(recData.confidence).toBeLessThanOrEqual(1);
     });
 
-    it('should handle preferences', async () => {
+    it("should handle preferences", async () => {
       const result = await recommendSSG({
-        analysisId: 'test-456',
+        analysisId: "test-456",
         preferences: {
-          priority: 'simplicity',
-          ecosystem: 'javascript',
+          priority: "simplicity",
+          ecosystem: "javascript",
         },
       });
 
@@ -103,11 +122,13 @@ describe('All MCP Tools Coverage Tests', () => {
       const recData = JSON.parse(
         result.content.find((c) => c.text.includes('"recommended"'))!.text,
       );
-      expect(['jekyll', 'hugo', 'docusaurus', 'mkdocs', 'eleventy']).toContain(recData.recommended);
+      expect(["jekyll", "hugo", "docusaurus", "mkdocs", "eleventy"]).toContain(
+        recData.recommended,
+      );
     });
 
-    it('should provide alternatives', async () => {
-      const result = await recommendSSG({ analysisId: 'test-789' });
+    it("should provide alternatives", async () => {
+      const result = await recommendSSG({ analysisId: "test-789" });
 
       const recData = JSON.parse(
         result.content.find((c) => c.text.includes('"alternatives"'))!.text,
@@ -117,195 +138,212 @@ describe('All MCP Tools Coverage Tests', () => {
     });
   });
 
-  describe('generate_config', () => {
-    it('should generate Docusaurus config', async () => {
-      const outputDir = await createTempDir('docusaurus-config');
+  describe("generate_config", () => {
+    it("should generate Docusaurus config", async () => {
+      const outputDir = await createTempDir("docusaurus-config");
       const result = await generateConfig({
-        ssg: 'docusaurus',
-        projectName: 'Test Docusaurus',
+        ssg: "docusaurus",
+        projectName: "Test Docusaurus",
         outputPath: outputDir,
       });
 
       expect(result.content).toBeDefined();
-      expect(await fileExists(path.join(outputDir, 'docusaurus.config.js'))).toBe(true);
-      expect(await fileExists(path.join(outputDir, 'package.json'))).toBe(true);
+      expect(
+        await fileExists(path.join(outputDir, "docusaurus.config.js")),
+      ).toBe(true);
+      expect(await fileExists(path.join(outputDir, "package.json"))).toBe(true);
     });
 
-    it('should generate MkDocs config', async () => {
-      const outputDir = await createTempDir('mkdocs-config');
+    it("should generate MkDocs config", async () => {
+      const outputDir = await createTempDir("mkdocs-config");
       const result = await generateConfig({
-        ssg: 'mkdocs',
-        projectName: 'Test MkDocs',
+        ssg: "mkdocs",
+        projectName: "Test MkDocs",
         outputPath: outputDir,
       });
 
       expect(result.content).toBeDefined();
-      expect(await fileExists(path.join(outputDir, 'mkdocs.yml'))).toBe(true);
-      expect(await fileExists(path.join(outputDir, 'requirements.txt'))).toBe(true);
+      expect(await fileExists(path.join(outputDir, "mkdocs.yml"))).toBe(true);
+      expect(await fileExists(path.join(outputDir, "requirements.txt"))).toBe(
+        true,
+      );
     });
 
-    it('should generate Hugo config', async () => {
-      const outputDir = await createTempDir('hugo-config');
+    it("should generate Hugo config", async () => {
+      const outputDir = await createTempDir("hugo-config");
       const result = await generateConfig({
-        ssg: 'hugo',
-        projectName: 'Test Hugo',
+        ssg: "hugo",
+        projectName: "Test Hugo",
         outputPath: outputDir,
       });
 
       expect(result.content).toBeDefined();
-      expect(await fileExists(path.join(outputDir, 'hugo.toml'))).toBe(true);
+      expect(await fileExists(path.join(outputDir, "hugo.toml"))).toBe(true);
     });
 
-    it('should generate Jekyll config', async () => {
-      const outputDir = await createTempDir('jekyll-config');
+    it("should generate Jekyll config", async () => {
+      const outputDir = await createTempDir("jekyll-config");
       const result = await generateConfig({
-        ssg: 'jekyll',
-        projectName: 'Test Jekyll',
+        ssg: "jekyll",
+        projectName: "Test Jekyll",
         outputPath: outputDir,
       });
 
       expect(result.content).toBeDefined();
-      expect(await fileExists(path.join(outputDir, '_config.yml'))).toBe(true);
-      expect(await fileExists(path.join(outputDir, 'Gemfile'))).toBe(true);
+      expect(await fileExists(path.join(outputDir, "_config.yml"))).toBe(true);
+      expect(await fileExists(path.join(outputDir, "Gemfile"))).toBe(true);
     });
 
-    it('should generate Eleventy config', async () => {
-      const outputDir = await createTempDir('eleventy-config');
+    it("should generate Eleventy config", async () => {
+      const outputDir = await createTempDir("eleventy-config");
       const result = await generateConfig({
-        ssg: 'eleventy',
-        projectName: 'Test Eleventy',
+        ssg: "eleventy",
+        projectName: "Test Eleventy",
         outputPath: outputDir,
       });
 
       expect(result.content).toBeDefined();
-      expect(await fileExists(path.join(outputDir, '.eleventy.js'))).toBe(true);
-      expect(await fileExists(path.join(outputDir, 'package.json'))).toBe(true);
+      expect(await fileExists(path.join(outputDir, ".eleventy.js"))).toBe(true);
+      expect(await fileExists(path.join(outputDir, "package.json"))).toBe(true);
     });
   });
 
-  describe('setup_structure', () => {
-    it('should create Diataxis structure', async () => {
-      const docsDir = await createTempDir('diataxis-structure');
+  describe("setup_structure", () => {
+    it("should create Diataxis structure", async () => {
+      const docsDir = await createTempDir("diataxis-structure");
       const result = await setupStructure({
         path: docsDir,
-        ssg: 'docusaurus',
+        ssg: "docusaurus",
         includeExamples: true,
       });
 
       expect(result.content).toBeDefined();
 
-      const categories = ['tutorials', 'how-to', 'reference', 'explanation'];
+      const categories = ["tutorials", "how-to", "reference", "explanation"];
       for (const category of categories) {
-        expect(await fileExists(path.join(docsDir, category, 'index.md'))).toBe(true);
+        expect(await fileExists(path.join(docsDir, category, "index.md"))).toBe(
+          true,
+        );
       }
-      expect(await fileExists(path.join(docsDir, 'index.md'))).toBe(true);
+      expect(await fileExists(path.join(docsDir, "index.md"))).toBe(true);
     });
 
-    it('should create structure without examples', async () => {
-      const docsDir = await createTempDir('no-examples');
+    it("should create structure without examples", async () => {
+      const docsDir = await createTempDir("no-examples");
       const result = await setupStructure({
         path: docsDir,
-        ssg: 'mkdocs',
+        ssg: "mkdocs",
         includeExamples: false,
       });
 
       expect(result.content).toBeDefined();
 
-      const tutorialsFiles = await fs.readdir(path.join(docsDir, 'tutorials'));
-      expect(tutorialsFiles).toEqual(['index.md']); // Only index, no examples
+      const tutorialsFiles = await fs.readdir(path.join(docsDir, "tutorials"));
+      expect(tutorialsFiles).toEqual(["index.md"]); // Only index, no examples
     });
 
-    it('should handle different SSG formats', async () => {
-      const docusaurusDir = await createTempDir('docusaurus-format');
+    it("should handle different SSG formats", async () => {
+      const docusaurusDir = await createTempDir("docusaurus-format");
       await setupStructure({
         path: docusaurusDir,
-        ssg: 'docusaurus',
+        ssg: "docusaurus",
         includeExamples: true,
       });
 
-      const content = await fs.readFile(path.join(docusaurusDir, 'tutorials', 'index.md'), 'utf-8');
-      expect(content).toContain('id: tutorials-index');
+      const content = await fs.readFile(
+        path.join(docusaurusDir, "tutorials", "index.md"),
+        "utf-8",
+      );
+      expect(content).toContain("id: tutorials-index");
 
-      const jekyllDir = await createTempDir('jekyll-format');
+      const jekyllDir = await createTempDir("jekyll-format");
       await setupStructure({
         path: jekyllDir,
-        ssg: 'jekyll',
+        ssg: "jekyll",
         includeExamples: true,
       });
 
       const jekyllContent = await fs.readFile(
-        path.join(jekyllDir, 'tutorials', 'index.md'),
-        'utf-8',
+        path.join(jekyllDir, "tutorials", "index.md"),
+        "utf-8",
       );
-      expect(jekyllContent).toContain('title:');
+      expect(jekyllContent).toContain("title:");
     });
   });
 
-  describe('deploy_pages', () => {
-    it('should create Docusaurus deployment workflow', async () => {
-      const repoDir = await createTempDir('docusaurus-deploy');
+  describe("deploy_pages", () => {
+    it("should create Docusaurus deployment workflow", async () => {
+      const repoDir = await createTempDir("docusaurus-deploy");
       const result = await deployPages({
         repository: repoDir,
-        ssg: 'docusaurus',
+        ssg: "docusaurus",
       });
 
       expect(result.content).toBeDefined();
 
-      const workflowPath = path.join(repoDir, '.github', 'workflows', 'deploy-docs.yml');
+      const workflowPath = path.join(
+        repoDir,
+        ".github",
+        "workflows",
+        "deploy-docs.yml",
+      );
       expect(await fileExists(workflowPath)).toBe(true);
 
-      const workflowContent = await fs.readFile(workflowPath, 'utf-8');
-      expect(workflowContent).toContain('Deploy Docusaurus');
-      expect(workflowContent).toContain('npm run build');
+      const workflowContent = await fs.readFile(workflowPath, "utf-8");
+      expect(workflowContent).toContain("Deploy Docusaurus");
+      expect(workflowContent).toContain("npm run build");
     });
 
-    it('should create MkDocs deployment workflow', async () => {
-      const repoDir = await createTempDir('mkdocs-deploy');
+    it("should create MkDocs deployment workflow", async () => {
+      const repoDir = await createTempDir("mkdocs-deploy");
       const result = await deployPages({
         repository: repoDir,
-        ssg: 'mkdocs',
+        ssg: "mkdocs",
       });
 
       const workflowContent = await fs.readFile(
-        path.join(repoDir, '.github', 'workflows', 'deploy-docs.yml'),
-        'utf-8',
+        path.join(repoDir, ".github", "workflows", "deploy-docs.yml"),
+        "utf-8",
       );
-      expect(workflowContent).toContain('mkdocs gh-deploy');
+      expect(workflowContent).toContain("mkdocs gh-deploy");
     });
 
-    it('should handle custom domain', async () => {
-      const repoDir = await createTempDir('custom-domain');
+    it("should handle custom domain", async () => {
+      const repoDir = await createTempDir("custom-domain");
       const result = await deployPages({
         repository: repoDir,
-        ssg: 'docusaurus',
-        customDomain: 'docs.example.com',
+        ssg: "docusaurus",
+        customDomain: "docs.example.com",
       });
 
       expect(result.content).toBeDefined();
-      expect(await fileExists(path.join(repoDir, 'CNAME'))).toBe(true);
+      expect(await fileExists(path.join(repoDir, "CNAME"))).toBe(true);
 
-      const cnameContent = await fs.readFile(path.join(repoDir, 'CNAME'), 'utf-8');
-      expect(cnameContent.trim()).toBe('docs.example.com');
+      const cnameContent = await fs.readFile(
+        path.join(repoDir, "CNAME"),
+        "utf-8",
+      );
+      expect(cnameContent.trim()).toBe("docs.example.com");
     });
 
-    it('should handle different branches', async () => {
-      const repoDir = await createTempDir('custom-branch');
+    it("should handle different branches", async () => {
+      const repoDir = await createTempDir("custom-branch");
       await deployPages({
         repository: repoDir,
-        ssg: 'hugo',
-        branch: 'main',
+        ssg: "hugo",
+        branch: "main",
       });
 
       const workflowContent = await fs.readFile(
-        path.join(repoDir, '.github', 'workflows', 'deploy-docs.yml'),
-        'utf-8',
+        path.join(repoDir, ".github", "workflows", "deploy-docs.yml"),
+        "utf-8",
       );
-      expect(workflowContent).toContain('Deploy Hugo');
+      expect(workflowContent).toContain("Deploy Hugo");
     });
   });
 
-  describe('verify_deployment', () => {
-    it('should verify complete setup', async () => {
+  describe("verify_deployment", () => {
+    it("should verify complete setup", async () => {
       const repoDir = await createCompleteRepo();
       const result = await verifyDeployment({
         repository: repoDir,
@@ -313,62 +351,69 @@ describe('All MCP Tools Coverage Tests', () => {
 
       expect(result.content).toBeDefined();
       const verification = JSON.parse(result.content[0].text);
-      expect(verification.overallStatus).toBe('Ready for deployment');
+      expect(verification.overallStatus).toBe("Ready for deployment");
       expect(verification.summary.passed).toBeGreaterThan(0);
     });
 
-    it('should identify missing components', async () => {
-      const emptyDir = await createTempDir('empty-verify');
+    it("should identify missing components", async () => {
+      const emptyDir = await createTempDir("empty-verify");
       const result = await verifyDeployment({
         repository: emptyDir,
       });
 
       const verification = JSON.parse(result.content[0].text);
-      expect(verification.overallStatus).toContain('Configuration required');
+      expect(verification.overallStatus).toContain("Configuration required");
       expect(verification.summary.failed).toBeGreaterThan(0);
       expect(
-        verification.checks.some((check: any) => check.message.includes('No .github/workflows')),
+        verification.checks.some((check: any) =>
+          check.message.includes("No .github/workflows"),
+        ),
       ).toBe(true);
     });
 
-    it('should handle different repository paths', async () => {
-      const relativeResult = await verifyDeployment({ repository: '.' });
+    it("should handle different repository paths", async () => {
+      const relativeResult = await verifyDeployment({ repository: "." });
       expect(relativeResult.content).toBeDefined();
 
-      const httpResult = await verifyDeployment({ repository: 'https://github.com/user/repo' });
+      const httpResult = await verifyDeployment({
+        repository: "https://github.com/user/repo",
+      });
       expect(httpResult.content).toBeDefined();
     });
 
-    it('should provide recommendations', async () => {
-      const incompleteDir = await createTempDir('incomplete');
-      await fs.writeFile(path.join(incompleteDir, 'README.md'), '# Test');
+    it("should provide recommendations", async () => {
+      const incompleteDir = await createTempDir("incomplete");
+      await fs.writeFile(path.join(incompleteDir, "README.md"), "# Test");
 
       const result = await verifyDeployment({
         repository: incompleteDir,
       });
 
-      const resultText = result.content.map((c) => c.text).join('\n');
-      expect(resultText).toContain('→');
-      expect(resultText).toContain('deploy_pages tool');
+      const resultText = result.content.map((c) => c.text).join("\n");
+      expect(resultText).toContain("→");
+      expect(resultText).toContain("deploy_pages tool");
     });
 
-    it('should check for different config patterns', async () => {
-      const configDir = await createTempDir('config-check');
-      await fs.writeFile(path.join(configDir, 'docusaurus.config.js'), 'module.exports = {};');
+    it("should check for different config patterns", async () => {
+      const configDir = await createTempDir("config-check");
+      await fs.writeFile(
+        path.join(configDir, "docusaurus.config.js"),
+        "module.exports = {};",
+      );
 
       const result = await verifyDeployment({
         repository: configDir,
       });
 
-      const resultText = result.content.map((c) => c.text).join('\n');
-      expect(resultText).toContain('SSG Configuration');
-      expect(resultText).toContain('docusaurus.config.js');
+      const resultText = result.content.map((c) => c.text).join("\n");
+      expect(resultText).toContain("SSG Configuration");
+      expect(resultText).toContain("docusaurus.config.js");
     });
   });
 
-  describe('evaluate_readme_health', () => {
-    it('should evaluate README health with minimal input', async () => {
-      const readmePath = await createReadmeFile('Basic project README');
+  describe("evaluate_readme_health", () => {
+    it("should evaluate README health with minimal input", async () => {
+      const readmePath = await createReadmeFile("Basic project README");
       const result = await evaluateReadmeHealth({
         readme_path: readmePath,
       });
@@ -376,22 +421,26 @@ describe('All MCP Tools Coverage Tests', () => {
       expect(result.content).toBeDefined();
       expect(result.isError).toBe(false);
 
-      const healthData = result.content.find((c) => c.text.includes('healthReport'));
+      const healthData = result.content.find((c) =>
+        c.text.includes("healthReport"),
+      );
       expect(healthData).toBeDefined();
     });
 
-    it('should handle different project types', async () => {
-      const readmePath = await createReadmeFile('Enterprise tool documentation');
+    it("should handle different project types", async () => {
+      const readmePath = await createReadmeFile(
+        "Enterprise tool documentation",
+      );
       const result = await evaluateReadmeHealth({
         readme_path: readmePath,
-        project_type: 'enterprise_tool',
+        project_type: "enterprise_tool",
       });
 
       expect(result.content).toBeDefined();
       expect(result.isError).toBe(false);
     });
 
-    it('should provide health components and scoring', async () => {
+    it("should provide health components and scoring", async () => {
       const readmePath = await createReadmeFile(`# Complete Project
 
 ## Description
@@ -413,7 +462,9 @@ MIT License`);
         readme_path: readmePath,
       });
 
-      const dataContent = result.content.find((c) => c.text.includes('healthReport'));
+      const dataContent = result.content.find((c) =>
+        c.text.includes("healthReport"),
+      );
       const data = JSON.parse(dataContent!.text);
 
       expect(data.healthReport.overallScore).toBeGreaterThanOrEqual(0);
@@ -422,12 +473,12 @@ MIT License`);
     });
   });
 
-  describe('readme_best_practices', () => {
-    it('should analyze README best practices', async () => {
-      const readmePath = await createReadmeFile('Basic library README');
+  describe("readme_best_practices", () => {
+    it("should analyze README best practices", async () => {
+      const readmePath = await createReadmeFile("Basic library README");
       const result = await readmeBestPractices({
         readme_path: readmePath,
-        project_type: 'library',
+        project_type: "library",
       });
 
       expect(result.success).toBe(true);
@@ -435,20 +486,20 @@ MIT License`);
       expect(result.data!.bestPracticesReport).toBeDefined();
     });
 
-    it('should handle template generation', async () => {
-      const outputDir = await createTempDir('best-practices-template');
+    it("should handle template generation", async () => {
+      const outputDir = await createTempDir("best-practices-template");
       const result = await readmeBestPractices({
-        readme_path: path.join(outputDir, 'missing.md'),
+        readme_path: path.join(outputDir, "missing.md"),
         generate_template: true,
         output_directory: outputDir,
-        project_type: 'application',
+        project_type: "application",
       });
 
       expect(result.success).toBe(true);
       expect(result.data).toBeDefined();
     });
 
-    it('should provide checklist and recommendations', async () => {
+    it("should provide checklist and recommendations", async () => {
       const readmePath = await createReadmeFile(`# Library Project
 
 ## Installation
@@ -467,7 +518,9 @@ API documentation
 
       expect(result.success).toBe(true);
       expect(result.data!.bestPracticesReport.checklist).toBeDefined();
-      expect(Array.isArray(result.data!.bestPracticesReport.checklist)).toBe(true);
+      expect(Array.isArray(result.data!.bestPracticesReport.checklist)).toBe(
+        true,
+      );
       expect(result.data!.recommendations).toBeDefined();
       expect(result.data!.nextSteps).toBeDefined();
     });
@@ -479,20 +532,23 @@ API documentation
     await fs.mkdir(repoPath, { recursive: true });
 
     await fs.writeFile(
-      path.join(repoPath, 'package.json'),
+      path.join(repoPath, "package.json"),
       JSON.stringify(
         {
-          name: 'test-js-project',
-          dependencies: { express: '^4.0.0' },
-          devDependencies: { jest: '^29.0.0' },
+          name: "test-js-project",
+          dependencies: { express: "^4.0.0" },
+          devDependencies: { jest: "^29.0.0" },
         },
         null,
         2,
       ),
     );
 
-    await fs.writeFile(path.join(repoPath, 'index.js'), 'console.log("Hello");');
-    await fs.writeFile(path.join(repoPath, 'README.md'), '# JS Project');
+    await fs.writeFile(
+      path.join(repoPath, "index.js"),
+      'console.log("Hello");',
+    );
+    await fs.writeFile(path.join(repoPath, "README.md"), "# JS Project");
 
     return repoPath;
   }
@@ -501,19 +557,24 @@ API documentation
     const repoPath = path.join(tempDir, `py-repo-${Date.now()}`);
     await fs.mkdir(repoPath, { recursive: true });
 
-    await fs.writeFile(path.join(repoPath, 'requirements.txt'), 'flask>=2.0.0');
-    await fs.writeFile(path.join(repoPath, 'main.py'), 'print("Hello")');
-    await fs.writeFile(path.join(repoPath, 'README.md'), '# Python Project');
+    await fs.writeFile(path.join(repoPath, "requirements.txt"), "flask>=2.0.0");
+    await fs.writeFile(path.join(repoPath, "main.py"), 'print("Hello")');
+    await fs.writeFile(path.join(repoPath, "README.md"), "# Python Project");
 
     return repoPath;
   }
 
   async function createRepoWithCI(): Promise<string> {
     const repoPath = path.join(tempDir, `ci-repo-${Date.now()}`);
-    await fs.mkdir(path.join(repoPath, '.github', 'workflows'), { recursive: true });
+    await fs.mkdir(path.join(repoPath, ".github", "workflows"), {
+      recursive: true,
+    });
 
-    await fs.writeFile(path.join(repoPath, '.github', 'workflows', 'ci.yml'), 'name: CI\non: push');
-    await fs.writeFile(path.join(repoPath, 'README.md'), '# CI Project');
+    await fs.writeFile(
+      path.join(repoPath, ".github", "workflows", "ci.yml"),
+      "name: CI\non: push",
+    );
+    await fs.writeFile(path.join(repoPath, "README.md"), "# CI Project");
 
     return repoPath;
   }
@@ -521,7 +582,7 @@ API documentation
   async function createEmptyRepo(): Promise<string> {
     const repoPath = path.join(tempDir, `empty-repo-${Date.now()}`);
     await fs.mkdir(repoPath, { recursive: true });
-    await fs.writeFile(path.join(repoPath, 'README.md'), '# Empty Project');
+    await fs.writeFile(path.join(repoPath, "README.md"), "# Empty Project");
 
     return repoPath;
   }
@@ -533,25 +594,33 @@ API documentation
   }
 
   async function createCompleteRepo(): Promise<string> {
-    const repoPath = await createTempDir('complete-repo');
+    const repoPath = await createTempDir("complete-repo");
 
     // Create workflow
-    await fs.mkdir(path.join(repoPath, '.github', 'workflows'), { recursive: true });
+    await fs.mkdir(path.join(repoPath, ".github", "workflows"), {
+      recursive: true,
+    });
     await fs.writeFile(
-      path.join(repoPath, '.github', 'workflows', 'deploy.yml'),
-      'name: Deploy\non: push',
+      path.join(repoPath, ".github", "workflows", "deploy.yml"),
+      "name: Deploy\non: push",
     );
 
     // Create docs
-    await fs.mkdir(path.join(repoPath, 'docs'), { recursive: true });
-    await fs.writeFile(path.join(repoPath, 'docs', 'index.md'), '# Docs');
+    await fs.mkdir(path.join(repoPath, "docs"), { recursive: true });
+    await fs.writeFile(path.join(repoPath, "docs", "index.md"), "# Docs");
 
     // Create config
-    await fs.writeFile(path.join(repoPath, 'docusaurus.config.js'), 'module.exports = {};');
+    await fs.writeFile(
+      path.join(repoPath, "docusaurus.config.js"),
+      "module.exports = {};",
+    );
 
     // Create build output
-    await fs.mkdir(path.join(repoPath, 'build'), { recursive: true });
-    await fs.writeFile(path.join(repoPath, 'build', 'index.html'), '<html></html>');
+    await fs.mkdir(path.join(repoPath, "build"), { recursive: true });
+    await fs.writeFile(
+      path.join(repoPath, "build", "index.html"),
+      "<html></html>",
+    );
 
     return repoPath;
   }
@@ -566,7 +635,7 @@ API documentation
   }
 
   async function createReadmeFile(content: string): Promise<string> {
-    const file = tmp.fileSync({ postfix: '.md', keep: false });
+    const file = tmp.fileSync({ postfix: ".md", keep: false });
     await fs.writeFile(file.name, content);
     return file.name;
   }

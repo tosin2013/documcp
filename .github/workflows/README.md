@@ -5,8 +5,10 @@ This directory contains the complete CI/CD pipeline for DocuMCP, implementing au
 ## Workflows Overview
 
 ### 🔄 **ci.yml** - Continuous Integration
+
 **Triggers**: Push to main/develop, Pull Requests to main
 **Features**:
+
 - Multi-Node.js version testing (20.x, 22.x)
 - Type checking with TypeScript
 - ESLint code quality checks
@@ -17,8 +19,10 @@ This directory contains the complete CI/CD pipeline for DocuMCP, implementing au
 - Security auditing with npm audit
 
 ### 🚀 **release.yml** - Release Management
-**Triggers**: Git tags (v*.*.*), Manual workflow dispatch
+
+**Triggers**: Git tags (v*.*.\*), Manual workflow dispatch
 **Features**:
+
 - Pre-release testing with 80% coverage enforcement
 - Automated GitHub releases with changelog
 - npm package publishing
@@ -26,24 +30,30 @@ This directory contains the complete CI/CD pipeline for DocuMCP, implementing au
 - Version bumping (patch/minor/major)
 
 ### 🔒 **codeql.yml** - Security Analysis
+
 **Triggers**: Push to main, Pull Requests, Weekly schedule
 **Features**:
+
 - GitHub CodeQL security scanning
 - JavaScript/TypeScript vulnerability detection
 - Security-extended query suite
 - Automated security alerts
 
 ### 🛡️ **dependency-review.yml** - Dependency Security
+
 **Triggers**: Pull Requests
 **Features**:
+
 - Dependency vulnerability scanning
 - License compliance checking
 - Blocks PRs with moderate+ vulnerabilities
 - Allows MIT, Apache, BSD licenses only
 
 ### 🤖 **auto-merge.yml** - Dependabot Integration
+
 **Triggers**: Dependabot PRs
 **Features**:
+
 - Automatic merging of dependency updates
 - Patch and minor version auto-approval
 - Maintains security posture
@@ -51,12 +61,14 @@ This directory contains the complete CI/CD pipeline for DocuMCP, implementing au
 ## Available npm Scripts
 
 ### Testing & Quality
+
 - `npm run test` - Run test suite
 - `npm run test:coverage` - Run tests with coverage
 - `npm run test:ci` - CI-optimized test run
 - `npm run test:performance` - Performance benchmarks
 
 ### Code Quality
+
 - `npm run lint` - ESLint code checking
 - `npm run lint:fix` - Auto-fix linting issues
 - `npm run format` - Prettier code formatting
@@ -64,11 +76,13 @@ This directory contains the complete CI/CD pipeline for DocuMCP, implementing au
 - `npm run typecheck` - TypeScript type checking
 
 ### Validation & Security
+
 - `npm run validate:rules` - Full quality check (lint + typecheck + coverage)
 - `npm run security:check` - Security audit
 - `npm run ci` - Complete CI pipeline locally
 
 ### Build & Release
+
 - `npm run build` - TypeScript compilation
 - `npm run prepare` - Pre-publish preparation
 
@@ -91,12 +105,13 @@ This directory contains the complete CI/CD pipeline for DocuMCP, implementing au
 
 - **PERF-001 Standard**: Repository analysis performance targets
 - **Small repos** (<100 files): <1 second
-- **Medium repos** (100-1000 files): <10 seconds  
+- **Medium repos** (100-1000 files): <10 seconds
 - **Large repos** (1000+ files): <60 seconds
 
 ## Branch Protection
 
 Recommended branch protection rules for `main` branch:
+
 - Require status checks (CI workflow)
 - Require up-to-date branches
 - Require code reviews

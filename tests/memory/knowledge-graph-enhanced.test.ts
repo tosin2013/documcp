@@ -1,16 +1,19 @@
-import { promises as fs } from 'fs';
-import { join } from 'path';
-import { tmpdir } from 'os';
-import { KnowledgeGraph } from '../../src/memory/knowledge-graph.js';
-import { MemoryManager } from '../../src/memory/manager.js';
+import { promises as fs } from "fs";
+import { join } from "path";
+import { tmpdir } from "os";
+import { KnowledgeGraph } from "../../src/memory/knowledge-graph.js";
+import { MemoryManager } from "../../src/memory/manager.js";
 
-describe('Knowledge Graph Basic Tests', () => {
+describe("Knowledge Graph Basic Tests", () => {
   let tempDir: string;
   let memoryManager: MemoryManager;
   let knowledgeGraph: KnowledgeGraph;
 
   beforeEach(async () => {
-    tempDir = join(tmpdir(), `test-kg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
+    tempDir = join(
+      tmpdir(),
+      `test-kg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    );
     await fs.mkdir(tempDir, { recursive: true });
 
     memoryManager = new MemoryManager(tempDir);
@@ -21,29 +24,29 @@ describe('Knowledge Graph Basic Tests', () => {
 
     // Add test data to memory manager
     await memoryManager.remember(
-      'analysis',
+      "analysis",
       {
-        projectType: 'javascript',
-        complexity: 'medium',
-        framework: 'react',
-        technologies: ['webpack', 'babel', 'jest'],
+        projectType: "javascript",
+        complexity: "medium",
+        framework: "react",
+        technologies: ["webpack", "babel", "jest"],
       },
       {
-        projectId: 'project-1',
-        tags: ['frontend', 'spa'],
+        projectId: "project-1",
+        tags: ["frontend", "spa"],
       },
     );
 
     await memoryManager.remember(
-      'recommendation',
+      "recommendation",
       {
-        ssg: 'docusaurus',
+        ssg: "docusaurus",
         confidence: 0.9,
-        reasons: ['React ecosystem', 'Good documentation features'],
+        reasons: ["React ecosystem", "Good documentation features"],
       },
       {
-        projectId: 'project-1',
-        tags: ['react', 'documentation'],
+        projectId: "project-1",
+        tags: ["react", "documentation"],
       },
     );
   });
@@ -56,22 +59,22 @@ describe('Knowledge Graph Basic Tests', () => {
     }
   });
 
-  describe('Basic Functionality', () => {
-    it('should initialize knowledge graph', async () => {
+  describe("Basic Functionality", () => {
+    it("should initialize knowledge graph", async () => {
       expect(knowledgeGraph).toBeDefined();
     });
 
-    it('should build graph from memories', async () => {
+    it("should build graph from memories", async () => {
       await knowledgeGraph.buildFromMemories();
       const stats = await knowledgeGraph.getStatistics();
 
       expect(stats).toBeDefined();
-      expect(typeof stats.nodeCount).toBe('number');
-      expect(typeof stats.edgeCount).toBe('number');
+      expect(typeof stats.nodeCount).toBe("number");
+      expect(typeof stats.edgeCount).toBe("number");
       expect(stats.nodeCount).toBeGreaterThanOrEqual(0);
     });
 
-    it('should get all nodes', async () => {
+    it("should get all nodes", async () => {
       await knowledgeGraph.buildFromMemories();
       const nodes = await knowledgeGraph.getAllNodes();
 
@@ -79,7 +82,7 @@ describe('Knowledge Graph Basic Tests', () => {
       expect(nodes.length).toBeGreaterThanOrEqual(0);
     });
 
-    it('should get all edges', async () => {
+    it("should get all edges", async () => {
       await knowledgeGraph.buildFromMemories();
       const edges = await knowledgeGraph.getAllEdges();
 
@@ -87,7 +90,7 @@ describe('Knowledge Graph Basic Tests', () => {
       expect(edges.length).toBeGreaterThanOrEqual(0);
     });
 
-    it('should get connections for a node', async () => {
+    it("should get connections for a node", async () => {
       await knowledgeGraph.buildFromMemories();
       const nodes = await knowledgeGraph.getAllNodes();
 
@@ -98,8 +101,8 @@ describe('Knowledge Graph Basic Tests', () => {
     });
   });
 
-  describe('Data Management', () => {
-    it('should save and load from memory', async () => {
+  describe("Data Management", () => {
+    it("should save and load from memory", async () => {
       await knowledgeGraph.buildFromMemories();
 
       // Save the current state
@@ -116,7 +119,7 @@ describe('Knowledge Graph Basic Tests', () => {
       expect(loadedStats.nodeCount).toBe(originalStats.nodeCount);
     });
 
-    it('should remove nodes', async () => {
+    it("should remove nodes", async () => {
       await knowledgeGraph.buildFromMemories();
       const nodes = await knowledgeGraph.getAllNodes();
 
@@ -132,17 +135,17 @@ describe('Knowledge Graph Basic Tests', () => {
     });
   });
 
-  describe('Performance', () => {
-    it('should handle multiple memories efficiently', async () => {
+  describe("Performance", () => {
+    it("should handle multiple memories efficiently", async () => {
       // Add more test data
       const promises = [];
       for (let i = 0; i < 20; i++) {
         promises.push(
           memoryManager.remember(
-            'analysis',
+            "analysis",
             {
-              projectType: i % 2 === 0 ? 'javascript' : 'python',
-              complexity: ['low', 'medium', 'high'][i % 3],
+              projectType: i % 2 === 0 ? "javascript" : "python",
+              complexity: ["low", "medium", "high"][i % 3],
               index: i,
             },
             {

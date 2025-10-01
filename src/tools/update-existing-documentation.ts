@@ -1,26 +1,26 @@
-import { Tool } from '@modelcontextprotocol/sdk/types.js';
-import * as fs from 'fs/promises';
-import * as path from 'path';
+import { Tool } from "@modelcontextprotocol/sdk/types.js";
+import * as fs from "fs/promises";
+import * as path from "path";
 import {
   handleMemoryRecall,
   handleMemoryEnhancedRecommendation,
   handleMemoryIntelligentAnalysis,
-} from '../memory/index.js';
+} from "../memory/index.js";
 
 interface UpdateOptions {
   analysisId: string;
   docsPath: string;
-  compareMode: 'comprehensive' | 'gap-detection' | 'accuracy-check';
-  updateStrategy: 'conservative' | 'moderate' | 'aggressive';
+  compareMode: "comprehensive" | "gap-detection" | "accuracy-check";
+  updateStrategy: "conservative" | "moderate" | "aggressive";
   preserveStyle: boolean;
   focusAreas?: string[];
 }
 
 interface DocumentationGap {
-  type: 'missing' | 'outdated' | 'incorrect' | 'incomplete';
+  type: "missing" | "outdated" | "incorrect" | "incomplete";
   location: string;
   description: string;
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  severity: "low" | "medium" | "high" | "critical";
   suggestedUpdate: string;
   memoryEvidence?: any[];
 }
@@ -40,7 +40,7 @@ interface UpdateRecommendation {
   reasoning: string;
   memoryEvidence: any[];
   confidence: number;
-  effort: 'low' | 'medium' | 'high';
+  effort: "low" | "medium" | "high";
 }
 
 interface UpdateResult {
@@ -66,7 +66,9 @@ class DocumentationUpdateEngine {
   private codeAnalysis: any = null;
   private existingDocs: Map<string, any> = new Map();
 
-  async updateExistingDocumentation(options: UpdateOptions): Promise<UpdateResult> {
+  async updateExistingDocumentation(
+    options: UpdateOptions,
+  ): Promise<UpdateResult> {
     // 1. Load repository analysis and memory insights
     const analysis = await this.getRepositoryAnalysis(options.analysisId);
     this.codeAnalysis = analysis;
@@ -75,7 +77,9 @@ class DocumentationUpdateEngine {
     await this.loadMemoryInsights(analysis, options);
 
     // 3. Analyze existing documentation structure and content
-    const existingDocs = await this.analyzeExistingDocumentation(options.docsPath);
+    const existingDocs = await this.analyzeExistingDocumentation(
+      options.docsPath,
+    );
     this.existingDocs = existingDocs;
 
     // 4. Perform comprehensive code-documentation comparison
@@ -86,10 +90,16 @@ class DocumentationUpdateEngine {
     );
 
     // 5. Generate memory-informed update recommendations
-    const recommendations = await this.generateUpdateRecommendations(comparison, options);
+    const recommendations = await this.generateUpdateRecommendations(
+      comparison,
+      options,
+    );
 
     // 6. Calculate metrics and confidence scores
-    const updateMetrics = this.calculateUpdateMetrics(comparison, recommendations);
+    const updateMetrics = this.calculateUpdateMetrics(
+      comparison,
+      recommendations,
+    );
 
     return {
       success: true,
@@ -97,7 +107,10 @@ class DocumentationUpdateEngine {
       recommendations,
       memoryInsights: this.memoryInsights,
       updateMetrics,
-      nextSteps: this.generateMemoryInformedNextSteps(comparison, recommendations),
+      nextSteps: this.generateMemoryInformedNextSteps(
+        comparison,
+        recommendations,
+      ),
     };
   }
 
@@ -106,23 +119,38 @@ class DocumentationUpdateEngine {
     try {
       const memoryRecall = await handleMemoryRecall({
         query: analysisId,
-        type: 'analysis',
+        type: "analysis",
         limit: 1,
       });
 
       // Handle the memory recall result structure
-      if (memoryRecall && memoryRecall.memories && memoryRecall.memories.length > 0) {
+      if (
+        memoryRecall &&
+        memoryRecall.memories &&
+        memoryRecall.memories.length > 0
+      ) {
         const memory = memoryRecall.memories[0];
 
         // Handle wrapped content structure
-        if (memory.data && memory.data.content && Array.isArray(memory.data.content)) {
+        if (
+          memory.data &&
+          memory.data.content &&
+          Array.isArray(memory.data.content)
+        ) {
           // Extract the JSON from the first text content
           const firstContent = memory.data.content[0];
-          if (firstContent && firstContent.type === 'text' && firstContent.text) {
+          if (
+            firstContent &&
+            firstContent.type === "text" &&
+            firstContent.text
+          ) {
             try {
               return JSON.parse(firstContent.text);
             } catch (parseError) {
-              console.warn('Failed to parse analysis content from memory:', parseError);
+              console.warn(
+                "Failed to parse analysis content from memory:",
+                parseError,
+              );
               return memory.data;
             }
           }
@@ -139,13 +167,17 @@ class DocumentationUpdateEngine {
         }
       }
     } catch (error) {
-      console.warn('Failed to retrieve from memory system:', error);
+      console.warn("Failed to retrieve from memory system:", error);
     }
 
     // Fallback to reading from cached analysis file
-    const analysisPath = path.join('.documcp', 'analyses', `${analysisId}.json`);
+    const analysisPath = path.join(
+      ".documcp",
+      "analyses",
+      `${analysisId}.json`,
+    );
     try {
-      const content = await fs.readFile(analysisPath, 'utf-8');
+      const content = await fs.readFile(analysisPath, "utf-8");
       return JSON.parse(content);
     } catch {
       throw new Error(
@@ -154,47 +186,51 @@ class DocumentationUpdateEngine {
     }
   }
 
-  private async loadMemoryInsights(analysis: any, options: UpdateOptions): Promise<void> {
+  private async loadMemoryInsights(
+    analysis: any,
+    options: UpdateOptions,
+  ): Promise<void> {
     try {
       // Get similar projects that had successful documentation updates
-      const similarProjectsQuery = `${analysis.metadata?.primaryLanguage || ''} ${
-        analysis.metadata?.ecosystem || ''
-      } documentation update`;
+      const similarProjectsQuery = `${
+        analysis.metadata?.primaryLanguage || ""
+      } ${analysis.metadata?.ecosystem || ""} documentation update`;
       const similarProjects = await handleMemoryRecall({
         query: similarProjectsQuery,
-        type: 'recommendation',
+        type: "recommendation",
         limit: 10,
       });
 
       // Get patterns for successful documentation updates
-      const updatePatternsQuery = 'documentation update successful patterns gaps outdated';
+      const updatePatternsQuery =
+        "documentation update successful patterns gaps outdated";
       const updatePatterns = await handleMemoryRecall({
         query: updatePatternsQuery,
-        type: 'configuration',
+        type: "configuration",
         limit: 5,
       });
 
       // Get memory-enhanced analysis for this specific update task
       const enhancedAnalysis = await handleMemoryIntelligentAnalysis({
-        projectPath: analysis.projectPath || '',
+        projectPath: analysis.projectPath || "",
         baseAnalysis: analysis,
       });
 
       // Get memory-enhanced recommendations for update strategy
       const enhancedRecommendations = await handleMemoryEnhancedRecommendation({
-        projectPath: analysis.projectPath || '',
+        projectPath: analysis.projectPath || "",
         baseRecommendation: {
           updateStrategy: options.updateStrategy,
           compareMode: options.compareMode,
           focusAreas: options.focusAreas || [],
         },
         projectFeatures: {
-          ecosystem: analysis.metadata?.ecosystem || 'unknown',
-          primaryLanguage: analysis.metadata?.primaryLanguage || 'unknown',
-          complexity: analysis.complexity || 'medium',
+          ecosystem: analysis.metadata?.ecosystem || "unknown",
+          primaryLanguage: analysis.metadata?.primaryLanguage || "unknown",
+          complexity: analysis.complexity || "medium",
           hasTests: analysis.structure?.hasTests || false,
           hasCI: analysis.structure?.hasCI || false,
-          docStructure: 'existing', // Indicates we're updating existing docs
+          docStructure: "existing", // Indicates we're updating existing docs
         },
       });
 
@@ -203,11 +239,15 @@ class DocumentationUpdateEngine {
         updatePatterns: updatePatterns.memories || [],
         enhancedAnalysis: enhancedAnalysis,
         enhancedRecommendations: enhancedRecommendations,
-        successfulUpdatePatterns: this.extractUpdatePatterns(similarProjects.memories || []),
-        commonGapTypes: this.extractCommonGapTypes(similarProjects.memories || []),
+        successfulUpdatePatterns: this.extractUpdatePatterns(
+          similarProjects.memories || [],
+        ),
+        commonGapTypes: this.extractCommonGapTypes(
+          similarProjects.memories || [],
+        ),
       };
     } catch (error) {
-      console.warn('Failed to load memory insights:', error);
+      console.warn("Failed to load memory insights:", error);
       this.memoryInsights = {
         similarProjects: [],
         updatePatterns: [],
@@ -221,7 +261,9 @@ class DocumentationUpdateEngine {
 
   private extractUpdatePatterns(projects: any[]): any[] {
     return projects
-      .filter((p) => p.content?.updatePatterns || p.content?.documentationUpdates)
+      .filter(
+        (p) => p.content?.updatePatterns || p.content?.documentationUpdates,
+      )
       .map((p) => p.content?.updatePatterns || p.content?.documentationUpdates)
       .flat()
       .filter(Boolean);
@@ -233,7 +275,7 @@ class DocumentationUpdateEngine {
     projects.forEach((p) => {
       const gaps = p.content?.documentationGaps || [];
       gaps.forEach((gap: any) => {
-        const type = gap.type || 'unknown';
+        const type = gap.type || "unknown";
         gapTypes[type] = (gapTypes[type] || 0) + 1;
       });
     });
@@ -241,13 +283,15 @@ class DocumentationUpdateEngine {
     return gapTypes;
   }
 
-  private async analyzeExistingDocumentation(docsPath: string): Promise<Map<string, any>> {
+  private async analyzeExistingDocumentation(
+    docsPath: string,
+  ): Promise<Map<string, any>> {
     const docs = new Map<string, any>();
 
     try {
       await this.recursivelyAnalyzeDocuments(docsPath, docs);
     } catch (error) {
-      console.warn('Failed to analyze existing documentation:', error);
+      console.warn("Failed to analyze existing documentation:", error);
     }
 
     return docs;
@@ -256,7 +300,7 @@ class DocumentationUpdateEngine {
   private async recursivelyAnalyzeDocuments(
     dirPath: string,
     docs: Map<string, any>,
-    relativePath: string = '',
+    relativePath: string = "",
   ): Promise<void> {
     try {
       const entries = await fs.readdir(dirPath, { withFileTypes: true });
@@ -267,9 +311,9 @@ class DocumentationUpdateEngine {
 
         if (entry.isDirectory()) {
           await this.recursivelyAnalyzeDocuments(fullPath, docs, docPath);
-        } else if (entry.name.endsWith('.md') || entry.name.endsWith('.mdx')) {
+        } else if (entry.name.endsWith(".md") || entry.name.endsWith(".mdx")) {
           try {
-            const content = await fs.readFile(fullPath, 'utf-8');
+            const content = await fs.readFile(fullPath, "utf-8");
             const analysis = this.analyzeDocumentContent(content, docPath);
             docs.set(docPath, {
               content,
@@ -307,33 +351,42 @@ class DocumentationUpdateEngine {
     const pathParts = filePath.toLowerCase().split(path.sep);
 
     // Diataxis categories
-    if (pathParts.includes('tutorials')) return 'tutorial';
-    if (pathParts.includes('how-to') || pathParts.includes('howto')) return 'how-to';
-    if (pathParts.includes('reference')) return 'reference';
-    if (pathParts.includes('explanation')) return 'explanation';
+    if (pathParts.includes("tutorials")) return "tutorial";
+    if (pathParts.includes("how-to") || pathParts.includes("howto"))
+      return "how-to";
+    if (pathParts.includes("reference")) return "reference";
+    if (pathParts.includes("explanation")) return "explanation";
 
     // Common documentation types
-    if (fileName.includes('readme')) return 'readme';
-    if (fileName.includes('getting-started') || fileName.includes('quickstart'))
-      return 'getting-started';
-    if (fileName.includes('api')) return 'api-reference';
-    if (fileName.includes('install') || fileName.includes('setup')) return 'installation';
-    if (fileName.includes('deploy')) return 'deployment';
-    if (fileName.includes('config')) return 'configuration';
+    if (fileName.includes("readme")) return "readme";
+    if (fileName.includes("getting-started") || fileName.includes("quickstart"))
+      return "getting-started";
+    if (fileName.includes("api")) return "api-reference";
+    if (fileName.includes("install") || fileName.includes("setup"))
+      return "installation";
+    if (fileName.includes("deploy")) return "deployment";
+    if (fileName.includes("config")) return "configuration";
 
     // Infer from content
-    if (content.includes('# Getting Started') || content.includes('## Getting Started'))
-      return 'getting-started';
-    if (content.includes('# API') || content.includes('## API')) return 'api-reference';
-    if (content.includes('# Installation') || content.includes('## Installation'))
-      return 'installation';
+    if (
+      content.includes("# Getting Started") ||
+      content.includes("## Getting Started")
+    )
+      return "getting-started";
+    if (content.includes("# API") || content.includes("## API"))
+      return "api-reference";
+    if (
+      content.includes("# Installation") ||
+      content.includes("## Installation")
+    )
+      return "installation";
 
-    return 'general';
+    return "general";
   }
 
   private extractSections(content: string): any[] {
     const sections: any[] = [];
-    const lines = content.split('\n');
+    const lines = content.split("\n");
     let currentSection: any = null;
 
     for (let i = 0; i < lines.length; i++) {
@@ -362,8 +415,8 @@ class DocumentationUpdateEngine {
 
     return sections.map((section) => ({
       ...section,
-      content: section.content.join('\n'),
-      wordCount: section.content.join(' ').split(/\s+/).length,
+      content: section.content.join("\n"),
+      wordCount: section.content.join(" ").split(/\s+/).length,
     }));
   }
 
@@ -374,7 +427,7 @@ class DocumentationUpdateEngine {
 
     while ((match = codeBlockRegex.exec(content)) !== null) {
       codeBlocks.push({
-        language: match[1] || 'text',
+        language: match[1] || "text",
         code: match[2],
         startIndex: match.index,
         endIndex: match.index + match[0].length,
@@ -393,7 +446,7 @@ class DocumentationUpdateEngine {
       links.push({
         text: match[1],
         url: match[2],
-        isInternal: !match[2].startsWith('http'),
+        isInternal: !match[2].startsWith("http"),
         startIndex: match.index,
       });
     }
@@ -402,7 +455,9 @@ class DocumentationUpdateEngine {
   }
 
   private extractLastUpdated(content: string): string | null {
-    const updateMatch = content.match(/(?:last updated|updated|modified):\s*(.+)/i);
+    const updateMatch = content.match(
+      /(?:last updated|updated|modified):\s*(.+)/i,
+    );
     return updateMatch ? updateMatch[1] : null;
   }
 
@@ -418,9 +473,9 @@ class DocumentationUpdateEngine {
     const npmMatches = content.match(/npm install\s+([^`\n]+)/g);
     if (npmMatches) {
       npmMatches.forEach((match) => {
-        const packages = match.replace('npm install', '').trim().split(/\s+/);
+        const packages = match.replace("npm install", "").trim().split(/\s+/);
         packages.forEach((pkg) => {
-          if (pkg && !pkg.startsWith('-')) {
+          if (pkg && !pkg.startsWith("-")) {
             dependencies.add(pkg);
           }
         });
@@ -432,7 +487,7 @@ class DocumentationUpdateEngine {
     if (importMatches) {
       importMatches.forEach((match) => {
         const packageMatch = match.match(/from\s+['"]([^'"]+)['"]/);
-        if (packageMatch && !packageMatch[1].startsWith('.')) {
+        if (packageMatch && !packageMatch[1].startsWith(".")) {
           dependencies.add(packageMatch[1]);
         }
       });
@@ -445,7 +500,9 @@ class DocumentationUpdateEngine {
     const features: Set<string> = new Set();
 
     // Extract function names from code blocks
-    const functionMatches = content.match(/(?:function|const|let|var)\s+(\w+)/g);
+    const functionMatches = content.match(
+      /(?:function|const|let|var)\s+(\w+)/g,
+    );
     if (functionMatches) {
       functionMatches.forEach((match) => {
         const functionMatch = match.match(/(?:function|const|let|var)\s+(\w+)/);
@@ -456,10 +513,14 @@ class DocumentationUpdateEngine {
     }
 
     // Extract API endpoints
-    const apiMatches = content.match(/(?:GET|POST|PUT|DELETE|PATCH)\s+([/\w-]+)/g);
+    const apiMatches = content.match(
+      /(?:GET|POST|PUT|DELETE|PATCH)\s+([/\w-]+)/g,
+    );
     if (apiMatches) {
       apiMatches.forEach((match) => {
-        const endpointMatch = match.match(/(?:GET|POST|PUT|DELETE|PATCH)\s+([/\w-]+)/);
+        const endpointMatch = match.match(
+          /(?:GET|POST|PUT|DELETE|PATCH)\s+([/\w-]+)/,
+        );
         if (endpointMatch) {
           features.add(endpointMatch[1]);
         }
@@ -470,8 +531,11 @@ class DocumentationUpdateEngine {
     const headings = content.match(/#{1,6}\s+(.+)/g);
     if (headings) {
       headings.forEach((heading) => {
-        const headingText = heading.replace(/#{1,6}\s+/, '').toLowerCase();
-        if (headingText.includes('feature') || headingText.includes('functionality')) {
+        const headingText = heading.replace(/#{1,6}\s+/, "").toLowerCase();
+        if (
+          headingText.includes("feature") ||
+          headingText.includes("functionality")
+        ) {
           features.add(headingText);
         }
       });
@@ -482,7 +546,7 @@ class DocumentationUpdateEngine {
 
   private extractHeadingStructure(content: string): any[] {
     const headings: any[] = [];
-    const lines = content.split('\n');
+    const lines = content.split("\n");
 
     lines.forEach((line, index) => {
       const headingMatch = line.match(/^(#{1,6})\s+(.+)/);
@@ -506,9 +570,19 @@ class DocumentationUpdateEngine {
     const codeFeatures = this.extractCodeFeatures(analysis);
     const documentedFeatures = this.extractAllDocumentedFeatures(existingDocs);
 
-    const gaps = await this.detectDocumentationGaps(codeFeatures, documentedFeatures, _options);
-    const outdatedSections = await this.detectOutdatedSections(analysis, existingDocs);
-    const accuracyIssues = await this.detectAccuracyIssues(analysis, existingDocs);
+    const gaps = await this.detectDocumentationGaps(
+      codeFeatures,
+      documentedFeatures,
+      _options,
+    );
+    const outdatedSections = await this.detectOutdatedSections(
+      analysis,
+      existingDocs,
+    );
+    const accuracyIssues = await this.detectAccuracyIssues(
+      analysis,
+      existingDocs,
+    );
 
     return {
       codeFeatures,
@@ -526,9 +600,9 @@ class DocumentationUpdateEngine {
     if (analysis.dependencies?.packages) {
       analysis.dependencies.packages.forEach((pkg: string) => {
         features.push({
-          type: 'dependency',
+          type: "dependency",
           name: pkg,
-          source: 'package.json',
+          source: "package.json",
         });
       });
     }
@@ -538,10 +612,10 @@ class DocumentationUpdateEngine {
     if (packageJson?.scripts) {
       Object.keys(packageJson.scripts).forEach((script) => {
         features.push({
-          type: 'script',
+          type: "script",
           name: script,
           command: packageJson.scripts[script],
-          source: 'package.json',
+          source: "package.json",
         });
       });
     }
@@ -549,10 +623,18 @@ class DocumentationUpdateEngine {
     // Extract from file structure
     if (analysis.structure) {
       if (analysis.structure.hasTests) {
-        features.push({ type: 'testing', name: 'test suite', source: 'structure' });
+        features.push({
+          type: "testing",
+          name: "test suite",
+          source: "structure",
+        });
       }
       if (analysis.structure.hasCI) {
-        features.push({ type: 'ci-cd', name: 'continuous integration', source: 'structure' });
+        features.push({
+          type: "ci-cd",
+          name: "continuous integration",
+          source: "structure",
+        });
       }
     }
 
@@ -561,10 +643,10 @@ class DocumentationUpdateEngine {
       Object.entries(analysis.technologies).forEach(([key, value]) => {
         if (value) {
           features.push({
-            type: 'technology',
+            type: "technology",
             name: key,
             value: value,
-            source: 'analysis',
+            source: "analysis",
           });
         }
       });
@@ -575,7 +657,7 @@ class DocumentationUpdateEngine {
 
   private findPackageJsonInAnalysis(analysis: any): any {
     const files = analysis.files || [];
-    const packageFile = files.find((f: any) => f.name === 'package.json');
+    const packageFile = files.find((f: any) => f.name === "package.json");
 
     if (packageFile?.content) {
       try {
@@ -599,7 +681,7 @@ class DocumentationUpdateEngine {
         allFeatures.push({
           name: feature,
           source: docPath,
-          type: 'documented-feature',
+          type: "documented-feature",
         });
       });
 
@@ -607,7 +689,7 @@ class DocumentationUpdateEngine {
         allFeatures.push({
           name: dep,
           source: docPath,
-          type: 'documented-dependency',
+          type: "documented-dependency",
         });
       });
     });
@@ -630,11 +712,17 @@ class DocumentationUpdateEngine {
       );
 
       if (!isDocumented) {
-        const severity = this.determineGapSeverity(codeFeature, memoryGapPatterns);
-        const suggestedUpdate = this.generateGapSuggestion(codeFeature, _options);
+        const severity = this.determineGapSeverity(
+          codeFeature,
+          memoryGapPatterns,
+        );
+        const suggestedUpdate = this.generateGapSuggestion(
+          codeFeature,
+          _options,
+        );
 
         gaps.push({
-          type: 'missing',
+          type: "missing",
           location: `${codeFeature.source} -> documentation`,
           description: `${codeFeature.type} '${codeFeature.name}' exists in code but is not documented`,
           severity,
@@ -652,10 +740,10 @@ class DocumentationUpdateEngine {
 
       if (!existsInCode) {
         gaps.push({
-          type: 'outdated',
+          type: "outdated",
           location: docFeature.source,
           description: `Documented feature '${docFeature.name}' no longer exists in code`,
-          severity: 'medium',
+          severity: "medium",
           suggestedUpdate: `Remove or update documentation for '${docFeature.name}'`,
           memoryEvidence: this.findMemoryEvidenceForOutdated(docFeature),
         });
@@ -670,7 +758,10 @@ class DocumentationUpdateEngine {
     if (codeFeature.name === docFeature.name) return true;
 
     // Type-specific matching
-    if (codeFeature.type === 'dependency' && docFeature.type === 'documented-dependency') {
+    if (
+      codeFeature.type === "dependency" &&
+      docFeature.type === "documented-dependency"
+    ) {
       return codeFeature.name === docFeature.name;
     }
 
@@ -684,63 +775,69 @@ class DocumentationUpdateEngine {
   private determineGapSeverity(
     codeFeature: any,
     memoryGapPatterns: Record<string, number>,
-  ): 'low' | 'medium' | 'high' | 'critical' {
+  ): "low" | "medium" | "high" | "critical" {
     // High importance features
     if (
-      codeFeature.type === 'script' &&
-      ['start', 'dev', 'build', 'test'].includes(codeFeature.name)
+      codeFeature.type === "script" &&
+      ["start", "dev", "build", "test"].includes(codeFeature.name)
     ) {
-      return 'high';
+      return "high";
     }
 
-    if (codeFeature.type === 'dependency' && this.isCriticalDependency(codeFeature.name)) {
-      return 'high';
+    if (
+      codeFeature.type === "dependency" &&
+      this.isCriticalDependency(codeFeature.name)
+    ) {
+      return "high";
     }
 
-    if (codeFeature.type === 'testing' || codeFeature.type === 'ci-cd') {
-      return 'medium';
+    if (codeFeature.type === "testing" || codeFeature.type === "ci-cd") {
+      return "medium";
     }
 
     // Check memory patterns for common gaps
     const gapFrequency = memoryGapPatterns[codeFeature.type] || 0;
-    if (gapFrequency > 5) return 'medium'; // Common gap type
-    if (gapFrequency > 2) return 'low';
+    if (gapFrequency > 5) return "medium"; // Common gap type
+    if (gapFrequency > 2) return "low";
 
-    return 'low';
+    return "low";
   }
 
   private isCriticalDependency(depName: string): boolean {
     const criticalDeps = [
-      'react',
-      'vue',
-      'angular',
-      'express',
-      'fastify',
-      'next',
-      'nuxt',
-      'gatsby',
-      'typescript',
-      'jest',
-      'mocha',
-      'webpack',
-      'vite',
-      'rollup',
+      "react",
+      "vue",
+      "angular",
+      "express",
+      "fastify",
+      "next",
+      "nuxt",
+      "gatsby",
+      "typescript",
+      "jest",
+      "mocha",
+      "webpack",
+      "vite",
+      "rollup",
     ];
 
     return criticalDeps.some((critical) => depName.includes(critical));
   }
 
-  private generateGapSuggestion(codeFeature: any, _options: UpdateOptions): string {
+  private generateGapSuggestion(
+    codeFeature: any,
+    _options: UpdateOptions,
+  ): string {
     switch (codeFeature.type) {
-      case 'script':
+      case "script":
         return `Add documentation for the '${codeFeature.name}' script: \`npm run ${codeFeature.name}\``;
-      case 'dependency':
+      case "dependency":
         return `Document the '${codeFeature.name}' dependency and its usage`;
-      case 'testing':
+      case "testing":
         return `Add testing documentation explaining how to run and write tests`;
-      case 'ci-cd':
+      case "ci-cd":
         return `Document the CI/CD pipeline and deployment process`;
-      case 'technology':
+      case "technology":
         return `Add explanation for ${codeFeature.name}: ${codeFeature.value}`;
       default:
         return `Document the ${codeFeature.type} '${codeFeature.name}'`;
@@ -750,7 +847,10 @@ class DocumentationUpdateEngine {
   private findMemoryEvidenceForGap(codeFeature: any): any[] {
     return (
       this.memoryInsights?.similarProjects
-        .filter((p: any) => p.content?.gaps?.some((gap: any) => gap.type === codeFeature.type))
+        .filter(
+          (p: any) =>
+            p.content?.gaps?.some((gap: any) => gap.type === codeFeature.type),
+        )
         .slice(0, 3) || []
     );
   }
@@ -822,7 +922,10 @@ class DocumentationUpdateEngine {
       for (const dep of currentDeps) {
         if (sectionContent.includes(dep)) {
           const version = packageJson.dependencies[dep];
-          if (sectionContent.includes(dep) && !sectionContent.includes(version)) {
+          if (
+            sectionContent.includes(dep) &&
+            !sectionContent.includes(version)
+          ) {
             return {
               reason: `Package version information may be outdated for ${dep}`,
               confidence: 0.7,
@@ -871,16 +974,18 @@ class DocumentationUpdateEngine {
     const npmInstallMatches = code.match(/npm install\s+([^`\n]+)/g);
     if (npmInstallMatches) {
       const packageJson = this.findPackageJsonInAnalysis(analysis);
-      const actualDeps = packageJson ? Object.keys(packageJson.dependencies || {}) : [];
+      const actualDeps = packageJson
+        ? Object.keys(packageJson.dependencies || {})
+        : [];
 
       npmInstallMatches.forEach((match: string) => {
-        const packages = match.replace('npm install', '').trim().split(/\s+/);
+        const packages = match.replace("npm install", "").trim().split(/\s+/);
         packages.forEach((pkg: string) => {
-          if (pkg && !pkg.startsWith('-') && !actualDeps.includes(pkg)) {
+          if (pkg && !pkg.startsWith("-") && !actualDeps.includes(pkg)) {
             issues.push({
-              type: 'incorrect-dependency',
+              type: "incorrect-dependency",
               description: `npm install command includes '${pkg}' which is not in package.json`,
-              severity: 'medium',
+              severity: "medium",
               suggestedFix: `Remove '${pkg}' or add it to dependencies`,
             });
           }
@@ -889,12 +994,15 @@ class DocumentationUpdateEngine {
     }
 
     // Check for outdated import syntax
-    if (code.includes('require(') && analysis.metadata?.primaryLanguage === 'TypeScript') {
+    if (
+      code.includes("require(") &&
+      analysis.metadata?.primaryLanguage === "TypeScript"
+    ) {
       issues.push({
-        type: 'outdated-syntax',
-        description: 'Using require() syntax in TypeScript project',
-        severity: 'low',
-        suggestedFix: 'Update to ES6 import syntax',
+        type: "outdated-syntax",
+        description: "Using require() syntax in TypeScript project",
+        severity: "low",
+        suggestedFix: "Update to ES6 import syntax",
       });
     }
 
@@ -910,25 +1018,38 @@ class DocumentationUpdateEngine {
     // Generate recommendations for gaps
     for (const gap of comparison.gaps) {
       if (
-        gap.severity === 'critical' ||
-        gap.severity === 'high' ||
-        (gap.severity === 'medium' && _options.updateStrategy !== 'conservative')
+        gap.severity === "critical" ||
+        gap.severity === "high" ||
+        (gap.severity === "medium" &&
+          _options.updateStrategy !== "conservative")
       ) {
-        const recommendation = await this.generateGapRecommendation(gap, _options);
+        const recommendation = await this.generateGapRecommendation(
+          gap,
+          _options,
+        );
         recommendations.push(recommendation);
       }
     }
 
     // Generate recommendations for outdated sections
     for (const outdated of comparison.outdatedSections) {
-      const recommendation = await this.generateOutdatedRecommendation(outdated, _options);
+      const recommendation = await this.generateOutdatedRecommendation(
+        outdated,
+        _options,
+      );
       recommendations.push(recommendation);
     }
 
     // Generate recommendations for accuracy issues
     for (const issue of comparison.accuracyIssues) {
-      if (issue.severity !== 'low' || _options.updateStrategy === 'aggressive') {
-        const recommendation = await this.generateAccuracyRecommendation(issue, _options);
+      if (
+        issue.severity !== "low" ||
+        _options.updateStrategy === "aggressive"
+      ) {
+        const recommendation = await this.generateAccuracyRecommendation(
+          issue,
+          _options,
+        );
         recommendations.push(recommendation);
       }
     }
@@ -941,11 +1062,12 @@ class DocumentationUpdateEngine {
     _options: UpdateOptions,
   ): Promise<UpdateRecommendation> {
     const memoryEvidence = gap.memoryEvidence || [];
-    const successfulPatterns = this.memoryInsights?.successfulUpdatePatterns || [];
+    const successfulPatterns =
+      this.memoryInsights?.successfulUpdatePatterns || [];
 
     return {
       section: gap.location,
-      currentContent: '', // No current content for missing items
+      currentContent: "", // No current content for missing items
       suggestedContent: this.generateContentForGap(gap, successfulPatterns),
       reasoning: `${gap.description}. ${memoryEvidence.length} similar projects had similar gaps.`,
       memoryEvidence,
@@ -954,7 +1076,10 @@ class DocumentationUpdateEngine {
     };
   }
 
-  private generateContentForGap(gap: DocumentationGap, patterns: any[]): string {
+  private generateContentForGap(
+    gap: DocumentationGap,
+    patterns: any[],
+  ): string {
     // Use memory patterns to generate appropriate content
     const relevantPatterns = patterns.filter((p) => p.gapType === gap.type);
 
@@ -976,21 +1101,24 @@ class DocumentationUpdateEngine {
     return content;
   }
 
-  private calculateGapConfidence(gap: DocumentationGap, evidence: any[]): number {
+  private calculateGapConfidence(
+    gap: DocumentationGap,
+    evidence: any[],
+  ): number {
     let confidence = 0.5; // Base confidence
 
     // Increase confidence based on severity
     switch (gap.severity) {
-      case 'critical':
+      case "critical":
         confidence += 0.4;
         break;
-      case 'high':
+      case "high":
         confidence += 0.3;
         break;
-      case 'medium':
+      case "medium":
         confidence += 0.2;
         break;
-      case 'low':
+      case "low":
         confidence += 0.1;
         break;
     }
@@ -1001,18 +1129,18 @@ class DocumentationUpdateEngine {
     return Math.min(confidence, 1.0);
   }
 
-  private estimateGapEffort(gap: DocumentationGap): 'low' | 'medium' | 'high' {
+  private estimateGapEffort(gap: DocumentationGap): "low" | "medium" | "high" {
     switch (gap.type) {
-      case 'missing':
-        return gap.severity === 'critical' ? 'high' : 'medium';
-      case 'outdated':
-        return 'low';
-      case 'incorrect':
-        return 'medium';
-      case 'incomplete':
-        return 'low';
+      case "missing":
+        return gap.severity === "critical" ? "high" : "medium";
+      case "outdated":
+        return "low";
+      case "incorrect":
+        return "medium";
+      case "incomplete":
+        return "low";
       default:
-        return 'medium';
+        return "medium";
     }
   }
 
@@ -1027,7 +1155,7 @@ class DocumentationUpdateEngine {
       reasoning: outdated.reason,
       memoryEvidence: [],
       confidence: outdated.confidence || 0.8,
-      effort: 'low',
+      effort: "low",
     };
   }
 
@@ -1037,12 +1165,12 @@ class DocumentationUpdateEngine {
   ): Promise<UpdateRecommendation> {
     return {
       section: issue.location,
-      currentContent: 'Code block with accuracy issues',
+      currentContent: "Code block with accuracy issues",
       suggestedContent: issue.suggestedFix,
       reasoning: issue.description,
       memoryEvidence: [],
-      confidence: issue.severity === 'high' ? 0.9 : 0.7,
-      effort: issue.severity === 'high' ? 'medium' : 'low',
+      confidence: issue.severity === "high" ? 0.9 : 0.7,
+      effort: issue.severity === "high" ? "medium" : "low",
     };
   }
 
@@ -1053,7 +1181,8 @@ class DocumentationUpdateEngine {
     const totalGaps = comparison.gaps.length;
     const totalRecommendations = recommendations.length;
     const avgConfidence =
-      recommendations.reduce((sum, r) => sum + r.confidence, 0) / recommendations.length || 0;
+      recommendations.reduce((sum, r) => sum + r.confidence, 0) /
+        recommendations.length || 0;
 
     const effortCounts = recommendations.reduce(
       (acc, r) => {
@@ -1063,9 +1192,9 @@ class DocumentationUpdateEngine {
       {} as Record<string, number>,
     );
 
-    let estimatedEffort = 'low';
-    if (effortCounts.high > 0) estimatedEffort = 'high';
-    else if (effortCounts.medium > effortCounts.low) estimatedEffort = 'medium';
+    let estimatedEffort = "low";
+    if (effortCounts.high > 0) estimatedEffort = "high";
+    else if (effortCounts.medium > effortCounts.low) estimatedEffort = "medium";
 
     return {
       gapsDetected: totalGaps,
@@ -1080,11 +1209,17 @@ class DocumentationUpdateEngine {
     recommendations: UpdateRecommendation[],
   ): string[] {
     const nextSteps = [];
-    const highConfidenceRecs = recommendations.filter((r) => r.confidence > 0.8);
-    const criticalGaps = comparison.gaps.filter((g) => g.severity === 'critical');
+    const highConfidenceRecs = recommendations.filter(
+      (r) => r.confidence > 0.8,
+    );
+    const criticalGaps = comparison.gaps.filter(
+      (g) => g.severity === "critical",
+    );
 
     if (criticalGaps.length > 0) {
-      nextSteps.push(`Address ${criticalGaps.length} critical documentation gaps immediately`);
+      nextSteps.push(
+        `Address ${criticalGaps.length} critical documentation gaps immediately`,
+      );
     }
 
     if (highConfidenceRecs.length > 0) {
@@ -1099,8 +1234,10 @@ class DocumentationUpdateEngine {
       );
     }
 
-    nextSteps.push('Review and validate all recommended changes before implementation');
-    nextSteps.push('Test updated code examples to ensure they work correctly');
+    nextSteps.push(
+      "Review and validate all recommended changes before implementation",
+    );
+    nextSteps.push("Test updated code examples to ensure they work correctly");
 
     const memoryInsights = this.memoryInsights?.similarProjects?.length || 0;
     if (memoryInsights > 0) {
@@ -1115,48 +1252,51 @@ class DocumentationUpdateEngine {
 
 // Export the tool implementation
 export const updateExistingDocumentation: Tool = {
-  name: 'update_existing_documentation',
+  name: "update_existing_documentation",
   description:
-    'Intelligently analyze and update existing documentation using memory insights and code comparison',
+    "Intelligently analyze and update existing documentation using memory insights and code comparison",
   inputSchema: {
-    type: 'object',
+    type: "object",
     properties: {
       analysisId: {
-        type: 'string',
-        description: 'Repository analysis ID from analyze_repository tool',
+        type: "string",
+        description: "Repository analysis ID from analyze_repository tool",
       },
       docsPath: {
-        type: 'string',
-        description: 'Path to existing documentation directory',
+        type: "string",
+        description: "Path to existing documentation directory",
       },
       compareMode: {
-        type: 'string',
-        enum: ['comprehensive', 'gap-detection', 'accuracy-check'],
-        default: 'comprehensive',
-        description: 'Mode of comparison between code and documentation',
+        type: "string",
+        enum: ["comprehensive", "gap-detection", "accuracy-check"],
+        default: "comprehensive",
+        description: "Mode of comparison between code and documentation",
       },
       updateStrategy: {
-        type: 'string',
-        enum: ['conservative', 'moderate', 'aggressive'],
-        default: 'moderate',
-        description: 'How aggressively to suggest updates',
+        type: "string",
+        enum: ["conservative", "moderate", "aggressive"],
+        default: "moderate",
+        description: "How aggressively to suggest updates",
       },
       preserveStyle: {
-        type: 'boolean',
+        type: "boolean",
         default: true,
-        description: 'Preserve existing documentation style and formatting',
+        description: "Preserve existing documentation style and formatting",
       },
       focusAreas: {
-        type: 'array',
-        items: { type: 'string' },
-        description: 'Specific areas to focus updates on (e.g., "dependencies", "scripts", "api")',
+        type: "array",
+        items: { type: "string" },
+        description:
+          'Specific areas to focus updates on (e.g., "dependencies", "scripts", "api")',
       },
     },
-    required: ['analysisId', 'docsPath'],
+    required: ["analysisId", "docsPath"],
   },
 };
 
-export async function handleUpdateExistingDocumentation(args: any): Promise<UpdateResult> {
+export async function handleUpdateExistingDocumentation(
+  args: any,
+): Promise<UpdateResult> {
   const engine = new DocumentationUpdateEngine();
   return await engine.updateExistingDocumentation(args);
 }

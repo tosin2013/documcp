@@ -1,15 +1,20 @@
-import { z } from 'zod';
-import { promises as fs } from 'fs';
-import path from 'path';
-import { MCPToolResponse } from '../types/api.js';
+import { z } from "zod";
+import { promises as fs } from "fs";
+import path from "path";
+import { MCPToolResponse } from "../types/api.js";
 
 // Input validation schema
 const OptimizeReadmeInputSchema = z.object({
-  readme_path: z.string().min(1, 'README path is required'),
+  readme_path: z.string().min(1, "README path is required"),
   strategy: z
-    .enum(['community_focused', 'enterprise_focused', 'developer_focused', 'general'])
+    .enum([
+      "community_focused",
+      "enterprise_focused",
+      "developer_focused",
+      "general",
+    ])
     .optional()
-    .default('community_focused'),
+    .default("community_focused"),
   max_length: z.number().min(50).max(1000).optional().default(300),
   include_tldr: z.boolean().optional().default(true),
   preserve_existing: z.boolean().optional().default(false),
@@ -38,7 +43,7 @@ interface ExtractedSection {
 }
 
 interface RestructuringChange {
-  type: 'moved' | 'condensed' | 'split' | 'added' | 'removed';
+  type: "moved" | "condensed" | "split" | "added" | "removed";
   section: string;
   description: string;
   impact: string;
@@ -46,41 +51,57 @@ interface RestructuringChange {
 
 export async function optimizeReadme(
   input: Partial<OptimizeReadmeInput>,
-): Promise<MCPToolResponse<{ optimization: OptimizationResult; nextSteps: string[] }>> {
+): Promise<
+  MCPToolResponse<{ optimization: OptimizationResult; nextSteps: string[] }>
+> {
   const startTime = Date.now();
 
   try {
     // Validate input
     const validatedInput = OptimizeReadmeInputSchema.parse(input);
-    const { readme_path, strategy, max_length, include_tldr, output_path, create_docs_directory } =
-      validatedInput;
+    const {
+      readme_path,
+      strategy,
+      max_length,
+      include_tldr,
+      output_path,
+      create_docs_directory,
+    } = validatedInput;
 
     // Read original README
-    const originalContent = await fs.readFile(readme_path, 'utf-8');
-    const originalLength = originalContent.split('\n').length;
+    const originalContent = await fs.readFile(readme_path, "utf-8");
+    const originalLength = originalContent.split("\n").length;
 
     // Parse README structure
     const sections = parseReadmeStructure(originalContent);
 
     // Generate TL;DR if requested
-    const tldrGenerated = include_tldr ? generateTldr(originalContent, sections) : null;
+    const tldrGenerated = include_tldr
+      ? generateTldr(originalContent, sections)
+      : null;
 
     // Identify sections to extract
-    const extractedSections = identifySectionsToExtract(sections, strategy, max_length);
+    const extractedSections = identifySectionsToExtract(
+      sections,
+      strategy,
+      max_length,
+    );
 
     // Create basic optimization result
     const optimizedContent =
-      originalContent + '\n\n## TL;DR\n\n' + (tldrGenerated || 'Quick overview of the project.');
+      originalContent +
+      "\n\n## TL;DR\n\n" +
+      (tldrGenerated || "Quick overview of the project.");
     const restructuringChanges = [
       {
-        type: 'added' as const,
-        section: 'TL;DR',
-        description: 'Added concise project overview',
-        impact: 'Helps users quickly understand project value',
+        type: "added" as const,
+        section: "TL;DR",
+        description: "Added concise project overview",
+        impact: "Helps users quickly understand project value",
       },
     ];
 
-    const optimizedLength = optimizedContent.split('\n').length;
+    const optimizedLength = optimizedContent.split("\n").length;
     const reductionPercentage = Math.round(
       ((originalLength - optimizedLength) / originalLength) * 100,
     );
@@ -92,7 +113,7 @@ export async function optimizeReadme(
 
     // Write optimized README if output path specified
     if (output_path) {
-      await fs.writeFile(output_path, optimizedContent, 'utf-8');
+      await fs.writeFile(output_path, optimizedContent, "utf-8");
     }
 
     const recommendations = generateOptimizationRecommendations(
@@ -113,7 +134,10 @@ export async function optimizeReadme(
       recommendations,
     };
 
-    const nextSteps = generateOptimizationNextSteps(optimization, validatedInput);
+    const nextSteps = generateOptimizationNextSteps(
+      optimization,
+      validatedInput,
+    );
 
     return {
       success: true,
@@ -122,7 +146,7 @@ export async function optimizeReadme(
         nextSteps,
       },
       metadata: {
-        toolVersion: '1.0.0',
+        toolVersion: "1.0.0",
         executionTime: Date.now() - startTime,
         timestamp: new Date().toISOString(),
       },
@@ -131,13 +155,13 @@ export async function optimizeReadme(
     return {
       success: false,
       error: {
-        code: 'OPTIMIZATION_FAILED',
-        message: 'Failed to optimize README',
-        details: error instanceof Error ? error.message : 'Unknown error',
-        resolution: 'Check README file path and permissions',
+        code: "OPTIMIZATION_FAILED",
+        message: "Failed to optimize README",
+        details: error instanceof Error ? error.message : "Unknown error",
+        resolution: "Check README file path and permissions",
       },
       metadata: {
-        toolVersion: '1.0.0',
+        toolVersion: "1.0.0",
         executionTime: Date.now() - startTime,
         timestamp: new Date().toISOString(),
       },
@@ -156,9 +180,9 @@ interface ReadmeSection {
 }
 
 function parseReadmeStructure(content: string): ReadmeSection[] {
-  const lines = content.split('\n');
+  const lines = content.split("\n");
   const sections: ReadmeSection[] = [];
-  let currentTitle = '';
+  let currentTitle = "";
   let currentLevel = 0;
   let currentStartLine = 0;
 
@@ -169,7 +193,9 @@ function parseReadmeStructure(content: string): ReadmeSection[] {
       // Save previous section
       if (currentTitle) {
         const endLine = index - 1;
-        const sectionContent = lines.slice(currentStartLine, endLine + 1).join('\n');
+        const sectionContent = lines
+          .slice(currentStartLine, endLine + 1)
+          .join("\n");
         const wordCount = sectionContent.split(/\s+/).length;
         const isEssential = isEssentialSection(currentTitle);
 
@@ -194,7 +220,9 @@ function parseReadmeStructure(content: string): ReadmeSection[] {
   // Add final section
   if (currentTitle) {
     const endLine = lines.length - 1;
-    const sectionContent = lines.slice(currentStartLine, endLine + 1).join('\n');
+    const sectionContent = lines
+      .slice(currentStartLine, endLine + 1)
+      .join("\n");
     const wordCount = sectionContent.split(/\s+/).length;
     const isEssential = isEssentialSection(currentTitle);
 
@@ -214,47 +242,55 @@ function parseReadmeStructure(content: string): ReadmeSection[] {
 
 function isEssentialSection(title: string): boolean {
   const essentialKeywords = [
-    'installation',
-    'install',
-    'setup',
-    'getting started',
-    'quick start',
-    'usage',
-    'example',
-    'api',
-    'license',
-    'contributing',
+    "installation",
+    "install",
+    "setup",
+    "getting started",
+    "quick start",
+    "usage",
+    "example",
+    "api",
+    "license",
+    "contributing",
   ];
 
-  return essentialKeywords.some((keyword) => title.toLowerCase().includes(keyword));
+  return essentialKeywords.some((keyword) =>
+    title.toLowerCase().includes(keyword),
+  );
 }
 
 function generateTldr(content: string, sections: ReadmeSection[]): string {
   // Extract project name from first heading
   const projectNameMatch = content.match(/^#\s+(.+)$/m);
-  const projectName = projectNameMatch ? projectNameMatch[1] : 'This project';
+  const projectName = projectNameMatch ? projectNameMatch[1] : "This project";
 
   // Extract description (usually after title or in blockquote)
   const descriptionMatch = content.match(/>\s*(.+)/);
-  let description = descriptionMatch ? descriptionMatch[1] : '';
+  let description = descriptionMatch ? descriptionMatch[1] : "";
 
   // If no description found, try to extract from first paragraph
   if (!description) {
     const firstParagraphMatch = content.match(/^[^#\n].{20,200}/m);
-    description = firstParagraphMatch ? firstParagraphMatch[0].substring(0, 100) + '...' : '';
+    description = firstParagraphMatch
+      ? firstParagraphMatch[0].substring(0, 100) + "..."
+      : "";
   }
 
   // Identify key features or use cases
   const features: string[] = [];
   sections.forEach((section) => {
     if (
-      section.title.toLowerCase().includes('feature') ||
-      section.title.toLowerCase().includes('what') ||
-      section.title.toLowerCase().includes('why')
+      section.title.toLowerCase().includes("feature") ||
+      section.title.toLowerCase().includes("what") ||
+      section.title.toLowerCase().includes("why")
     ) {
       const bullets = section.content.match(/^\s*[-*+]\s+(.+)$/gm);
       if (bullets && bullets.length > 0) {
-        features.push(...bullets.slice(0, 3).map((b) => b.replace(/^\s*[-*+]\s+/, '').trim()));
+        features.push(
+          ...bullets
+            .slice(0, 3)
+            .map((b) => b.replace(/^\s*[-*+]\s+/, "").trim()),
+        );
       }
     }
   });
@@ -266,12 +302,14 @@ function generateTldr(content: string, sections: ReadmeSection[]): string {
     features.slice(0, 3).forEach((feature) => {
       tldr += `- ${feature}\n`;
     });
-    tldr += '\n';
+    tldr += "\n";
   }
 
   // Add quick start reference
   const hasInstallSection = sections.some(
-    (s) => s.title.toLowerCase().includes('install') || s.title.toLowerCase().includes('setup'),
+    (s) =>
+      s.title.toLowerCase().includes("install") ||
+      s.title.toLowerCase().includes("setup"),
   );
 
   if (hasInstallSection) {
@@ -287,7 +325,10 @@ function identifySectionsToExtract(
   maxLength: number,
 ): ExtractedSection[] {
   const extractedSections: ExtractedSection[] = [];
-  const currentLength = sections.reduce((sum, s) => sum + s.content.split('\n').length, 0);
+  const currentLength = sections.reduce(
+    (sum, s) => sum + s.content.split("\n").length,
+    0,
+  );
 
   if (currentLength <= maxLength) {
     return extractedSections; // No extraction needed
@@ -317,33 +358,35 @@ function getExtractionRules(strategy: string) {
   const baseRules = [
     {
       matcher: (section: ReadmeSection) => section.wordCount > 200,
-      suggestedLocation: 'docs/detailed-guide.md',
-      reason: 'Section too long for main README',
+      suggestedLocation: "docs/detailed-guide.md",
+      reason: "Section too long for main README",
     },
     {
       matcher: (section: ReadmeSection) =>
         /troubleshoot|faq|common issues|problems/i.test(section.title),
-      suggestedLocation: 'docs/troubleshooting.md',
-      reason: 'Troubleshooting content better suited for separate document',
+      suggestedLocation: "docs/troubleshooting.md",
+      reason: "Troubleshooting content better suited for separate document",
     },
     {
-      matcher: (section: ReadmeSection) => /advanced|configuration|config/i.test(section.title),
-      suggestedLocation: 'docs/configuration.md',
-      reason: 'Advanced configuration details',
+      matcher: (section: ReadmeSection) =>
+        /advanced|configuration|config/i.test(section.title),
+      suggestedLocation: "docs/configuration.md",
+      reason: "Advanced configuration details",
     },
     {
       matcher: (section: ReadmeSection) =>
         /development|developer|build|compile/i.test(section.title),
-      suggestedLocation: 'docs/development.md',
-      reason: 'Development-specific information',
+      suggestedLocation: "docs/development.md",
+      reason: "Development-specific information",
     },
   ];
 
-  if (strategy === 'community_focused') {
+  if (strategy === "community_focused") {
     baseRules.push({
-      matcher: (section: ReadmeSection) => /architecture|design|technical/i.test(section.title),
-      suggestedLocation: 'docs/technical.md',
-      reason: 'Technical details can overwhelm community contributors',
+      matcher: (section: ReadmeSection) =>
+        /architecture|design|technical/i.test(section.title),
+      suggestedLocation: "docs/technical.md",
+      reason: "Technical details can overwhelm community contributors",
     });
   }
 
@@ -354,7 +397,7 @@ async function createDocsStructure(
   projectDir: string,
   extractedSections: ExtractedSection[],
 ): Promise<void> {
-  const docsDir = path.join(projectDir, 'docs');
+  const docsDir = path.join(projectDir, "docs");
 
   try {
     await fs.mkdir(docsDir, { recursive: true });
@@ -369,7 +412,7 @@ async function createDocsStructure(
 
     try {
       await fs.mkdir(fileDir, { recursive: true });
-      await fs.writeFile(filePath, section.content, 'utf-8');
+      await fs.writeFile(filePath, section.content, "utf-8");
     } catch (error) {
       console.warn(`Failed to create ${filePath}:`, error);
     }
@@ -377,15 +420,15 @@ async function createDocsStructure(
 
   // Create docs index
   const indexContent = generateDocsIndex(extractedSections);
-  await fs.writeFile(path.join(docsDir, 'README.md'), indexContent, 'utf-8');
+  await fs.writeFile(path.join(docsDir, "README.md"), indexContent, "utf-8");
 }
 
 function generateDocsIndex(extractedSections: ExtractedSection[]): string {
-  let content = '# Documentation\n\n';
+  let content = "# Documentation\n\n";
   content +=
-    'This directory contains detailed documentation extracted from the main README for better organization.\n\n';
+    "This directory contains detailed documentation extracted from the main README for better organization.\n\n";
 
-  content += '## Available Documentation\n\n';
+  content += "## Available Documentation\n\n";
   extractedSections.forEach((section) => {
     const filename = path.basename(section.suggestedLocation);
     content += `- [${section.title}](${filename}) - ${section.reason}\n`;
@@ -417,16 +460,18 @@ function generateOptimizationRecommendations(
     );
   }
 
-  if (strategy === 'community_focused') {
+  if (strategy === "community_focused") {
     recommendations.push(
-      '👥 Optimized for community contributors - prioritized quick start and contribution info',
+      "👥 Optimized for community contributors - prioritized quick start and contribution info",
     );
   }
 
   recommendations.push(
-    '🔗 Added links to detailed documentation for users who need more information',
+    "🔗 Added links to detailed documentation for users who need more information",
   );
-  recommendations.push('📊 Consider adding a table of contents for sections with 5+ headings');
+  recommendations.push(
+    "📊 Consider adding a table of contents for sections with 5+ headings",
+  );
 
   return recommendations;
 }
@@ -438,20 +483,22 @@ function generateOptimizationNextSteps(
   const steps: string[] = [];
 
   if (!input.output_path) {
-    steps.push('💾 Review optimized content and save to README.md when ready');
+    steps.push("💾 Review optimized content and save to README.md when ready");
   }
 
   if (optimization.extractedSections.length > 0) {
-    steps.push('📝 Review extracted documentation files in docs/ directory');
-    steps.push('🔗 Update any internal links that may have been affected');
+    steps.push("📝 Review extracted documentation files in docs/ directory");
+    steps.push("🔗 Update any internal links that may have been affected");
   }
 
   if (optimization.reductionPercentage > 30) {
-    steps.push('👀 Have team members review the condensed content for accuracy');
+    steps.push(
+      "👀 Have team members review the condensed content for accuracy",
+    );
   }
 
-  steps.push('📈 Run analyze_readme again to verify improvements');
-  steps.push('🎯 Consider setting up automated README length monitoring');
+  steps.push("📈 Run analyze_readme again to verify improvements");
+  steps.push("🎯 Consider setting up automated README length monitoring");
 
   return steps;
 }

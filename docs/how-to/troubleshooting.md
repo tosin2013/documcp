@@ -221,8 +221,8 @@ mkdocs --version && mkdocs build --strict
 ```javascript
 // Fix in docusaurus.config.js
 const config = {
-  baseUrl: '/your-repo-name/', // Must match repository name
-  url: 'https://yourusername.github.io',
+  baseUrl: "/your-repo-name/", // Must match repository name
+  url: "https://yourusername.github.io",
 };
 ```
 
@@ -230,7 +230,7 @@ const config = {
 
 ```yaml
 # Fix in config.yml
-baseURL: 'https://yourusername.github.io/your-repo-name/'
+baseURL: "https://yourusername.github.io/your-repo-name/"
 ```
 
 ## Documentation Structure Issues
@@ -320,7 +320,7 @@ find . -name "*.ts" -exec grep -l "export" {} \;
 - name: Setup Node.js
   uses: actions/setup-node@v4
   with:
-    node-version: '20' # Match your local version
+    node-version: "20" # Match your local version
 ```
 
 **Missing dependencies:**
@@ -365,21 +365,21 @@ find . -name "*.ts" -exec grep -l "export" {} \;
 
 ```javascript
 const config = {
-  baseUrl: '/repository-name/', // Must match your repo name exactly
-  url: 'https://username.github.io',
+  baseUrl: "/repository-name/", // Must match your repo name exactly
+  url: "https://username.github.io",
 };
 ```
 
 **Hugo:**
 
 ```yaml
-baseURL: 'https://username.github.io/repository-name/'
+baseURL: "https://username.github.io/repository-name/"
 ```
 
 **MkDocs:**
 
 ```yaml
-site_url: 'https://username.github.io/repository-name/'
+site_url: "https://username.github.io/repository-name/"
 ```
 
 3. **Check file naming:**
@@ -413,8 +413,8 @@ ls docs/index.*
 
 ```javascript
 const config = {
-  baseUrl: '/repo-name/',
-  staticDirectories: ['static'],
+  baseUrl: "/repo-name/",
+  staticDirectories: ["static"],
 };
 ```
 
@@ -422,7 +422,7 @@ const config = {
 
 ```yaml
 # In config.yml
-baseURL: 'https://username.github.io/repo-name/'
+baseURL: "https://username.github.io/repo-name/"
 canonifyURLs: true
 ```
 
@@ -486,7 +486,7 @@ Link to [My Section](#my_section) <!-- May fail -->
 <!-- Correct -->
 
 ```javascript
-const example = 'Hello World';
+const example = "Hello World";
 ```
 ````
 
@@ -592,10 +592,10 @@ const config = {
   },
   webpack: {
     jsLoader: (isServer) => ({
-      loader: 'esbuild-loader',
+      loader: "esbuild-loader",
       options: {
-        loader: 'tsx',
-        target: isServer ? 'node12' : 'es2017',
+        loader: "tsx",
+        target: isServer ? "node12" : "es2017",
       },
     }),
   },
@@ -663,7 +663,7 @@ find docs -name "*.png" -exec cwebp {} -o {}.webp \;
 const config = {
   webpack: {
     splitChunks: {
-      chunks: 'all',
+      chunks: "all",
       cacheGroups: {
         default: {
           minChunks: 2,

@@ -1,17 +1,35 @@
 /**
  * Knowledge Graph Architecture for DocuMCP
- * Implements Issue #48: Knowledge Graph Architecture
+ * Implements Phase 1.1: Enhanced Knowledge Graph Schema Implementation
+ * Previously: Issue #48: Knowledge Graph Architecture
  *
  * Creates entity relationship graphs for projects, technologies, patterns, and dependencies
  * to enable advanced reasoning and recommendation improvements.
+ *
+ * Enhanced with comprehensive entity types and relationship schemas following NEW_PRD.md
  */
 
-import { MemoryManager } from './manager.js';
-import { MemoryEntry } from './storage.js';
+import { MemoryManager } from "./manager.js";
+import { MemoryEntry } from "./storage.js";
+import {
+  validateEntity,
+  validateRelationship,
+  SCHEMA_METADATA,
+} from "./schemas.js";
 
 export interface GraphNode {
   id: string;
-  type: 'project' | 'technology' | 'pattern' | 'user' | 'outcome' | 'recommendation';
+  type:
+    | "project"
+    | "technology"
+    | "pattern"
+    | "user"
+    | "outcome"
+    | "recommendation"
+    | "configuration"
+    | "documentation"
+    | "code_file"
+    | "documentation_section";
   label: string;
   properties: Record<string, any>;
   weight: number;
@@ -22,7 +40,19 @@ export interface GraphEdge {
   id: string;
   source: string;
   target: string;
-  type: 'uses' | 'similar_to' | 'depends_on' | 'recommends' | 'results_in' | 'created_by';
+  type:
+    | "uses"
+    | "similar_to"
+    | "depends_on"
+    | "recommends"
+    | "results_in"
+    | "created_by"
+    | "project_uses_technology"
+    | "user_prefers_ssg"
+    | "project_deployed_with"
+    | "documents"
+    | "references"
+    | "outdated_for";
   weight: number;
   properties: Record<string, any>;
   confidence: number;
@@ -76,7 +106,7 @@ export class KnowledgeGraph {
   /**
    * Add or update a node in the knowledge graph
    */
-  addNode(node: Omit<GraphNode, 'lastUpdated'>): GraphNode {
+  addNode(node: Omit<GraphNode, "lastUpdated">): GraphNode {
     const fullNode: GraphNode = {
       ...node,
       lastUpdated: new Date().toISOString(),
@@ -94,7 +124,7 @@ export class KnowledgeGraph {
   /**
    * Add or update an edge in the knowledge graph
    */
-  addEdge(edge: Omit<GraphEdge, 'id' | 'lastUpdated'>): GraphEdge {
+  addEdge(edge: Omit<GraphEdge, "id" | "lastUpdated">): GraphEdge {
     const edgeId = `${edge.source}-${edge.type}-${edge.target}`;
     const fullEdge: GraphEdge = {
       ...edge,
@@ -121,7 +151,9 @@ export class KnowledgeGraph {
    * Build knowledge graph from memory entries
    */
   async buildFromMemories(): Promise<void> {
-    const memories = await this.memoryManager.search('', { sortBy: 'timestamp' });
+    const memories = await this.memoryManager.search("", {
+      sortBy: "timestamp",
+    });
 
     for (const memory of memories) {
       await this.processMemoryEntry(memory);
@@ -139,7 +171,7 @@ export class KnowledgeGraph {
     if (memory.metadata.projectId) {
       const projectNode = this.addNode({
         id: `project:${memory.metadata.projectId}`,
-        type: 'project',
+        type: "project",
         label: memory.metadata.projectId,
         properties: {
           repository: memory.metadata.repository,
@@ -149,14 +181,16 @@ export class KnowledgeGraph {
       });
 
       // Create technology nodes
-      if (memory.type === 'analysis' && memory.data.language) {
+      if (memory.type === "analysis" && memory.data.language) {
         const langNode = this.addNode({
           id: `tech:${memory.data.language.primary}`,
-          type: 'technology',
+          type: "technology",
           label: memory.data.language.primary,
           properties: {
-            category: 'language',
-            popularity: this.getTechnologyPopularity(memory.data.language.primary),
+            category: "language",
+            popularity: this.getTechnologyPopularity(
+              memory.data.language.primary,
+            ),
           },
           weight: 1.0,
         });
@@ -164,10 +198,10 @@ export class KnowledgeGraph {
         this.addEdge({
           source: projectNode.id,
           target: langNode.id,
-          type: 'uses',
+          type: "uses",
           weight: 1.0,
           confidence: 0.9,
-          properties: { source: 'analysis' },
+          properties: { source: "analysis" },
         });
       }
 
@@ -175,10 +209,10 @@ export class KnowledgeGraph {
       if (memory.data.framework?.name) {
         const frameworkNode = this.addNode({
           id: `tech:${memory.data.framework.name}`,
-          type: 'technology',
+          type: "technology",
           label: memory.data.framework.name,
           properties: {
-            category: 'framework',
+            category: "framework",
             version: memory.data.framework.version,
           },
           weight: 1.0,
@@ -187,21 +221,21 @@ export class KnowledgeGraph {
         this.addEdge({
           source: projectNode.id,
           target: frameworkNode.id,
-          type: 'uses',
+          type: "uses",
           weight: 1.0,
           confidence: 0.8,
-          properties: { source: 'analysis' },
+          properties: { source: "analysis" },
         });
       }
 
       // Create SSG recommendation nodes
-      if (memory.type === 'recommendation' && memory.data.recommended) {
+      if (memory.type === "recommendation" && memory.data.recommended) {
         const ssgNode = this.addNode({
           id: `tech:${memory.data.recommended}`,
-          type: 'technology',
+          type: "technology",
           label: memory.data.recommended,
           properties: {
-            category: 'ssg',
+            category: "ssg",
             score: memory.data.score,
           },
           weight: 1.0,
@@ -210,34 +244,34 @@ export class KnowledgeGraph {
         this.addEdge({
           source: projectNode.id,
           target: ssgNode.id,
-          type: 'recommends',
+          type: "recommends",
           weight: memory.data.score || 1.0,
           confidence: memory.data.confidence || 0.5,
           properties: {
-            source: 'recommendation',
+            source: "recommendation",
             reasoning: memory.data.reasoning,
           },
         });
       }
 
       // Create outcome nodes
-      if (memory.type === 'deployment') {
+      if (memory.type === "deployment") {
         const outcomeNode = this.addNode({
           id: `outcome:${memory.data.status}:${memory.metadata.ssg}`,
-          type: 'outcome',
+          type: "outcome",
           label: `${memory.data.status} with ${memory.metadata.ssg}`,
           properties: {
             status: memory.data.status,
             ssg: memory.metadata.ssg,
             duration: memory.data.duration,
           },
-          weight: memory.data.status === 'success' ? 1.0 : 0.5,
+          weight: memory.data.status === "success" ? 1.0 : 0.5,
         });
 
         this.addEdge({
           source: projectNode.id,
           target: outcomeNode.id,
-          type: 'results_in',
+          type: "results_in",
           weight: 1.0,
           confidence: 1.0,
           properties: {
@@ -267,17 +301,22 @@ export class KnowledgeGraph {
    * Compute project similarity relationships
    */
   private async computeProjectSimilarity(): Promise<void> {
-    const projectNodes = Array.from(this.nodes.values()).filter((node) => node.type === 'project');
+    const projectNodes = Array.from(this.nodes.values()).filter(
+      (node) => node.type === "project",
+    );
 
     for (let i = 0; i < projectNodes.length; i++) {
       for (let j = i + 1; j < projectNodes.length; j++) {
-        const similarity = this.calculateProjectSimilarity(projectNodes[i], projectNodes[j]);
+        const similarity = this.calculateProjectSimilarity(
+          projectNodes[i],
+          projectNodes[j],
+        );
 
         if (similarity > 0.7) {
           this.addEdge({
             source: projectNodes[i].id,
             target: projectNodes[j].id,
-            type: 'similar_to',
+            type: "similar_to",
             weight: similarity,
             confidence: similarity,
             properties: {
@@ -293,7 +332,10 @@ export class KnowledgeGraph {
   /**
    * Calculate similarity between two projects
    */
-  private calculateProjectSimilarity(project1: GraphNode, project2: GraphNode): number {
+  private calculateProjectSimilarity(
+    project1: GraphNode,
+    project2: GraphNode,
+  ): number {
     const tech1 = this.getConnectedTechnologies(project1.id);
     const tech2 = this.getConnectedTechnologies(project2.id);
 
@@ -314,7 +356,7 @@ export class KnowledgeGraph {
 
     for (const nodeId of adjacents) {
       const node = this.nodes.get(nodeId);
-      if (node && node.type === 'technology') {
+      if (node && node.type === "technology") {
         technologies.add(nodeId);
       }
     }
@@ -328,16 +370,16 @@ export class KnowledgeGraph {
   private async computeTechnologyDependencies(): Promise<void> {
     // Define known technology dependencies
     const dependencies = new Map([
-      ['tech:react', ['tech:javascript', 'tech:nodejs']],
-      ['tech:vue', ['tech:javascript', 'tech:nodejs']],
-      ['tech:angular', ['tech:typescript', 'tech:nodejs']],
-      ['tech:gatsby', ['tech:react', 'tech:graphql']],
-      ['tech:next.js', ['tech:react', 'tech:nodejs']],
-      ['tech:nuxt.js', ['tech:vue', 'tech:nodejs']],
-      ['tech:docusaurus', ['tech:react', 'tech:markdown']],
-      ['tech:jekyll', ['tech:ruby', 'tech:markdown']],
-      ['tech:hugo', ['tech:go', 'tech:markdown']],
-      ['tech:mkdocs', ['tech:python', 'tech:markdown']],
+      ["tech:react", ["tech:javascript", "tech:nodejs"]],
+      ["tech:vue", ["tech:javascript", "tech:nodejs"]],
+      ["tech:angular", ["tech:typescript", "tech:nodejs"]],
+      ["tech:gatsby", ["tech:react", "tech:graphql"]],
+      ["tech:next.js", ["tech:react", "tech:nodejs"]],
+      ["tech:nuxt.js", ["tech:vue", "tech:nodejs"]],
+      ["tech:docusaurus", ["tech:react", "tech:markdown"]],
+      ["tech:jekyll", ["tech:ruby", "tech:markdown"]],
+      ["tech:hugo", ["tech:go", "tech:markdown"]],
+      ["tech:mkdocs", ["tech:python", "tech:markdown"]],
     ]);
 
     for (const [tech, deps] of dependencies) {
@@ -349,12 +391,12 @@ export class KnowledgeGraph {
           this.addEdge({
             source: tech,
             target: dep,
-            type: 'depends_on',
+            type: "depends_on",
             weight: 0.8,
             confidence: 0.9,
             properties: {
               computed: true,
-              dependency_type: 'runtime',
+              dependency_type: "runtime",
             },
           });
         }
@@ -367,7 +409,7 @@ export class KnowledgeGraph {
    */
   private async computePatternRelationships(): Promise<void> {
     const successfulOutcomes = Array.from(this.nodes.values()).filter(
-      (node) => node.type === 'outcome' && node.properties.status === 'success',
+      (node) => node.type === "outcome" && node.properties.status === "success",
     );
 
     for (const outcome of successfulOutcomes) {
@@ -378,7 +420,7 @@ export class KnowledgeGraph {
 
       for (const edge of incomingEdges) {
         const sourceNode = this.nodes.get(edge.source);
-        if (sourceNode && sourceNode.type === 'project') {
+        if (sourceNode && sourceNode.type === "project") {
           // Strengthen relationships for successful patterns
           this.strengthenSuccessPattern(sourceNode.id, outcome.properties.ssg);
         }
@@ -412,10 +454,10 @@ export class KnowledgeGraph {
 
     // Update edge weights based on frequency and success
     for (const edge of this.edges.values()) {
-      if (edge.type === 'recommends') {
+      if (edge.type === "recommends") {
         // Find successful outcomes for this recommendation
         const targetNode = this.nodes.get(edge.target);
-        if (targetNode && targetNode.type === 'technology') {
+        if (targetNode && targetNode.type === "technology") {
           const successRate = this.calculateSuccessRate(targetNode.id);
           edge.weight *= 1 + successRate;
         }
@@ -427,21 +469,27 @@ export class KnowledgeGraph {
    * Calculate success rate for a technology
    */
   private calculateSuccessRate(techId: string): number {
-    const tech = techId.replace('tech:', '');
+    const tech = techId.replace("tech:", "");
     const outcomes = Array.from(this.nodes.values()).filter(
-      (node) => node.type === 'outcome' && node.properties.ssg === tech,
+      (node) => node.type === "outcome" && node.properties.ssg === tech,
     );
 
     if (outcomes.length === 0) return 0;
 
-    const successes = outcomes.filter((node) => node.properties.status === 'success').length;
+    const successes = outcomes.filter(
+      (node) => node.properties.status === "success",
+    ).length;
     return successes / outcomes.length;
   }
 
   /**
    * Find the shortest path between two nodes
    */
-  findPath(sourceId: string, targetId: string, maxDepth: number = 5): GraphPath | null {
+  findPath(
+    sourceId: string,
+    targetId: string,
+    maxDepth: number = 5,
+  ): GraphPath | null {
     const visited = new Set<string>();
     const queue: { nodeId: string; path: GraphPath }[] = [
       {
@@ -527,7 +575,9 @@ export class KnowledgeGraph {
     // Filter by properties
     if (query.properties) {
       nodes = nodes.filter((node) =>
-        Object.entries(query.properties!).every(([key, value]) => node.properties[key] === value),
+        Object.entries(query.properties!).every(
+          ([key, value]) => node.properties[key] === value,
+        ),
       );
     }
 
@@ -550,7 +600,13 @@ export class KnowledgeGraph {
         totalWeight: 0,
         confidence: 1.0,
       };
-      this.explorePaths(query.startNode, emptyPath, paths, visited, query.maxDepth);
+      this.explorePaths(
+        query.startNode,
+        emptyPath,
+        paths,
+        visited,
+        query.maxDepth,
+      );
       (result as any).paths = paths;
     }
 
@@ -587,7 +643,13 @@ export class KnowledgeGraph {
         };
 
         allPaths.push(newPath);
-        this.explorePaths(neighborId, newPath, allPaths, new Set(visited), maxDepth);
+        this.explorePaths(
+          neighborId,
+          newPath,
+          allPaths,
+          new Set(visited),
+          maxDepth,
+        );
       }
     }
   }
@@ -605,8 +667,8 @@ export class KnowledgeGraph {
     const tempProjectId = `temp:${Date.now()}`;
     const projectNode = this.addNode({
       id: tempProjectId,
-      type: 'project',
-      label: 'Query Project',
+      type: "project",
+      label: "Query Project",
       properties: projectFeatures,
       weight: 1.0,
     });
@@ -624,7 +686,10 @@ export class KnowledgeGraph {
 
           if (path) {
             const reasoning = this.generateReasoning(path);
-            const confidence = this.calculatePathConfidence(path, projectFeatures);
+            const confidence = this.calculatePathConfidence(
+              path,
+              projectFeatures,
+            );
 
             recommendations.push({
               from: projectNode,
@@ -648,12 +713,17 @@ export class KnowledgeGraph {
    * Find projects similar to given features
    */
   private findSimilarProjects(features: any): GraphNode[] {
-    const projectNodes = Array.from(this.nodes.values()).filter((node) => node.type === 'project');
+    const projectNodes = Array.from(this.nodes.values()).filter(
+      (node) => node.type === "project",
+    );
 
     return projectNodes
       .map((project) => ({
         project,
-        similarity: this.calculateFeatureSimilarity(features, project.properties),
+        similarity: this.calculateFeatureSimilarity(
+          features,
+          project.properties,
+        ),
       }))
       .filter(({ similarity }) => similarity > 0.6)
       .sort((a, b) => b.similarity - a.similarity)
@@ -703,20 +773,26 @@ export class KnowledgeGraph {
       const targetNode = path.nodes[i + 1];
 
       switch (edge.type) {
-        case 'similar_to':
+        case "similar_to":
           reasoning.push(
-            `Similar to ${sourceNode.label} (${(edge.confidence * 100).toFixed(0)}% similarity)`,
+            `Similar to ${sourceNode.label} (${(edge.confidence * 100).toFixed(
+              0,
+            )}% similarity)`,
           );
           break;
-        case 'recommends':
+        case "recommends":
           reasoning.push(
-            `Successfully used ${targetNode.label} (score: ${edge.weight.toFixed(1)})`,
+            `Successfully used ${
+              targetNode.label
+            } (score: ${edge.weight.toFixed(1)})`,
           );
           break;
-        case 'results_in':
-          reasoning.push(`Resulted in ${targetNode.properties.status} deployment`);
+        case "results_in":
+          reasoning.push(
+            `Resulted in ${targetNode.properties.status} deployment`,
+          );
           break;
-        case 'uses':
+        case "uses":
           reasoning.push(`Uses ${targetNode.label}`);
           break;
       }
@@ -753,15 +829,15 @@ export class KnowledgeGraph {
   private getTechnologyPopularity(tech: string): number {
     // Simple popularity scoring - could be enhanced with real data
     const popularityMap = new Map([
-      ['javascript', 0.9],
-      ['typescript', 0.8],
-      ['python', 0.8],
-      ['react', 0.9],
-      ['vue', 0.7],
-      ['angular', 0.6],
-      ['go', 0.7],
-      ['ruby', 0.5],
-      ['rust', 0.6],
+      ["javascript", 0.9],
+      ["typescript", 0.8],
+      ["python", 0.8],
+      ["react", 0.9],
+      ["vue", 0.7],
+      ["angular", 0.6],
+      ["go", 0.7],
+      ["ruby", 0.5],
+      ["rust", 0.6],
     ]);
 
     return popularityMap.get(tech.toLowerCase()) || 0.3;
@@ -779,13 +855,13 @@ export class KnowledgeGraph {
     };
 
     await this.memoryManager.remember(
-      'interaction',
+      "interaction",
       {
         graph: graphData,
-        type: 'knowledge_graph',
+        type: "knowledge_graph",
       },
       {
-        tags: ['knowledge_graph', 'structure'],
+        tags: ["knowledge_graph", "structure"],
       },
     );
   }
@@ -795,11 +871,12 @@ export class KnowledgeGraph {
    */
   async loadFromMemory(): Promise<void> {
     try {
-      const graphMemories = await this.memoryManager.search('knowledge_graph');
+      const graphMemories = await this.memoryManager.search("knowledge_graph");
 
       if (graphMemories.length > 0) {
         const latestGraph = graphMemories.sort(
-          (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+          (a, b) =>
+            new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
         )[0];
 
         if (latestGraph.data.graph) {
@@ -824,7 +901,7 @@ export class KnowledgeGraph {
         }
       }
     } catch (error) {
-      console.error('Failed to load knowledge graph from memory:', error);
+      console.error("Failed to load knowledge graph from memory:", error);
     }
   }
 
@@ -911,8 +988,10 @@ export class KnowledgeGraph {
 
     const averageConnectivity =
       connectivityCounts.length > 0
-        ? connectivityCounts.reduce((sum, { connections }) => sum + connections, 0) /
-          connectivityCounts.length
+        ? connectivityCounts.reduce(
+            (sum, { connections }) => sum + connections,
+            0,
+          ) / connectivityCounts.length
         : 0;
 
     return {
@@ -923,6 +1002,239 @@ export class KnowledgeGraph {
       averageConnectivity,
       mostConnectedNodes: connectivityCounts.slice(0, 10),
     };
+  }
+
+  // ============================================================================
+  // Phase 1.1: Enhanced Node Query Methods
+  // ============================================================================
+
+  /**
+   * Find a single node matching criteria
+   */
+  async findNode(criteria: {
+    type?: string;
+    properties?: Record<string, any>;
+  }): Promise<GraphNode | null> {
+    for (const node of this.nodes.values()) {
+      if (criteria.type && node.type !== criteria.type) continue;
+
+      if (criteria.properties) {
+        let matches = true;
+        for (const [key, value] of Object.entries(criteria.properties)) {
+          if (node.properties[key] !== value) {
+            matches = false;
+            break;
+          }
+        }
+        if (!matches) continue;
+      }
+
+      return node;
+    }
+
+    return null;
+  }
+
+  /**
+   * Find all nodes matching criteria
+   */
+  async findNodes(criteria: {
+    type?: string;
+    properties?: Record<string, any>;
+  }): Promise<GraphNode[]> {
+    const results: GraphNode[] = [];
+
+    for (const node of this.nodes.values()) {
+      if (criteria.type && node.type !== criteria.type) continue;
+
+      if (criteria.properties) {
+        let matches = true;
+        for (const [key, value] of Object.entries(criteria.properties)) {
+          if (node.properties[key] !== value) {
+            matches = false;
+            break;
+          }
+        }
+        if (!matches) continue;
+      }
+
+      results.push(node);
+    }
+
+    return results;
+  }
+
+  /**
+   * Find edges matching criteria
+   */
+  async findEdges(criteria: {
+    source?: string;
+    target?: string;
+    type?: string;
+  }): Promise<GraphEdge[]> {
+    const results: GraphEdge[] = [];
+
+    for (const edge of this.edges.values()) {
+      if (criteria.source && edge.source !== criteria.source) continue;
+      if (criteria.target && edge.target !== criteria.target) continue;
+      if (criteria.type && edge.type !== criteria.type) continue;
+
+      results.push(edge);
+    }
+
+    return results;
+  }
+
+  /**
+   * Find all paths between two nodes up to a maximum depth
+   */
+  async findPaths(criteria: {
+    startNode: string;
+    endNode?: string;
+    edgeTypes?: string[];
+    maxDepth: number;
+  }): Promise<GraphPath[]> {
+    const paths: GraphPath[] = [];
+    const visited = new Set<string>();
+
+    const emptyPath: GraphPath = {
+      nodes: [this.nodes.get(criteria.startNode)!],
+      edges: [],
+      totalWeight: 0,
+      confidence: 1.0,
+    };
+
+    this.findPathsRecursive(
+      criteria.startNode,
+      emptyPath,
+      paths,
+      visited,
+      criteria.maxDepth,
+      criteria.endNode,
+      criteria.edgeTypes,
+    );
+
+    return paths;
+  }
+
+  /**
+   * Recursive helper for finding paths
+   */
+  private findPathsRecursive(
+    currentNodeId: string,
+    currentPath: GraphPath,
+    allPaths: GraphPath[],
+    visited: Set<string>,
+    maxDepth: number,
+    endNode?: string,
+    edgeTypes?: string[],
+  ): void {
+    if (currentPath.nodes.length >= maxDepth) return;
+
+    visited.add(currentNodeId);
+    const neighbors = this.adjacencyList.get(currentNodeId) || new Set();
+
+    for (const neighborId of neighbors) {
+      if (visited.has(neighborId)) continue;
+
+      const edge = this.findEdge(currentNodeId, neighborId);
+      if (!edge) continue;
+
+      // Filter by edge type if specified
+      if (edgeTypes && !edgeTypes.includes(edge.type)) continue;
+
+      const neighborNode = this.nodes.get(neighborId);
+      if (!neighborNode) continue;
+
+      const newPath: GraphPath = {
+        nodes: [...currentPath.nodes, neighborNode],
+        edges: [...currentPath.edges, edge],
+        totalWeight: currentPath.totalWeight + edge.weight,
+        confidence: currentPath.confidence * edge.confidence,
+      };
+
+      // If we've reached the end node, add this path
+      if (endNode && neighborId === endNode) {
+        allPaths.push(newPath);
+        continue;
+      }
+
+      // If no end node specified, add all paths
+      if (!endNode) {
+        allPaths.push(newPath);
+      }
+
+      // Continue exploring
+      this.findPathsRecursive(
+        neighborId,
+        newPath,
+        allPaths,
+        new Set(visited),
+        maxDepth,
+        endNode,
+        edgeTypes,
+      );
+    }
+  }
+
+  /**
+   * Get node history (all changes to a node over time)
+   */
+  async getNodeHistory(nodeId: string): Promise<MemoryEntry[]> {
+    const node = this.nodes.get(nodeId);
+    if (!node) return [];
+
+    // Search memory for all entries related to this node
+    const projectId = node.properties.projectId || node.properties.path;
+    if (!projectId) return [];
+
+    return await this.memoryManager.search(projectId);
+  }
+
+  /**
+   * Get schema version
+   */
+  getSchemaVersion(): string {
+    return SCHEMA_METADATA.version;
+  }
+
+  /**
+   * Validate node against schema
+   */
+  validateNode(node: GraphNode): boolean {
+    try {
+      const entityData = {
+        ...node.properties,
+        type: node.type,
+      };
+      validateEntity(entityData);
+      return true;
+    } catch (error) {
+      console.error(`Node validation failed for ${node.id}:`, error);
+      return false;
+    }
+  }
+
+  /**
+   * Validate edge against schema
+   */
+  validateEdge(edge: GraphEdge): boolean {
+    try {
+      const relationshipData = {
+        type: edge.type,
+        weight: edge.weight,
+        confidence: edge.confidence,
+        createdAt: edge.lastUpdated,
+        lastUpdated: edge.lastUpdated,
+        metadata: edge.properties,
+        ...edge.properties,
+      };
+      validateRelationship(relationshipData);
+      return true;
+    } catch (error) {
+      console.error(`Edge validation failed for ${edge.id}:`, error);
+      return false;
+    }
   }
 }
 

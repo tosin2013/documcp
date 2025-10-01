@@ -168,12 +168,12 @@ While DocuMCP is designed for MCP integration, you can test tools via Node.js:
 
 ```javascript
 // test-tool.js
-import { analyzeRepository } from './dist/tools/analyze-repository.js';
+import { analyzeRepository } from "./dist/tools/analyze-repository.js";
 
 async function test() {
   const result = await analyzeRepository({
     path: process.cwd(),
-    depth: 'standard',
+    depth: "standard",
   });
   console.log(JSON.stringify(result, null, 2));
 }
@@ -191,24 +191,24 @@ node test-tool.js
 **Repository Analysis:**
 
 ```javascript
-import { analyzeRepository } from './dist/tools/analyze-repository.js';
+import { analyzeRepository } from "./dist/tools/analyze-repository.js";
 
 const analysis = await analyzeRepository({
-  path: '/path/to/repository',
-  depth: 'deep',
+  path: "/path/to/repository",
+  depth: "deep",
 });
 ```
 
 **SSG Recommendation:**
 
 ```javascript
-import { recommendSSG } from './dist/tools/recommend-ssg.js';
+import { recommendSSG } from "./dist/tools/recommend-ssg.js";
 
 const recommendation = await recommendSSG({
-  analysisId: 'analysis_12345',
+  analysisId: "analysis_12345",
   preferences: {
-    ecosystem: 'javascript',
-    priority: 'features',
+    ecosystem: "javascript",
+    priority: "features",
   },
 });
 ```
@@ -216,12 +216,12 @@ const recommendation = await recommendSSG({
 **Configuration Generation:**
 
 ```javascript
-import { generateConfig } from './dist/tools/generate-config.js';
+import { generateConfig } from "./dist/tools/generate-config.js";
 
 const config = await generateConfig({
-  ssg: 'docusaurus',
-  projectName: 'My Project',
-  outputPath: './docs',
+  ssg: "docusaurus",
+  projectName: "My Project",
+  outputPath: "./docs",
 });
 ```
 
@@ -363,7 +363,7 @@ name: Documentation
 on:
   push:
     branches: [main]
-    paths: ['docs/**', '*.md']
+    paths: ["docs/**", "*.md"]
 
 jobs:
   deploy-docs:
@@ -374,7 +374,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
 
       - name: Install DocuMCP
         run: npm install -g documcp
@@ -391,15 +391,15 @@ For advanced integration:
 
 ```javascript
 // integration.js
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { analyzeRepository, recommendSSG, deployPages } from 'documcp';
+import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import { analyzeRepository, recommendSSG, deployPages } from "documcp";
 
 class DocuMCPIntegration {
   async deployDocumentation(repoPath) {
     // Analyze
     const analysis = await analyzeRepository({
       path: repoPath,
-      depth: 'standard',
+      depth: "standard",
     });
 
     // Get recommendation

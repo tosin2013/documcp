@@ -294,8 +294,8 @@ name: Documentation Tests
 on:
   pull_request:
     paths:
-      - 'docs/**'
-      - 'docs-site/**'
+      - "docs/**"
+      - "docs-site/**"
 
 jobs:
   test-docs:
@@ -306,9 +306,9 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: 'docs-site/package-lock.json'
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: "docs-site/package-lock.json"
 
       - name: Test documentation build
         run: ./test-docs-local.sh --build-only

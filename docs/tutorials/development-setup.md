@@ -206,7 +206,7 @@ name: Documentation Quality
 
 on:
   pull_request:
-    paths: ['docs/**', '*.md']
+    paths: ["docs/**", "*.md"]
 
 jobs:
   quality-check:
@@ -217,8 +217,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -380,7 +380,7 @@ name: Scheduled Documentation Validation
 
 on:
   schedule:
-    - cron: '0 2 * * 1' # Every Monday at 2 AM
+    - cron: "0 2 * * 1" # Every Monday at 2 AM
 
 jobs:
   validate:
@@ -391,7 +391,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
 
       - name: Full validation
         run: |
@@ -420,14 +420,14 @@ Automate dependency maintenance:
 # .github/dependabot.yml
 version: 2
 updates:
-  - package-ecosystem: 'npm'
-    directory: '/'
+  - package-ecosystem: "npm"
+    directory: "/"
     schedule:
-      interval: 'weekly'
+      interval: "weekly"
     open-pull-requests-limit: 5
     labels:
-      - 'dependencies'
-      - 'documentation'
+      - "dependencies"
+      - "documentation"
 ```
 
 ## Collaboration Workflow

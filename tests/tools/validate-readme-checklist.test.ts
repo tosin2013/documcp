@@ -1,14 +1,14 @@
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import { promises as fs } from 'fs';
-import * as path from 'path';
-import * as tmp from 'tmp';
+import { describe, it, expect, beforeEach, afterEach } from "@jest/globals";
+import { promises as fs } from "fs";
+import * as path from "path";
+import * as tmp from "tmp";
 import {
   validateReadmeChecklist,
   ReadmeChecklistValidator,
   ValidateReadmeChecklistSchema,
-} from '../../src/tools/validate-readme-checklist';
+} from "../../src/tools/validate-readme-checklist";
 
-describe('README Checklist Validator', () => {
+describe("README Checklist Validator", () => {
   let tempDir: string;
   let validator: ReadmeChecklistValidator;
 
@@ -25,42 +25,48 @@ describe('README Checklist Validator', () => {
     }
   });
 
-  async function createTestReadme(content: string, filename = 'README.md'): Promise<string> {
+  async function createTestReadme(
+    content: string,
+    filename = "README.md",
+  ): Promise<string> {
     const readmePath = path.join(tempDir, filename);
-    await fs.writeFile(readmePath, content, 'utf-8');
+    await fs.writeFile(readmePath, content, "utf-8");
     return readmePath;
   }
 
-  async function createProjectFile(filename: string, content = ''): Promise<void> {
-    await fs.writeFile(path.join(tempDir, filename), content, 'utf-8');
+  async function createProjectFile(
+    filename: string,
+    content = "",
+  ): Promise<void> {
+    await fs.writeFile(path.join(tempDir, filename), content, "utf-8");
   }
 
-  describe('Input Validation', () => {
-    it('should validate required fields', () => {
+  describe("Input Validation", () => {
+    it("should validate required fields", () => {
       expect(() => ValidateReadmeChecklistSchema.parse({})).toThrow();
       expect(() =>
         ValidateReadmeChecklistSchema.parse({
-          readmePath: '',
+          readmePath: "",
         }),
       ).toThrow();
     });
 
-    it('should accept valid input with defaults', () => {
+    it("should accept valid input with defaults", () => {
       const input = ValidateReadmeChecklistSchema.parse({
-        readmePath: '/path/to/README.md',
+        readmePath: "/path/to/README.md",
       });
 
       expect(input.strict).toBe(false);
-      expect(input.outputFormat).toBe('console');
+      expect(input.outputFormat).toBe("console");
     });
 
-    it('should validate output format options', () => {
-      const validFormats = ['json', 'markdown', 'console'];
+    it("should validate output format options", () => {
+      const validFormats = ["json", "markdown", "console"];
 
       for (const format of validFormats) {
         expect(() =>
           ValidateReadmeChecklistSchema.parse({
-            readmePath: '/test/README.md',
+            readmePath: "/test/README.md",
             outputFormat: format,
           }),
         ).not.toThrow();
@@ -68,52 +74,56 @@ describe('README Checklist Validator', () => {
 
       expect(() =>
         ValidateReadmeChecklistSchema.parse({
-          readmePath: '/test/README.md',
-          outputFormat: 'invalid',
+          readmePath: "/test/README.md",
+          outputFormat: "invalid",
         }),
       ).toThrow();
     });
   });
 
-  describe('Essential Sections Validation', () => {
-    it('should detect project title', async () => {
+  describe("Essential Sections Validation", () => {
+    it("should detect project title", async () => {
       const goodReadme = await createTestReadme(
-        '# My Project\n\nDescription here',
-        'good-README.md',
+        "# My Project\n\nDescription here",
+        "good-README.md",
       );
       const badReadme = await createTestReadme(
-        '## Not a main title\n\nNo main heading',
-        'bad-README.md',
+        "## Not a main title\n\nNo main heading",
+        "bad-README.md",
       );
 
-      const goodInput = ValidateReadmeChecklistSchema.parse({ readmePath: goodReadme });
-      const badInput = ValidateReadmeChecklistSchema.parse({ readmePath: badReadme });
+      const goodInput = ValidateReadmeChecklistSchema.parse({
+        readmePath: goodReadme,
+      });
+      const badInput = ValidateReadmeChecklistSchema.parse({
+        readmePath: badReadme,
+      });
       const result = await validateReadmeChecklist(goodInput);
       const result2 = await validateReadmeChecklist(badInput);
 
-      const titleCheck = result.categories['Essential Sections'].results.find(
-        (r) => r.item.id === 'title',
+      const titleCheck = result.categories["Essential Sections"].results.find(
+        (r) => r.item.id === "title",
       );
-      const badTitleCheck = result2.categories['Essential Sections'].results.find(
-        (r) => r.item.id === 'title',
-      );
+      const badTitleCheck = result2.categories[
+        "Essential Sections"
+      ].results.find((r) => r.item.id === "title");
 
       expect(titleCheck?.passed).toBe(true);
       expect(badTitleCheck?.passed).toBe(false);
     });
 
-    it('should detect project description', async () => {
+    it("should detect project description", async () => {
       const withSubtitle = await createTestReadme(
-        '# Project\n\n> A great project description',
-        'subtitle-README.md',
+        "# Project\n\n> A great project description",
+        "subtitle-README.md",
       );
       const withParagraph = await createTestReadme(
-        '# Project\n\nThis is a description paragraph',
-        'paragraph-README.md',
+        "# Project\n\nThis is a description paragraph",
+        "paragraph-README.md",
       );
       const withoutDesc = await createTestReadme(
-        '# Project\n\n## Installation',
-        'no-desc-README.md',
+        "# Project\n\n## Installation",
+        "no-desc-README.md",
       );
 
       const subtitleResult = await validateReadmeChecklist(
@@ -127,8 +137,8 @@ describe('README Checklist Validator', () => {
       );
 
       const getDescCheck = (result: any) =>
-        result.categories['Essential Sections'].results.find(
-          (r: any) => r.item.id === 'description',
+        result.categories["Essential Sections"].results.find(
+          (r: any) => r.item.id === "description",
         );
 
       expect(getDescCheck(subtitleResult)?.passed).toBe(true);
@@ -136,36 +146,44 @@ describe('README Checklist Validator', () => {
       expect(getDescCheck(noDescResult)?.passed).toBe(false);
     });
 
-    it('should detect TL;DR section', async () => {
+    it("should detect TL;DR section", async () => {
       const withTldr = await createTestReadme(
-        '# Project\n\n## TL;DR\n\nQuick summary',
-        'tldr-README.md',
+        "# Project\n\n## TL;DR\n\nQuick summary",
+        "tldr-README.md",
       );
       const withQuickStart = await createTestReadme(
-        '# Project\n\n## Quick Start\n\nQuick summary',
-        'quickstart-README.md',
+        "# Project\n\n## Quick Start\n\nQuick summary",
+        "quickstart-README.md",
       );
       const withoutTldr = await createTestReadme(
-        '# Project\n\n## Installation',
-        'no-tldr-README.md',
+        "# Project\n\n## Installation",
+        "no-tldr-README.md",
       );
 
-      const tldrInput = ValidateReadmeChecklistSchema.parse({ readmePath: withTldr });
-      const quickStartInput = ValidateReadmeChecklistSchema.parse({ readmePath: withQuickStart });
-      const noTldrInput = ValidateReadmeChecklistSchema.parse({ readmePath: withoutTldr });
+      const tldrInput = ValidateReadmeChecklistSchema.parse({
+        readmePath: withTldr,
+      });
+      const quickStartInput = ValidateReadmeChecklistSchema.parse({
+        readmePath: withQuickStart,
+      });
+      const noTldrInput = ValidateReadmeChecklistSchema.parse({
+        readmePath: withoutTldr,
+      });
       const result = await validateReadmeChecklist(tldrInput);
       const result2 = await validateReadmeChecklist(quickStartInput);
       const result3 = await validateReadmeChecklist(noTldrInput);
 
       const getTldrCheck = (result: any) =>
-        result.categories['Essential Sections'].results.find((r: any) => r.item.id === 'tldr');
+        result.categories["Essential Sections"].results.find(
+          (r: any) => r.item.id === "tldr",
+        );
 
       expect(getTldrCheck(result)?.passed).toBe(true);
       expect(getTldrCheck(result2)?.passed).toBe(true);
       expect(getTldrCheck(result3)?.passed).toBe(false);
     });
 
-    it('should detect installation instructions with code blocks', async () => {
+    it("should detect installation instructions with code blocks", async () => {
       const goodInstall = await createTestReadme(
         `
 # Project
@@ -174,7 +192,7 @@ describe('README Checklist Validator', () => {
 npm install project
 \`\`\`
       `,
-        'good-install-README.md',
+        "good-install-README.md",
       );
 
       const noCodeBlocks = await createTestReadme(
@@ -183,12 +201,12 @@ npm install project
 ## Installation
 Just install it somehow
       `,
-        'no-code-README.md',
+        "no-code-README.md",
       );
 
       const noInstallSection = await createTestReadme(
-        '# Project\n\nSome content',
-        'no-install-README.md',
+        "# Project\n\nSome content",
+        "no-install-README.md",
       );
 
       const goodResult = await validateReadmeChecklist(
@@ -202,8 +220,8 @@ Just install it somehow
       );
 
       const getInstallCheck = (result: any) =>
-        result.categories['Essential Sections'].results.find(
-          (r: any) => r.item.id === 'installation',
+        result.categories["Essential Sections"].results.find(
+          (r: any) => r.item.id === "installation",
         );
 
       expect(getInstallCheck(goodResult)?.passed).toBe(true);
@@ -211,7 +229,7 @@ Just install it somehow
       expect(getInstallCheck(noSectionResult)?.passed).toBe(false);
     });
 
-    it('should detect usage examples', async () => {
+    it("should detect usage examples", async () => {
       const goodUsage = await createTestReadme(
         `
 # Project
@@ -221,10 +239,13 @@ const lib = require('lib');
 lib.doSomething();
 \`\`\`
       `,
-        'good-usage-README.md',
+        "good-usage-README.md",
       );
 
-      const noUsage = await createTestReadme('# Project\n\nNo usage section', 'no-usage-README.md');
+      const noUsage = await createTestReadme(
+        "# Project\n\nNo usage section",
+        "no-usage-README.md",
+      );
 
       const goodResult = await validateReadmeChecklist(
         ValidateReadmeChecklistSchema.parse({ readmePath: goodUsage }),
@@ -234,20 +255,22 @@ lib.doSomething();
       );
 
       const getUsageCheck = (result: any) =>
-        result.categories['Essential Sections'].results.find((r: any) => r.item.id === 'usage');
+        result.categories["Essential Sections"].results.find(
+          (r: any) => r.item.id === "usage",
+        );
 
       expect(getUsageCheck(goodResult)?.passed).toBe(true);
       expect(getUsageCheck(noUsageResult)?.passed).toBe(false);
     });
 
-    it('should detect license information', async () => {
+    it("should detect license information", async () => {
       const readmeWithLicense = await createTestReadme(
-        '# Project\n\n## License\n\nMIT',
-        'license-README.md',
+        "# Project\n\n## License\n\nMIT",
+        "license-README.md",
       );
       const readmeWithoutLicense = await createTestReadme(
-        '# Project\n\nNo license info',
-        'no-license-README.md',
+        "# Project\n\nNo license info",
+        "no-license-README.md",
       );
 
       // Test without LICENSE file first
@@ -265,10 +288,10 @@ lib.doSomething();
       );
 
       // Test with LICENSE file
-      await createProjectFile('LICENSE', 'MIT License...');
+      await createProjectFile("LICENSE", "MIT License...");
       const readmeWithLicenseFile = await createTestReadme(
-        '# Project\n\nSome content',
-        'license-file-README.md',
+        "# Project\n\nSome content",
+        "license-file-README.md",
       );
       const withLicenseFileResult = await validateReadmeChecklist(
         ValidateReadmeChecklistSchema.parse({
@@ -278,7 +301,9 @@ lib.doSomething();
       );
 
       const getLicenseCheck = (result: any) =>
-        result.categories['Essential Sections'].results.find((r: any) => r.item.id === 'license');
+        result.categories["Essential Sections"].results.find(
+          (r: any) => r.item.id === "license",
+        );
 
       expect(getLicenseCheck(withLicenseResult)?.passed).toBe(true);
       expect(getLicenseCheck(withoutLicenseResult)?.passed).toBe(false);
@@ -286,12 +311,12 @@ lib.doSomething();
     });
   });
 
-  describe('Community Health Validation', () => {
-    it('should detect contributing guidelines', async () => {
+  describe("Community Health Validation", () => {
+    it("should detect contributing guidelines", async () => {
       const readmeWithContributing = await createTestReadme(
-        '# Project\n\n## Contributing\n\nSee CONTRIBUTING.md',
+        "# Project\n\n## Contributing\n\nSee CONTRIBUTING.md",
       );
-      await createProjectFile('CONTRIBUTING.md', 'Contributing guidelines...');
+      await createProjectFile("CONTRIBUTING.md", "Contributing guidelines...");
 
       const result = await validateReadmeChecklist(
         ValidateReadmeChecklistSchema.parse({
@@ -300,55 +325,61 @@ lib.doSomething();
         }),
       );
 
-      const contributingCheck = result.categories['Community Health'].results.find(
-        (r) => r.item.id === 'contributing',
-      );
+      const contributingCheck = result.categories[
+        "Community Health"
+      ].results.find((r) => r.item.id === "contributing");
       expect(contributingCheck?.passed).toBe(true);
     });
 
-    it('should detect code of conduct', async () => {
-      await createProjectFile('CODE_OF_CONDUCT.md', 'Code of conduct...');
-      const readme = await createTestReadme('# Project\n\nSome content');
+    it("should detect code of conduct", async () => {
+      await createProjectFile("CODE_OF_CONDUCT.md", "Code of conduct...");
+      const readme = await createTestReadme("# Project\n\nSome content");
 
       const result = await validateReadmeChecklist(
-        ValidateReadmeChecklistSchema.parse({ readmePath: readme, projectPath: tempDir }),
+        ValidateReadmeChecklistSchema.parse({
+          readmePath: readme,
+          projectPath: tempDir,
+        }),
       );
 
-      const cocCheck = result.categories['Community Health'].results.find(
-        (r) => r.item.id === 'code-of-conduct',
+      const cocCheck = result.categories["Community Health"].results.find(
+        (r) => r.item.id === "code-of-conduct",
       );
       expect(cocCheck?.passed).toBe(true);
     });
 
-    it('should detect security policy', async () => {
-      await createProjectFile('SECURITY.md', 'Security policy...');
-      const readme = await createTestReadme('# Project\n\nSome content');
+    it("should detect security policy", async () => {
+      await createProjectFile("SECURITY.md", "Security policy...");
+      const readme = await createTestReadme("# Project\n\nSome content");
 
       const result = await validateReadmeChecklist(
-        ValidateReadmeChecklistSchema.parse({ readmePath: readme, projectPath: tempDir }),
+        ValidateReadmeChecklistSchema.parse({
+          readmePath: readme,
+          projectPath: tempDir,
+        }),
       );
 
-      const securityCheck = result.categories['Community Health'].results.find(
-        (r) => r.item.id === 'security',
+      const securityCheck = result.categories["Community Health"].results.find(
+        (r) => r.item.id === "security",
       );
       expect(securityCheck?.passed).toBe(true);
     });
   });
 
-  describe('Visual Elements Validation', () => {
-    it('should detect status badges', async () => {
+  describe("Visual Elements Validation", () => {
+    it("should detect status badges", async () => {
       const withBadges = await createTestReadme(
         `
 # Project
 [![Build Status](https://travis-ci.org/user/repo.svg?branch=main)](https://travis-ci.org/user/repo)
 [![npm version](https://badge.fury.io/js/package.svg)](https://badge.fury.io/js/package)
       `,
-        'with-badges-README.md',
+        "with-badges-README.md",
       );
 
       const withoutBadges = await createTestReadme(
-        '# Project\n\nNo badges here',
-        'no-badges-README.md',
+        "# Project\n\nNo badges here",
+        "no-badges-README.md",
       );
 
       const withBadgesResult = await validateReadmeChecklist(
@@ -359,25 +390,27 @@ lib.doSomething();
       );
 
       const getBadgeCheck = (result: any) =>
-        result.categories['Visual Elements'].results.find((r: any) => r.item.id === 'badges');
+        result.categories["Visual Elements"].results.find(
+          (r: any) => r.item.id === "badges",
+        );
 
       expect(getBadgeCheck(withBadgesResult)?.passed).toBe(true);
       expect(getBadgeCheck(withoutBadgesResult)?.passed).toBe(false);
     });
 
-    it('should detect screenshots and images', async () => {
+    it("should detect screenshots and images", async () => {
       const withScreenshots = await createTestReadme(
         `
 # Project
 ![Screenshot](screenshot.png)
 ![Demo](demo.gif)
       `,
-        'with-screenshots-README.md',
+        "with-screenshots-README.md",
       );
 
       const withoutScreenshots = await createTestReadme(
-        '# Project\n\nNo images',
-        'no-screenshots-README.md',
+        "# Project\n\nNo images",
+        "no-screenshots-README.md",
       );
 
       const withScreenshotsResult = await validateReadmeChecklist(
@@ -388,13 +421,15 @@ lib.doSomething();
       );
 
       const getScreenshotCheck = (result: any) =>
-        result.categories['Visual Elements'].results.find((r: any) => r.item.id === 'screenshots');
+        result.categories["Visual Elements"].results.find(
+          (r: any) => r.item.id === "screenshots",
+        );
 
       expect(getScreenshotCheck(withScreenshotsResult)?.passed).toBe(true);
       expect(getScreenshotCheck(withoutScreenshotsResult)?.passed).toBe(false);
     });
 
-    it('should validate markdown formatting', async () => {
+    it("should validate markdown formatting", async () => {
       const goodFormatting = await createTestReadme(
         `
 # Main Title
@@ -402,7 +437,7 @@ lib.doSomething();
 ### Subsection
 ## Section 2
       `,
-        'good-formatting-README.md',
+        "good-formatting-README.md",
       );
 
       const poorFormatting = await createTestReadme(
@@ -411,7 +446,7 @@ lib.doSomething();
 #Another Title
 ##Poor Spacing
       `,
-        'poor-formatting-README.md',
+        "poor-formatting-README.md",
       );
 
       const goodResult = await validateReadmeChecklist(
@@ -422,15 +457,17 @@ lib.doSomething();
       );
 
       const getFormattingCheck = (result: any) =>
-        result.categories['Visual Elements'].results.find((r: any) => r.item.id === 'formatting');
+        result.categories["Visual Elements"].results.find(
+          (r: any) => r.item.id === "formatting",
+        );
 
       expect(getFormattingCheck(goodResult)?.passed).toBe(true);
       expect(getFormattingCheck(poorResult)?.passed).toBe(false);
     });
   });
 
-  describe('Content Quality Validation', () => {
-    it('should detect working code examples', async () => {
+  describe("Content Quality Validation", () => {
+    it("should detect working code examples", async () => {
       const withCodeExamples = await createTestReadme(
         `
 # Project
@@ -443,34 +480,40 @@ lib.doSomething();
 npm install lib
 \`\`\`
       `,
-        'with-code-README.md',
+        "with-code-README.md",
       );
 
       const withoutCodeExamples = await createTestReadme(
-        '# Project\n\nNo code examples',
-        'no-code-examples-README.md',
+        "# Project\n\nNo code examples",
+        "no-code-examples-README.md",
       );
 
       const withCodeResult = await validateReadmeChecklist(
         ValidateReadmeChecklistSchema.parse({ readmePath: withCodeExamples }),
       );
       const withoutCodeResult = await validateReadmeChecklist(
-        ValidateReadmeChecklistSchema.parse({ readmePath: withoutCodeExamples }),
+        ValidateReadmeChecklistSchema.parse({
+          readmePath: withoutCodeExamples,
+        }),
       );
 
       const getCodeCheck = (result: any) =>
-        result.categories['Content Quality'].results.find(
-          (r: any) => r.item.id === 'working-examples',
+        result.categories["Content Quality"].results.find(
+          (r: any) => r.item.id === "working-examples",
         );
 
       expect(getCodeCheck(withCodeResult)?.passed).toBe(true);
       expect(getCodeCheck(withoutCodeResult)?.passed).toBe(false);
     });
 
-    it('should validate appropriate length', async () => {
-      const shortReadme = await createTestReadme('# Project\n\nShort content', 'short-README.md');
-      const longContent = '# Project\n\n' + 'Long line of content.\n'.repeat(350);
-      const longReadme = await createTestReadme(longContent, 'long-README.md');
+    it("should validate appropriate length", async () => {
+      const shortReadme = await createTestReadme(
+        "# Project\n\nShort content",
+        "short-README.md",
+      );
+      const longContent =
+        "# Project\n\n" + "Long line of content.\n".repeat(350);
+      const longReadme = await createTestReadme(longContent, "long-README.md");
 
       const shortResult = await validateReadmeChecklist(
         ValidateReadmeChecklistSchema.parse({ readmePath: shortReadme }),
@@ -480,15 +523,15 @@ npm install lib
       );
 
       const getLengthCheck = (result: any) =>
-        result.categories['Content Quality'].results.find(
-          (r: any) => r.item.id === 'appropriate-length',
+        result.categories["Content Quality"].results.find(
+          (r: any) => r.item.id === "appropriate-length",
         );
 
       expect(getLengthCheck(shortResult)?.passed).toBe(true);
       expect(getLengthCheck(longResult)?.passed).toBe(false);
     });
 
-    it('should validate scannable structure', async () => {
+    it("should validate scannable structure", async () => {
       const goodStructure = await createTestReadme(
         `
 # Main Title
@@ -502,7 +545,7 @@ npm install lib
 - Another item
 - Yet another item
       `,
-        'good-structure-README.md',
+        "good-structure-README.md",
       );
 
       const poorStructure = await createTestReadme(
@@ -511,7 +554,7 @@ npm install lib
 #### Skipped levels
 ## Back to level 2
       `,
-        'poor-structure-README.md',
+        "poor-structure-README.md",
       );
 
       const goodResult = await validateReadmeChecklist(
@@ -522,8 +565,8 @@ npm install lib
       );
 
       const getStructureCheck = (result: any) =>
-        result.categories['Content Quality'].results.find(
-          (r: any) => r.item.id === 'scannable-structure',
+        result.categories["Content Quality"].results.find(
+          (r: any) => r.item.id === "scannable-structure",
         );
 
       expect(getStructureCheck(goodResult)?.passed).toBe(true);
@@ -531,8 +574,8 @@ npm install lib
     });
   });
 
-  describe('Report Generation', () => {
-    it('should generate comprehensive report with all categories', async () => {
+  describe("Report Generation", () => {
+    it("should generate comprehensive report with all categories", async () => {
       const readme = await createTestReadme(`
 # Test Project
 > A test project description
@@ -562,15 +605,15 @@ MIT
       expect(result.overallScore).toBeGreaterThan(0);
       expect(result.totalItems).toBeGreaterThan(0);
       expect(result.passedItems).toBeGreaterThan(0);
-      expect(result.categories).toHaveProperty('Essential Sections');
-      expect(result.categories).toHaveProperty('Community Health');
-      expect(result.categories).toHaveProperty('Visual Elements');
-      expect(result.categories).toHaveProperty('Content Quality');
+      expect(result.categories).toHaveProperty("Essential Sections");
+      expect(result.categories).toHaveProperty("Community Health");
+      expect(result.categories).toHaveProperty("Visual Elements");
+      expect(result.categories).toHaveProperty("Content Quality");
       expect(result.wordCount).toBeGreaterThan(0);
       expect(result.estimatedReadTime).toBeGreaterThan(0);
     });
 
-    it('should calculate scores correctly', async () => {
+    it("should calculate scores correctly", async () => {
       const perfectReadme = await createTestReadme(`
 # Perfect Project
 > An amazing project that does everything right
@@ -598,19 +641,24 @@ See CONTRIBUTING.md for guidelines.
 MIT © Author
       `);
 
-      await createProjectFile('CONTRIBUTING.md', 'Guidelines...');
-      await createProjectFile('LICENSE', 'MIT License...');
+      await createProjectFile("CONTRIBUTING.md", "Guidelines...");
+      await createProjectFile("LICENSE", "MIT License...");
 
       const result = await validateReadmeChecklist(
-        ValidateReadmeChecklistSchema.parse({ readmePath: perfectReadme, projectPath: tempDir }),
+        ValidateReadmeChecklistSchema.parse({
+          readmePath: perfectReadme,
+          projectPath: tempDir,
+        }),
       );
 
       expect(result.overallScore).toBeGreaterThan(70);
-      expect(result.categories['Essential Sections'].score).toBeGreaterThan(80);
+      expect(result.categories["Essential Sections"].score).toBeGreaterThan(80);
     });
 
-    it('should provide helpful recommendations', async () => {
-      const poorReadme = await createTestReadme('# Poor Project\n\nMinimal content');
+    it("should provide helpful recommendations", async () => {
+      const poorReadme = await createTestReadme(
+        "# Poor Project\n\nMinimal content",
+      );
 
       const result = await validateReadmeChecklist(
         ValidateReadmeChecklistSchema.parse({ readmePath: poorReadme }),
@@ -621,55 +669,64 @@ MIT © Author
     });
   });
 
-  describe('Output Formatting', () => {
-    it('should format console output correctly', async () => {
-      const readme = await createTestReadme('# Test\n\nContent');
+  describe("Output Formatting", () => {
+    it("should format console output correctly", async () => {
+      const readme = await createTestReadme("# Test\n\nContent");
       const result = await validateReadmeChecklist(
-        ValidateReadmeChecklistSchema.parse({ readmePath: readme, outputFormat: 'console' }),
+        ValidateReadmeChecklistSchema.parse({
+          readmePath: readme,
+          outputFormat: "console",
+        }),
       );
 
-      const formatted = validator.formatReport(result, 'console');
+      const formatted = validator.formatReport(result, "console");
 
-      expect(formatted).toContain('📋 README Checklist Report');
-      expect(formatted).toContain('Overall Score:');
-      expect(formatted).toContain('Essential Sections');
-      expect(formatted).toContain('✅');
-      expect(formatted).toContain('❌');
+      expect(formatted).toContain("📋 README Checklist Report");
+      expect(formatted).toContain("Overall Score:");
+      expect(formatted).toContain("Essential Sections");
+      expect(formatted).toContain("✅");
+      expect(formatted).toContain("❌");
     });
 
-    it('should format markdown output correctly', async () => {
-      const readme = await createTestReadme('# Test\n\nContent');
+    it("should format markdown output correctly", async () => {
+      const readme = await createTestReadme("# Test\n\nContent");
       const result = await validateReadmeChecklist(
-        ValidateReadmeChecklistSchema.parse({ readmePath: readme, outputFormat: 'markdown' }),
+        ValidateReadmeChecklistSchema.parse({
+          readmePath: readme,
+          outputFormat: "markdown",
+        }),
       );
 
-      const formatted = validator.formatReport(result, 'markdown');
+      const formatted = validator.formatReport(result, "markdown");
 
-      expect(formatted).toContain('# README Checklist Report');
-      expect(formatted).toContain('## Overall Score:');
-      expect(formatted).toContain('### Essential Sections');
-      expect(formatted).toContain('- ✅');
-      expect(formatted).toContain('- ❌');
+      expect(formatted).toContain("# README Checklist Report");
+      expect(formatted).toContain("## Overall Score:");
+      expect(formatted).toContain("### Essential Sections");
+      expect(formatted).toContain("- ✅");
+      expect(formatted).toContain("- ❌");
     });
 
-    it('should format JSON output correctly', async () => {
-      const readme = await createTestReadme('# Test\n\nContent');
+    it("should format JSON output correctly", async () => {
+      const readme = await createTestReadme("# Test\n\nContent");
       const result = await validateReadmeChecklist(
-        ValidateReadmeChecklistSchema.parse({ readmePath: readme, outputFormat: 'json' }),
+        ValidateReadmeChecklistSchema.parse({
+          readmePath: readme,
+          outputFormat: "json",
+        }),
       );
 
-      const formatted = validator.formatReport(result, 'json');
+      const formatted = validator.formatReport(result, "json");
       const parsed = JSON.parse(formatted);
 
-      expect(parsed).toHaveProperty('overallScore');
-      expect(parsed).toHaveProperty('categories');
-      expect(parsed).toHaveProperty('recommendations');
+      expect(parsed).toHaveProperty("overallScore");
+      expect(parsed).toHaveProperty("categories");
+      expect(parsed).toHaveProperty("recommendations");
     });
   });
 
-  describe('Error Handling', () => {
-    it('should handle non-existent README file', async () => {
-      const nonExistentPath = path.join(tempDir, 'nonexistent.md');
+  describe("Error Handling", () => {
+    it("should handle non-existent README file", async () => {
+      const nonExistentPath = path.join(tempDir, "nonexistent.md");
 
       await expect(
         validateReadmeChecklist(
@@ -678,19 +735,22 @@ MIT © Author
       ).rejects.toThrow();
     });
 
-    it('should handle invalid project path gracefully', async () => {
-      const readme = await createTestReadme('# Test\n\nContent');
+    it("should handle invalid project path gracefully", async () => {
+      const readme = await createTestReadme("# Test\n\nContent");
 
       const result = await validateReadmeChecklist(
-        ValidateReadmeChecklistSchema.parse({ readmePath: readme, projectPath: '/invalid/path' }),
+        ValidateReadmeChecklistSchema.parse({
+          readmePath: readme,
+          projectPath: "/invalid/path",
+        }),
       );
 
       // Should still work, just without project file context
       expect(result.overallScore).toBeGreaterThan(0);
     });
 
-    it('should handle empty README file', async () => {
-      const emptyReadme = await createTestReadme('', 'empty-README.md');
+    it("should handle empty README file", async () => {
+      const emptyReadme = await createTestReadme("", "empty-README.md");
 
       const result = await validateReadmeChecklist(
         ValidateReadmeChecklistSchema.parse({ readmePath: emptyReadme }),
@@ -704,9 +764,11 @@ MIT © Author
     });
   });
 
-  describe('Suggestions Generation', () => {
-    it('should provide specific suggestions for failed checks', async () => {
-      const incompleteReadme = await createTestReadme('# Project\n\nMinimal content');
+  describe("Suggestions Generation", () => {
+    it("should provide specific suggestions for failed checks", async () => {
+      const incompleteReadme = await createTestReadme(
+        "# Project\n\nMinimal content",
+      );
 
       const result = await validateReadmeChecklist(
         ValidateReadmeChecklistSchema.parse({ readmePath: incompleteReadme }),

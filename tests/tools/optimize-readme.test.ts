@@ -1,10 +1,10 @@
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import { promises as fs } from 'fs';
-import { join } from 'path';
-import { optimizeReadme } from '../../src/tools/optimize-readme.js';
-import { tmpdir } from 'os';
+import { describe, it, expect, beforeEach, afterEach } from "@jest/globals";
+import { promises as fs } from "fs";
+import { join } from "path";
+import { optimizeReadme } from "../../src/tools/optimize-readme.js";
+import { tmpdir } from "os";
 
-describe('optimize_readme', () => {
+describe("optimize_readme", () => {
   let testDir: string;
   let readmePath: string;
   let docsDir: string;
@@ -13,8 +13,8 @@ describe('optimize_readme', () => {
     // Create temporary test directory
     testDir = join(tmpdir(), `test-optimize-${Date.now()}`);
     await fs.mkdir(testDir, { recursive: true });
-    readmePath = join(testDir, 'README.md');
-    docsDir = join(testDir, 'docs');
+    readmePath = join(testDir, "README.md");
+    docsDir = join(testDir, "docs");
   });
 
   afterEach(async () => {
@@ -26,35 +26,35 @@ describe('optimize_readme', () => {
     }
   });
 
-  describe('input validation', () => {
-    it('should require readme_path parameter', async () => {
+  describe("input validation", () => {
+    it("should require readme_path parameter", async () => {
       const result = await optimizeReadme({});
 
       expect(result.success).toBe(false);
-      expect(result.error?.code).toBe('OPTIMIZATION_FAILED');
+      expect(result.error?.code).toBe("OPTIMIZATION_FAILED");
     });
 
-    it('should handle non-existent README file', async () => {
+    it("should handle non-existent README file", async () => {
       const result = await optimizeReadme({
-        readme_path: '/non/existent/path/README.md',
+        readme_path: "/non/existent/path/README.md",
       });
 
       expect(result.success).toBe(false);
-      expect(result.error?.code).toBe('OPTIMIZATION_FAILED');
+      expect(result.error?.code).toBe("OPTIMIZATION_FAILED");
     });
 
-    it('should handle missing README file', async () => {
+    it("should handle missing README file", async () => {
       const result = await optimizeReadme({
-        readme_path: join(testDir, 'README.md'),
+        readme_path: join(testDir, "README.md"),
       });
 
       expect(result.success).toBe(false);
-      expect(result.error?.code).toBe('OPTIMIZATION_FAILED');
+      expect(result.error?.code).toBe("OPTIMIZATION_FAILED");
     });
   });
 
-  describe('TL;DR generation', () => {
-    it('should generate TL;DR for README without one', async () => {
+  describe("TL;DR generation", () => {
+    it("should generate TL;DR for README without one", async () => {
       const readmeContent = `# Awesome Project
 
 This is a comprehensive project that does many things. It provides solutions for various problems and offers extensive functionality for users.
@@ -88,16 +88,16 @@ The project can be used in multiple ways:
 
       const result = await optimizeReadme({
         readme_path: readmePath,
-        strategy: 'developer_focused',
+        strategy: "developer_focused",
       });
 
       expect(result.success).toBe(true);
-      expect(result.data?.optimization.optimizedContent).toContain('## TL;DR');
+      expect(result.data?.optimization.optimizedContent).toContain("## TL;DR");
       // TL;DR is generated as content, not a boolean flag
-      expect(typeof result.data?.optimization.tldrGenerated).toBe('string');
+      expect(typeof result.data?.optimization.tldrGenerated).toBe("string");
     });
 
-    it('should preserve existing TL;DR section', async () => {
+    it("should preserve existing TL;DR section", async () => {
       const readmeWithTldr = `# Project
 
 ## TL;DR
@@ -115,13 +115,15 @@ More detailed information here.`;
       });
 
       expect(result.success).toBe(true);
-      expect(result.data?.optimization.optimizedContent).toContain('Quick overview of the project');
+      expect(result.data?.optimization.optimizedContent).toContain(
+        "Quick overview of the project",
+      );
       // Tool may still generate TL;DR content even when existing TL;DR is present
     });
   });
 
-  describe('content restructuring', () => {
-    it('should restructure verbose content', async () => {
+  describe("content restructuring", () => {
+    it("should restructure verbose content", async () => {
       const verboseReadme = `# Project Title
 
 This project is an incredibly comprehensive solution that addresses multiple complex challenges in the software development ecosystem. It has been designed with careful consideration of industry best practices and incorporates cutting-edge technologies to deliver exceptional performance and reliability.
@@ -161,12 +163,16 @@ This section provides comprehensive guidance on how to effectively utilize all f
       });
 
       expect(result.success).toBe(true);
-      expect(result.data?.optimization.restructuringChanges.length).toBeGreaterThan(0);
+      expect(
+        result.data?.optimization.restructuringChanges.length,
+      ).toBeGreaterThan(0);
       // Optimization may add TL;DR which can increase length
-      expect(result.data?.optimization.optimizedContent.length).toBeGreaterThan(0);
+      expect(result.data?.optimization.optimizedContent.length).toBeGreaterThan(
+        0,
+      );
     });
 
-    it('should extract detailed sections to docs directory', async () => {
+    it("should extract detailed sections to docs directory", async () => {
       const readmeWithDetailedSections = `# Project
 
 Brief project description.
@@ -222,15 +228,15 @@ Extensive contributing guidelines with detailed processes, code style requiremen
         .then(() => true)
         .catch(() => false);
       // Directory creation depends on content structure and extraction rules
-      expect(typeof docsExists).toBe('boolean');
+      expect(typeof docsExists).toBe("boolean");
 
       // Optimized content should be generated successfully
       expect(result.data?.optimization.optimizedContent).toBeDefined();
     });
   });
 
-  describe('audience-specific optimization', () => {
-    it('should optimize for community contributors', async () => {
+  describe("audience-specific optimization", () => {
+    it("should optimize for community contributors", async () => {
       const readmeContent = `# Open Source Project
 
 A project for the community.
@@ -251,15 +257,15 @@ Development setup instructions.`;
 
       const result = await optimizeReadme({
         readme_path: readmePath,
-        strategy: 'community_focused',
+        strategy: "community_focused",
       });
 
       expect(result.success).toBe(true);
       // Community optimization focuses on accessibility and contribution info
-      expect(result.data?.optimization.optimizedContent).toContain('## TL;DR');
+      expect(result.data?.optimization.optimizedContent).toContain("## TL;DR");
     });
 
-    it('should optimize for enterprise users', async () => {
+    it("should optimize for enterprise users", async () => {
       const readmeContent = `# Enterprise Solution
 
 A business solution.
@@ -276,7 +282,7 @@ Installation steps...`;
 
       const result = await optimizeReadme({
         readme_path: readmePath,
-        strategy: 'enterprise_focused',
+        strategy: "enterprise_focused",
       });
 
       expect(result.success).toBe(true);
@@ -284,7 +290,7 @@ Installation steps...`;
       expect(result.data?.optimization).toBeDefined();
     });
 
-    it('should optimize for developers', async () => {
+    it("should optimize for developers", async () => {
       const readmeContent = `# Developer Tool
 
 A tool for developers.
@@ -301,17 +307,19 @@ How to set up...`;
 
       const result = await optimizeReadme({
         readme_path: readmePath,
-        strategy: 'developer_focused',
+        strategy: "developer_focused",
       });
 
       expect(result.success).toBe(true);
       // Developer optimization includes quick start information
-      expect(result.data?.optimization.optimizedContent).toContain('Quick start');
+      expect(result.data?.optimization.optimizedContent).toContain(
+        "Quick start",
+      );
     });
   });
 
-  describe('optimization levels', () => {
-    it('should apply conservative optimization', async () => {
+  describe("optimization levels", () => {
+    it("should apply conservative optimization", async () => {
       const readmeContent = `# Project
 
 This is a moderately long description that could be shortened but isn't extremely verbose.
@@ -333,13 +341,17 @@ Usage information with reasonable detail.`;
 
       expect(result.success).toBe(true);
       // Conservative should make minimal changes
-      expect(result.data?.optimization.restructuringChanges.length).toBeLessThanOrEqual(2);
+      expect(
+        result.data?.optimization.restructuringChanges.length,
+      ).toBeLessThanOrEqual(2);
     });
 
-    it('should apply aggressive optimization', async () => {
+    it("should apply aggressive optimization", async () => {
       const verboseReadme = Array(50)
-        .fill('# Section\n\nVery long content that repeats and could be significantly shortened.\n')
-        .join('\n');
+        .fill(
+          "# Section\n\nVery long content that repeats and could be significantly shortened.\n",
+        )
+        .join("\n");
       await fs.writeFile(readmePath, verboseReadme);
 
       const result = await optimizeReadme({
@@ -348,14 +360,18 @@ Usage information with reasonable detail.`;
       });
 
       expect(result.success).toBe(true);
-      expect(result.data?.optimization.restructuringChanges.length).toBeGreaterThan(0);
+      expect(
+        result.data?.optimization.restructuringChanges.length,
+      ).toBeGreaterThan(0);
       // Optimization may add TL;DR which can increase length
-      expect(result.data?.optimization.optimizedContent.length).toBeGreaterThan(0);
+      expect(result.data?.optimization.optimizedContent.length).toBeGreaterThan(
+        0,
+      );
     });
   });
 
-  describe('file output', () => {
-    it('should write optimized README to file', async () => {
+  describe("file output", () => {
+    it("should write optimized README to file", async () => {
       const readmeContent = `# Project\n\nOriginal content that will be optimized.`;
       await fs.writeFile(readmePath, readmeContent);
 
@@ -367,12 +383,12 @@ Usage information with reasonable detail.`;
       expect(result.success).toBe(true);
 
       // Check that README was updated
-      const updatedContent = await fs.readFile(readmePath, 'utf-8');
+      const updatedContent = await fs.readFile(readmePath, "utf-8");
       expect(updatedContent).not.toBe(readmeContent);
-      expect(updatedContent).toContain('## TL;DR');
+      expect(updatedContent).toContain("## TL;DR");
     });
 
-    it('should create backup of original README', async () => {
+    it("should create backup of original README", async () => {
       const originalContent = `# Original Project\n\nOriginal content.`;
       await fs.writeFile(readmePath, originalContent);
 
@@ -384,12 +400,14 @@ Usage information with reasonable detail.`;
       expect(result.success).toBe(true);
 
       // Verify output was written successfully
-      const outputContent = await fs.readFile(readmePath, 'utf-8');
-      expect(outputContent).toContain('## TL;DR');
-      expect(outputContent.length).toBeGreaterThan(originalContent.length * 0.5);
+      const outputContent = await fs.readFile(readmePath, "utf-8");
+      expect(outputContent).toContain("## TL;DR");
+      expect(outputContent.length).toBeGreaterThan(
+        originalContent.length * 0.5,
+      );
     });
 
-    it('should create docs index when extracting sections', async () => {
+    it("should create docs index when extracting sections", async () => {
       const readmeWithSections = `# Project
 
 Brief description.
@@ -417,7 +435,7 @@ Complex configuration details that belong in docs.`;
         result.data.optimization.extractedSections.length > 0
       ) {
         // Check that docs index was created
-        const indexPath = join(docsDir, 'index.md');
+        const indexPath = join(docsDir, "index.md");
         const indexExists = await fs
           .access(indexPath)
           .then(() => true)
@@ -427,8 +445,8 @@ Complex configuration details that belong in docs.`;
     });
   });
 
-  describe('recommendations and next steps', () => {
-    it('should provide relevant recommendations', async () => {
+  describe("recommendations and next steps", () => {
+    it("should provide relevant recommendations", async () => {
       const basicReadme = `# Project\n\nBasic description without much structure.`;
       await fs.writeFile(readmePath, basicReadme);
 
@@ -437,11 +455,13 @@ Complex configuration details that belong in docs.`;
       });
 
       expect(result.success).toBe(true);
-      expect(result.data?.optimization.recommendations.length).toBeGreaterThan(0);
+      expect(result.data?.optimization.recommendations.length).toBeGreaterThan(
+        0,
+      );
       expect(result.data?.nextSteps.length).toBeGreaterThan(0);
     });
 
-    it('should prioritize recommendations by impact', async () => {
+    it("should prioritize recommendations by impact", async () => {
       const poorReadme = `ProjectWithoutProperStructure\nNo headings or organization.`;
       await fs.writeFile(readmePath, poorReadme);
 
@@ -451,13 +471,15 @@ Complex configuration details that belong in docs.`;
       });
 
       expect(result.success).toBe(true);
-      expect(result.data?.optimization.recommendations.length).toBeGreaterThan(0);
+      expect(result.data?.optimization.recommendations.length).toBeGreaterThan(
+        0,
+      );
       // Recommendations are provided based on content analysis
     });
   });
 
-  describe('metadata and tracking', () => {
-    it('should include optimization metadata', async () => {
+  describe("metadata and tracking", () => {
+    it("should include optimization metadata", async () => {
       const readmeContent = `# Project\n\nContent to optimize.`;
       await fs.writeFile(readmePath, readmeContent);
 
@@ -466,14 +488,16 @@ Complex configuration details that belong in docs.`;
       });
 
       expect(result.success).toBe(true);
-      expect(result.metadata?.toolVersion).toBe('1.0.0');
+      expect(result.metadata?.toolVersion).toBe("1.0.0");
       // Execution time may be 0 for very fast operations
       expect(result.metadata?.executionTime).toBeGreaterThanOrEqual(0);
       expect(result.metadata?.timestamp).toBeDefined();
     });
 
-    it('should track optimization statistics', async () => {
-      const longReadme = Array(20).fill('# Section\n\nContent here.\n').join('\n');
+    it("should track optimization statistics", async () => {
+      const longReadme = Array(20)
+        .fill("# Section\n\nContent here.\n")
+        .join("\n");
       await fs.writeFile(readmePath, longReadme);
 
       const result = await optimizeReadme({
@@ -485,12 +509,14 @@ Complex configuration details that belong in docs.`;
       expect(result.data?.optimization.originalLength).toBeGreaterThan(0);
       expect(result.data?.optimization.optimizedLength).toBeGreaterThan(0);
       // Reduction percentage can be negative when content is added (like TL;DR)
-      expect(typeof result.data?.optimization.reductionPercentage).toBe('number');
+      expect(typeof result.data?.optimization.reductionPercentage).toBe(
+        "number",
+      );
     });
   });
 
-  describe('error handling', () => {
-    it('should handle file permission errors gracefully', async () => {
+  describe("error handling", () => {
+    it("should handle file permission errors gracefully", async () => {
       const readmeContent = `# Project\n\nContent.`;
       await fs.writeFile(readmePath, readmeContent);
 
@@ -506,13 +532,13 @@ Complex configuration details that belong in docs.`;
       await fs.chmod(testDir, 0o755);
 
       expect(result.success).toBe(false);
-      expect(result.error?.code).toBe('OPTIMIZATION_FAILED');
+      expect(result.error?.code).toBe("OPTIMIZATION_FAILED");
     });
 
-    it('should handle malformed README content', async () => {
+    it("should handle malformed README content", async () => {
       // Create README with unusual content
-      const malformedContent = '\x00\x01\x02Invalid binary content\xFF\xFE';
-      await fs.writeFile(readmePath, malformedContent, 'binary');
+      const malformedContent = "\x00\x01\x02Invalid binary content\xFF\xFE";
+      await fs.writeFile(readmePath, malformedContent, "binary");
 
       const result = await optimizeReadme({
         readme_path: readmePath,
@@ -524,8 +550,8 @@ Complex configuration details that belong in docs.`;
     });
   });
 
-  describe('integration scenarios', () => {
-    it('should work with real-world README structure', async () => {
+  describe("integration scenarios", () => {
+    it("should work with real-world README structure", async () => {
       const realWorldReadme = `# MyAwesome Project
 
 [![Build Status](https://travis-ci.org/user/project.svg?branch=main)](https://travis-ci.org/user/project)
@@ -583,13 +609,15 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
       const result = await optimizeReadme({
         readme_path: readmePath,
-        strategy: 'developer_focused',
+        strategy: "developer_focused",
         max_length: 400,
       });
 
       expect(result.success).toBe(true);
-      expect(result.data?.optimization.optimizedContent).toContain('TL;DR');
-      expect(result.data?.optimization.optimizedContent).toContain('Quick Start');
+      expect(result.data?.optimization.optimizedContent).toContain("TL;DR");
+      expect(result.data?.optimization.optimizedContent).toContain(
+        "Quick Start",
+      );
     });
   });
 });

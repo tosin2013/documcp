@@ -45,10 +45,10 @@ The memory system stores analysis results and learning patterns:
 **\_config.yml:**
 
 ```yaml
-title: 'Your Documentation Site'
-description: 'Project documentation'
-baseurl: '/repository-name'
-url: 'https://username.github.io'
+title: "Your Documentation Site"
+description: "Project documentation"
+baseurl: "/repository-name"
+url: "https://username.github.io"
 
 markdown: kramdown
 highlighter: rouge
@@ -69,13 +69,13 @@ collections:
 
 defaults:
   - scope:
-      path: ''
+      path: ""
     values:
-      layout: 'default'
+      layout: "default"
   - scope:
-      path: '_tutorials'
+      path: "_tutorials"
     values:
-      layout: 'tutorial'
+      layout: "tutorial"
 ```
 
 **Gemfile:**
@@ -99,31 +99,31 @@ end
 **config.yml:**
 
 ```yaml
-baseURL: 'https://username.github.io/repository-name'
-languageCode: 'en-us'
-title: 'Documentation Site'
-theme: 'docsy'
+baseURL: "https://username.github.io/repository-name"
+languageCode: "en-us"
+title: "Documentation Site"
+theme: "docsy"
 
 params:
-  github_repo: 'https://github.com/username/repository'
-  github_branch: 'main'
+  github_repo: "https://github.com/username/repository"
+  github_branch: "main"
   edit_page: true
   search:
     enabled: true
 
 menu:
   main:
-    - name: 'Tutorials'
-      url: '/tutorials/'
+    - name: "Tutorials"
+      url: "/tutorials/"
       weight: 10
-    - name: 'How-to Guides'
-      url: '/how-to/'
+    - name: "How-to Guides"
+      url: "/how-to/"
       weight: 20
-    - name: 'Reference'
-      url: '/reference/'
+    - name: "Reference"
+      url: "/reference/"
       weight: 30
-    - name: 'Explanation'
-      url: '/explanation/'
+    - name: "Explanation"
+      url: "/explanation/"
       weight: 40
 
 markup:
@@ -161,38 +161,38 @@ require (
 
 ```javascript
 const config = {
-  title: 'Documentation Site',
-  tagline: 'Comprehensive project documentation',
-  url: 'https://username.github.io',
-  baseUrl: '/repository-name/',
+  title: "Documentation Site",
+  tagline: "Comprehensive project documentation",
+  url: "https://username.github.io",
+  baseUrl: "/repository-name/",
 
-  organizationName: 'username',
-  projectName: 'repository-name',
-  deploymentBranch: 'gh-pages',
+  organizationName: "username",
+  projectName: "repository-name",
+  deploymentBranch: "gh-pages",
   trailingSlash: false,
 
-  onBrokenLinks: 'throw',
-  onBrokenMarkdownLinks: 'warn',
+  onBrokenLinks: "throw",
+  onBrokenMarkdownLinks: "warn",
 
   i18n: {
-    defaultLocale: 'en',
-    locales: ['en'],
+    defaultLocale: "en",
+    locales: ["en"],
   },
 
   presets: [
     [
-      'classic',
+      "classic",
       {
         docs: {
-          routeBasePath: '/',
-          sidebarPath: require.resolve('./sidebars.js'),
-          editUrl: 'https://github.com/username/repository/tree/main/',
+          routeBasePath: "/",
+          sidebarPath: require.resolve("./sidebars.js"),
+          editUrl: "https://github.com/username/repository/tree/main/",
         },
         theme: {
-          customCss: require.resolve('./src/css/custom.css'),
+          customCss: require.resolve("./src/css/custom.css"),
         },
         gtag: {
-          trackingID: 'G-XXXXXXXXXX',
+          trackingID: "G-XXXXXXXXXX",
           anonymizeIP: true,
         },
       },
@@ -201,40 +201,40 @@ const config = {
 
   themeConfig: {
     navbar: {
-      title: 'Documentation',
+      title: "Documentation",
       items: [
         {
-          type: 'doc',
-          docId: 'tutorials/index',
-          position: 'left',
-          label: 'Tutorials',
+          type: "doc",
+          docId: "tutorials/index",
+          position: "left",
+          label: "Tutorials",
         },
         {
-          type: 'doc',
-          docId: 'how-to/index',
-          position: 'left',
-          label: 'How-to',
+          type: "doc",
+          docId: "how-to/index",
+          position: "left",
+          label: "How-to",
         },
         {
-          type: 'doc',
-          docId: 'reference/index',
-          position: 'left',
-          label: 'Reference',
+          type: "doc",
+          docId: "reference/index",
+          position: "left",
+          label: "Reference",
         },
         {
-          href: 'https://github.com/username/repository',
-          label: 'GitHub',
-          position: 'right',
+          href: "https://github.com/username/repository",
+          label: "GitHub",
+          position: "right",
         },
       ],
     },
     footer: {
-      style: 'dark',
+      style: "dark",
       copyright: `Copyright © ${new Date().getFullYear()} Your Project Name.`,
     },
     prism: {
-      theme: require('prism-react-renderer/themes/github'),
-      darkTheme: require('prism-react-renderer/themes/dracula'),
+      theme: require("prism-react-renderer/themes/github"),
+      darkTheme: require("prism-react-renderer/themes/dracula"),
     },
   },
 };
@@ -247,30 +247,34 @@ module.exports = config;
 ```javascript
 const sidebars = {
   tutorialSidebar: [
-    'index',
+    "index",
     {
-      type: 'category',
-      label: 'Tutorials',
+      type: "category",
+      label: "Tutorials",
       items: [
-        'tutorials/getting-started',
-        'tutorials/first-deployment',
-        'tutorials/development-setup',
+        "tutorials/getting-started",
+        "tutorials/first-deployment",
+        "tutorials/development-setup",
       ],
     },
     {
-      type: 'category',
-      label: 'How-to Guides',
+      type: "category",
+      label: "How-to Guides",
       items: [
-        'how-to/prompting-guide',
-        'how-to/repository-analysis',
-        'how-to/github-pages-deployment',
-        'how-to/troubleshooting',
+        "how-to/prompting-guide",
+        "how-to/repository-analysis",
+        "how-to/github-pages-deployment",
+        "how-to/troubleshooting",
       ],
     },
     {
-      type: 'category',
-      label: 'Reference',
-      items: ['reference/mcp-tools', 'reference/configuration', 'reference/cli'],
+      type: "category",
+      label: "Reference",
+      items: [
+        "reference/mcp-tools",
+        "reference/configuration",
+        "reference/cli",
+      ],
     },
   ],
 };
@@ -369,9 +373,9 @@ mkdocs-git-revision-date-localized-plugin>=1.2.0
 **.eleventy.js:**
 
 ```javascript
-const { EleventyHtmlBasePlugin } = require('@11ty/eleventy');
-const markdownIt = require('markdown-it');
-const markdownItAnchor = require('markdown-it-anchor');
+const { EleventyHtmlBasePlugin } = require("@11ty/eleventy");
+const markdownIt = require("markdown-it");
+const markdownItAnchor = require("markdown-it-anchor");
 
 module.exports = function (eleventyConfig) {
   // Add plugins
@@ -384,48 +388,48 @@ module.exports = function (eleventyConfig) {
     linkify: true,
   }).use(markdownItAnchor, {
     permalink: markdownItAnchor.permalink.ariaHidden({
-      placement: 'after',
-      class: 'direct-link',
-      symbol: '#',
+      placement: "after",
+      class: "direct-link",
+      symbol: "#",
     }),
     level: [1, 2, 3, 4],
-    slugify: eleventyConfig.getFilter('slug'),
+    slugify: eleventyConfig.getFilter("slug"),
   });
 
-  eleventyConfig.setLibrary('md', markdownLibrary);
+  eleventyConfig.setLibrary("md", markdownLibrary);
 
   // Copy static files
-  eleventyConfig.addPassthroughCopy('src/assets');
-  eleventyConfig.addPassthroughCopy('src/css');
+  eleventyConfig.addPassthroughCopy("src/assets");
+  eleventyConfig.addPassthroughCopy("src/css");
 
   // Collections for Diataxis structure
-  eleventyConfig.addCollection('tutorials', function (collection) {
-    return collection.getFilteredByGlob('src/tutorials/*.md');
+  eleventyConfig.addCollection("tutorials", function (collection) {
+    return collection.getFilteredByGlob("src/tutorials/*.md");
   });
 
-  eleventyConfig.addCollection('howto', function (collection) {
-    return collection.getFilteredByGlob('src/how-to/*.md');
+  eleventyConfig.addCollection("howto", function (collection) {
+    return collection.getFilteredByGlob("src/how-to/*.md");
   });
 
-  eleventyConfig.addCollection('reference', function (collection) {
-    return collection.getFilteredByGlob('src/reference/*.md');
+  eleventyConfig.addCollection("reference", function (collection) {
+    return collection.getFilteredByGlob("src/reference/*.md");
   });
 
-  eleventyConfig.addCollection('explanation', function (collection) {
-    return collection.getFilteredByGlob('src/explanation/*.md');
+  eleventyConfig.addCollection("explanation", function (collection) {
+    return collection.getFilteredByGlob("src/explanation/*.md");
   });
 
   return {
     dir: {
-      input: 'src',
-      output: '_site',
-      includes: '_includes',
-      layouts: '_layouts',
-      data: '_data',
+      input: "src",
+      output: "_site",
+      includes: "_includes",
+      layouts: "_layouts",
+      data: "_data",
     },
-    pathPrefix: '/repository-name/',
-    markdownTemplateEngine: 'njk',
-    htmlTemplateEngine: 'njk',
+    pathPrefix: "/repository-name/",
+    markdownTemplateEngine: "njk",
+    htmlTemplateEngine: "njk",
   };
 };
 ```
@@ -460,7 +464,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: 'pages'
+  group: "pages"
   cancel-in-progress: false
 
 environment:
@@ -507,10 +511,10 @@ const config = {
   },
   webpack: {
     jsLoader: (isServer) => ({
-      loader: 'esbuild-loader',
+      loader: "esbuild-loader",
       options: {
-        loader: 'tsx',
-        target: isServer ? 'node12' : 'es2017',
+        loader: "tsx",
+        target: isServer ? "node12" : "es2017",
       },
     }),
   },
@@ -526,9 +530,9 @@ build:
 
 caches:
   getjson:
-    maxAge: '1m'
+    maxAge: "1m"
   getcsv:
-    maxAge: '1m'
+    maxAge: "1m"
 ```
 
 ### SEO Configuration

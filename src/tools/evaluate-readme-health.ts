@@ -1,22 +1,31 @@
-import { z } from 'zod';
-import { promises as fs } from 'fs';
-import path from 'path';
-import { formatMCPResponse } from '../types/api.js';
+import { z } from "zod";
+import { promises as fs } from "fs";
+import path from "path";
+import { formatMCPResponse } from "../types/api.js";
 
 // Input validation schema
 const EvaluateReadmeHealthSchema = z.object({
-  readme_path: z.string().min(1, 'README path is required'),
+  readme_path: z.string().min(1, "README path is required"),
   project_type: z
-    .enum(['community_library', 'enterprise_tool', 'personal_project', 'documentation'])
+    .enum([
+      "community_library",
+      "enterprise_tool",
+      "personal_project",
+      "documentation",
+    ])
     .optional()
-    .default('community_library'),
+    .default("community_library"),
   repository_path: z.string().optional(),
 });
 
 // Input type that matches what users actually pass (project_type is optional)
 export interface EvaluateReadmeHealthInput {
   readme_path: string;
-  project_type?: 'community_library' | 'enterprise_tool' | 'personal_project' | 'documentation';
+  project_type?:
+    | "community_library"
+    | "enterprise_tool"
+    | "personal_project"
+    | "documentation";
   repository_path?: string;
 }
 
@@ -39,7 +48,7 @@ interface HealthCheckDetail {
 interface ReadmeHealthReport {
   overallScore: number;
   maxScore: number;
-  grade: 'A' | 'B' | 'C' | 'D' | 'F';
+  grade: "A" | "B" | "C" | "D" | "F";
   components: {
     communityHealth: HealthScoreComponent;
     accessibility: HealthScoreComponent;
@@ -60,23 +69,31 @@ export async function evaluateReadmeHealth(input: EvaluateReadmeHealthInput) {
 
     // Read README file
     const readmePath = path.resolve(validatedInput.readme_path);
-    const readmeContent = await fs.readFile(readmePath, 'utf-8');
+    const readmeContent = await fs.readFile(readmePath, "utf-8");
 
     // Get repository context if available
     let repoContext: any = null;
     if (validatedInput.repository_path) {
-      repoContext = await analyzeRepositoryContext(validatedInput.repository_path);
+      repoContext = await analyzeRepositoryContext(
+        validatedInput.repository_path,
+      );
     }
 
     // Evaluate all health components
     const communityHealth = evaluateCommunityHealth(readmeContent, repoContext);
     const accessibility = evaluateAccessibility(readmeContent);
-    const onboarding = evaluateOnboarding(readmeContent, validatedInput.project_type);
+    const onboarding = evaluateOnboarding(
+      readmeContent,
+      validatedInput.project_type,
+    );
     const contentQuality = evaluateContentQuality(readmeContent);
 
     // Calculate overall score
     const totalScore =
-      communityHealth.score + accessibility.score + onboarding.score + contentQuality.score;
+      communityHealth.score +
+      accessibility.score +
+      onboarding.score +
+      contentQuality.score;
     const maxTotalScore =
       communityHealth.maxScore +
       accessibility.maxScore +
@@ -90,7 +107,7 @@ export async function evaluateReadmeHealth(input: EvaluateReadmeHealthInput) {
     // Generate recommendations and insights
     const recommendations = generateHealthRecommendations(
       [communityHealth, accessibility, onboarding, contentQuality],
-      'general',
+      "general",
     );
     const strengths = identifyStrengths([
       communityHealth,
@@ -136,7 +153,7 @@ export async function evaluateReadmeHealth(input: EvaluateReadmeHealthInput) {
       success: true,
       data: response,
       metadata: {
-        toolVersion: '1.0.0',
+        toolVersion: "1.0.0",
         executionTime: Date.now() - startTime,
         timestamp: new Date().toISOString(),
       },
@@ -145,12 +162,12 @@ export async function evaluateReadmeHealth(input: EvaluateReadmeHealthInput) {
     return formatMCPResponse({
       success: false,
       error: {
-        code: 'README_HEALTH_EVALUATION_FAILED',
+        code: "README_HEALTH_EVALUATION_FAILED",
         message: `Failed to evaluate README health: ${error}`,
-        resolution: 'Ensure README path is valid and file is readable',
+        resolution: "Ensure README path is valid and file is readable",
       },
       metadata: {
-        toolVersion: '1.0.0',
+        toolVersion: "1.0.0",
         executionTime: Date.now() - startTime,
         timestamp: new Date().toISOString(),
       },
@@ -158,45 +175,58 @@ export async function evaluateReadmeHealth(input: EvaluateReadmeHealthInput) {
   }
 }
 
-function evaluateCommunityHealth(content: string, _repoContext: any): HealthScoreComponent {
+function evaluateCommunityHealth(
+  content: string,
+  _repoContext: any,
+): HealthScoreComponent {
   const checks: HealthCheckDetail[] = [
     {
-      check: 'Code of Conduct linked',
-      passed: /code.of.conduct|conduct\.md|\.github\/code_of_conduct/i.test(content),
+      check: "Code of Conduct linked",
+      passed: /code.of.conduct|conduct\.md|\.github\/code_of_conduct/i.test(
+        content,
+      ),
       points: 0,
       maxPoints: 5,
-      recommendation: 'Add a link to your Code of Conduct to establish community standards',
+      recommendation:
+        "Add a link to your Code of Conduct to establish community standards",
     },
     {
-      check: 'Contributing guidelines visible',
-      passed: /contributing|contribute\.md|\.github\/contributing/i.test(content),
+      check: "Contributing guidelines visible",
+      passed: /contributing|contribute\.md|\.github\/contributing/i.test(
+        content,
+      ),
       points: 0,
       maxPoints: 5,
-      recommendation: 'Include contributing guidelines to help new contributors get started',
+      recommendation:
+        "Include contributing guidelines to help new contributors get started",
     },
     {
-      check: 'Issue/PR templates mentioned',
+      check: "Issue/PR templates mentioned",
       passed:
         /issue.template|pull.request.template|\.github\/issue_template|\.github\/pull_request_template/i.test(
           content,
         ),
       points: 0,
       maxPoints: 5,
-      recommendation: 'Reference issue and PR templates to streamline contributions',
+      recommendation:
+        "Reference issue and PR templates to streamline contributions",
     },
     {
-      check: 'Security policy linked',
+      check: "Security policy linked",
       passed: /security\.md|security.policy|\.github\/security/i.test(content),
       points: 0,
       maxPoints: 5,
-      recommendation: 'Add a security policy to handle vulnerability reports responsibly',
+      recommendation:
+        "Add a security policy to handle vulnerability reports responsibly",
     },
     {
-      check: 'Support channels provided',
-      passed: /support|help|discord|slack|discussions|forum|community/i.test(content),
+      check: "Support channels provided",
+      passed: /support|help|discord|slack|discussions|forum|community/i.test(
+        content,
+      ),
       points: 0,
       maxPoints: 5,
-      recommendation: 'Provide clear support channels for users seeking help',
+      recommendation: "Provide clear support channels for users seeking help",
     },
   ];
 
@@ -211,7 +241,7 @@ function evaluateCommunityHealth(content: string, _repoContext: any): HealthScor
   const maxScore = checks.reduce((sum, check) => sum + check.maxPoints, 0);
 
   return {
-    name: 'Community Health',
+    name: "Community Health",
     score: totalScore,
     maxScore,
     details: checks,
@@ -219,34 +249,37 @@ function evaluateCommunityHealth(content: string, _repoContext: any): HealthScor
 }
 
 function evaluateAccessibility(content: string): HealthScoreComponent {
-  const lines = content.split('\n');
-  const headings = lines.filter((line) => line.trim().startsWith('#'));
+  const lines = content.split("\n");
+  const headings = lines.filter((line) => line.trim().startsWith("#"));
   const images = content.match(/!\[.*?\]\(.*?\)/g) || [];
 
   const checks: HealthCheckDetail[] = [
     {
-      check: 'Scannable structure with proper spacing',
-      passed: content.includes('\n\n') && lines.length > 10,
+      check: "Scannable structure with proper spacing",
+      passed: content.includes("\n\n") && lines.length > 10,
       points: 0,
       maxPoints: 5,
-      recommendation: 'Use proper spacing and breaks to make content scannable',
+      recommendation: "Use proper spacing and breaks to make content scannable",
     },
     {
-      check: 'Clear heading hierarchy',
-      passed: headings.length >= 3 && headings.some((h) => h.startsWith('##')),
+      check: "Clear heading hierarchy",
+      passed: headings.length >= 3 && headings.some((h) => h.startsWith("##")),
       points: 0,
       maxPoints: 5,
-      recommendation: 'Use proper heading hierarchy (H1, H2, H3) to structure content',
+      recommendation:
+        "Use proper heading hierarchy (H1, H2, H3) to structure content",
     },
     {
-      check: 'Alt text for images',
-      passed: images.length === 0 || images.every((img) => !img.includes('![](')),
+      check: "Alt text for images",
+      passed:
+        images.length === 0 || images.every((img) => !img.includes("![](")),
       points: 0,
       maxPoints: 5,
-      recommendation: 'Add descriptive alt text for all images for screen readers',
+      recommendation:
+        "Add descriptive alt text for all images for screen readers",
     },
     {
-      check: 'Inclusive language',
+      check: "Inclusive language",
       passed: !/\b(guys|blacklist|whitelist|master|slave)\b/i.test(content),
       points: 0,
       maxPoints: 5,
@@ -266,42 +299,53 @@ function evaluateAccessibility(content: string): HealthScoreComponent {
   const maxScore = checks.reduce((sum, check) => sum + check.maxPoints, 0);
 
   return {
-    name: 'Accessibility',
+    name: "Accessibility",
     score: totalScore,
     maxScore,
     details: checks,
   };
 }
 
-function evaluateOnboarding(content: string, _projectType: string): HealthScoreComponent {
+function evaluateOnboarding(
+  content: string,
+  _projectType: string,
+): HealthScoreComponent {
   const checks: HealthCheckDetail[] = [
     {
-      check: 'Quick start section',
+      check: "Quick start section",
       passed: /quick.start|getting.started|installation|setup/i.test(content),
       points: 0,
       maxPoints: 5,
-      recommendation: 'Add a quick start section to help users get up and running fast',
+      recommendation:
+        "Add a quick start section to help users get up and running fast",
     },
     {
-      check: 'Prerequisites clearly listed',
-      passed: /prerequisites|requirements|dependencies|before.you.begin/i.test(content),
+      check: "Prerequisites clearly listed",
+      passed: /prerequisites|requirements|dependencies|before.you.begin/i.test(
+        content,
+      ),
       points: 0,
       maxPoints: 5,
-      recommendation: 'Clearly list all prerequisites and system requirements',
+      recommendation: "Clearly list all prerequisites and system requirements",
     },
     {
-      check: 'First contribution guide',
-      passed: /first.contribution|new.contributor|beginner|newcomer/i.test(content),
+      check: "First contribution guide",
+      passed: /first.contribution|new.contributor|beginner|newcomer/i.test(
+        content,
+      ),
       points: 0,
       maxPoints: 5,
-      recommendation: 'Include guidance specifically for first-time contributors',
+      recommendation:
+        "Include guidance specifically for first-time contributors",
     },
     {
-      check: 'Good first issues mentioned',
-      passed: /good.first.issue|beginner.friendly|easy.pick|help.wanted/i.test(content),
+      check: "Good first issues mentioned",
+      passed: /good.first.issue|beginner.friendly|easy.pick|help.wanted/i.test(
+        content,
+      ),
       points: 0,
       maxPoints: 5,
-      recommendation: 'Mention good first issues or beginner-friendly tasks',
+      recommendation: "Mention good first issues or beginner-friendly tasks",
     },
   ];
 
@@ -316,7 +360,7 @@ function evaluateOnboarding(content: string, _projectType: string): HealthScoreC
   const maxScore = checks.reduce((sum, check) => sum + check.maxPoints, 0);
 
   return {
-    name: 'Onboarding',
+    name: "Onboarding",
     score: totalScore,
     maxScore,
     details: checks,
@@ -330,32 +374,35 @@ function evaluateContentQuality(content: string): HealthScoreComponent {
 
   const checks: HealthCheckDetail[] = [
     {
-      check: 'Adequate content length',
+      check: "Adequate content length",
       passed: wordCount >= 50 && wordCount <= 2000,
       points: 0,
       maxPoints: 5,
-      recommendation: 'Maintain optimal README length (50-2000 words) for readability',
+      recommendation:
+        "Maintain optimal README length (50-2000 words) for readability",
     },
     {
-      check: 'Code examples provided',
+      check: "Code examples provided",
       passed: codeBlocks >= 2,
       points: 0,
       maxPoints: 5,
-      recommendation: 'Include practical code examples to demonstrate usage',
+      recommendation: "Include practical code examples to demonstrate usage",
     },
     {
-      check: 'External links present',
+      check: "External links present",
       passed: links >= 3,
       points: 0,
       maxPoints: 5,
-      recommendation: 'Add relevant external links (docs, demos, related projects)',
+      recommendation:
+        "Add relevant external links (docs, demos, related projects)",
     },
     {
-      check: 'Project description clarity',
+      check: "Project description clarity",
       passed: /## |### /.test(content) && content.length > 500,
       points: 0,
       maxPoints: 5,
-      recommendation: 'Provide clear, detailed project description with proper structure',
+      recommendation:
+        "Provide clear, detailed project description with proper structure",
     },
   ];
 
@@ -370,7 +417,7 @@ function evaluateContentQuality(content: string): HealthScoreComponent {
   const maxScore = checks.reduce((sum, check) => sum + check.maxPoints, 0);
 
   return {
-    name: 'Content Quality',
+    name: "Content Quality",
     score: totalScore,
     maxScore,
     details: checks,
@@ -383,26 +430,29 @@ async function analyzeRepositoryContext(repoPath: string): Promise<any> {
     const files = await fs.readdir(repoDir);
 
     return {
-      hasCodeOfConduct: files.includes('CODE_OF_CONDUCT.md'),
-      hasContributing: files.includes('CONTRIBUTING.md'),
-      hasSecurityPolicy: files.includes('SECURITY.md'),
-      hasGithubDir: files.includes('.github'),
-      packageJson: files.includes('package.json'),
+      hasCodeOfConduct: files.includes("CODE_OF_CONDUCT.md"),
+      hasContributing: files.includes("CONTRIBUTING.md"),
+      hasSecurityPolicy: files.includes("SECURITY.md"),
+      hasGithubDir: files.includes(".github"),
+      packageJson: files.includes("package.json"),
     };
   } catch (error) {
     return null;
   }
 }
 
-function getGrade(percentage: number): 'A' | 'B' | 'C' | 'D' | 'F' {
-  if (percentage >= 90) return 'A';
-  if (percentage >= 80) return 'B';
-  if (percentage >= 70) return 'C';
-  if (percentage >= 60) return 'D';
-  return 'F';
+function getGrade(percentage: number): "A" | "B" | "C" | "D" | "F" {
+  if (percentage >= 90) return "A";
+  if (percentage >= 80) return "B";
+  if (percentage >= 70) return "C";
+  if (percentage >= 60) return "D";
+  return "F";
 }
 
-function generateHealthRecommendations(analysis: any[], _projectType: string): string[] {
+function generateHealthRecommendations(
+  analysis: any[],
+  _projectType: string,
+): string[] {
   const recommendations: string[] = [];
 
   analysis.forEach((component: any) => {
@@ -425,7 +475,7 @@ function identifyStrengths(components: HealthScoreComponent[]): string[] {
       strengths.push(
         `Strong ${component.name.toLowerCase()}: ${passedChecks
           .map((c) => c.check.toLowerCase())
-          .join(', ')}`,
+          .join(", ")}`,
       );
     }
   });
@@ -450,7 +500,10 @@ function identifyCriticalIssues(components: HealthScoreComponent[]): string[] {
   return critical;
 }
 
-function estimateImprovementTime(recommendationCount: number, criticalCount: number): string {
+function estimateImprovementTime(
+  recommendationCount: number,
+  criticalCount: number,
+): string {
   const baseTime = recommendationCount * 15; // 15 minutes per recommendation
   const criticalTime = criticalCount * 30; // 30 minutes per critical issue
   const totalMinutes = baseTime + criticalTime;
@@ -465,7 +518,7 @@ function generateSummary(report: ReadmeHealthReport): string {
 
   const componentScores = Object.values(components)
     .map((c) => `${c.name}: ${c.score}/${c.maxScore}`)
-    .join(', ');
+    .join(", ");
 
   return `README Health Score: ${overallScore}/100 (Grade ${grade}). Component breakdown: ${componentScores}. ${report.criticalIssues.length} critical issues identified.`;
 }
@@ -474,20 +527,25 @@ function generateNextSteps(report: ReadmeHealthReport): string[] {
   const steps: string[] = [];
 
   if (report.criticalIssues.length > 0) {
-    steps.push('Address critical issues first to establish baseline community health');
+    steps.push(
+      "Address critical issues first to establish baseline community health",
+    );
   }
 
   if (report.recommendations.length > 0) {
     steps.push(
-      `Implement top ${Math.min(3, report.recommendations.length)} recommendations for quick wins`,
+      `Implement top ${Math.min(
+        3,
+        report.recommendations.length,
+      )} recommendations for quick wins`,
     );
   }
 
   if (report.overallScore < 85) {
-    steps.push('Target 85+ health score for optimal community engagement');
+    steps.push("Target 85+ health score for optimal community engagement");
   }
 
-  steps.push('Re-evaluate after improvements to track progress');
+  steps.push("Re-evaluate after improvements to track progress");
 
   return steps;
 }

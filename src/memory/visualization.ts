@@ -3,25 +3,33 @@
  * Generate visual representations of memory data, patterns, and insights
  */
 
-import { EventEmitter } from 'events';
-import { MemoryEntry, JSONLStorage } from './storage.js';
-import { MemoryManager } from './manager.js';
-import { IncrementalLearningSystem } from './learning.js';
-import { KnowledgeGraph } from './knowledge-graph.js';
-import { TemporalMemoryAnalysis } from './temporal-analysis.js';
+import { EventEmitter } from "events";
+import { MemoryEntry, JSONLStorage } from "./storage.js";
+import { MemoryManager } from "./manager.js";
+import { IncrementalLearningSystem } from "./learning.js";
+import { KnowledgeGraph } from "./knowledge-graph.js";
+import { TemporalMemoryAnalysis } from "./temporal-analysis.js";
 
 export interface VisualizationConfig {
   width: number;
   height: number;
-  theme: 'light' | 'dark' | 'auto';
+  theme: "light" | "dark" | "auto";
   colorScheme: string[];
   interactive: boolean;
-  exportFormat: 'svg' | 'png' | 'json' | 'html';
+  exportFormat: "svg" | "png" | "json" | "html";
   responsive: boolean;
 }
 
 export interface ChartData {
-  type: 'line' | 'bar' | 'scatter' | 'heatmap' | 'network' | 'sankey' | 'treemap' | 'timeline';
+  type:
+    | "line"
+    | "bar"
+    | "scatter"
+    | "heatmap"
+    | "network"
+    | "sankey"
+    | "treemap"
+    | "timeline";
   title: string;
   description: string;
   data: any;
@@ -64,7 +72,7 @@ export interface NetworkVisualization {
     color: string;
     metadata: any;
   }>;
-  layout: 'force' | 'circular' | 'hierarchical' | 'grid';
+  layout: "force" | "circular" | "hierarchical" | "grid";
   clustering: boolean;
 }
 
@@ -95,7 +103,7 @@ export interface TimelineVisualization {
     metadata: any;
   }>;
   timeRange: { start: Date; end: Date };
-  granularity: 'hour' | 'day' | 'week' | 'month';
+  granularity: "hour" | "day" | "week" | "month";
   groupBy?: string;
 }
 
@@ -126,19 +134,19 @@ export class MemoryVisualizationSystem extends EventEmitter {
     this.defaultConfig = {
       width: 800,
       height: 600,
-      theme: 'light',
+      theme: "light",
       colorScheme: [
-        '#3B82F6', // Blue
-        '#10B981', // Green
-        '#F59E0B', // Yellow
-        '#EF4444', // Red
-        '#8B5CF6', // Purple
-        '#06B6D4', // Cyan
-        '#F97316', // Orange
-        '#84CC16', // Lime
+        "#3B82F6", // Blue
+        "#10B981", // Green
+        "#F59E0B", // Yellow
+        "#EF4444", // Red
+        "#8B5CF6", // Purple
+        "#06B6D4", // Cyan
+        "#F97316", // Orange
+        "#84CC16", // Lime
       ],
       interactive: true,
-      exportFormat: 'svg',
+      exportFormat: "svg",
       responsive: true,
     };
   }
@@ -154,44 +162,71 @@ export class MemoryVisualizationSystem extends EventEmitter {
     const timeRange = options?.timeRange || this.getDefaultTimeRange();
     const config = { ...this.defaultConfig, ...options?.config };
 
-    this.emit('dashboard_generation_started', { timeRange });
+    this.emit("dashboard_generation_started", { timeRange });
 
     try {
       const charts: ChartData[] = [];
 
       // Activity Timeline
-      if (!options?.includeCharts || options.includeCharts.includes('activity')) {
+      if (
+        !options?.includeCharts ||
+        options.includeCharts.includes("activity")
+      ) {
         charts.push(await this.generateActivityTimeline(timeRange, config));
       }
 
       // Memory Type Distribution
-      if (!options?.includeCharts || options.includeCharts.includes('distribution')) {
-        charts.push(await this.generateMemoryTypeDistribution(timeRange, config));
+      if (
+        !options?.includeCharts ||
+        options.includeCharts.includes("distribution")
+      ) {
+        charts.push(
+          await this.generateMemoryTypeDistribution(timeRange, config),
+        );
       }
 
       // Success Rate Trends
-      if (!options?.includeCharts || options.includeCharts.includes('success')) {
+      if (
+        !options?.includeCharts ||
+        options.includeCharts.includes("success")
+      ) {
         charts.push(await this.generateSuccessRateTrends(timeRange, config));
       }
 
       // Knowledge Graph Network
-      if (!options?.includeCharts || options.includeCharts.includes('network')) {
+      if (
+        !options?.includeCharts ||
+        options.includeCharts.includes("network")
+      ) {
         charts.push(await this.generateKnowledgeGraphVisualization(config));
       }
 
       // Learning Patterns Heatmap
-      if (!options?.includeCharts || options.includeCharts.includes('learning')) {
+      if (
+        !options?.includeCharts ||
+        options.includeCharts.includes("learning")
+      ) {
         charts.push(await this.generateLearningPatternsHeatmap(config));
       }
 
       // Temporal Patterns
-      if (!options?.includeCharts || options.includeCharts.includes('temporal')) {
-        charts.push(await this.generateTemporalPatternsChart(timeRange, config));
+      if (
+        !options?.includeCharts ||
+        options.includeCharts.includes("temporal")
+      ) {
+        charts.push(
+          await this.generateTemporalPatternsChart(timeRange, config),
+        );
       }
 
       // Project Correlation Matrix
-      if (!options?.includeCharts || options.includeCharts.includes('correlation')) {
-        charts.push(await this.generateProjectCorrelationMatrix(timeRange, config));
+      if (
+        !options?.includeCharts ||
+        options.includeCharts.includes("correlation")
+      ) {
+        charts.push(
+          await this.generateProjectCorrelationMatrix(timeRange, config),
+        );
       }
 
       // Get summary data
@@ -200,7 +235,7 @@ export class MemoryVisualizationSystem extends EventEmitter {
       const healthScore = await this.calculateSystemHealthScore(entries);
 
       const dashboard: DashboardData = {
-        title: 'DocuMCP Memory System Dashboard',
+        title: "DocuMCP Memory System Dashboard",
         description: `Comprehensive overview of memory system activity from ${timeRange.start.toLocaleDateString()} to ${timeRange.end.toLocaleDateString()}`,
         charts,
         summary: {
@@ -212,7 +247,7 @@ export class MemoryVisualizationSystem extends EventEmitter {
         generated: new Date(),
       };
 
-      this.emit('dashboard_generated', {
+      this.emit("dashboard_generated", {
         charts: charts.length,
         entries: entries.length,
         timeRange,
@@ -220,7 +255,7 @@ export class MemoryVisualizationSystem extends EventEmitter {
 
       return dashboard;
     } catch (error) {
-      this.emit('dashboard_error', {
+      this.emit("dashboard_error", {
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;
@@ -244,7 +279,7 @@ export class MemoryVisualizationSystem extends EventEmitter {
       const day = entry.timestamp.slice(0, 10); // YYYY-MM-DD
       dailyData.set(day, (dailyData.get(day) || 0) + 1);
 
-      if (entry.data.outcome === 'success' || entry.data.success === true) {
+      if (entry.data.outcome === "success" || entry.data.success === true) {
         successData.set(day, (successData.get(day) || 0) + 1);
       }
     }
@@ -252,31 +287,32 @@ export class MemoryVisualizationSystem extends EventEmitter {
     // Create time series data
     const datasets = [
       {
-        label: 'Total Activity',
+        label: "Total Activity",
         data: Array.from(dailyData.entries()).map(([date, count]) => ({
           x: date,
           y: count,
         })),
-        borderColor: config.colorScheme?.[0] || '#3B82F6',
-        backgroundColor: config.colorScheme?.[0] || '#3B82F6',
+        borderColor: config.colorScheme?.[0] || "#3B82F6",
+        backgroundColor: config.colorScheme?.[0] || "#3B82F6",
         fill: false,
       },
       {
-        label: 'Successful Activities',
+        label: "Successful Activities",
         data: Array.from(successData.entries()).map(([date, count]) => ({
           x: date,
           y: count,
         })),
-        borderColor: config.colorScheme?.[1] || '#10B981',
-        backgroundColor: config.colorScheme?.[1] || '#10B981',
+        borderColor: config.colorScheme?.[1] || "#10B981",
+        backgroundColor: config.colorScheme?.[1] || "#10B981",
         fill: false,
       },
     ];
 
     return {
-      type: 'line',
-      title: 'Memory Activity Timeline',
-      description: 'Daily memory system activity showing total entries and successful outcomes',
+      type: "line",
+      title: "Memory Activity Timeline",
+      description:
+        "Daily memory system activity showing total entries and successful outcomes",
       data: {
         datasets,
         options: {
@@ -284,28 +320,28 @@ export class MemoryVisualizationSystem extends EventEmitter {
           plugins: {
             title: {
               display: true,
-              text: 'Memory Activity Over Time',
+              text: "Memory Activity Over Time",
             },
             legend: {
               display: true,
-              position: 'top',
+              position: "top",
             },
           },
           scales: {
             x: {
-              type: 'time',
+              type: "time",
               time: {
-                unit: 'day',
+                unit: "day",
               },
               title: {
                 display: true,
-                text: 'Date',
+                text: "Date",
               },
             },
             y: {
               title: {
                 display: true,
-                text: 'Number of Entries',
+                text: "Number of Entries",
               },
             },
           },
@@ -316,7 +352,7 @@ export class MemoryVisualizationSystem extends EventEmitter {
         generated: new Date(),
         dataPoints: entries.length,
         timeRange,
-        filters: { type: 'activity_timeline' },
+        filters: { type: "activity_timeline" },
       },
     };
   }
@@ -337,7 +373,9 @@ export class MemoryVisualizationSystem extends EventEmitter {
     }
 
     // Sort by count
-    const sortedTypes = Array.from(typeCounts.entries()).sort(([, a], [, b]) => b - a);
+    const sortedTypes = Array.from(typeCounts.entries()).sort(
+      ([, a], [, b]) => b - a,
+    );
 
     const data = {
       labels: sortedTypes.map(([type]) => type),
@@ -354,9 +392,9 @@ export class MemoryVisualizationSystem extends EventEmitter {
     };
 
     return {
-      type: 'bar',
-      title: 'Memory Type Distribution',
-      description: 'Distribution of memory entries by type',
+      type: "bar",
+      title: "Memory Type Distribution",
+      description: "Distribution of memory entries by type",
       data: {
         ...data,
         options: {
@@ -364,7 +402,7 @@ export class MemoryVisualizationSystem extends EventEmitter {
           plugins: {
             title: {
               display: true,
-              text: 'Memory Entry Types',
+              text: "Memory Entry Types",
             },
             legend: {
               display: false,
@@ -375,13 +413,13 @@ export class MemoryVisualizationSystem extends EventEmitter {
               beginAtZero: true,
               title: {
                 display: true,
-                text: 'Number of Entries',
+                text: "Number of Entries",
               },
             },
             x: {
               title: {
                 display: true,
-                text: 'Memory Type',
+                text: "Memory Type",
               },
             },
           },
@@ -392,7 +430,7 @@ export class MemoryVisualizationSystem extends EventEmitter {
         generated: new Date(),
         dataPoints: entries.length,
         timeRange,
-        filters: { type: 'type_distribution' },
+        filters: { type: "type_distribution" },
       },
     };
   }
@@ -414,7 +452,7 @@ export class MemoryVisualizationSystem extends EventEmitter {
       const current = weeklyData.get(week) || { total: 0, successful: 0 };
 
       current.total++;
-      if (entry.data.outcome === 'success' || entry.data.success === true) {
+      if (entry.data.outcome === "success" || entry.data.success === true) {
         current.successful++;
       }
 
@@ -432,16 +470,16 @@ export class MemoryVisualizationSystem extends EventEmitter {
       .sort((a, b) => a.x.localeCompare(b.x));
 
     return {
-      type: 'line',
-      title: 'Success Rate Trends',
-      description: 'Weekly success rate trends for memory system operations',
+      type: "line",
+      title: "Success Rate Trends",
+      description: "Weekly success rate trends for memory system operations",
       data: {
         datasets: [
           {
-            label: 'Success Rate (%)',
+            label: "Success Rate (%)",
             data: data,
-            borderColor: config.colorScheme?.[1] || '#10B981',
-            backgroundColor: config.colorScheme?.[1] || '#10B981',
+            borderColor: config.colorScheme?.[1] || "#10B981",
+            backgroundColor: config.colorScheme?.[1] || "#10B981",
             fill: false,
             tension: 0.1,
           },
@@ -451,7 +489,7 @@ export class MemoryVisualizationSystem extends EventEmitter {
           plugins: {
             title: {
               display: true,
-              text: 'Success Rate Over Time',
+              text: "Success Rate Over Time",
             },
             tooltip: {
               callbacks: {
@@ -466,7 +504,7 @@ export class MemoryVisualizationSystem extends EventEmitter {
             x: {
               title: {
                 display: true,
-                text: 'Week',
+                text: "Week",
               },
             },
             y: {
@@ -474,7 +512,7 @@ export class MemoryVisualizationSystem extends EventEmitter {
               max: 100,
               title: {
                 display: true,
-                text: 'Success Rate (%)',
+                text: "Success Rate (%)",
               },
             },
           },
@@ -485,7 +523,7 @@ export class MemoryVisualizationSystem extends EventEmitter {
         generated: new Date(),
         dataPoints: data.length,
         timeRange,
-        filters: { type: 'success_trends' },
+        filters: { type: "success_trends" },
       },
     };
   }
@@ -517,20 +555,21 @@ export class MemoryVisualizationSystem extends EventEmitter {
         color: this.getColorForEdgeType(edge.type, config.colorScheme),
         metadata: edge.properties,
       })),
-      layout: 'force',
+      layout: "force",
       clustering: true,
     };
 
     return {
-      type: 'network',
-      title: 'Knowledge Graph Network',
-      description: 'Interactive network visualization of memory relationships and connections',
+      type: "network",
+      title: "Knowledge Graph Network",
+      description:
+        "Interactive network visualization of memory relationships and connections",
       data: networkData,
       config,
       metadata: {
         generated: new Date(),
         dataPoints: allNodes.length + allEdges.length,
-        filters: { type: 'knowledge_graph' },
+        filters: { type: "knowledge_graph" },
       },
     };
   }
@@ -538,7 +577,9 @@ export class MemoryVisualizationSystem extends EventEmitter {
   /**
    * Generate learning patterns heatmap
    */
-  async generateLearningPatternsHeatmap(config: Partial<VisualizationConfig>): Promise<ChartData> {
+  async generateLearningPatternsHeatmap(
+    config: Partial<VisualizationConfig>,
+  ): Promise<ChartData> {
     const patterns = await this.learningSystem.getPatterns();
 
     // Create correlation matrix between different pattern dimensions
@@ -548,10 +589,10 @@ export class MemoryVisualizationSystem extends EventEmitter {
           .flatMap((p) => p.metadata.technologies || [])
           .filter(
             (t) =>
-              t.includes('framework') ||
-              t.includes('js') ||
-              t.includes('react') ||
-              t.includes('vue'),
+              t.includes("framework") ||
+              t.includes("js") ||
+              t.includes("react") ||
+              t.includes("vue"),
           ),
       ),
     ];
@@ -559,7 +600,7 @@ export class MemoryVisualizationSystem extends EventEmitter {
       ...new Set(
         patterns
           .flatMap((p) => p.metadata.technologies || [])
-          .filter((t) => !t.includes('framework')),
+          .filter((t) => !t.includes("framework")),
       ),
     ];
 
@@ -570,7 +611,9 @@ export class MemoryVisualizationSystem extends EventEmitter {
       const row: number[] = [];
       for (const framework of frameworks) {
         // Calculate correlation/co-occurrence
-        const langPatterns = patterns.filter((p) => p.metadata.technologies?.includes(language));
+        const langPatterns = patterns.filter(
+          (p) => p.metadata.technologies?.includes(language),
+        );
         const frameworkPatterns = patterns.filter(
           (p) => p.metadata.technologies?.includes(framework),
         );
@@ -582,7 +625,8 @@ export class MemoryVisualizationSystem extends EventEmitter {
 
         const correlation =
           langPatterns.length > 0 && frameworkPatterns.length > 0
-            ? bothPatterns.length / Math.min(langPatterns.length, frameworkPatterns.length)
+            ? bothPatterns.length /
+              Math.min(langPatterns.length, frameworkPatterns.length)
             : 0;
 
         row.push(correlation);
@@ -596,23 +640,24 @@ export class MemoryVisualizationSystem extends EventEmitter {
       colorScale: {
         min: 0,
         max: 1,
-        colors: ['#F3F4F6', '#93C5FD', '#3B82F6', '#1D4ED8', '#1E3A8A'],
+        colors: ["#F3F4F6", "#93C5FD", "#3B82F6", "#1D4ED8", "#1E3A8A"],
       },
-      title: 'Language-Framework Learning Patterns',
+      title: "Language-Framework Learning Patterns",
       description:
-        'Correlation matrix showing relationships between programming languages and frameworks in learning patterns',
+        "Correlation matrix showing relationships between programming languages and frameworks in learning patterns",
     };
 
     return {
-      type: 'heatmap',
-      title: 'Learning Patterns Heatmap',
-      description: 'Visualization of learning pattern correlations across languages and frameworks',
+      type: "heatmap",
+      title: "Learning Patterns Heatmap",
+      description:
+        "Visualization of learning pattern correlations across languages and frameworks",
       data: heatmap,
       config,
       metadata: {
         generated: new Date(),
         dataPoints: patterns.length,
-        filters: { type: 'learning_patterns' },
+        filters: { type: "learning_patterns" },
       },
     };
   }
@@ -625,13 +670,13 @@ export class MemoryVisualizationSystem extends EventEmitter {
     config: Partial<VisualizationConfig>,
   ): Promise<ChartData> {
     const patterns = await this.temporalAnalysis.analyzeTemporalPatterns({
-      granularity: 'day',
-      aggregation: 'count',
+      granularity: "day",
+      aggregation: "count",
       timeRange: {
         start: timeRange.start,
         end: timeRange.end,
         duration: timeRange.end.getTime() - timeRange.start.getTime(),
-        label: 'Analysis Period',
+        label: "Analysis Period",
       },
     });
 
@@ -647,7 +692,7 @@ export class MemoryVisualizationSystem extends EventEmitter {
       labels: patternData.map((p) => p.type),
       datasets: [
         {
-          label: 'Pattern Confidence',
+          label: "Pattern Confidence",
           data: patternData.map((p) => p.confidence * 100),
           backgroundColor: config.colorScheme || this.defaultConfig.colorScheme,
           borderColor:
@@ -659,9 +704,10 @@ export class MemoryVisualizationSystem extends EventEmitter {
     };
 
     return {
-      type: 'bar',
-      title: 'Temporal Patterns Analysis',
-      description: 'Confidence levels of detected temporal patterns in memory activity',
+      type: "bar",
+      title: "Temporal Patterns Analysis",
+      description:
+        "Confidence levels of detected temporal patterns in memory activity",
       data: {
         ...data,
         options: {
@@ -669,7 +715,7 @@ export class MemoryVisualizationSystem extends EventEmitter {
           plugins: {
             title: {
               display: true,
-              text: 'Detected Temporal Patterns',
+              text: "Detected Temporal Patterns",
             },
             tooltip: {
               callbacks: {
@@ -686,13 +732,13 @@ export class MemoryVisualizationSystem extends EventEmitter {
               max: 100,
               title: {
                 display: true,
-                text: 'Confidence (%)',
+                text: "Confidence (%)",
               },
             },
             x: {
               title: {
                 display: true,
-                text: 'Pattern Type',
+                text: "Pattern Type",
               },
             },
           },
@@ -703,7 +749,7 @@ export class MemoryVisualizationSystem extends EventEmitter {
         generated: new Date(),
         dataPoints: patterns.length,
         timeRange,
-        filters: { type: 'temporal_patterns' },
+        filters: { type: "temporal_patterns" },
       },
     };
   }
@@ -721,8 +767,8 @@ export class MemoryVisualizationSystem extends EventEmitter {
     const projects = [
       ...new Set(
         entries
-          .map((e) => e.data.projectPath || e.data.projectId || 'Unknown')
-          .filter((p) => p !== 'Unknown'),
+          .map((e) => e.data.projectPath || e.data.projectId || "Unknown")
+          .filter((p) => p !== "Unknown"),
       ),
     ].slice(0, 10); // Limit to top 10
 
@@ -735,7 +781,11 @@ export class MemoryVisualizationSystem extends EventEmitter {
         if (project1 === project2) {
           row.push(1.0);
         } else {
-          const correlation = this.calculateProjectCorrelation(entries, project1, project2);
+          const correlation = this.calculateProjectCorrelation(
+            entries,
+            project1,
+            project2,
+          );
           row.push(correlation);
         }
       }
@@ -748,24 +798,25 @@ export class MemoryVisualizationSystem extends EventEmitter {
       colorScale: {
         min: -1,
         max: 1,
-        colors: ['#EF4444', '#F59E0B', '#F3F4F6', '#10B981', '#059669'],
+        colors: ["#EF4444", "#F59E0B", "#F3F4F6", "#10B981", "#059669"],
       },
-      title: 'Project Correlation Matrix',
+      title: "Project Correlation Matrix",
       description:
-        'Correlation matrix showing relationships between different projects based on memory patterns',
+        "Correlation matrix showing relationships between different projects based on memory patterns",
     };
 
     return {
-      type: 'heatmap',
-      title: 'Project Correlations',
-      description: 'Visualization of correlations between different projects in the memory system',
+      type: "heatmap",
+      title: "Project Correlations",
+      description:
+        "Visualization of correlations between different projects in the memory system",
       data: heatmap,
       config,
       metadata: {
         generated: new Date(),
         dataPoints: projects.length * projects.length,
         timeRange,
-        filters: { type: 'project_correlation' },
+        filters: { type: "project_correlation" },
       },
     };
   }
@@ -774,7 +825,7 @@ export class MemoryVisualizationSystem extends EventEmitter {
    * Generate custom visualization
    */
   async generateCustomVisualization(
-    type: ChartData['type'],
+    type: ChartData["type"],
     query: {
       filters?: Record<string, any>;
       timeRange?: { start: Date; end: Date };
@@ -794,13 +845,13 @@ export class MemoryVisualizationSystem extends EventEmitter {
     }
 
     switch (type) {
-      case 'timeline':
+      case "timeline":
         return this.generateTimelineVisualization(entries, query, activeConfig);
-      case 'scatter':
+      case "scatter":
         return this.generateScatterPlot(entries, query, activeConfig);
-      case 'treemap':
+      case "treemap":
         return this.generateTreemapVisualization(entries, query, activeConfig);
-      case 'sankey':
+      case "sankey":
         return this.generateSankeyDiagram(entries, query, activeConfig);
       default:
         throw new Error(`Unsupported visualization type: ${type}`);
@@ -812,7 +863,7 @@ export class MemoryVisualizationSystem extends EventEmitter {
    */
   async exportVisualization(
     chartData: ChartData,
-    format: 'svg' | 'png' | 'json' | 'html' = 'json',
+    format: "svg" | "png" | "json" | "html" = "json",
     options?: {
       filename?: string;
       quality?: number;
@@ -820,28 +871,32 @@ export class MemoryVisualizationSystem extends EventEmitter {
       height?: number;
     },
   ): Promise<string | Buffer> {
-    this.emit('export_started', { type: chartData.type, format });
+    this.emit("export_started", { type: chartData.type, format });
 
     try {
       switch (format) {
-        case 'json':
+        case "json":
           return JSON.stringify(chartData, null, 2);
 
-        case 'html':
+        case "html":
           return this.generateHTMLVisualization(chartData, options);
 
-        case 'svg':
+        case "svg":
           return this.generateSVGVisualization(chartData, options);
 
-        case 'png':
+        case "png":
           // This would require a rendering library like Puppeteer
-          throw new Error('PNG export requires additional rendering capabilities');
+          throw new Error(
+            "PNG export requires additional rendering capabilities",
+          );
 
         default:
           throw new Error(`Unsupported export format: ${format}`);
       }
     } catch (error) {
-      this.emit('export_error', { error: error instanceof Error ? error.message : String(error) });
+      this.emit("export_error", {
+        error: error instanceof Error ? error.message : String(error),
+      });
       throw error;
     }
   }
@@ -869,11 +924,13 @@ export class MemoryVisualizationSystem extends EventEmitter {
   private getWeekKey(date: Date): string {
     const year = date.getFullYear();
     const week = this.getWeekNumber(date);
-    return `${year}-W${week.toString().padStart(2, '0')}`;
+    return `${year}-W${week.toString().padStart(2, "0")}`;
   }
 
   private getWeekNumber(date: Date): number {
-    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const d = new Date(
+      Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
+    );
     const dayNum = d.getUTCDay() || 7;
     d.setUTCDate(d.getUTCDate() + 4 - dayNum);
     const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
@@ -899,13 +956,13 @@ export class MemoryVisualizationSystem extends EventEmitter {
 
   private darkenColor(color: string): string {
     // Simple color darkening - in production, use a proper color library
-    if (color.startsWith('#')) {
+    if (color.startsWith("#")) {
       const hex = color.slice(1);
       const num = parseInt(hex, 16);
       const r = Math.max(0, (num >> 16) - 40);
       const g = Math.max(0, ((num >> 8) & 0x00ff) - 40);
       const b = Math.max(0, (num & 0x0000ff) - 40);
-      return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
+      return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, "0")}`;
     }
     return color;
   }
@@ -916,10 +973,12 @@ export class MemoryVisualizationSystem extends EventEmitter {
     project2: string,
   ): number {
     const entries1 = entries.filter(
-      (e) => e.data.projectPath?.includes(project1) || e.data.projectId === project1,
+      (e) =>
+        e.data.projectPath?.includes(project1) || e.data.projectId === project1,
     );
     const entries2 = entries.filter(
-      (e) => e.data.projectPath?.includes(project2) || e.data.projectId === project2,
+      (e) =>
+        e.data.projectPath?.includes(project2) || e.data.projectId === project2,
     );
 
     if (entries1.length === 0 || entries2.length === 0) return 0;
@@ -945,30 +1004,40 @@ export class MemoryVisualizationSystem extends EventEmitter {
     return totalFeatures > 0 ? sharedFeatures / totalFeatures : 0;
   }
 
-  private applyFilters(entries: MemoryEntry[], filters: Record<string, any>): MemoryEntry[] {
+  private applyFilters(
+    entries: MemoryEntry[],
+    filters: Record<string, any>,
+  ): MemoryEntry[] {
     return entries.filter((entry) => {
       for (const [key, value] of Object.entries(filters)) {
         switch (key) {
-          case 'type':
-            if (Array.isArray(value) && !value.includes(entry.type)) return false;
-            if (typeof value === 'string' && entry.type !== value) return false;
+          case "type":
+            if (Array.isArray(value) && !value.includes(entry.type))
+              return false;
+            if (typeof value === "string" && entry.type !== value) return false;
             break;
-          case 'outcome':
+          case "outcome":
             if (entry.data.outcome !== value) return false;
             break;
-          case 'language':
+          case "language":
             if (entry.data.language !== value) return false;
             break;
-          case 'framework':
+          case "framework":
             if (entry.data.framework !== value) return false;
             break;
-          case 'project':
-            if (!entry.data.projectPath?.includes(value) && entry.data.projectId !== value) {
+          case "project":
+            if (
+              !entry.data.projectPath?.includes(value) &&
+              entry.data.projectId !== value
+            ) {
               return false;
             }
             break;
-          case 'tags':
-            if (Array.isArray(value) && !value.some((tag) => entry.tags?.includes(tag))) {
+          case "tags":
+            if (
+              Array.isArray(value) &&
+              !value.some((tag) => entry.tags?.includes(tag))
+            ) {
               return false;
             }
             break;
@@ -989,53 +1058,72 @@ export class MemoryVisualizationSystem extends EventEmitter {
       entries.length /
       Math.max(
         1,
-        Math.ceil((timeRange.end.getTime() - timeRange.start.getTime()) / (24 * 60 * 60 * 1000)),
+        Math.ceil(
+          (timeRange.end.getTime() - timeRange.start.getTime()) /
+            (24 * 60 * 60 * 1000),
+        ),
       );
     insights.push(`Average ${dailyAverage.toFixed(1)} entries per day`);
 
     // Success rate insight
     const successful = entries.filter(
-      (e) => e.data.outcome === 'success' || e.data.success === true,
+      (e) => e.data.outcome === "success" || e.data.success === true,
     ).length;
-    const successRate = entries.length > 0 ? (successful / entries.length) * 100 : 0;
+    const successRate =
+      entries.length > 0 ? (successful / entries.length) * 100 : 0;
     insights.push(`${successRate.toFixed(1)}% success rate`);
 
     // Most common type
     const typeCounts = new Map<string, number>();
-    entries.forEach((e) => typeCounts.set(e.type, (typeCounts.get(e.type) || 0) + 1));
-    const mostCommonType = Array.from(typeCounts.entries()).sort(([, a], [, b]) => b - a)[0];
+    entries.forEach((e) =>
+      typeCounts.set(e.type, (typeCounts.get(e.type) || 0) + 1),
+    );
+    const mostCommonType = Array.from(typeCounts.entries()).sort(
+      ([, a], [, b]) => b - a,
+    )[0];
     if (mostCommonType) {
-      insights.push(`Most common activity: ${mostCommonType[0]} (${mostCommonType[1]} entries)`);
+      insights.push(
+        `Most common activity: ${mostCommonType[0]} (${mostCommonType[1]} entries)`,
+      );
     }
 
     // Growth trend
-    const midpoint = new Date((timeRange.start.getTime() + timeRange.end.getTime()) / 2);
-    const firstHalf = entries.filter((e) => new Date(e.timestamp) < midpoint).length;
-    const secondHalf = entries.filter((e) => new Date(e.timestamp) >= midpoint).length;
+    const midpoint = new Date(
+      (timeRange.start.getTime() + timeRange.end.getTime()) / 2,
+    );
+    const firstHalf = entries.filter(
+      (e) => new Date(e.timestamp) < midpoint,
+    ).length;
+    const secondHalf = entries.filter(
+      (e) => new Date(e.timestamp) >= midpoint,
+    ).length;
     if (firstHalf > 0) {
       const growthRate = ((secondHalf - firstHalf) / firstHalf) * 100;
       insights.push(
-        `Activity ${growthRate >= 0 ? 'increased' : 'decreased'} by ${Math.abs(growthRate).toFixed(
-          1,
-        )}%`,
+        `Activity ${growthRate >= 0 ? "increased" : "decreased"} by ${Math.abs(
+          growthRate,
+        ).toFixed(1)}%`,
       );
     }
 
     return insights.slice(0, 5); // Return top 5 insights
   }
 
-  private async calculateSystemHealthScore(entries: MemoryEntry[]): Promise<number> {
+  private async calculateSystemHealthScore(
+    entries: MemoryEntry[],
+  ): Promise<number> {
     let score = 0;
 
     // Activity level (0-25 points)
     const recentEntries = entries.filter(
-      (e) => new Date(e.timestamp) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+      (e) =>
+        new Date(e.timestamp) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
     );
     score += Math.min(25, recentEntries.length * 2);
 
     // Success rate (0-25 points)
     const successful = entries.filter(
-      (e) => e.data.outcome === 'success' || e.data.success === true,
+      (e) => e.data.outcome === "success" || e.data.success === true,
     ).length;
     const successRate = entries.length > 0 ? successful / entries.length : 0;
     score += successRate * 25;
@@ -1055,8 +1143,10 @@ export class MemoryVisualizationSystem extends EventEmitter {
       const values = Array.from(dailyActivities.values());
       const mean = values.reduce((sum, val) => sum + val, 0) / values.length;
       const variance =
-        values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / values.length;
-      const consistency = mean > 0 ? Math.max(0, 1 - Math.sqrt(variance) / mean) : 0;
+        values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) /
+        values.length;
+      const consistency =
+        mean > 0 ? Math.max(0, 1 - Math.sqrt(variance) / mean) : 0;
       score += consistency * 25;
     }
 
@@ -1074,7 +1164,7 @@ export class MemoryVisualizationSystem extends EventEmitter {
       title: entry.type,
       description: entry.data.description || `${entry.type} entry`,
       type: entry.type,
-      importance: entry.data.outcome === 'success' ? 1 : 0.5,
+      importance: entry.data.outcome === "success" ? 1 : 0.5,
       color: this.getColorForNodeType(entry.type, config.colorScheme),
       metadata: entry.data,
     }));
@@ -1085,14 +1175,14 @@ export class MemoryVisualizationSystem extends EventEmitter {
         start: new Date(Math.min(...events.map((e) => e.timestamp.getTime()))),
         end: new Date(Math.max(...events.map((e) => e.timestamp.getTime()))),
       },
-      granularity: 'day',
+      granularity: "day",
       groupBy: query.groupBy,
     };
 
     return {
-      type: 'timeline',
-      title: 'Memory Activity Timeline',
-      description: 'Chronological timeline of memory system activities',
+      type: "timeline",
+      title: "Memory Activity Timeline",
+      description: "Chronological timeline of memory system activities",
       data: timelineData,
       config,
       metadata: {
@@ -1117,13 +1207,13 @@ export class MemoryVisualizationSystem extends EventEmitter {
     }));
 
     return {
-      type: 'scatter',
-      title: 'Memory Activity Scatter Plot',
-      description: 'Scatter plot visualization of memory activities',
+      type: "scatter",
+      title: "Memory Activity Scatter Plot",
+      description: "Scatter plot visualization of memory activities",
       data: {
         datasets: [
           {
-            label: 'Activities',
+            label: "Activities",
             data: data,
             backgroundColor: data.map((d) => d.color),
           },
@@ -1148,28 +1238,33 @@ export class MemoryVisualizationSystem extends EventEmitter {
 
     for (const entry of entries) {
       const type = entry.type;
-      const project = entry.data.projectPath || entry.data.projectId || 'Unknown';
+      const project =
+        entry.data.projectPath || entry.data.projectId || "Unknown";
 
       if (!hierarchy.has(type)) {
         hierarchy.set(type, new Map());
       }
-      hierarchy.get(type)!.set(project, (hierarchy.get(type)!.get(project) || 0) + 1);
+      hierarchy
+        .get(type)!
+        .set(project, (hierarchy.get(type)!.get(project) || 0) + 1);
     }
 
     // Convert to treemap format
-    const treemapData = Array.from(hierarchy.entries()).map(([type, projects]) => ({
-      name: type,
-      value: Array.from(projects.values()).reduce((sum, val) => sum + val, 0),
-      children: Array.from(projects.entries()).map(([project, count]) => ({
-        name: project,
-        value: count,
-      })),
-    }));
+    const treemapData = Array.from(hierarchy.entries()).map(
+      ([type, projects]) => ({
+        name: type,
+        value: Array.from(projects.values()).reduce((sum, val) => sum + val, 0),
+        children: Array.from(projects.entries()).map(([project, count]) => ({
+          name: project,
+          value: count,
+        })),
+      }),
+    );
 
     return {
-      type: 'treemap',
-      title: 'Memory Type Hierarchy',
-      description: 'Hierarchical treemap of memory entries by type and project',
+      type: "treemap",
+      title: "Memory Type Hierarchy",
+      description: "Hierarchical treemap of memory entries by type and project",
       data: treemapData,
       config,
       metadata: {
@@ -1190,7 +1285,8 @@ export class MemoryVisualizationSystem extends EventEmitter {
 
     for (const entry of entries) {
       const source = entry.type;
-      const target = entry.data.outcome || (entry.data.success ? 'success' : 'unknown');
+      const target =
+        entry.data.outcome || (entry.data.success ? "success" : "unknown");
 
       if (!flows.has(source)) {
         flows.set(source, new Map());
@@ -1209,7 +1305,10 @@ export class MemoryVisualizationSystem extends EventEmitter {
       targetMap.forEach((_, target) => targets.add(target));
     });
 
-    nodes.push(...sources, ...Array.from(targets).filter((t) => !sources.includes(t)));
+    nodes.push(
+      ...sources,
+      ...Array.from(targets).filter((t) => !sources.includes(t)),
+    );
 
     // Create links
     flows.forEach((targetMap, source) => {
@@ -1223,9 +1322,9 @@ export class MemoryVisualizationSystem extends EventEmitter {
     });
 
     return {
-      type: 'sankey',
-      title: 'Memory Flow Diagram',
-      description: 'Sankey diagram showing flow from memory types to outcomes',
+      type: "sankey",
+      title: "Memory Flow Diagram",
+      description: "Sankey diagram showing flow from memory types to outcomes",
       data: { nodes, links },
       config,
       metadata: {
@@ -1236,7 +1335,10 @@ export class MemoryVisualizationSystem extends EventEmitter {
     };
   }
 
-  private generateHTMLVisualization(chartData: ChartData, _options?: any): string {
+  private generateHTMLVisualization(
+    chartData: ChartData,
+    _options?: any,
+  ): string {
     // Generate basic HTML with embedded Chart.js or D3.js
     return `
 <!DOCTYPE html>
@@ -1264,7 +1366,10 @@ export class MemoryVisualizationSystem extends EventEmitter {
 </html>`;
   }
 
-  private generateSVGVisualization(chartData: ChartData, options?: any): string {
+  private generateSVGVisualization(
+    chartData: ChartData,
+    options?: any,
+  ): string {
     // Generate basic SVG - in production, use a proper chart library
     const width = options?.width || 800;
     const height = options?.height || 600;
@@ -1279,7 +1384,9 @@ export class MemoryVisualizationSystem extends EventEmitter {
         ${chartData.description}
     </text>
     <!-- Chart data would be rendered here -->
-    <text x="50%" y="${height / 2}" text-anchor="middle" font-size="12" fill="#999">
+    <text x="50%" y="${
+      height / 2
+    }" text-anchor="middle" font-size="12" fill="#999">
         Chart visualization (${chartData.metadata.dataPoints} data points)
     </text>
 </svg>`;

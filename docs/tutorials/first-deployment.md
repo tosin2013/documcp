@@ -170,27 +170,27 @@ Here's a real example for a TypeScript library:
 
 ```javascript
 const config = {
-  title: 'TypeScript Library Docs',
-  tagline: 'Comprehensive API documentation',
-  url: 'https://yourusername.github.io',
-  baseUrl: '/your-repo-name/',
+  title: "TypeScript Library Docs",
+  tagline: "Comprehensive API documentation",
+  url: "https://yourusername.github.io",
+  baseUrl: "/your-repo-name/",
 
   // GitHub Pages deployment config
-  organizationName: 'yourusername',
-  projectName: 'your-repo-name',
-  deploymentBranch: 'gh-pages',
+  organizationName: "yourusername",
+  projectName: "your-repo-name",
+  deploymentBranch: "gh-pages",
   trailingSlash: false,
 
   presets: [
     [
-      'classic',
+      "classic",
       {
         docs: {
-          routeBasePath: '/',
-          sidebarPath: require.resolve('./sidebars.js'),
+          routeBasePath: "/",
+          sidebarPath: require.resolve("./sidebars.js"),
         },
         theme: {
-          customCss: require.resolve('./src/css/custom.css'),
+          customCss: require.resolve("./src/css/custom.css"),
         },
       },
     ],
@@ -208,7 +208,7 @@ name: Deploy Documentation
 on:
   push:
     branches: [main]
-    paths: ['docs/**', 'docusaurus.config.js']
+    paths: ["docs/**", "docusaurus.config.js"]
 
 permissions:
   contents: read
@@ -228,8 +228,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -243,7 +243,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './build'
+          path: "./build"
 
       - name: Deploy to GitHub Pages
         id: deployment

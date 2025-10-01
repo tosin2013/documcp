@@ -3,16 +3,21 @@
  * Implements Issue #45: Persistent JSONL Storage
  */
 
-import * as fs from 'fs';
-import * as path from 'path';
-import * as readline from 'readline';
-import * as os from 'os';
-import { createHash } from 'crypto';
+import * as fs from "fs";
+import * as path from "path";
+import * as readline from "readline";
+import * as os from "os";
+import { createHash } from "crypto";
 
 export interface MemoryEntry {
   id: string;
   timestamp: string;
-  type: 'analysis' | 'recommendation' | 'deployment' | 'configuration' | 'interaction';
+  type:
+    | "analysis"
+    | "recommendation"
+    | "deployment"
+    | "configuration"
+    | "interaction";
   data: Record<string, any>;
   metadata: {
     projectId?: string;
@@ -41,14 +46,14 @@ export class JSONLStorage {
 
   constructor(baseDir?: string) {
     this.storageDir = baseDir || this.getDefaultStorageDir();
-    this.indexFile = path.join(this.storageDir, '.index.json');
+    this.indexFile = path.join(this.storageDir, ".index.json");
     this.index = new Map();
     this.lineCounters = new Map();
   }
 
   private getDefaultStorageDir(): string {
     // For tests, use temp directory
-    if (process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID) {
+    if (process.env.NODE_ENV === "test" || process.env.JEST_WORKER_ID) {
       return path.join(
         os.tmpdir(),
         `documcp-test-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -56,7 +61,7 @@ export class JSONLStorage {
     }
 
     // For production/development, use project-local .documcp directory
-    return path.join(process.cwd(), '.documcp', 'memory');
+    return path.join(process.cwd(), ".documcp", "memory");
   }
 
   async initialize(): Promise<void> {
@@ -64,7 +69,7 @@ export class JSONLStorage {
     await this.loadIndex();
 
     // Log storage location in development mode
-    if (process.env.NODE_ENV === 'development' || process.env.DEBUG) {
+    if (process.env.NODE_ENV === "development" || process.env.DEBUG) {
       // eslint-disable-next-line no-console
       console.log(`[DocuMCP] Memory storage initialized: ${this.storageDir}`);
     }
@@ -72,7 +77,7 @@ export class JSONLStorage {
 
   private async loadIndex(): Promise<void> {
     try {
-      const indexData = await fs.promises.readFile(this.indexFile, 'utf-8');
+      const indexData = await fs.promises.readFile(this.indexFile, "utf-8");
       const data = JSON.parse(indexData);
 
       // Handle both old format (just entries) and new format (with line counters)
@@ -98,26 +103,28 @@ export class JSONLStorage {
     await fs.promises.writeFile(this.indexFile, JSON.stringify(data, null, 2));
   }
 
-  private getFileName(type: MemoryEntry['type'], timestamp: string): string {
+  private getFileName(type: MemoryEntry["type"], timestamp: string): string {
     const date = new Date(timestamp);
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, "0");
     return `${type}_${year}_${month}.jsonl`;
   }
 
-  private generateId(entry: Omit<MemoryEntry, 'id' | 'checksum'>): string {
-    const hash = createHash('sha256');
+  private generateId(entry: Omit<MemoryEntry, "id" | "checksum">): string {
+    const hash = createHash("sha256");
     hash.update(JSON.stringify({ type: entry.type, data: entry.data }));
-    return hash.digest('hex').substring(0, 16);
+    return hash.digest("hex").substring(0, 16);
   }
 
   private generateChecksum(data: any): string {
-    const hash = createHash('md5');
+    const hash = createHash("md5");
     hash.update(JSON.stringify(data));
-    return hash.digest('hex');
+    return hash.digest("hex");
   }
 
-  async append(entry: Omit<MemoryEntry, 'id' | 'checksum'>): Promise<MemoryEntry> {
+  async append(
+    entry: Omit<MemoryEntry, "id" | "checksum">,
+  ): Promise<MemoryEntry> {
     const id = this.generateId(entry);
     const checksum = this.generateChecksum(entry.data);
     const completeEntry: MemoryEntry = {
@@ -127,11 +134,14 @@ export class JSONLStorage {
       timestamp: entry.timestamp || new Date().toISOString(),
     };
 
-    const fileName = this.getFileName(completeEntry.type, completeEntry.timestamp);
+    const fileName = this.getFileName(
+      completeEntry.type,
+      completeEntry.timestamp,
+    );
     const filePath = path.join(this.storageDir, fileName);
 
     const line = JSON.stringify(completeEntry);
-    await fs.promises.appendFile(filePath, line + '\n');
+    await fs.promises.appendFile(filePath, line + "\n");
 
     // Efficiently track line numbers using a counter
     const currentLineCount = this.lineCounters.get(fileName) || 0;
@@ -175,7 +185,7 @@ export class JSONLStorage {
   }
 
   async query(filter: {
-    type?: MemoryEntry['type'];
+    type?: MemoryEntry["type"];
     projectId?: string;
     repository?: string;
     ssg?: string;
@@ -195,7 +205,7 @@ export class JSONLStorage {
       });
 
       for await (const line of stream) {
-        if (line.trim() === '') continue; // Skip empty lines
+        if (line.trim() === "") continue; // Skip empty lines
 
         try {
           const entry: MemoryEntry = JSON.parse(line);
@@ -221,7 +231,7 @@ export class JSONLStorage {
   private async getRelevantFiles(filter: any): Promise<string[]> {
     const files = await fs.promises.readdir(this.storageDir);
     return files
-      .filter((f) => f.endsWith('.jsonl'))
+      .filter((f) => f.endsWith(".jsonl"))
       .filter((file) => {
         if (!filter.type) return true;
         return file.startsWith(filter.type);
@@ -230,13 +240,16 @@ export class JSONLStorage {
 
   private matchesFilter(entry: MemoryEntry, filter: any): boolean {
     if (filter.type && entry.type !== filter.type) return false;
-    if (filter.projectId && entry.metadata.projectId !== filter.projectId) return false;
-    if (filter.repository && entry.metadata.repository !== filter.repository) return false;
+    if (filter.projectId && entry.metadata.projectId !== filter.projectId)
+      return false;
+    if (filter.repository && entry.metadata.repository !== filter.repository)
+      return false;
     if (filter.ssg && entry.metadata.ssg !== filter.ssg) return false;
 
     if (filter.tags && filter.tags.length > 0) {
       const entryTags = entry.metadata.tags || [];
-      if (!filter.tags.some((tag: any) => entryTags.includes(tag))) return false;
+      if (!filter.tags.some((tag: any) => entryTags.includes(tag)))
+        return false;
     }
 
     if (filter.startDate && entry.timestamp < filter.startDate) return false;
@@ -254,12 +267,12 @@ export class JSONLStorage {
     return true;
   }
 
-  async compact(type?: MemoryEntry['type']): Promise<void> {
+  async compact(type?: MemoryEntry["type"]): Promise<void> {
     const files = await this.getRelevantFiles({ type });
 
     for (const file of files) {
       const filePath = path.join(this.storageDir, file);
-      const tempPath = filePath + '.tmp';
+      const tempPath = filePath + ".tmp";
       const validEntries: string[] = [];
 
       const stream = readline.createInterface({
@@ -278,7 +291,7 @@ export class JSONLStorage {
         }
       }
 
-      await fs.promises.writeFile(tempPath, validEntries.join('\n') + '\n');
+      await fs.promises.writeFile(tempPath, validEntries.join("\n") + "\n");
       await fs.promises.rename(tempPath, filePath);
     }
   }
@@ -311,7 +324,7 @@ export class JSONLStorage {
     };
 
     const files = await fs.promises.readdir(this.storageDir);
-    for (const file of files.filter((f) => f.endsWith('.jsonl'))) {
+    for (const file of files.filter((f) => f.endsWith(".jsonl"))) {
       const filePath = path.join(this.storageDir, file);
       const fileStats = await fs.promises.stat(filePath);
       stats.totalSize += fileStats.size;
@@ -378,11 +391,14 @@ export class JSONLStorage {
         timestamp: entry.timestamp || new Date().toISOString(),
       };
 
-      const fileName = this.getFileName(completeEntry.type, completeEntry.timestamp);
+      const fileName = this.getFileName(
+        completeEntry.type,
+        completeEntry.timestamp,
+      );
       const filePath = path.join(this.storageDir, fileName);
 
       const line = JSON.stringify(completeEntry);
-      await fs.promises.appendFile(filePath, line + '\n');
+      await fs.promises.appendFile(filePath, line + "\n");
 
       // Efficiently track line numbers using a counter
       const currentLineCount = this.lineCounters.get(fileName) || 0;
@@ -409,7 +425,7 @@ export class JSONLStorage {
     this.index.clear();
 
     const files = await fs.promises.readdir(this.storageDir);
-    const jsonlFiles = files.filter((f) => f.endsWith('.jsonl'));
+    const jsonlFiles = files.filter((f) => f.endsWith(".jsonl"));
 
     for (const file of jsonlFiles) {
       const filePath = path.join(this.storageDir, file);
@@ -422,7 +438,7 @@ export class JSONLStorage {
       for await (const line of stream) {
         try {
           const entry: MemoryEntry = JSON.parse(line);
-          const size = Buffer.byteLength(line, 'utf8');
+          const size = Buffer.byteLength(line, "utf8");
 
           this.index.set(entry.id, {
             file,

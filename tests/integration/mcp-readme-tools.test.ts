@@ -1,11 +1,11 @@
-import { promises as fs } from 'fs';
-import { join } from 'path';
+import { promises as fs } from "fs";
+import { join } from "path";
 
-describe('MCP Integration Tests', () => {
+describe("MCP Integration Tests", () => {
   let tempDir: string;
 
   beforeEach(async () => {
-    tempDir = join(process.cwd(), 'test-mcp-integration-temp');
+    tempDir = join(process.cwd(), "test-mcp-integration-temp");
     await fs.mkdir(tempDir, { recursive: true });
   });
 
@@ -17,36 +17,43 @@ describe('MCP Integration Tests', () => {
     }
   });
 
-  describe('Tool Registration', () => {
-    test('should include evaluate_readme_health in tools list', async () => {
+  describe("Tool Registration", () => {
+    test("should include evaluate_readme_health in tools list", async () => {
       // This test verifies that the README health tool is properly registered
       // Since we can't directly access the server instance, we'll test the tool functions directly
       // but verify they match the expected MCP interface
 
-      const { evaluateReadmeHealth } = await import('../../src/tools/evaluate-readme-health.js');
+      const { evaluateReadmeHealth } = await import(
+        "../../src/tools/evaluate-readme-health.js"
+      );
 
       // Test with valid parameters that match the MCP schema
-      const readmePath = join(tempDir, 'README.md');
-      await fs.writeFile(readmePath, '# Test Project\n\nBasic README content.');
+      const readmePath = join(tempDir, "README.md");
+      await fs.writeFile(readmePath, "# Test Project\n\nBasic README content.");
 
       const result = await evaluateReadmeHealth({
         readme_path: readmePath,
-        project_type: 'community_library', // Valid enum value from schema
+        project_type: "community_library", // Valid enum value from schema
       });
 
       expect(result.content).toBeDefined();
       expect(result.isError).toBe(false);
     });
 
-    test('should include readme_best_practices in tools list', async () => {
-      const { readmeBestPractices } = await import('../../src/tools/readme-best-practices.js');
+    test("should include readme_best_practices in tools list", async () => {
+      const { readmeBestPractices } = await import(
+        "../../src/tools/readme-best-practices.js"
+      );
 
-      const readmePath = join(tempDir, 'README.md');
-      await fs.writeFile(readmePath, '# Test Library\n\nLibrary documentation.');
+      const readmePath = join(tempDir, "README.md");
+      await fs.writeFile(
+        readmePath,
+        "# Test Library\n\nLibrary documentation.",
+      );
 
       const result = await readmeBestPractices({
         readme_path: readmePath,
-        project_type: 'library', // Valid enum value from schema
+        project_type: "library", // Valid enum value from schema
       });
 
       expect(result.success).toBe(true);
@@ -54,65 +61,78 @@ describe('MCP Integration Tests', () => {
     });
   });
 
-  describe('Parameter Validation', () => {
-    test('evaluate_readme_health should handle invalid project_type', async () => {
-      const { evaluateReadmeHealth } = await import('../../src/tools/evaluate-readme-health.js');
+  describe("Parameter Validation", () => {
+    test("evaluate_readme_health should handle invalid project_type", async () => {
+      const { evaluateReadmeHealth } = await import(
+        "../../src/tools/evaluate-readme-health.js"
+      );
 
-      const readmePath = join(tempDir, 'README.md');
-      await fs.writeFile(readmePath, '# Test');
+      const readmePath = join(tempDir, "README.md");
+      await fs.writeFile(readmePath, "# Test");
 
       const result = await evaluateReadmeHealth({
         readme_path: readmePath,
-        project_type: 'invalid_type' as any,
+        project_type: "invalid_type" as any,
       });
 
       expect(result.isError).toBe(true);
     });
 
-    test('readme_best_practices should handle invalid project_type', async () => {
-      const { readmeBestPractices } = await import('../../src/tools/readme-best-practices.js');
+    test("readme_best_practices should handle invalid project_type", async () => {
+      const { readmeBestPractices } = await import(
+        "../../src/tools/readme-best-practices.js"
+      );
 
-      const readmePath = join(tempDir, 'README.md');
-      await fs.writeFile(readmePath, '# Test');
+      const readmePath = join(tempDir, "README.md");
+      await fs.writeFile(readmePath, "# Test");
 
       const result = await readmeBestPractices({
         readme_path: readmePath,
-        project_type: 'invalid_type' as any,
+        project_type: "invalid_type" as any,
       });
 
       expect(result.success).toBe(false);
       expect(result.error).toBeDefined();
     });
 
-    test('evaluate_readme_health should handle missing file', async () => {
-      const { evaluateReadmeHealth } = await import('../../src/tools/evaluate-readme-health.js');
+    test("evaluate_readme_health should handle missing file", async () => {
+      const { evaluateReadmeHealth } = await import(
+        "../../src/tools/evaluate-readme-health.js"
+      );
 
       const result = await evaluateReadmeHealth({
-        readme_path: join(tempDir, 'nonexistent.md'),
+        readme_path: join(tempDir, "nonexistent.md"),
       });
 
       expect(result.isError).toBe(true);
     });
 
-    test('readme_best_practices should handle missing file without template', async () => {
-      const { readmeBestPractices } = await import('../../src/tools/readme-best-practices.js');
+    test("readme_best_practices should handle missing file without template", async () => {
+      const { readmeBestPractices } = await import(
+        "../../src/tools/readme-best-practices.js"
+      );
 
       const result = await readmeBestPractices({
-        readme_path: join(tempDir, 'nonexistent.md'),
+        readme_path: join(tempDir, "nonexistent.md"),
         generate_template: false,
       });
 
       expect(result.success).toBe(false);
-      expect(result.error?.code).toBe('README_NOT_FOUND');
+      expect(result.error?.code).toBe("README_NOT_FOUND");
     });
   });
 
-  describe('Response Format Consistency', () => {
-    test('evaluate_readme_health should return MCP-formatted response', async () => {
-      const { evaluateReadmeHealth } = await import('../../src/tools/evaluate-readme-health.js');
+  describe("Response Format Consistency", () => {
+    test("evaluate_readme_health should return MCP-formatted response", async () => {
+      const { evaluateReadmeHealth } = await import(
+        "../../src/tools/evaluate-readme-health.js"
+      );
 
-      const readmePath = join(tempDir, 'README.md');
-      await fs.writeFile(readmePath, '# Complete Project\n\n## Description\nDetailed description.');
+      const readmePath = join(tempDir, "README.md");
+      await fs.writeFile(
+        readmePath,
+        "# Complete Project\n\n## Description\nDetailed description.",
+      );
 
       const result = await evaluateReadmeHealth({
         readme_path: readmePath,
@@ -124,16 +144,23 @@ describe('MCP Integration Tests', () => {
       expect(result.isError).toBeDefined();
 
       // Should have execution metadata
-      const metadataContent = result.content.find((c) => c.text.includes('Execution completed'));
+      const metadataContent = result.content.find((c) =>
+        c.text.includes("Execution completed"),
+      );
       expect(metadataContent).toBeDefined();
     });
 
-    test('readme_best_practices should return MCPToolResponse that can be formatted', async () => {
-      const { readmeBestPractices } = await import('../../src/tools/readme-best-practices.js');
-      const { formatMCPResponse } = await import('../../src/types/api.js');
+    test("readme_best_practices should return MCPToolResponse that can be formatted", async () => {
+      const { readmeBestPractices } = await import(
+        "../../src/tools/readme-best-practices.js"
+      );
+      const { formatMCPResponse } = await import("../../src/types/api.js");
 
-      const readmePath = join(tempDir, 'README.md');
-      await fs.writeFile(readmePath, '# Library Project\n\n## Installation\nnpm install');
+      const readmePath = join(tempDir, "README.md");
+      await fs.writeFile(
+        readmePath,
+        "# Library Project\n\n## Installation\nnpm install",
+      );
 
       const result = await readmeBestPractices({
         readme_path: readmePath,
@@ -151,12 +178,16 @@ describe('MCP Integration Tests', () => {
     });
   });
 
-  describe('Cross-tool Consistency', () => {
-    test('both tools should handle the same README file', async () => {
-      const { evaluateReadmeHealth } = await import('../../src/tools/evaluate-readme-health.js');
-      const { readmeBestPractices } = await import('../../src/tools/readme-best-practices.js');
+  describe("Cross-tool Consistency", () => {
+    test("both tools should handle the same README file", async () => {
+      const { evaluateReadmeHealth } = await import(
+        "../../src/tools/evaluate-readme-health.js"
+      );
+      const { readmeBestPractices } = await import(
+        "../../src/tools/readme-best-practices.js"
+      );
 
-      const readmePath = join(tempDir, 'README.md');
+      const readmePath = join(tempDir, "README.md");
       await fs.writeFile(
         readmePath,
         `# Test Project
@@ -186,12 +217,12 @@ MIT License
       // Both tools should work on the same file
       const healthResult = await evaluateReadmeHealth({
         readme_path: readmePath,
-        project_type: 'community_library',
+        project_type: "community_library",
       });
 
       const practicesResult = await readmeBestPractices({
         readme_path: readmePath,
-        project_type: 'library',
+        project_type: "library",
       });
 
       expect(healthResult.isError).toBe(false);

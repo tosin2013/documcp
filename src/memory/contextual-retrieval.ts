@@ -6,9 +6,9 @@
  * temporal relevance, and user intent analysis for enhanced recommendation accuracy.
  */
 
-import { MemoryManager } from './manager.js';
-import { MemoryEntry } from './storage.js';
-import { KnowledgeGraph } from './knowledge-graph.js';
+import { MemoryManager } from "./manager.js";
+import { MemoryEntry } from "./storage.js";
+import { KnowledgeGraph } from "./knowledge-graph.js";
 
 export interface RetrievalContext {
   currentProject?: {
@@ -16,12 +16,12 @@ export interface RetrievalContext {
     language: string;
     framework?: string;
     domain?: string;
-    size?: 'small' | 'medium' | 'large';
+    size?: "small" | "medium" | "large";
   };
   userIntent?: {
-    action: 'analyze' | 'recommend' | 'deploy' | 'troubleshoot' | 'learn';
-    urgency: 'low' | 'medium' | 'high';
-    experience: 'novice' | 'intermediate' | 'expert';
+    action: "analyze" | "recommend" | "deploy" | "troubleshoot" | "learn";
+    urgency: "low" | "medium" | "high";
+    experience: "novice" | "intermediate" | "expert";
   };
   sessionContext?: {
     recentActions: string[];
@@ -30,7 +30,7 @@ export interface RetrievalContext {
   };
   temporalContext?: {
     timeRange?: { start: string; end: string };
-    recency: 'recent' | 'all' | 'historical';
+    recency: "recent" | "all" | "historical";
     seasonality?: boolean;
   };
 }
@@ -105,7 +105,11 @@ export class ContextualMemoryRetrieval {
     const candidates = await this.getCandidateMemories(query, context);
 
     // Score and rank candidates
-    const scoredMatches = await this.scoreAndRankCandidates(candidates, query, context);
+    const scoredMatches = await this.scoreAndRankCandidates(
+      candidates,
+      query,
+      context,
+    );
 
     // Filter by relevance threshold
     const relevantMatches = scoredMatches
@@ -140,25 +144,31 @@ export class ContextualMemoryRetrieval {
 
     // Strategy 1: Text-based search
     const textMatches = await this.memoryManager.search(query, {
-      sortBy: 'timestamp',
+      sortBy: "timestamp",
     });
     textMatches.forEach((memory) => candidates.set(memory.id, memory));
 
     // Strategy 2: Context-based filtering
     if (context.currentProject) {
-      const contextMatches = await this.getContextBasedCandidates(context.currentProject);
+      const contextMatches = await this.getContextBasedCandidates(
+        context.currentProject,
+      );
       contextMatches.forEach((memory) => candidates.set(memory.id, memory));
     }
 
     // Strategy 3: Intent-based retrieval
     if (context.userIntent) {
-      const intentMatches = await this.getIntentBasedCandidates(context.userIntent);
+      const intentMatches = await this.getIntentBasedCandidates(
+        context.userIntent,
+      );
       intentMatches.forEach((memory) => candidates.set(memory.id, memory));
     }
 
     // Strategy 4: Temporal filtering
     if (context.temporalContext) {
-      const temporalMatches = await this.getTemporalCandidates(context.temporalContext);
+      const temporalMatches = await this.getTemporalCandidates(
+        context.temporalContext,
+      );
       temporalMatches.forEach((memory) => candidates.set(memory.id, memory));
     }
 
@@ -173,14 +183,14 @@ export class ContextualMemoryRetrieval {
    * Get candidates based on current project context
    */
   private async getContextBasedCandidates(
-    project: NonNullable<RetrievalContext['currentProject']>,
+    project: NonNullable<RetrievalContext["currentProject"]>,
   ): Promise<MemoryEntry[]> {
     const searchCriteria = [];
 
     // Language-based search
     searchCriteria.push(
       this.memoryManager
-        .search('', { sortBy: 'timestamp' })
+        .search("", { sortBy: "timestamp" })
         .then((memories) =>
           memories.filter(
             (m) =>
@@ -194,12 +204,13 @@ export class ContextualMemoryRetrieval {
     if (project.framework) {
       searchCriteria.push(
         this.memoryManager
-          .search('', { sortBy: 'timestamp' })
+          .search("", { sortBy: "timestamp" })
           .then((memories) =>
             memories.filter(
               (m) =>
                 m.data.framework?.name === project.framework ||
-                (project.framework && m.metadata.tags?.includes(project.framework)),
+                (project.framework &&
+                  m.metadata.tags?.includes(project.framework)),
             ),
           ),
       );
@@ -209,10 +220,12 @@ export class ContextualMemoryRetrieval {
     if (project.size) {
       searchCriteria.push(
         this.memoryManager
-          .search('', { sortBy: 'timestamp' })
+          .search("", { sortBy: "timestamp" })
           .then((memories) =>
             memories.filter(
-              (m) => this.categorizeProjectSize(m.data.stats?.files || 0) === project.size,
+              (m) =>
+                this.categorizeProjectSize(m.data.stats?.files || 0) ===
+                project.size,
             ),
           ),
       );
@@ -232,19 +245,19 @@ export class ContextualMemoryRetrieval {
    * Get candidates based on user intent
    */
   private async getIntentBasedCandidates(
-    intent: NonNullable<RetrievalContext['userIntent']>,
+    intent: NonNullable<RetrievalContext["userIntent"]>,
   ): Promise<MemoryEntry[]> {
     const intentTypeMap = {
-      analyze: ['analysis', 'evaluation', 'assessment'],
-      recommend: ['recommendation', 'suggestion', 'advice'],
-      deploy: ['deployment', 'publish', 'release'],
-      troubleshoot: ['error', 'issue', 'problem', 'debug'],
-      learn: ['tutorial', 'guide', 'example', 'pattern'],
+      analyze: ["analysis", "evaluation", "assessment"],
+      recommend: ["recommendation", "suggestion", "advice"],
+      deploy: ["deployment", "publish", "release"],
+      troubleshoot: ["error", "issue", "problem", "debug"],
+      learn: ["tutorial", "guide", "example", "pattern"],
     };
 
     const searchTerms = intentTypeMap[intent.action] || [intent.action];
     const searches = searchTerms.map((term) =>
-      this.memoryManager.search(term, { sortBy: 'timestamp' }),
+      this.memoryManager.search(term, { sortBy: "timestamp" }),
     );
 
     const results = await Promise.all(searches);
@@ -252,15 +265,16 @@ export class ContextualMemoryRetrieval {
 
     // Filter by experience level
     return allMatches.filter((memory) => {
-      if (intent.experience === 'novice') {
+      if (intent.experience === "novice") {
         return (
-          !memory.metadata.tags?.includes('advanced') && !memory.metadata.tags?.includes('expert')
+          !memory.metadata.tags?.includes("advanced") &&
+          !memory.metadata.tags?.includes("expert")
         );
-      } else if (intent.experience === 'expert') {
+      } else if (intent.experience === "expert") {
         return (
-          memory.metadata.tags?.includes('advanced') ||
-          memory.metadata.tags?.includes('expert') ||
-          memory.data.complexity === 'complex'
+          memory.metadata.tags?.includes("advanced") ||
+          memory.metadata.tags?.includes("expert") ||
+          memory.data.complexity === "complex"
         );
       }
       return true; // intermediate gets all
@@ -271,13 +285,13 @@ export class ContextualMemoryRetrieval {
    * Get candidates based on temporal context
    */
   private async getTemporalCandidates(
-    temporal: NonNullable<RetrievalContext['temporalContext']>,
+    temporal: NonNullable<RetrievalContext["temporalContext"]>,
   ): Promise<MemoryEntry[]> {
-    const searchOptions: any = { sortBy: 'timestamp' };
+    const searchOptions: any = { sortBy: "timestamp" };
 
     if (temporal.timeRange) {
       // Use memory manager's built-in time filtering
-      const allMemories = await this.memoryManager.search('', searchOptions);
+      const allMemories = await this.memoryManager.search("", searchOptions);
 
       return allMemories.filter((memory) => {
         const memoryTime = new Date(memory.timestamp);
@@ -287,21 +301,25 @@ export class ContextualMemoryRetrieval {
       });
     }
 
-    if (temporal.recency === 'recent') {
+    if (temporal.recency === "recent") {
       const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000); // Last 7 days
-      const allMemories = await this.memoryManager.search('', searchOptions);
+      const allMemories = await this.memoryManager.search("", searchOptions);
 
-      return allMemories.filter((memory) => new Date(memory.timestamp) > cutoff);
+      return allMemories.filter(
+        (memory) => new Date(memory.timestamp) > cutoff,
+      );
     }
 
-    if (temporal.recency === 'historical') {
+    if (temporal.recency === "historical") {
       const cutoff = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000); // Older than 90 days
-      const allMemories = await this.memoryManager.search('', searchOptions);
+      const allMemories = await this.memoryManager.search("", searchOptions);
 
-      return allMemories.filter((memory) => new Date(memory.timestamp) < cutoff);
+      return allMemories.filter(
+        (memory) => new Date(memory.timestamp) < cutoff,
+      );
     }
 
-    return this.memoryManager.search('', searchOptions);
+    return this.memoryManager.search("", searchOptions);
   }
 
   /**
@@ -315,7 +333,7 @@ export class ContextualMemoryRetrieval {
 
     // Find relevant nodes in the knowledge graph
     const graphQuery = {
-      nodeTypes: ['project', 'technology'],
+      nodeTypes: ["project", "technology"],
       properties: context.currentProject.language
         ? {
             language: context.currentProject.language,
@@ -329,11 +347,15 @@ export class ContextualMemoryRetrieval {
 
     // Find memories associated with these nodes
     const memories: MemoryEntry[] = [];
-    const allMemories = await this.memoryManager.search('', { sortBy: 'timestamp' });
+    const allMemories = await this.memoryManager.search("", {
+      sortBy: "timestamp",
+    });
 
     for (const memory of allMemories) {
       const projectNodeId = `project:${memory.metadata.projectId}`;
-      const techNodeId = memory.metadata.ssg ? `tech:${memory.metadata.ssg}` : null;
+      const techNodeId = memory.metadata.ssg
+        ? `tech:${memory.metadata.ssg}`
+        : null;
 
       if (
         relevantNodeIds.includes(projectNodeId) ||
@@ -357,10 +379,18 @@ export class ContextualMemoryRetrieval {
     const matches: ContextualMatch[] = [];
 
     for (const memory of candidates) {
-      const contextualFactors = await this.calculateContextualFactors(memory, query, context);
+      const contextualFactors = await this.calculateContextualFactors(
+        memory,
+        query,
+        context,
+      );
 
       const relevanceScore = this.calculateOverallRelevance(contextualFactors);
-      const reasoning = this.generateReasoning(memory, contextualFactors, context);
+      const reasoning = this.generateReasoning(
+        memory,
+        contextualFactors,
+        context,
+      );
       const confidence = this.calculateConfidence(contextualFactors, memory);
 
       matches.push({
@@ -383,7 +413,7 @@ export class ContextualMemoryRetrieval {
     memory: MemoryEntry,
     query: string,
     context: RetrievalContext,
-  ): Promise<ContextualMatch['contextualFactors']> {
+  ): Promise<ContextualMatch["contextualFactors"]> {
     const semantic = await this.calculateSemanticSimilarity(memory, query);
     const temporal = await this.calculateTemporalRelevance(memory, context);
     const structural = this.calculateStructuralRelevance(memory, context);
@@ -396,7 +426,10 @@ export class ContextualMemoryRetrieval {
    * Calculate semantic similarity using simple text matching
    * (In a production system, this would use embeddings)
    */
-  private async calculateSemanticSimilarity(memory: MemoryEntry, query: string): Promise<number> {
+  private async calculateSemanticSimilarity(
+    memory: MemoryEntry,
+    query: string,
+  ): Promise<number> {
     const queryTerms = query.toLowerCase().split(/\s+/);
     const memoryText = JSON.stringify(memory.data).toLowerCase();
     const metadataText = JSON.stringify(memory.metadata).toLowerCase();
@@ -420,21 +453,26 @@ export class ContextualMemoryRetrieval {
   ): Promise<number> {
     const memoryDate = new Date(memory.timestamp);
     const now = new Date();
-    const daysSince = (now.getTime() - memoryDate.getTime()) / (1000 * 60 * 60 * 24);
+    const daysSince =
+      (now.getTime() - memoryDate.getTime()) / (1000 * 60 * 60 * 24);
 
     // Base score decreases with age
     let score = Math.exp(-daysSince / 30); // Half-life of 30 days
 
     // Boost for explicit temporal preferences
-    if (context.temporalContext?.recency === 'recent' && daysSince <= 7) {
+    if (context.temporalContext?.recency === "recent" && daysSince <= 7) {
       score *= 1.5;
-    } else if (context.temporalContext?.recency === 'historical' && daysSince >= 90) {
+    } else if (
+      context.temporalContext?.recency === "historical" &&
+      daysSince >= 90
+    ) {
       score *= 1.3;
     }
 
     // Consider time constraints
     if (context.sessionContext?.timeConstraints) {
-      const urgencyMultiplier = context.userIntent?.urgency === 'high' ? 1.2 : 1.0;
+      const urgencyMultiplier =
+        context.userIntent?.urgency === "high" ? 1.2 : 1.0;
       score *= urgencyMultiplier;
     }
 
@@ -444,7 +482,10 @@ export class ContextualMemoryRetrieval {
   /**
    * Calculate structural relevance based on project similarity
    */
-  private calculateStructuralRelevance(memory: MemoryEntry, context: RetrievalContext): number {
+  private calculateStructuralRelevance(
+    memory: MemoryEntry,
+    context: RetrievalContext,
+  ): number {
     if (!context.currentProject) return 0.5; // Neutral when no project context
 
     let score = 0;
@@ -467,7 +508,9 @@ export class ContextualMemoryRetrieval {
 
     // Size similarity
     if (context.currentProject.size) {
-      const memorySize = this.categorizeProjectSize(memory.data.stats?.files || 0);
+      const memorySize = this.categorizeProjectSize(
+        memory.data.stats?.files || 0,
+      );
       if (memorySize === context.currentProject.size) {
         score += 0.2;
       }
@@ -475,9 +518,15 @@ export class ContextualMemoryRetrieval {
     factors++;
 
     // Type relevance
-    if (memory.type === 'analysis' && context.userIntent?.action === 'analyze') {
+    if (
+      memory.type === "analysis" &&
+      context.userIntent?.action === "analyze"
+    ) {
       score += 0.1;
-    } else if (memory.type === 'recommendation' && context.userIntent?.action === 'recommend') {
+    } else if (
+      memory.type === "recommendation" &&
+      context.userIntent?.action === "recommend"
+    ) {
       score += 0.1;
     }
     factors++;
@@ -488,18 +537,21 @@ export class ContextualMemoryRetrieval {
   /**
    * Calculate intentional relevance based on user intent
    */
-  private calculateIntentionalRelevance(memory: MemoryEntry, context: RetrievalContext): number {
+  private calculateIntentionalRelevance(
+    memory: MemoryEntry,
+    context: RetrievalContext,
+  ): number {
     if (!context.userIntent) return 0.5; // Neutral when no intent
 
     let score = 0;
 
     // Action alignment
     const actionTypeMap = {
-      analyze: ['analysis', 'evaluation'],
-      recommend: ['recommendation'],
-      deploy: ['deployment'],
-      troubleshoot: ['deployment', 'configuration'],
-      learn: ['analysis', 'recommendation'],
+      analyze: ["analysis", "evaluation"],
+      recommend: ["recommendation"],
+      deploy: ["deployment"],
+      troubleshoot: ["deployment", "configuration"],
+      learn: ["analysis", "recommendation"],
     };
 
     const relevantTypes = actionTypeMap[context.userIntent.action] || [];
@@ -508,23 +560,31 @@ export class ContextualMemoryRetrieval {
     }
 
     // Experience level alignment
-    if (context.userIntent.experience === 'novice') {
+    if (context.userIntent.experience === "novice") {
       // Prefer simpler, more successful cases
-      if (memory.data.status === 'success' || memory.data.complexity !== 'complex') {
+      if (
+        memory.data.status === "success" ||
+        memory.data.complexity !== "complex"
+      ) {
         score += 0.3;
       }
-    } else if (context.userIntent.experience === 'expert') {
+    } else if (context.userIntent.experience === "expert") {
       // Prefer complex or edge cases
-      if (memory.data.complexity === 'complex' || memory.metadata.tags?.includes('advanced')) {
+      if (
+        memory.data.complexity === "complex" ||
+        memory.metadata.tags?.includes("advanced")
+      ) {
         score += 0.3;
       }
     }
 
     // Urgency consideration
-    if (context.userIntent.urgency === 'high') {
+    if (context.userIntent.urgency === "high") {
       // Prefer recent, successful cases
-      const daysSince = (Date.now() - new Date(memory.timestamp).getTime()) / (1000 * 60 * 60 * 24);
-      if (daysSince <= 7 && memory.data.status === 'success') {
+      const daysSince =
+        (Date.now() - new Date(memory.timestamp).getTime()) /
+        (1000 * 60 * 60 * 24);
+      if (daysSince <= 7 && memory.data.status === "success") {
         score += 0.2;
       }
     }
@@ -535,7 +595,9 @@ export class ContextualMemoryRetrieval {
   /**
    * Calculate overall relevance score
    */
-  private calculateOverallRelevance(factors: ContextualMatch['contextualFactors']): number {
+  private calculateOverallRelevance(
+    factors: ContextualMatch["contextualFactors"],
+  ): number {
     // Weighted combination of factors
     const weights = {
       semantic: 0.3,
@@ -557,54 +619,69 @@ export class ContextualMemoryRetrieval {
    */
   private generateReasoning(
     memory: MemoryEntry,
-    factors: ContextualMatch['contextualFactors'],
+    factors: ContextualMatch["contextualFactors"],
     context: RetrievalContext,
   ): string[] {
     const reasoning: string[] = [];
 
     if (factors.semantic > 0.7) {
-      reasoning.push('High semantic similarity to query');
+      reasoning.push("High semantic similarity to query");
     }
 
     if (factors.temporal > 0.8) {
-      reasoning.push('Recently relevant information');
+      reasoning.push("Recently relevant information");
     }
 
     if (factors.structural > 0.6) {
-      reasoning.push(`Similar project structure (${memory.data.language?.primary || 'unknown'})`);
+      reasoning.push(
+        `Similar project structure (${
+          memory.data.language?.primary || "unknown"
+        })`,
+      );
     }
 
     if (factors.intentional > 0.7) {
-      reasoning.push(`Matches user intent for ${context.userIntent?.action || 'general'} action`);
+      reasoning.push(
+        `Matches user intent for ${
+          context.userIntent?.action || "general"
+        } action`,
+      );
     }
 
-    if (memory.data.status === 'success' && context.userIntent?.urgency === 'high') {
-      reasoning.push('Proven successful approach for urgent needs');
+    if (
+      memory.data.status === "success" &&
+      context.userIntent?.urgency === "high"
+    ) {
+      reasoning.push("Proven successful approach for urgent needs");
     }
 
     if (memory.metadata.ssg && context.currentProject?.framework) {
-      reasoning.push(`Experience with ${memory.metadata.ssg} for similar projects`);
+      reasoning.push(
+        `Experience with ${memory.metadata.ssg} for similar projects`,
+      );
     }
 
-    return reasoning.length > 0 ? reasoning : ['General relevance to query'];
+    return reasoning.length > 0 ? reasoning : ["General relevance to query"];
   }
 
   /**
    * Calculate confidence in the match
    */
   private calculateConfidence(
-    factors: ContextualMatch['contextualFactors'],
+    factors: ContextualMatch["contextualFactors"],
     memory: MemoryEntry,
   ): number {
     let confidence = (factors.semantic + factors.structural) / 2;
 
     // Boost confidence for successful outcomes
-    if (memory.data.status === 'success') {
+    if (memory.data.status === "success") {
       confidence *= 1.2;
     }
 
     // Boost confidence for recent data
-    const daysSince = (Date.now() - new Date(memory.timestamp).getTime()) / (1000 * 60 * 60 * 24);
+    const daysSince =
+      (Date.now() - new Date(memory.timestamp).getTime()) /
+      (1000 * 60 * 60 * 24);
     if (daysSince <= 30) {
       confidence *= 1.1;
     }
@@ -623,20 +700,22 @@ export class ContextualMemoryRetrieval {
   private async generateInsights(
     matches: ContextualMatch[],
     context: RetrievalContext,
-  ): Promise<RetrievalResult['insights']> {
+  ): Promise<RetrievalResult["insights"]> {
     const patterns: string[] = [];
     const recommendations: string[] = [];
     const gaps: string[] = [];
 
     if (matches.length === 0) {
-      gaps.push('No relevant memories found for current context');
-      recommendations.push('Consider expanding search criteria or building more experience');
+      gaps.push("No relevant memories found for current context");
+      recommendations.push(
+        "Consider expanding search criteria or building more experience",
+      );
       return { patterns, recommendations, gaps };
     }
 
     // Analyze patterns in successful matches
     const successfulMatches = matches.filter(
-      (m) => m.memory.data.status === 'success' && m.relevanceScore > 0.6,
+      (m) => m.memory.data.status === "success" && m.relevanceScore > 0.6,
     );
 
     if (successfulMatches.length >= 2) {
@@ -644,14 +723,23 @@ export class ContextualMemoryRetrieval {
       const ssgs = new Map<string, number>();
       successfulMatches.forEach((match) => {
         if (match.memory.metadata.ssg) {
-          ssgs.set(match.memory.metadata.ssg, (ssgs.get(match.memory.metadata.ssg) || 0) + 1);
+          ssgs.set(
+            match.memory.metadata.ssg,
+            (ssgs.get(match.memory.metadata.ssg) || 0) + 1,
+          );
         }
       });
 
       if (ssgs.size > 0) {
-        const topSSG = Array.from(ssgs.entries()).sort(([, a], [, b]) => b - a)[0];
-        patterns.push(`${topSSG[0]} appears in ${topSSG[1]} successful similar projects`);
-        recommendations.push(`Consider ${topSSG[0]} based on successful precedents`);
+        const topSSG = Array.from(ssgs.entries()).sort(
+          ([, a], [, b]) => b - a,
+        )[0];
+        patterns.push(
+          `${topSSG[0]} appears in ${topSSG[1]} successful similar projects`,
+        );
+        recommendations.push(
+          `Consider ${topSSG[0]} based on successful precedents`,
+        );
       }
 
       // Find common success factors
@@ -661,16 +749,23 @@ export class ContextualMemoryRetrieval {
 
     // Identify gaps
     if (
-      context.userIntent?.action === 'deploy' &&
-      matches.filter((m) => m.memory.type === 'deployment').length === 0
+      context.userIntent?.action === "deploy" &&
+      matches.filter((m) => m.memory.type === "deployment").length === 0
     ) {
-      gaps.push('Limited deployment experience for similar projects');
-      recommendations.push('Proceed cautiously with deployment and document the process');
+      gaps.push("Limited deployment experience for similar projects");
+      recommendations.push(
+        "Proceed cautiously with deployment and document the process",
+      );
     }
 
-    if (context.userIntent?.experience === 'novice' && matches.every((m) => m.confidence < 0.7)) {
-      gaps.push('Limited beginner-friendly resources for this context');
-      recommendations.push('Consider consulting documentation or seeking expert guidance');
+    if (
+      context.userIntent?.experience === "novice" &&
+      matches.every((m) => m.confidence < 0.7)
+    ) {
+      gaps.push("Limited beginner-friendly resources for this context");
+      recommendations.push(
+        "Consider consulting documentation or seeking expert guidance",
+      );
     }
 
     return { patterns, recommendations, gaps };
@@ -682,19 +777,23 @@ export class ContextualMemoryRetrieval {
   private findCommonSuccessFactors(matches: ContextualMatch[]): string[] {
     const factors: string[] = [];
 
-    const hasTests = matches.filter((m) => m.memory.data.testing?.hasTests).length;
+    const hasTests = matches.filter(
+      (m) => m.memory.data.testing?.hasTests,
+    ).length;
     if (hasTests / matches.length > 0.7) {
-      factors.push('Projects with testing have higher success rates');
+      factors.push("Projects with testing have higher success rates");
     }
 
     const hasCI = matches.filter((m) => m.memory.data.ci?.hasCI).length;
     if (hasCI / matches.length > 0.6) {
-      factors.push('CI/CD adoption correlates with deployment success');
+      factors.push("CI/CD adoption correlates with deployment success");
     }
 
-    const simpleProjects = matches.filter((m) => m.memory.data.complexity !== 'complex').length;
+    const simpleProjects = matches.filter(
+      (m) => m.memory.data.complexity !== "complex",
+    ).length;
     if (simpleProjects / matches.length > 0.8) {
-      factors.push('Simpler project structures show more reliable outcomes');
+      factors.push("Simpler project structures show more reliable outcomes");
     }
 
     return factors;
@@ -703,10 +802,12 @@ export class ContextualMemoryRetrieval {
   /**
    * Categorize project size for comparison
    */
-  private categorizeProjectSize(fileCount: number): 'small' | 'medium' | 'large' {
-    if (fileCount < 50) return 'small';
-    if (fileCount < 200) return 'medium';
-    return 'large';
+  private categorizeProjectSize(
+    fileCount: number,
+  ): "small" | "medium" | "large" {
+    if (fileCount < 50) return "small";
+    if (fileCount < 200) return "medium";
+    return "large";
   }
 
   /**
@@ -726,31 +827,37 @@ export class ContextualMemoryRetrieval {
     // Analyze current context completeness
     if (!context.currentProject) {
       suggestions.contextEnhancements.push(
-        'Provide current project information for better matches',
+        "Provide current project information for better matches",
       );
     }
 
     if (!context.userIntent) {
       suggestions.contextEnhancements.push(
-        'Specify your intent (analyze, recommend, deploy, etc.) for targeted results',
+        "Specify your intent (analyze, recommend, deploy, etc.) for targeted results",
       );
     }
 
     if (!context.temporalContext) {
       suggestions.contextEnhancements.push(
-        'Set temporal preferences (recent vs. historical) for relevance',
+        "Set temporal preferences (recent vs. historical) for relevance",
       );
     }
 
     // Analyze retrieval patterns
-    const recentSearches = await this.memoryManager.search('search', { sortBy: 'timestamp' });
+    const recentSearches = await this.memoryManager.search("search", {
+      sortBy: "timestamp",
+    });
     if (recentSearches.length < 5) {
-      suggestions.learningOpportunities.push('System will improve with more usage and data');
+      suggestions.learningOpportunities.push(
+        "System will improve with more usage and data",
+      );
     }
 
     // Check for data gaps
     if (context.currentProject?.language) {
-      const languageMemories = await this.memoryManager.search(context.currentProject.language);
+      const languageMemories = await this.memoryManager.search(
+        context.currentProject.language,
+      );
       if (languageMemories.length < 3) {
         suggestions.learningOpportunities.push(
           `More experience needed with ${context.currentProject.language} projects`,

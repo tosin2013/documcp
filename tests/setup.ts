@@ -1,10 +1,10 @@
 // Test environment setup for ESM compatibility
 
 // Mock import.meta for test environment
-Object.defineProperty(globalThis, 'import', {
+Object.defineProperty(globalThis, "import", {
   value: {
     meta: {
-      url: 'file:///test/mock.js',
+      url: "file:///test/mock.js",
     },
   },
   configurable: true,

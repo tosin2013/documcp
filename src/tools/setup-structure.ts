@@ -1,35 +1,37 @@
-import { promises as fs } from 'fs';
-import path from 'path';
-import { z } from 'zod';
-import { MCPToolResponse, formatMCPResponse } from '../types/api.js';
+import { promises as fs } from "fs";
+import path from "path";
+import { z } from "zod";
+import { MCPToolResponse, formatMCPResponse } from "../types/api.js";
 
 const inputSchema = z.object({
   path: z.string(),
-  ssg: z.enum(['jekyll', 'hugo', 'docusaurus', 'mkdocs', 'eleventy']),
+  ssg: z.enum(["jekyll", "hugo", "docusaurus", "mkdocs", "eleventy"]),
   includeExamples: z.boolean().optional().default(true),
 });
 
 // Diataxis structure based on ADR-004
 const DIATAXIS_STRUCTURE = {
   tutorials: {
-    description: 'Learning-oriented guides for newcomers',
-    example: 'getting-started.md',
+    description: "Learning-oriented guides for newcomers",
+    example: "getting-started.md",
   },
-  'how-to': {
-    description: 'Task-oriented guides for specific goals',
-    example: 'deploy-to-production.md',
+  "how-to": {
+    description: "Task-oriented guides for specific goals",
+    example: "deploy-to-production.md",
   },
   reference: {
-    description: 'Information-oriented technical descriptions',
-    example: 'api-documentation.md',
+    description: "Information-oriented technical descriptions",
+    example: "api-documentation.md",
   },
   explanation: {
-    description: 'Understanding-oriented conceptual discussions',
-    example: 'architecture-overview.md',
+    description: "Understanding-oriented conceptual discussions",
+    example: "architecture-overview.md",
   },
 };
 
-export async function setupStructure(args: unknown): Promise<{ content: any[] }> {
+export async function setupStructure(
+  args: unknown,
+): Promise<{ content: any[] }> {
   const startTime = Date.now();
   const { path: docsPath, ssg, includeExamples } = inputSchema.parse(args);
 
@@ -47,22 +49,31 @@ export async function setupStructure(args: unknown): Promise<{ content: any[] }>
       createdDirs.push(categoryPath);
 
       // Create index file for category
-      const indexPath = path.join(categoryPath, 'index.md');
-      const indexContent = generateCategoryIndex(category, info.description, ssg, includeExamples);
+      const indexPath = path.join(categoryPath, "index.md");
+      const indexContent = generateCategoryIndex(
+        category,
+        info.description,
+        ssg,
+        includeExamples,
+      );
       await fs.writeFile(indexPath, indexContent);
       createdFiles.push(indexPath);
 
       // Create example content if requested
       if (includeExamples) {
         const examplePath = path.join(categoryPath, info.example);
-        const exampleContent = generateExampleContent(category, info.example, ssg);
+        const exampleContent = generateExampleContent(
+          category,
+          info.example,
+          ssg,
+        );
         await fs.writeFile(examplePath, exampleContent);
         createdFiles.push(examplePath);
       }
     }
 
     // Create root index
-    const rootIndexPath = path.join(docsPath, 'index.md');
+    const rootIndexPath = path.join(docsPath, "index.md");
     const rootIndexContent = generateRootIndex(ssg);
     await fs.writeFile(rootIndexPath, rootIndexContent);
     createdFiles.push(rootIndexPath);
@@ -82,23 +93,23 @@ export async function setupStructure(args: unknown): Promise<{ content: any[] }>
       success: true,
       data: structureResult,
       metadata: {
-        toolVersion: '1.0.0',
+        toolVersion: "1.0.0",
         executionTime: Date.now() - startTime,
         timestamp: new Date().toISOString(),
       },
       recommendations: [
         {
-          type: 'info',
-          title: 'Diataxis Structure Created',
+          type: "info",
+          title: "Diataxis Structure Created",
           description: `Successfully created ${createdDirs.length} directories and ${createdFiles.length} files`,
         },
       ],
       nextSteps: [
         {
-          action: 'Setup GitHub Pages Deployment',
-          toolRequired: 'deploy_pages',
-          description: 'Create automated deployment workflow',
-          priority: 'medium',
+          action: "Setup GitHub Pages Deployment",
+          toolRequired: "deploy_pages",
+          description: "Create automated deployment workflow",
+          priority: "medium",
         },
       ],
     };
@@ -108,12 +119,12 @@ export async function setupStructure(args: unknown): Promise<{ content: any[] }>
     const errorResponse: MCPToolResponse = {
       success: false,
       error: {
-        code: 'STRUCTURE_SETUP_FAILED',
+        code: "STRUCTURE_SETUP_FAILED",
         message: `Failed to setup structure: ${error}`,
-        resolution: 'Ensure the documentation path is writable and accessible',
+        resolution: "Ensure the documentation path is writable and accessible",
       },
       metadata: {
-        toolVersion: '1.0.0',
+        toolVersion: "1.0.0",
         executionTime: Date.now() - startTime,
         timestamp: new Date().toISOString(),
       },
@@ -128,20 +139,21 @@ function generateCategoryIndex(
   ssg: string,
   includeExamples: boolean = true,
 ): string {
-  const title = category.charAt(0).toUpperCase() + category.slice(1).replace('-', ' ');
+  const title =
+    category.charAt(0).toUpperCase() + category.slice(1).replace("-", " ");
 
-  let frontmatter = '';
+  let frontmatter = "";
   switch (ssg) {
-    case 'docusaurus':
+    case "docusaurus":
       frontmatter = `---
 id: ${category}-index
 title: ${title}
 sidebar_label: ${title}
 ---\n\n`;
       break;
-    case 'mkdocs':
-    case 'jekyll':
-    case 'hugo':
+    case "mkdocs":
+    case "jekyll":
+    case "hugo":
       frontmatter = `---
 title: ${title}
 description: ${description}
@@ -163,27 +175,33 @@ ${generateDiataxisExplanation(category)}
 
 ${
   includeExamples
-    ? `- [Example: ${DIATAXIS_STRUCTURE[category as keyof typeof DIATAXIS_STRUCTURE].example}](./${
+    ? `- [Example: ${
+        DIATAXIS_STRUCTURE[category as keyof typeof DIATAXIS_STRUCTURE].example
+      }](./${
         DIATAXIS_STRUCTURE[category as keyof typeof DIATAXIS_STRUCTURE].example
       })`
-    : '- Coming soon...'
+    : "- Coming soon..."
 }
 `;
 }
 
-function generateExampleContent(category: string, filename: string, ssg: string): string {
+function generateExampleContent(
+  category: string,
+  filename: string,
+  ssg: string,
+): string {
   const title = filename
-    .replace('.md', '')
-    .replace(/-/g, ' ')
-    .split(' ')
+    .replace(".md", "")
+    .replace(/-/g, " ")
+    .split(" ")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
+    .join(" ");
 
-  let frontmatter = '';
+  let frontmatter = "";
   switch (ssg) {
-    case 'docusaurus':
+    case "docusaurus":
       frontmatter = `---
-id: ${filename.replace('.md', '')}
+id: ${filename.replace(".md", "")}
 title: ${title}
 sidebar_label: ${title}
 ---\n\n`;
@@ -195,9 +213,9 @@ title: ${title}
       break;
   }
 
-  let content = '';
+  let content = "";
   switch (category) {
-    case 'tutorials':
+    case "tutorials":
       content = `# ${title}
 
 This tutorial will guide you through the process step by step.
@@ -233,7 +251,7 @@ In this tutorial, you learned how to:
 - Read the [API Reference](../reference/)`;
       break;
 
-    case 'how-to':
+    case "how-to":
       content = `# ${title}
 
 This guide shows you how to accomplish a specific task.
@@ -278,7 +296,7 @@ If you encounter issues:
 - [Reference Documentation](../reference/)`;
       break;
 
-    case 'reference':
+    case "reference":
       content = `# ${title}
 
 Technical reference documentation.
@@ -324,7 +342,7 @@ Creates...
 | E002 | Error description | How to fix |`;
       break;
 
-    case 'explanation':
+    case "explanation":
       content = `# ${title}
 
 This document explains the concepts and reasoning behind...
@@ -374,9 +392,9 @@ The main trade-offs include:
 }
 
 function generateRootIndex(ssg: string): string {
-  let frontmatter = '';
+  let frontmatter = "";
   switch (ssg) {
-    case 'docusaurus':
+    case "docusaurus":
       frontmatter = `---
 id: intro
 title: Documentation
@@ -428,7 +446,7 @@ function generateDiataxisExplanation(category: string): string {
 - Focus on learning by doing
 - Ensure the reader succeeds in accomplishing something
 - Build confidence through success`,
-    'how-to': `
+    "how-to": `
 **How-To Guides** are task-oriented and help users accomplish specific goals:
 - Solve specific problems
 - Assume some knowledge and experience
@@ -448,5 +466,5 @@ function generateDiataxisExplanation(category: string): string {
 - Focus on understanding, not instruction`,
   };
 
-  return explanations[category] || '';
+  return explanations[category] || "";
 }

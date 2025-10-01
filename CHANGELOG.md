@@ -5,6 +5,58 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### 🚀 Features - Phase 2: Intelligence & Learning System
+
+**Phase 2.1: Historical Deployment Intelligence**
+
+- Enhanced `recommend_ssg` with historical deployment data from Knowledge Graph
+- Intelligent scoring based on success rates from similar projects
+- Confidence boosting for SSGs with proven track records
+- Automatic switching to top performers when significantly better
+
+**Phase 2.2: User Preference Management**
+
+- New `manage_preferences` tool for personalized recommendations
+- SSG usage history tracking with success/failure rates
+- User preference schema with documentation style, expertise level, and preferred technologies
+- Preference scoring algorithm (40% usage + 30% explicit + 30% compatibility)
+- Export/import functionality for preference backup and restore
+
+**Phase 2.3: Deployment Outcome Tracking**
+
+- Enhanced `deploy_pages` with deployment outcome tracking
+- Automatic project and deployment recording in Knowledge Graph
+- User preference updates based on deployment outcomes
+- Graceful degradation when tracking fails
+- Build time tracking and error message capture
+
+**Phase 2.4: Deployment Analytics & Insights**
+
+- New `analyze_deployments` tool with 5 analysis types
+- Full report generation with patterns, insights, and recommendations
+- Per-SSG statistics with success rates and build times
+- Multi-SSG comparison sorted by performance
+- Health score calculation (0-100) with 4 weighted factors
+- Trend analysis over configurable time periods
+- Automated insight generation and smart recommendations
+
+### 📚 Documentation
+
+- Added comprehensive Phase 2 documentation (`docs/phase-2-intelligence.md`)
+- Updated README with Intelligence & Learning features
+- Added usage examples for all Phase 2 tools
+- Documented feedback loop and data storage
+
+### ✅ Testing
+
+- Phase 2.1: 8 tests for historical integration
+- Phase 2.2: User preference management tests
+- Phase 2.3: 10 tests for deployment tracking
+- Phase 2.4: 20 tests for deployment analytics
+- All tests passing with comprehensive coverage
+
 ### [0.3.4](https://github.com/tosin2013/documcp/compare/v0.3.3...v0.3.4) (2025-09-18)
 
 ### 🐛 Bug Fixes

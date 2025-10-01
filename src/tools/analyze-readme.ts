@@ -1,16 +1,24 @@
-import { z } from 'zod';
-import { promises as fs } from 'fs';
-import path from 'path';
-import { MCPToolResponse } from '../types/api.js';
+import { z } from "zod";
+import { promises as fs } from "fs";
+import path from "path";
+import { MCPToolResponse } from "../types/api.js";
 
 // Input validation schema
 const AnalyzeReadmeInputSchema = z.object({
-  project_path: z.string().min(1, 'Project path is required'),
+  project_path: z.string().min(1, "Project path is required"),
   target_audience: z
-    .enum(['community_contributors', 'enterprise_users', 'developers', 'general'])
+    .enum([
+      "community_contributors",
+      "enterprise_users",
+      "developers",
+      "general",
+    ])
     .optional()
-    .default('community_contributors'),
-  optimization_level: z.enum(['light', 'moderate', 'aggressive']).optional().default('moderate'),
+    .default("community_contributors"),
+  optimization_level: z
+    .enum(["light", "moderate", "aggressive"])
+    .optional()
+    .default("moderate"),
   max_length_target: z.number().min(50).max(1000).optional().default(300),
 });
 
@@ -65,11 +73,15 @@ interface SectionLength {
 }
 
 interface OptimizationOpportunity {
-  type: 'length_reduction' | 'structure_improvement' | 'content_enhancement' | 'community_health';
-  priority: 'high' | 'medium' | 'low';
+  type:
+    | "length_reduction"
+    | "structure_improvement"
+    | "content_enhancement"
+    | "community_health";
+  priority: "high" | "medium" | "low";
   description: string;
   impact: string;
-  effort: 'low' | 'medium' | 'high';
+  effort: "low" | "medium" | "high";
 }
 
 export async function analyzeReadme(
@@ -80,7 +92,12 @@ export async function analyzeReadme(
   try {
     // Validate input
     const validatedInput = AnalyzeReadmeInputSchema.parse(input);
-    const { project_path, target_audience, optimization_level, max_length_target } = validatedInput;
+    const {
+      project_path,
+      target_audience,
+      optimization_level,
+      max_length_target,
+    } = validatedInput;
 
     // Find README file
     const readmePath = await findReadmeFile(project_path);
@@ -88,13 +105,14 @@ export async function analyzeReadme(
       return {
         success: false,
         error: {
-          code: 'README_NOT_FOUND',
-          message: 'No README file found in the project directory',
-          details: 'Looked for README.md, README.txt, readme.md in project root',
-          resolution: 'Create a README.md file in the project root directory',
+          code: "README_NOT_FOUND",
+          message: "No README file found in the project directory",
+          details:
+            "Looked for README.md, README.txt, readme.md in project root",
+          resolution: "Create a README.md file in the project root directory",
         },
         metadata: {
-          toolVersion: '1.0.0',
+          toolVersion: "1.0.0",
           executionTime: Date.now() - startTime,
           timestamp: new Date().toISOString(),
         },
@@ -102,16 +120,22 @@ export async function analyzeReadme(
     }
 
     // Read README content
-    const readmeContent = await fs.readFile(readmePath, 'utf-8');
+    const readmeContent = await fs.readFile(readmePath, "utf-8");
 
     // Get project context
     const projectContext = await analyzeProjectContext(project_path);
 
     // Perform comprehensive analysis
-    const lengthAnalysis = analyzeLengthMetrics(readmeContent, max_length_target);
+    const lengthAnalysis = analyzeLengthMetrics(
+      readmeContent,
+      max_length_target,
+    );
     const structureAnalysis = analyzeStructure(readmeContent);
     const contentAnalysis = analyzeContent(readmeContent);
-    const communityReadiness = analyzeCommunityReadiness(readmeContent, projectContext);
+    const communityReadiness = analyzeCommunityReadiness(
+      readmeContent,
+      projectContext,
+    );
 
     // Generate optimization opportunities
     const optimizationOpportunities = generateOptimizationOpportunities(
@@ -157,7 +181,7 @@ export async function analyzeReadme(
         nextSteps,
       },
       metadata: {
-        toolVersion: '1.0.0',
+        toolVersion: "1.0.0",
         executionTime: Date.now() - startTime,
         timestamp: new Date().toISOString(),
         analysisId: `readme-analysis-${Date.now()}`,
@@ -167,13 +191,13 @@ export async function analyzeReadme(
     return {
       success: false,
       error: {
-        code: 'ANALYSIS_FAILED',
-        message: 'Failed to analyze README',
-        details: error instanceof Error ? error.message : 'Unknown error',
-        resolution: 'Check project path and README file accessibility',
+        code: "ANALYSIS_FAILED",
+        message: "Failed to analyze README",
+        details: error instanceof Error ? error.message : "Unknown error",
+        resolution: "Check project path and README file accessibility",
       },
       metadata: {
-        toolVersion: '1.0.0',
+        toolVersion: "1.0.0",
         executionTime: Date.now() - startTime,
         timestamp: new Date().toISOString(),
       },
@@ -182,7 +206,13 @@ export async function analyzeReadme(
 }
 
 async function findReadmeFile(projectPath: string): Promise<string | null> {
-  const possibleNames = ['README.md', 'README.txt', 'readme.md', 'Readme.md', 'README'];
+  const possibleNames = [
+    "README.md",
+    "README.txt",
+    "readme.md",
+    "Readme.md",
+    "README",
+  ];
 
   for (const name of possibleNames) {
     const filePath = path.join(projectPath, name);
@@ -201,12 +231,12 @@ async function analyzeProjectContext(projectPath: string): Promise<any> {
   try {
     const files = await fs.readdir(projectPath);
     return {
-      hasPackageJson: files.includes('package.json'),
-      hasContributing: files.includes('CONTRIBUTING.md'),
-      hasCodeOfConduct: files.includes('CODE_OF_CONDUCT.md'),
-      hasSecurity: files.includes('SECURITY.md'),
-      hasGithubDir: files.includes('.github'),
-      hasDocsDir: files.includes('docs'),
+      hasPackageJson: files.includes("package.json"),
+      hasContributing: files.includes("CONTRIBUTING.md"),
+      hasCodeOfConduct: files.includes("CODE_OF_CONDUCT.md"),
+      hasSecurity: files.includes("SECURITY.md"),
+      hasGithubDir: files.includes(".github"),
+      hasDocsDir: files.includes("docs"),
       projectType: detectProjectType(files),
     };
   } catch {
@@ -215,16 +245,18 @@ async function analyzeProjectContext(projectPath: string): Promise<any> {
 }
 
 function detectProjectType(files: string[]): string {
-  if (files.includes('package.json')) return 'javascript';
-  if (files.includes('requirements.txt') || files.includes('setup.py')) return 'python';
-  if (files.includes('Cargo.toml')) return 'rust';
-  if (files.includes('go.mod')) return 'go';
-  if (files.includes('pom.xml') || files.includes('build.gradle')) return 'java';
-  return 'unknown';
+  if (files.includes("package.json")) return "javascript";
+  if (files.includes("requirements.txt") || files.includes("setup.py"))
+    return "python";
+  if (files.includes("Cargo.toml")) return "rust";
+  if (files.includes("go.mod")) return "go";
+  if (files.includes("pom.xml") || files.includes("build.gradle"))
+    return "java";
+  return "unknown";
 }
 
 function analyzeLengthMetrics(content: string, targetLines: number) {
-  const lines = content.split('\n');
+  const lines = content.split("\n");
   const words = content.split(/\s+/).length;
   const currentLines = lines.length;
 
@@ -238,7 +270,7 @@ function analyzeLengthMetrics(content: string, targetLines: number) {
 }
 
 function analyzeStructure(content: string) {
-  const lines = content.split('\n');
+  const lines = content.split("\n");
   const headings = extractHeadings(lines);
   const sectionLengths = calculateSectionLengths(lines, headings);
 
@@ -281,15 +313,19 @@ function extractHeadings(lines: string[]): HeadingInfo[] {
   return headings;
 }
 
-function calculateSectionLengths(lines: string[], headings: HeadingInfo[]): SectionLength[] {
+function calculateSectionLengths(
+  lines: string[],
+  headings: HeadingInfo[],
+): SectionLength[] {
   const sections: SectionLength[] = [];
 
   headings.forEach((heading, index) => {
     const startLine = heading.line - 1;
-    const endLine = index < headings.length - 1 ? headings[index + 1].line - 1 : lines.length;
+    const endLine =
+      index < headings.length - 1 ? headings[index + 1].line - 1 : lines.length;
 
     const sectionLines = lines.slice(startLine, endLine);
-    const sectionText = sectionLines.join('\n');
+    const sectionText = sectionLines.join("\n");
     const wordCount = sectionText.split(/\s+/).length;
 
     sections.push({
@@ -320,10 +356,12 @@ function checkHeadingHierarchy(headings: HeadingInfo[]): boolean {
 
 function analyzeContent(content: string) {
   return {
-    hasTldr: content.includes('## TL;DR') || content.includes('# TL;DR'),
+    hasTldr: content.includes("## TL;DR") || content.includes("# TL;DR"),
     hasQuickStart: /quick start|getting started|installation/i.test(content),
     hasPrerequisites: /prerequisite|requirement|dependencies/i.test(content),
-    hasTroubleshooting: /troubleshoot|faq|common issues|problems/i.test(content),
+    hasTroubleshooting: /troubleshoot|faq|common issues|problems/i.test(
+      content,
+    ),
     codeBlockCount: (content.match(/```/g) || []).length / 2,
     linkCount: (content.match(/\[.*?\]\(.*?\)/g) || []).length,
   };
@@ -331,9 +369,13 @@ function analyzeContent(content: string) {
 
 function analyzeCommunityReadiness(content: string, projectContext: any) {
   return {
-    hasContributing: /contributing|contribute/i.test(content) || projectContext.hasContributing,
-    hasIssueTemplates: /issue template|bug report/i.test(content) || projectContext.hasGithubDir,
-    hasCodeOfConduct: /code of conduct/i.test(content) || projectContext.hasCodeOfConduct,
+    hasContributing:
+      /contributing|contribute/i.test(content) ||
+      projectContext.hasContributing,
+    hasIssueTemplates:
+      /issue template|bug report/i.test(content) || projectContext.hasGithubDir,
+    hasCodeOfConduct:
+      /code of conduct/i.test(content) || projectContext.hasCodeOfConduct,
     hasSecurity: /security/i.test(content) || projectContext.hasSecurity,
     badgeCount: (content.match(/\[!\[.*?\]\(.*?\)\]\(.*?\)/g) || []).length,
   };
@@ -352,54 +394,57 @@ function generateOptimizationOpportunities(
   // Length reduction opportunities
   if (lengthAnalysis.exceedsTarget) {
     opportunities.push({
-      type: 'length_reduction',
-      priority: 'high',
+      type: "length_reduction",
+      priority: "high",
       description: `README is ${lengthAnalysis.reductionNeeded} lines over target (${lengthAnalysis.currentLines}/${lengthAnalysis.targetLines})`,
-      impact: 'Improves scannability and reduces cognitive load for new users',
-      effort: lengthAnalysis.reductionNeeded > 100 ? 'high' : 'medium',
+      impact: "Improves scannability and reduces cognitive load for new users",
+      effort: lengthAnalysis.reductionNeeded > 100 ? "high" : "medium",
     });
   }
 
   // Structure improvements
   if (structureAnalysis.scannabilityScore < 75) {
     opportunities.push({
-      type: 'structure_improvement',
-      priority: 'high',
+      type: "structure_improvement",
+      priority: "high",
       description: `Low scannability score (${structureAnalysis.scannabilityScore}/100)`,
-      impact: 'Makes README easier to navigate and understand quickly',
-      effort: 'medium',
+      impact: "Makes README easier to navigate and understand quickly",
+      effort: "medium",
     });
   }
 
   // Content enhancements
   if (!contentAnalysis.hasTldr) {
     opportunities.push({
-      type: 'content_enhancement',
-      priority: 'high',
-      description: 'Missing TL;DR section for quick project overview',
-      impact: 'Helps users quickly understand project value proposition',
-      effort: 'low',
+      type: "content_enhancement",
+      priority: "high",
+      description: "Missing TL;DR section for quick project overview",
+      impact: "Helps users quickly understand project value proposition",
+      effort: "low",
     });
   }
 
   if (!contentAnalysis.hasQuickStart) {
     opportunities.push({
-      type: 'content_enhancement',
-      priority: 'medium',
-      description: 'Missing quick start section',
-      impact: 'Reduces time to first success for new users',
-      effort: 'medium',
+      type: "content_enhancement",
+      priority: "medium",
+      description: "Missing quick start section",
+      impact: "Reduces time to first success for new users",
+      effort: "medium",
     });
   }
 
   // Community health
-  if (!communityReadiness.hasContributing && targetAudience === 'community_contributors') {
+  if (
+    !communityReadiness.hasContributing &&
+    targetAudience === "community_contributors"
+  ) {
     opportunities.push({
-      type: 'community_health',
-      priority: 'medium',
-      description: 'Missing contributing guidelines',
-      impact: 'Encourages community participation and sets expectations',
-      effort: 'medium',
+      type: "community_health",
+      priority: "medium",
+      description: "Missing contributing guidelines",
+      impact: "Encourages community participation and sets expectations",
+      effort: "medium",
     });
   }
 
@@ -453,52 +498,61 @@ function generateRecommendations(
   const recommendations: string[] = [];
 
   // High priority opportunities first
-  const highPriority = opportunities.filter((op) => op.priority === 'high');
+  const highPriority = opportunities.filter((op) => op.priority === "high");
   highPriority.forEach((op) => {
     recommendations.push(`🚨 ${op.description} - ${op.impact}`);
   });
 
   // Audience-specific recommendations
-  if (targetAudience === 'community_contributors') {
+  if (targetAudience === "community_contributors") {
     recommendations.push(
-      '👥 Focus on community onboarding: clear contributing guidelines and issue templates',
+      "👥 Focus on community onboarding: clear contributing guidelines and issue templates",
     );
-  } else if (targetAudience === 'enterprise_users') {
-    recommendations.push('🏢 Emphasize security, compliance, and support channels');
+  } else if (targetAudience === "enterprise_users") {
+    recommendations.push(
+      "🏢 Emphasize security, compliance, and support channels",
+    );
   }
 
   // Optimization level specific
-  if (optimizationLevel === 'aggressive') {
+  if (optimizationLevel === "aggressive") {
     recommendations.push(
-      '⚡ Consider moving detailed documentation to separate files (docs/ directory)',
+      "⚡ Consider moving detailed documentation to separate files (docs/ directory)",
     );
-    recommendations.push('📝 Use progressive disclosure: expandable sections for advanced topics');
+    recommendations.push(
+      "📝 Use progressive disclosure: expandable sections for advanced topics",
+    );
   }
 
   return recommendations.slice(0, 8); // Limit to top 8 recommendations
 }
 
-function generateNextSteps(analysis: ReadmeAnalysis, optimizationLevel: string): string[] {
+function generateNextSteps(
+  analysis: ReadmeAnalysis,
+  optimizationLevel: string,
+): string[] {
   const steps: string[] = [];
 
   if (analysis.overallScore < 60) {
-    steps.push('🎯 Priority: Address critical issues first (score < 60)');
+    steps.push("🎯 Priority: Address critical issues first (score < 60)");
   }
 
   // Add specific next steps based on opportunities
   const highPriorityOps = analysis.optimizationOpportunities
-    .filter((op) => op.priority === 'high')
+    .filter((op) => op.priority === "high")
     .slice(0, 3);
 
   highPriorityOps.forEach((op) => {
     steps.push(`• ${op.description}`);
   });
 
-  if (optimizationLevel !== 'light') {
-    steps.push('📊 Run optimize_readme tool to get specific restructuring suggestions');
+  if (optimizationLevel !== "light") {
+    steps.push(
+      "📊 Run optimize_readme tool to get specific restructuring suggestions",
+    );
   }
 
-  steps.push('🔄 Re-analyze after changes to track improvement');
+  steps.push("🔄 Re-analyze after changes to track improvement");
 
   return steps;
 }

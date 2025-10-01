@@ -45,7 +45,7 @@ Add any other context, screenshots, mockups, or examples about the feature reque
 ## Priority
 
 - [ ] Low (nice to have)
-- [ ] Medium (important but not critical)  
+- [ ] Medium (important but not critical)
 - [ ] High (critical for project success)
 
 ## Related Issues/PRs

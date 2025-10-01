@@ -1,5 +1,5 @@
-import { promises as fs } from 'fs';
-import { join } from 'path';
+import { promises as fs } from "fs";
+import { join } from "path";
 
 export interface ProjectContext {
   projectType: string;
@@ -13,16 +13,18 @@ export interface ProjectContext {
 }
 
 export interface PromptMessage {
-  role: 'user' | 'assistant' | 'system';
+  role: "user" | "assistant" | "system";
   content: {
-    type: 'text';
+    type: "text";
     text: string;
   };
 }
 
-export async function analyzeProjectContext(projectPath: string): Promise<ProjectContext> {
+export async function analyzeProjectContext(
+  projectPath: string,
+): Promise<ProjectContext> {
   const context: ProjectContext = {
-    projectType: 'unknown',
+    projectType: "unknown",
     languages: [],
     frameworks: [],
     hasTests: false,
@@ -32,62 +34,67 @@ export async function analyzeProjectContext(projectPath: string): Promise<Projec
   };
 
   // Check for README
-  context.readmeExists = await fileExists(join(projectPath, 'README.md'));
+  context.readmeExists = await fileExists(join(projectPath, "README.md"));
 
   // Analyze package.json for Node.js projects
-  const packageJsonPath = join(projectPath, 'package.json');
+  const packageJsonPath = join(projectPath, "package.json");
   if (await fileExists(packageJsonPath)) {
     try {
-      const packageJson = JSON.parse(await fs.readFile(packageJsonPath, 'utf-8'));
-      const deps = { ...packageJson.dependencies, ...packageJson.devDependencies };
+      const packageJson = JSON.parse(
+        await fs.readFile(packageJsonPath, "utf-8"),
+      );
+      const deps = {
+        ...packageJson.dependencies,
+        ...packageJson.devDependencies,
+      };
 
-      context.projectType = 'node_application';
-      context.languages.push('JavaScript');
+      context.projectType = "node_application";
+      context.languages.push("JavaScript");
 
       // Detect frameworks
-      if (deps['react']) context.frameworks.push('React');
-      if (deps['vue']) context.frameworks.push('Vue');
-      if (deps['angular']) context.frameworks.push('Angular');
-      if (deps['express']) context.frameworks.push('Express');
-      if (deps['next']) context.frameworks.push('Next.js');
-      if (deps['nuxt']) context.frameworks.push('Nuxt.js');
-      if (deps['svelte']) context.frameworks.push('Svelte');
-      if (deps['typescript']) context.languages.push('TypeScript');
+      if (deps["react"]) context.frameworks.push("React");
+      if (deps["vue"]) context.frameworks.push("Vue");
+      if (deps["angular"]) context.frameworks.push("Angular");
+      if (deps["express"]) context.frameworks.push("Express");
+      if (deps["next"]) context.frameworks.push("Next.js");
+      if (deps["nuxt"]) context.frameworks.push("Nuxt.js");
+      if (deps["svelte"]) context.frameworks.push("Svelte");
+      if (deps["typescript"]) context.languages.push("TypeScript");
 
       // Detect package manager
-      if (await fileExists(join(projectPath, 'yarn.lock'))) {
-        context.packageManager = 'yarn';
-      } else if (await fileExists(join(projectPath, 'pnpm-lock.yaml'))) {
-        context.packageManager = 'pnpm';
+      if (await fileExists(join(projectPath, "yarn.lock"))) {
+        context.packageManager = "yarn";
+      } else if (await fileExists(join(projectPath, "pnpm-lock.yaml"))) {
+        context.packageManager = "pnpm";
       } else {
-        context.packageManager = 'npm';
+        context.packageManager = "npm";
       }
     } catch (error) {
       // If package.json exists but can't be parsed, continue with other detections
-      console.warn('Failed to parse package.json:', error);
+      console.warn("Failed to parse package.json:", error);
     }
   }
 
   // Check for Python projects
   if (
-    (await fileExists(join(projectPath, 'requirements.txt'))) ||
-    (await fileExists(join(projectPath, 'pyproject.toml'))) ||
-    (await fileExists(join(projectPath, 'setup.py')))
+    (await fileExists(join(projectPath, "requirements.txt"))) ||
+    (await fileExists(join(projectPath, "pyproject.toml"))) ||
+    (await fileExists(join(projectPath, "setup.py")))
   ) {
-    context.projectType = 'python_application';
-    context.languages.push('Python');
+    context.projectType = "python_application";
+    context.languages.push("Python");
   }
 
   // Check for Go projects
-  if (await fileExists(join(projectPath, 'go.mod'))) {
-    context.projectType = 'go_application';
-    context.languages.push('Go');
+  if (await fileExists(join(projectPath, "go.mod"))) {
+    context.projectType = "go_application";
+    context.languages.push("Go");
   }
 
   // Check for Rust projects
-  if (await fileExists(join(projectPath, 'Cargo.toml'))) {
-    context.projectType = 'rust_application';
-    context.languages.push('Rust');
+  if (await fileExists(join(projectPath, "Cargo.toml"))) {
+    context.projectType = "rust_application";
+    context.languages.push("Rust");
   }
 
   // Check for tests
@@ -97,7 +104,10 @@ export async function analyzeProjectContext(projectPath: string): Promise<Projec
   context.hasCI = await hasCIConfig(projectPath);
 
   // Identify documentation gaps
-  context.documentationGaps = await identifyDocumentationGaps(projectPath, context);
+  context.documentationGaps = await identifyDocumentationGaps(
+    projectPath,
+    context,
+  );
 
   return context;
 }
@@ -110,23 +120,23 @@ export async function generateTechnicalWriterPrompts(
   const context = await analyzeProjectContext(projectPath);
 
   switch (promptType) {
-    case 'tutorial-writer':
+    case "tutorial-writer":
       return generateTutorialWriterPrompt(context, args);
-    case 'howto-guide-writer':
+    case "howto-guide-writer":
       return generateHowToGuideWriterPrompt(context, args);
-    case 'reference-writer':
+    case "reference-writer":
       return generateReferenceWriterPrompt(context, args);
-    case 'explanation-writer':
+    case "explanation-writer":
       return generateExplanationWriterPrompt(context, args);
-    case 'diataxis-organizer':
+    case "diataxis-organizer":
       return generateDiataxisOrganizerPrompt(context, args);
-    case 'readme-optimizer':
+    case "readme-optimizer":
       return generateReadmeOptimizerPrompt(context, args);
-    case 'analyze-and-recommend':
+    case "analyze-and-recommend":
       return generateAnalyzeAndRecommendPrompt(context, args);
-    case 'setup-documentation':
+    case "setup-documentation":
       return generateSetupDocumentationPrompt(context, args);
-    case 'troubleshoot-deployment':
+    case "troubleshoot-deployment":
       return generateTroubleshootDeploymentPrompt(context, args);
     default:
       throw new Error(`Unknown prompt type: ${promptType}`);
@@ -137,23 +147,23 @@ function generateTutorialWriterPrompt(
   context: ProjectContext,
   args: Record<string, any>,
 ): PromptMessage[] {
-  const targetAudience = args.target_audience || 'beginners';
-  const learningGoal = args.learning_goal || 'get started with the project';
+  const targetAudience = args.target_audience || "beginners";
+  const learningGoal = args.learning_goal || "get started with the project";
 
   return [
     {
-      role: 'user',
+      role: "user",
       content: {
-        type: 'text',
+        type: "text",
         text: `Create a comprehensive tutorial for a ${
           context.projectType
         } project following Diataxis framework principles.
 
 **Project Context:**
 - Type: ${context.projectType}
-- Languages: ${context.languages.join(', ')}
-- Frameworks: ${context.frameworks.join(', ')}
-- Package Manager: ${context.packageManager || 'N/A'}
+- Languages: ${context.languages.join(", ")}
+- Frameworks: ${context.frameworks.join(", ")}
+- Package Manager: ${context.packageManager || "N/A"}
 - Target Audience: ${targetAudience}
 - Learning Goal: ${learningGoal}
 
@@ -186,22 +196,22 @@ function generateHowToGuideWriterPrompt(
   context: ProjectContext,
   args: Record<string, any>,
 ): PromptMessage[] {
-  const problemToSolve = args.problem || 'common development task';
-  const userExperience = args.user_experience || 'intermediate';
+  const problemToSolve = args.problem || "common development task";
+  const userExperience = args.user_experience || "intermediate";
 
   return [
     {
-      role: 'user',
+      role: "user",
       content: {
-        type: 'text',
+        type: "text",
         text: `Create a practical how-to guide for a ${
           context.projectType
         } project following Diataxis framework principles.
 
 **Project Context:**
 - Type: ${context.projectType}
-- Languages: ${context.languages.join(', ')}
-- Frameworks: ${context.frameworks.join(', ')}
+- Languages: ${context.languages.join(", ")}
+- Frameworks: ${context.frameworks.join(", ")}
 - Problem to Solve: ${problemToSolve}
 - User Experience Level: ${userExperience}
 
@@ -235,22 +245,22 @@ function generateReferenceWriterPrompt(
   context: ProjectContext,
   args: Record<string, any>,
 ): PromptMessage[] {
-  const referenceType = args.reference_type || 'API';
-  const completeness = args.completeness || 'comprehensive';
+  const referenceType = args.reference_type || "API";
+  const completeness = args.completeness || "comprehensive";
 
   return [
     {
-      role: 'user',
+      role: "user",
       content: {
-        type: 'text',
+        type: "text",
         text: `Create comprehensive reference documentation for a ${
           context.projectType
         } project following Diataxis framework principles.
 
 **Project Context:**
 - Type: ${context.projectType}
-- Languages: ${context.languages.join(', ')}
-- Frameworks: ${context.frameworks.join(', ')}
+- Languages: ${context.languages.join(", ")}
+- Frameworks: ${context.frameworks.join(", ")}
 - Reference Type: ${referenceType}
 - Completeness Level: ${completeness}
 
@@ -284,22 +294,22 @@ function generateExplanationWriterPrompt(
   context: ProjectContext,
   args: Record<string, any>,
 ): PromptMessage[] {
-  const conceptToExplain = args.concept || 'system architecture';
-  const depth = args.depth || 'detailed';
+  const conceptToExplain = args.concept || "system architecture";
+  const depth = args.depth || "detailed";
 
   return [
     {
-      role: 'user',
+      role: "user",
       content: {
-        type: 'text',
+        type: "text",
         text: `Create in-depth explanation documentation for a ${
           context.projectType
         } project following Diataxis framework principles.
 
 **Project Context:**
 - Type: ${context.projectType}
-- Languages: ${context.languages.join(', ')}
-- Frameworks: ${context.frameworks.join(', ')}
+- Languages: ${context.languages.join(", ")}
+- Frameworks: ${context.frameworks.join(", ")}
 - Concept to Explain: ${conceptToExplain}
 - Depth Level: ${depth}
 
@@ -333,21 +343,21 @@ function generateDiataxisOrganizerPrompt(
   context: ProjectContext,
   args: Record<string, any>,
 ): PromptMessage[] {
-  const currentDocs = args.current_docs || 'mixed documentation';
-  const priority = args.priority || 'user needs';
+  const currentDocs = args.current_docs || "mixed documentation";
+  const priority = args.priority || "user needs";
 
   return [
     {
-      role: 'user',
+      role: "user",
       content: {
-        type: 'text',
+        type: "text",
         text: `Organize existing documentation for a ${
           context.projectType
         } project using Diataxis framework principles.
 
 **Project Context:**
 - Type: ${context.projectType}
-- Languages: ${context.languages.join(', ')}
+- Languages: ${context.languages.join(", ")}
 - Current Documentation: ${currentDocs}
 - Organization Priority: ${priority}
 
@@ -381,22 +391,24 @@ function generateReadmeOptimizerPrompt(
   context: ProjectContext,
   args: Record<string, any>,
 ): PromptMessage[] {
-  const optimizationFocus = args.optimization_focus || 'general';
+  const optimizationFocus = args.optimization_focus || "general";
 
   return [
     {
-      role: 'user',
+      role: "user",
       content: {
-        type: 'text',
+        type: "text",
         text: `Optimize existing README content for a ${
           context.projectType
         } project using Diataxis-aware principles.
 
 **Project Context:**
 - Type: ${context.projectType}
-- Languages: ${context.languages.join(', ')}
+- Languages: ${context.languages.join(", ")}
 - README Exists: ${context.readmeExists}
-- Documentation Gaps: ${context.documentationGaps.join(', ') || 'None identified'}
+- Documentation Gaps: ${
+          context.documentationGaps.join(", ") || "None identified"
+        }
 - Optimization Focus: ${optimizationFocus}
 
 **Diataxis-Aware README Requirements:**
@@ -439,13 +451,13 @@ async function hasTestFiles(projectPath: string): Promise<boolean> {
     const files = await fs.readdir(projectPath, { recursive: true });
     return files.some(
       (file) =>
-        typeof file === 'string' &&
-        (file.includes('test') ||
-          file.includes('spec') ||
-          file.endsWith('.test.js') ||
-          file.endsWith('.test.ts') ||
-          file.endsWith('.spec.js') ||
-          file.endsWith('.spec.ts')),
+        typeof file === "string" &&
+        (file.includes("test") ||
+          file.includes("spec") ||
+          file.endsWith(".test.js") ||
+          file.endsWith(".test.ts") ||
+          file.endsWith(".spec.js") ||
+          file.endsWith(".spec.ts")),
     );
   } catch {
     return false;
@@ -454,12 +466,12 @@ async function hasTestFiles(projectPath: string): Promise<boolean> {
 
 async function hasCIConfig(projectPath: string): Promise<boolean> {
   const ciFiles = [
-    '.github/workflows',
-    '.gitlab-ci.yml',
-    'circle.yml',
-    '.circleci/config.yml',
-    'travis.yml',
-    '.travis.yml',
+    ".github/workflows",
+    ".gitlab-ci.yml",
+    "circle.yml",
+    ".circleci/config.yml",
+    "travis.yml",
+    ".travis.yml",
   ];
 
   for (const file of ciFiles) {
@@ -477,22 +489,22 @@ async function identifyDocumentationGaps(
   const gaps: string[] = [];
 
   if (!context.readmeExists) {
-    gaps.push('readme');
+    gaps.push("readme");
   }
 
   // Check for common documentation files
   const docFiles = [
-    'CONTRIBUTING.md',
-    'CHANGELOG.md',
-    'LICENSE',
-    'docs/api.md',
-    'docs/tutorial.md',
-    'docs/installation.md',
+    "CONTRIBUTING.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "docs/api.md",
+    "docs/tutorial.md",
+    "docs/installation.md",
   ];
 
   for (const docFile of docFiles) {
     if (!(await fileExists(join(projectPath, docFile)))) {
-      gaps.push(docFile.toLowerCase().replace('.md', '').replace('docs/', ''));
+      gaps.push(docFile.toLowerCase().replace(".md", "").replace("docs/", ""));
     }
   }
 
@@ -505,24 +517,25 @@ function generateAnalyzeAndRecommendPrompt(
   context: ProjectContext,
   args: Record<string, any>,
 ): PromptMessage[] {
-  const analysisDepth = args.analysis_depth || 'standard';
-  const preferences = args.preferences || 'balanced approach with good community support';
+  const analysisDepth = args.analysis_depth || "standard";
+  const preferences =
+    args.preferences || "balanced approach with good community support";
 
   return [
     {
-      role: 'user',
+      role: "user",
       content: {
-        type: 'text',
+        type: "text",
         text: `Execute a complete repository analysis and SSG recommendation workflow for this project.
 
 **Project Context:**
 - Type: ${context.projectType}
-- Languages: ${context.languages.join(', ')}
-- Frameworks: ${context.frameworks.join(', ')}
-- Package Manager: ${context.packageManager || 'N/A'}
+- Languages: ${context.languages.join(", ")}
+- Frameworks: ${context.frameworks.join(", ")}
+- Package Manager: ${context.packageManager || "N/A"}
 - Has Tests: ${context.hasTests}
 - Has CI: ${context.hasCI}
-- Documentation Gaps: ${context.documentationGaps.join(', ')}
+- Documentation Gaps: ${context.documentationGaps.join(", ")}
 
 **Workflow Parameters:**
 - Analysis Depth: ${analysisDepth}
@@ -551,21 +564,21 @@ function generateSetupDocumentationPrompt(
   context: ProjectContext,
   args: Record<string, any>,
 ): PromptMessage[] {
-  const ssgType = args.ssg_type || 'recommended based on project analysis';
+  const ssgType = args.ssg_type || "recommended based on project analysis";
   const includeExamples = args.include_examples !== false;
 
   return [
     {
-      role: 'user',
+      role: "user",
       content: {
-        type: 'text',
+        type: "text",
         text: `Create a comprehensive documentation structure with best practices for this project.
 
 **Project Context:**
 - Type: ${context.projectType}
-- Languages: ${context.languages.join(', ')}
-- Frameworks: ${context.frameworks.join(', ')}
-- Current Documentation Gaps: ${context.documentationGaps.join(', ')}
+- Languages: ${context.languages.join(", ")}
+- Frameworks: ${context.frameworks.join(", ")}
+- Current Documentation Gaps: ${context.documentationGaps.join(", ")}
 
 **Setup Parameters:**
 - SSG Type: ${ssgType}
@@ -599,7 +612,7 @@ function generateSetupDocumentationPrompt(
 **Required Deliverables:**
 - Complete directory structure
 - Configuration files with comments
-- Sample content ${includeExamples ? 'with examples' : 'templates'}
+- Sample content ${includeExamples ? "with examples" : "templates"}
 - Deployment automation
 - Maintenance runbook
 
@@ -614,14 +627,15 @@ function generateTroubleshootDeploymentPrompt(
   args: Record<string, any>,
 ): PromptMessage[] {
   const repository = args.repository;
-  const deploymentUrl = args.deployment_url || 'GitHub Pages URL';
-  const issueDescription = args.issue_description || 'deployment not working as expected';
+  const deploymentUrl = args.deployment_url || "GitHub Pages URL";
+  const issueDescription =
+    args.issue_description || "deployment not working as expected";
 
   return [
     {
-      role: 'user',
+      role: "user",
       content: {
-        type: 'text',
+        type: "text",
         text: `Diagnose and fix GitHub Pages deployment issues for this documentation project.
 
 **Repository Information:**
@@ -631,7 +645,7 @@ function generateTroubleshootDeploymentPrompt(
 
 **Project Context:**
 - Type: ${context.projectType}
-- Languages: ${context.languages.join(', ')}
+- Languages: ${context.languages.join(", ")}
 - Has CI: ${context.hasCI}
 
 **Troubleshooting Checklist:**

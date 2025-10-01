@@ -4,12 +4,12 @@
  * Part of Issue #54 - Core Memory System Unit Tests
  */
 
-import { promises as fs } from 'fs';
-import path from 'path';
-import os from 'os';
-import { JSONLStorage, MemoryEntry } from '../../src/memory/storage.js';
+import { promises as fs } from "fs";
+import path from "path";
+import os from "os";
+import { JSONLStorage, MemoryEntry } from "../../src/memory/storage.js";
 
-describe('JSONLStorage', () => {
+describe("JSONLStorage", () => {
   let storage: JSONLStorage;
   let tempDir: string;
 
@@ -17,7 +17,9 @@ describe('JSONLStorage', () => {
     // Create unique temp directory for each test
     tempDir = path.join(
       os.tmpdir(),
-      `memory-storage-test-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      `memory-storage-test-${Date.now()}-${Math.random()
+        .toString(36)
+        .substr(2, 9)}`,
     );
     await fs.mkdir(tempDir, { recursive: true });
     storage = new JSONLStorage(tempDir);
@@ -33,8 +35,8 @@ describe('JSONLStorage', () => {
     }
   });
 
-  describe('Basic Storage Operations', () => {
-    test('should create storage instance and initialize', async () => {
+  describe("Basic Storage Operations", () => {
+    test("should create storage instance and initialize", async () => {
       expect(storage).toBeDefined();
       expect(storage).toBeInstanceOf(JSONLStorage);
 
@@ -43,28 +45,28 @@ describe('JSONLStorage', () => {
       expect(stats.isDirectory()).toBe(true);
     });
 
-    test('should append and retrieve memory entries', async () => {
+    test("should append and retrieve memory entries", async () => {
       const entry = {
         timestamp: new Date().toISOString(),
-        type: 'analysis' as const,
-        data: { project: 'test-project', result: 'success' },
-        metadata: { projectId: 'test-proj', tags: ['test'] },
+        type: "analysis" as const,
+        data: { project: "test-project", result: "success" },
+        metadata: { projectId: "test-proj", tags: ["test"] },
       };
 
       const stored = await storage.append(entry);
       expect(stored.id).toBeDefined();
       expect(stored.checksum).toBeDefined();
-      expect(stored.type).toBe('analysis');
+      expect(stored.type).toBe("analysis");
       expect(stored.data).toEqual(entry.data);
     });
 
-    test('should handle different entry types', async () => {
-      const entryTypes: Array<MemoryEntry['type']> = [
-        'analysis',
-        'recommendation',
-        'deployment',
-        'configuration',
-        'interaction',
+    test("should handle different entry types", async () => {
+      const entryTypes: Array<MemoryEntry["type"]> = [
+        "analysis",
+        "recommendation",
+        "deployment",
+        "configuration",
+        "interaction",
       ];
 
       for (const type of entryTypes) {
@@ -72,7 +74,7 @@ describe('JSONLStorage', () => {
           timestamp: new Date().toISOString(),
           type,
           data: { testType: type },
-          metadata: { projectId: 'test-types' },
+          metadata: { projectId: "test-types" },
         };
 
         const stored = await storage.append(entry);
@@ -81,19 +83,19 @@ describe('JSONLStorage', () => {
       }
     });
 
-    test('should generate unique IDs for different entries', async () => {
+    test("should generate unique IDs for different entries", async () => {
       const entry1 = {
         timestamp: new Date().toISOString(),
-        type: 'analysis' as const,
-        data: { project: 'test-1' },
-        metadata: { projectId: 'test-1' },
+        type: "analysis" as const,
+        data: { project: "test-1" },
+        metadata: { projectId: "test-1" },
       };
 
       const entry2 = {
         timestamp: new Date().toISOString(),
-        type: 'analysis' as const,
-        data: { project: 'test-2' },
-        metadata: { projectId: 'test-2' },
+        type: "analysis" as const,
+        data: { project: "test-2" },
+        metadata: { projectId: "test-2" },
       };
 
       const stored1 = await storage.append(entry1);
@@ -103,12 +105,12 @@ describe('JSONLStorage', () => {
       expect(stored1.checksum).not.toBe(stored2.checksum);
     });
 
-    test('should generate same ID for identical entries', async () => {
+    test("should generate same ID for identical entries", async () => {
       const entry = {
         timestamp: new Date().toISOString(),
-        type: 'analysis' as const,
-        data: { project: 'identical-test' },
-        metadata: { projectId: 'identical' },
+        type: "analysis" as const,
+        data: { project: "identical-test" },
+        metadata: { projectId: "identical" },
       };
 
       const stored1 = await storage.append(entry);
@@ -119,55 +121,55 @@ describe('JSONLStorage', () => {
     });
   });
 
-  describe('File Management', () => {
-    test('should create proper JSONL file structure', async () => {
+  describe("File Management", () => {
+    test("should create proper JSONL file structure", async () => {
       const entry = {
-        timestamp: '2024-01-15T10:30:00.000Z',
-        type: 'analysis' as const,
+        timestamp: "2024-01-15T10:30:00.000Z",
+        type: "analysis" as const,
         data: { fileTest: true },
-        metadata: { projectId: 'file-proj' },
+        metadata: { projectId: "file-proj" },
       };
 
       await storage.append(entry);
 
       // Check that file was created with expected name pattern
       const files = await fs.readdir(tempDir);
-      const jsonlFiles = files.filter((f) => f.endsWith('.jsonl'));
+      const jsonlFiles = files.filter((f) => f.endsWith(".jsonl"));
       expect(jsonlFiles.length).toBeGreaterThan(0);
 
       // Should have analysis_2024_01.jsonl
-      const expectedFile = 'analysis_2024_01.jsonl';
+      const expectedFile = "analysis_2024_01.jsonl";
       expect(jsonlFiles).toContain(expectedFile);
 
       // Verify file contains the entry
       const filePath = path.join(tempDir, expectedFile);
-      const content = await fs.readFile(filePath, 'utf-8');
-      const lines = content.trim().split('\n');
+      const content = await fs.readFile(filePath, "utf-8");
+      const lines = content.trim().split("\n");
       expect(lines.length).toBeGreaterThan(0);
 
       const parsedEntry = JSON.parse(lines[0]);
       expect(parsedEntry.data.fileTest).toBe(true);
     });
 
-    test('should organize files by type and date', async () => {
+    test("should organize files by type and date", async () => {
       const entries = [
         {
-          timestamp: '2024-01-15T10:30:00.000Z',
-          type: 'analysis' as const,
-          data: { test: 'analysis-jan' },
-          metadata: { projectId: 'date-test' },
+          timestamp: "2024-01-15T10:30:00.000Z",
+          type: "analysis" as const,
+          data: { test: "analysis-jan" },
+          metadata: { projectId: "date-test" },
         },
         {
-          timestamp: '2024-02-15T10:30:00.000Z',
-          type: 'analysis' as const,
-          data: { test: 'analysis-feb' },
-          metadata: { projectId: 'date-test' },
+          timestamp: "2024-02-15T10:30:00.000Z",
+          type: "analysis" as const,
+          data: { test: "analysis-feb" },
+          metadata: { projectId: "date-test" },
         },
         {
-          timestamp: '2024-01-15T10:30:00.000Z',
-          type: 'recommendation' as const,
-          data: { test: 'recommendation-jan' },
-          metadata: { projectId: 'date-test' },
+          timestamp: "2024-01-15T10:30:00.000Z",
+          type: "recommendation" as const,
+          data: { test: "recommendation-jan" },
+          metadata: { projectId: "date-test" },
         },
       ];
 
@@ -176,25 +178,25 @@ describe('JSONLStorage', () => {
       }
 
       const files = await fs.readdir(tempDir);
-      const jsonlFiles = files.filter((f) => f.endsWith('.jsonl'));
+      const jsonlFiles = files.filter((f) => f.endsWith(".jsonl"));
 
-      expect(jsonlFiles).toContain('analysis_2024_01.jsonl');
-      expect(jsonlFiles).toContain('analysis_2024_02.jsonl');
-      expect(jsonlFiles).toContain('recommendation_2024_01.jsonl');
+      expect(jsonlFiles).toContain("analysis_2024_01.jsonl");
+      expect(jsonlFiles).toContain("analysis_2024_02.jsonl");
+      expect(jsonlFiles).toContain("recommendation_2024_01.jsonl");
     });
 
-    test('should handle index persistence', async () => {
+    test("should handle index persistence", async () => {
       const entry = {
         timestamp: new Date().toISOString(),
-        type: 'configuration' as const,
+        type: "configuration" as const,
         data: { indexTest: true },
-        metadata: { projectId: 'index-test' },
+        metadata: { projectId: "index-test" },
       };
 
       await storage.append(entry);
 
       // Check that index file was created
-      const indexPath = path.join(tempDir, '.index.json');
+      const indexPath = path.join(tempDir, ".index.json");
       const indexExists = await fs
         .access(indexPath)
         .then(() => true)
@@ -202,48 +204,48 @@ describe('JSONLStorage', () => {
       expect(indexExists).toBe(true);
 
       // Index should contain entry information
-      const indexContent = await fs.readFile(indexPath, 'utf-8');
+      const indexContent = await fs.readFile(indexPath, "utf-8");
       const indexData = JSON.parse(indexContent);
-      expect(typeof indexData).toBe('object');
+      expect(typeof indexData).toBe("object");
       expect(Array.isArray(indexData.entries)).toBe(true);
       expect(indexData.entries.length).toBeGreaterThan(0);
     });
   });
 
-  describe('Data Integrity', () => {
-    test('should generate checksums for data integrity', async () => {
+  describe("Data Integrity", () => {
+    test("should generate checksums for data integrity", async () => {
       const entry = {
         timestamp: new Date().toISOString(),
-        type: 'deployment' as const,
-        data: { integrity: 'test', checkData: 'important' },
-        metadata: { projectId: 'integrity-test' },
+        type: "deployment" as const,
+        data: { integrity: "test", checkData: "important" },
+        metadata: { projectId: "integrity-test" },
       };
 
       const stored = await storage.append(entry);
       expect(stored.checksum).toBeDefined();
-      expect(typeof stored.checksum).toBe('string');
+      expect(typeof stored.checksum).toBe("string");
       expect(stored.checksum?.length).toBe(32); // MD5 hash length
     });
 
-    test('should handle entry timestamps correctly', async () => {
-      const customTimestamp = '2024-06-15T14:30:00.000Z';
+    test("should handle entry timestamps correctly", async () => {
+      const customTimestamp = "2024-06-15T14:30:00.000Z";
       const entry = {
         timestamp: customTimestamp,
-        type: 'interaction' as const,
+        type: "interaction" as const,
         data: { timestampTest: true },
-        metadata: { projectId: 'timestamp-test' },
+        metadata: { projectId: "timestamp-test" },
       };
 
       const stored = await storage.append(entry);
       expect(stored.timestamp).toBe(customTimestamp);
     });
 
-    test('should auto-generate timestamp if not provided', async () => {
+    test("should auto-generate timestamp if not provided", async () => {
       const entry = {
-        timestamp: '', // Will be auto-generated
-        type: 'analysis' as const,
+        timestamp: "", // Will be auto-generated
+        type: "analysis" as const,
         data: { autoTimestamp: true },
-        metadata: { projectId: 'auto-timestamp-test' },
+        metadata: { projectId: "auto-timestamp-test" },
       };
 
       const beforeTime = new Date().toISOString();
@@ -256,68 +258,68 @@ describe('JSONLStorage', () => {
     });
   });
 
-  describe('Metadata Handling', () => {
-    test('should preserve metadata structure', async () => {
+  describe("Metadata Handling", () => {
+    test("should preserve metadata structure", async () => {
       const metadata = {
-        projectId: 'metadata-test',
-        repository: 'github.com/test/repo',
-        ssg: 'docusaurus',
-        tags: ['frontend', 'typescript'],
-        version: '1.0.0',
+        projectId: "metadata-test",
+        repository: "github.com/test/repo",
+        ssg: "docusaurus",
+        tags: ["frontend", "typescript"],
+        version: "1.0.0",
       };
 
       const entry = {
         timestamp: new Date().toISOString(),
-        type: 'recommendation' as const,
-        data: { recommendation: 'use-docusaurus' },
+        type: "recommendation" as const,
+        data: { recommendation: "use-docusaurus" },
         metadata,
       };
 
       const stored = await storage.append(entry);
       expect(stored.metadata).toEqual(metadata);
-      expect(stored.metadata.projectId).toBe('metadata-test');
-      expect(stored.metadata.tags).toEqual(['frontend', 'typescript']);
+      expect(stored.metadata.projectId).toBe("metadata-test");
+      expect(stored.metadata.tags).toEqual(["frontend", "typescript"]);
     });
 
-    test('should handle optional metadata fields', async () => {
+    test("should handle optional metadata fields", async () => {
       const entry = {
         timestamp: new Date().toISOString(),
-        type: 'analysis' as const,
+        type: "analysis" as const,
         data: { minimal: true },
-        metadata: { projectId: 'minimal-test' },
+        metadata: { projectId: "minimal-test" },
       };
 
       const stored = await storage.append(entry);
-      expect(stored.metadata.projectId).toBe('minimal-test');
+      expect(stored.metadata.projectId).toBe("minimal-test");
       expect(stored.metadata.repository).toBeUndefined();
       expect(stored.metadata.tags).toBeUndefined();
     });
 
-    test('should handle compression metadata', async () => {
+    test("should handle compression metadata", async () => {
       const metadata = {
-        projectId: 'compression-test',
+        projectId: "compression-test",
         compressed: true,
-        compressionType: 'gzip',
+        compressionType: "gzip",
         compressedAt: new Date().toISOString(),
         originalSize: 1024,
       };
 
       const entry = {
         timestamp: new Date().toISOString(),
-        type: 'configuration' as const,
-        data: { compressed: 'data' },
+        type: "configuration" as const,
+        data: { compressed: "data" },
         metadata,
       };
 
       const stored = await storage.append(entry);
       expect(stored.metadata.compressed).toBe(true);
-      expect(stored.metadata.compressionType).toBe('gzip');
+      expect(stored.metadata.compressionType).toBe("gzip");
       expect(stored.metadata.originalSize).toBe(1024);
     });
   });
 
-  describe('Performance and Concurrency', () => {
-    test('should handle concurrent writes safely', async () => {
+  describe("Performance and Concurrency", () => {
+    test("should handle concurrent writes safely", async () => {
       const concurrentWrites = 10;
       const promises: Promise<MemoryEntry>[] = [];
 
@@ -325,9 +327,9 @@ describe('JSONLStorage', () => {
       for (let i = 0; i < concurrentWrites; i++) {
         const promise = storage.append({
           timestamp: new Date().toISOString(),
-          type: 'analysis',
+          type: "analysis",
           data: { index: i, concurrent: true },
-          metadata: { projectId: 'concurrent-test' },
+          metadata: { projectId: "concurrent-test" },
         });
         promises.push(promise);
       }
@@ -342,11 +344,11 @@ describe('JSONLStorage', () => {
       // All should have correct structure
       results.forEach((result, index) => {
         expect(result.data.index).toBe(index);
-        expect(result.metadata.projectId).toBe('concurrent-test');
+        expect(result.metadata.projectId).toBe("concurrent-test");
       });
     });
 
-    test('should handle bulk append operations efficiently', async () => {
+    test("should handle bulk append operations efficiently", async () => {
       const startTime = Date.now();
       const bulkSize = 50;
 
@@ -354,10 +356,10 @@ describe('JSONLStorage', () => {
       for (let i = 0; i < bulkSize; i++) {
         await storage.append({
           timestamp: new Date().toISOString(),
-          type: i % 2 === 0 ? 'analysis' : 'recommendation',
+          type: i % 2 === 0 ? "analysis" : "recommendation",
           data: { index: i, bulk: true },
           metadata: {
-            projectId: 'bulk-test',
+            projectId: "bulk-test",
           },
         });
       }
@@ -367,13 +369,13 @@ describe('JSONLStorage', () => {
 
       // Verify files were created
       const files = await fs.readdir(tempDir);
-      const jsonlFiles = files.filter((f) => f.endsWith('.jsonl'));
+      const jsonlFiles = files.filter((f) => f.endsWith(".jsonl"));
       expect(jsonlFiles.length).toBeGreaterThan(0);
     });
 
-    test('should maintain performance with large data entries', async () => {
+    test("should maintain performance with large data entries", async () => {
       const largeData = {
-        description: 'x'.repeat(10000), // 10KB string
+        description: "x".repeat(10000), // 10KB string
         array: new Array(1000).fill(0).map((_, i) => ({
           id: i,
           data: `large-item-${i}`,
@@ -383,9 +385,9 @@ describe('JSONLStorage', () => {
 
       const entry = {
         timestamp: new Date().toISOString(),
-        type: 'analysis' as const,
+        type: "analysis" as const,
         data: largeData,
-        metadata: { projectId: 'large-test' },
+        metadata: { projectId: "large-test" },
       };
 
       const startTime = Date.now();
@@ -398,36 +400,36 @@ describe('JSONLStorage', () => {
     });
   });
 
-  describe('Error Handling and Edge Cases', () => {
-    test('should handle special characters in data', async () => {
+  describe("Error Handling and Edge Cases", () => {
+    test("should handle special characters in data", async () => {
       const entry = {
         timestamp: new Date().toISOString(),
-        type: 'interaction' as const,
+        type: "interaction" as const,
         data: {
-          message: 'Special chars: äöü 🚀 @#$%^&*()[]{}|\\:";\'<>?,./`~',
-          unicode: '测试中文字符',
-          emoji: '🎉🔥💯⚡🚀',
-          json: { nested: { deeply: { value: 'test' } } },
+          message: "Special chars: äöü 🚀 @#$%^&*()[]{}|\\:\";'<>?,./`~",
+          unicode: "测试中文字符",
+          emoji: "🎉🔥💯⚡🚀",
+          json: { nested: { deeply: { value: "test" } } },
         },
         metadata: {
-          projectId: 'special-chars-项目-🏗️',
-          tags: ['special', 'unicode', '特殊字符'],
+          projectId: "special-chars-项目-🏗️",
+          tags: ["special", "unicode", "特殊字符"],
         },
       };
 
       const stored = await storage.append(entry);
-      expect(stored.data.message).toContain('Special chars');
-      expect(stored.data.unicode).toBe('测试中文字符');
-      expect(stored.data.emoji).toBe('🎉🔥💯⚡🚀');
-      expect(stored.metadata.projectId).toBe('special-chars-项目-🏗️');
+      expect(stored.data.message).toContain("Special chars");
+      expect(stored.data.unicode).toBe("测试中文字符");
+      expect(stored.data.emoji).toBe("🎉🔥💯⚡🚀");
+      expect(stored.metadata.projectId).toBe("special-chars-项目-🏗️");
     });
 
-    test('should handle empty data gracefully', async () => {
+    test("should handle empty data gracefully", async () => {
       const entry = {
         timestamp: new Date().toISOString(),
-        type: 'configuration' as const,
+        type: "configuration" as const,
         data: {},
-        metadata: { projectId: 'empty-test' },
+        metadata: { projectId: "empty-test" },
       };
 
       const stored = await storage.append(entry);
@@ -436,8 +438,13 @@ describe('JSONLStorage', () => {
       expect(stored.checksum).toBeDefined();
     });
 
-    test('should handle missing storage directory', async () => {
-      const nonExistentDir = path.join(tempDir, 'non-existent', 'deeply', 'nested');
+    test("should handle missing storage directory", async () => {
+      const nonExistentDir = path.join(
+        tempDir,
+        "non-existent",
+        "deeply",
+        "nested",
+      );
       const newStorage = new JSONLStorage(nonExistentDir);
 
       // Should create directory during initialization
@@ -449,34 +456,34 @@ describe('JSONLStorage', () => {
       // Should be able to append entries
       const entry = {
         timestamp: new Date().toISOString(),
-        type: 'analysis' as const,
+        type: "analysis" as const,
         data: { recovery: true },
-        metadata: { projectId: 'recovery-test' },
+        metadata: { projectId: "recovery-test" },
       };
 
       const stored = await newStorage.append(entry);
       expect(stored.data.recovery).toBe(true);
     });
 
-    test('should maintain data consistency across operations', async () => {
+    test("should maintain data consistency across operations", async () => {
       const entries = [
         {
           timestamp: new Date().toISOString(),
-          type: 'analysis' as const,
-          data: { step: 1, consistency: 'test' },
-          metadata: { projectId: 'consistency-test' },
+          type: "analysis" as const,
+          data: { step: 1, consistency: "test" },
+          metadata: { projectId: "consistency-test" },
         },
         {
           timestamp: new Date().toISOString(),
-          type: 'recommendation' as const,
-          data: { step: 2, consistency: 'test' },
-          metadata: { projectId: 'consistency-test' },
+          type: "recommendation" as const,
+          data: { step: 2, consistency: "test" },
+          metadata: { projectId: "consistency-test" },
         },
         {
           timestamp: new Date().toISOString(),
-          type: 'deployment' as const,
-          data: { step: 3, consistency: 'test' },
-          metadata: { projectId: 'consistency-test' },
+          type: "deployment" as const,
+          data: { step: 3, consistency: "test" },
+          metadata: { projectId: "consistency-test" },
         },
       ];
 
@@ -490,7 +497,7 @@ describe('JSONLStorage', () => {
       expect(storedEntries).toHaveLength(3);
       storedEntries.forEach((stored, index) => {
         expect(stored.data.step).toBe(index + 1);
-        expect(stored.metadata.projectId).toBe('consistency-test');
+        expect(stored.metadata.projectId).toBe("consistency-test");
         expect(stored.id).toBeDefined();
         expect(stored.checksum).toBeDefined();
       });

@@ -13,11 +13,21 @@ DocuMCP analyzes your repository, recommends the perfect static site generator (
 
 ## Features
 
+### Core Capabilities
+
 - 🔍 **Repository Analysis**: Deep multi-layered analysis of project structure, dependencies, and documentation needs
 - 🎯 **SSG Recommendations**: Data-driven recommendations for Jekyll, Hugo, Docusaurus, MkDocs, or Eleventy
 - 📚 **Diataxis Framework**: Automatic creation of well-structured documentation following proven principles
 - 🚀 **GitHub Pages Deployment**: Automated workflow generation with SSG-specific optimizations
 - ✅ **Deployment Verification**: Comprehensive checks and troubleshooting for successful deployments
+
+### Intelligence & Learning (Phase 2)
+
+- 🧠 **Historical Intelligence**: Learns from past deployments to improve recommendations
+- 👤 **User Preferences**: Personalized recommendations based on your preferences and patterns
+- 📊 **Deployment Analytics**: Comprehensive insights into deployment patterns and success rates
+- 🎯 **Smart Scoring**: Intelligent SSG scoring based on success rates from similar projects
+- 📈 **Trend Analysis**: Identifies deployment trends and provides health scores
 
 ## Requirements
 
@@ -125,7 +135,27 @@ Once configured with your MCP client, just prompt DocuMCP with natural language:
 "set up documentation structure and deploy to GitHub Pages"
 ```
 
-DocuMCP provides 25+ tools including repository analysis, SSG recommendations, content generation, deployment automation, validation, and memory-enhanced insights. See the [complete documentation](docs/index.md) for detailed tool reference.
+DocuMCP provides 30+ tools including repository analysis, intelligent SSG recommendations, content generation, deployment automation with tracking, validation, user preference management, deployment analytics, and memory-enhanced insights. See the [complete documentation](docs/index.md) for detailed tool reference.
+
+## Key Tools
+
+### Analysis & Recommendations
+
+- `analyze_repository` - Deep repository structure and dependency analysis
+- `recommend_ssg` - Intelligent SSG recommendations with historical data and user preferences
+- `detect_gaps` - Identify missing documentation sections
+
+### Deployment & Tracking
+
+- `deploy_pages` - Automated GitHub Pages deployment with outcome tracking
+- `verify_deployment` - Comprehensive deployment validation
+- `analyze_deployments` - Analytics and insights from deployment history
+
+### User Preferences & Learning
+
+- `manage_preferences` - Manage user preferences for personalized recommendations
+- View historical success rates and deployment patterns
+- Get recommendations based on similar projects' success
 
 ## Development
 

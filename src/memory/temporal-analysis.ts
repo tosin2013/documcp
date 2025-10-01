@@ -3,11 +3,11 @@
  * Time-based analysis of memory patterns, trends, and predictions
  */
 
-import { EventEmitter } from 'events';
-import { MemoryEntry, JSONLStorage } from './storage.js';
-import { MemoryManager } from './manager.js';
-import { IncrementalLearningSystem } from './learning.js';
-import { KnowledgeGraph } from './knowledge-graph.js';
+import { EventEmitter } from "events";
+import { MemoryEntry, JSONLStorage } from "./storage.js";
+import { MemoryManager } from "./manager.js";
+import { IncrementalLearningSystem } from "./learning.js";
+import { KnowledgeGraph } from "./knowledge-graph.js";
 
 export interface TimeWindow {
   start: Date;
@@ -17,11 +17,11 @@ export interface TimeWindow {
 }
 
 export interface TemporalPattern {
-  type: 'periodic' | 'trending' | 'seasonal' | 'burst' | 'decay';
+  type: "periodic" | "trending" | "seasonal" | "burst" | "decay";
   confidence: number;
   period?: number; // For periodic patterns (in milliseconds)
-  trend?: 'increasing' | 'decreasing' | 'stable';
-  seasonality?: 'daily' | 'weekly' | 'monthly' | 'yearly';
+  trend?: "increasing" | "decreasing" | "stable";
+  seasonality?: "daily" | "weekly" | "monthly" | "yearly";
   description: string;
   dataPoints: Array<{ timestamp: Date; value: number; metadata?: any }>;
 }
@@ -48,7 +48,7 @@ export interface PredictionResult {
   };
   anomalies: Array<{
     timestamp: Date;
-    type: 'spike' | 'drought' | 'shift';
+    type: "spike" | "drought" | "shift";
     severity: number;
     description: string;
   }>;
@@ -57,8 +57,8 @@ export interface PredictionResult {
 
 export interface TemporalQuery {
   timeRange?: TimeWindow;
-  granularity: 'hour' | 'day' | 'week' | 'month' | 'year';
-  aggregation: 'count' | 'success_rate' | 'activity_level' | 'diversity';
+  granularity: "hour" | "day" | "week" | "month" | "year";
+  aggregation: "count" | "success_rate" | "activity_level" | "diversity";
   filters?: {
     types?: string[];
     projects?: string[];
@@ -67,13 +67,13 @@ export interface TemporalQuery {
   };
   smoothing?: {
     enabled: boolean;
-    method: 'moving_average' | 'exponential' | 'savitzky_golay';
+    method: "moving_average" | "exponential" | "savitzky_golay";
     window: number;
   };
 }
 
 export interface TemporalInsight {
-  type: 'pattern' | 'anomaly' | 'trend' | 'prediction';
+  type: "pattern" | "anomaly" | "trend" | "prediction";
   title: string;
   description: string;
   confidence: number;
@@ -113,20 +113,22 @@ export class TemporalMemoryAnalysis extends EventEmitter {
   /**
    * Analyze temporal patterns in memory data
    */
-  async analyzeTemporalPatterns(query?: TemporalQuery): Promise<TemporalPattern[]> {
+  async analyzeTemporalPatterns(
+    query?: TemporalQuery,
+  ): Promise<TemporalPattern[]> {
     const defaultQuery: TemporalQuery = {
-      granularity: 'day',
-      aggregation: 'count',
+      granularity: "day",
+      aggregation: "count",
       timeRange: this.getDefaultTimeRange(),
       smoothing: {
         enabled: true,
-        method: 'moving_average',
+        method: "moving_average",
         window: 7,
       },
     };
 
     const activeQuery = { ...defaultQuery, ...query };
-    const cacheKey = this.generateCacheKey('patterns', activeQuery);
+    const cacheKey = this.generateCacheKey("patterns", activeQuery);
 
     // Check cache first
     if (this.patternCache.has(cacheKey)) {
@@ -141,19 +143,29 @@ export class TemporalMemoryAnalysis extends EventEmitter {
       const patterns: TemporalPattern[] = [];
 
       // Periodic patterns
-      patterns.push(...(await this.detectPeriodicPatterns(timeSeries, activeQuery)));
+      patterns.push(
+        ...(await this.detectPeriodicPatterns(timeSeries, activeQuery)),
+      );
 
       // Trend patterns
-      patterns.push(...(await this.detectTrendPatterns(timeSeries, activeQuery)));
+      patterns.push(
+        ...(await this.detectTrendPatterns(timeSeries, activeQuery)),
+      );
 
       // Seasonal patterns
-      patterns.push(...(await this.detectSeasonalPatterns(timeSeries, activeQuery)));
+      patterns.push(
+        ...(await this.detectSeasonalPatterns(timeSeries, activeQuery)),
+      );
 
       // Burst patterns
-      patterns.push(...(await this.detectBurstPatterns(timeSeries, activeQuery)));
+      patterns.push(
+        ...(await this.detectBurstPatterns(timeSeries, activeQuery)),
+      );
 
       // Decay patterns
-      patterns.push(...(await this.detectDecayPatterns(timeSeries, activeQuery)));
+      patterns.push(
+        ...(await this.detectDecayPatterns(timeSeries, activeQuery)),
+      );
 
       // Sort by confidence
       patterns.sort((a, b) => b.confidence - a.confidence);
@@ -161,7 +173,7 @@ export class TemporalMemoryAnalysis extends EventEmitter {
       // Cache results
       this.patternCache.set(cacheKey, patterns);
 
-      this.emit('patterns_analyzed', {
+      this.emit("patterns_analyzed", {
         query: activeQuery,
         patterns: patterns.length,
         highConfidence: patterns.filter((p) => p.confidence > 0.7).length,
@@ -169,7 +181,7 @@ export class TemporalMemoryAnalysis extends EventEmitter {
 
       return patterns;
     } catch (error) {
-      this.emit('analysis_error', {
+      this.emit("analysis_error", {
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;
@@ -181,13 +193,13 @@ export class TemporalMemoryAnalysis extends EventEmitter {
    */
   async getTemporalMetrics(query?: TemporalQuery): Promise<TemporalMetrics> {
     const defaultQuery: TemporalQuery = {
-      granularity: 'day',
-      aggregation: 'count',
+      granularity: "day",
+      aggregation: "count",
       timeRange: this.getDefaultTimeRange(),
     };
 
     const activeQuery = { ...defaultQuery, ...query };
-    const cacheKey = this.generateCacheKey('metrics', activeQuery);
+    const cacheKey = this.generateCacheKey("metrics", activeQuery);
 
     if (this.metricsCache.has(cacheKey)) {
       return this.metricsCache.get(cacheKey)!;
@@ -196,19 +208,31 @@ export class TemporalMemoryAnalysis extends EventEmitter {
     const timeSeries = await this.buildTimeSeries(activeQuery);
 
     // Calculate activity level
-    const totalActivity = timeSeries.reduce((sum, point) => sum + point.value, 0);
-    const maxPossibleActivity = timeSeries.length * Math.max(...timeSeries.map((p) => p.value));
-    const activityLevel = maxPossibleActivity > 0 ? totalActivity / maxPossibleActivity : 0;
+    const totalActivity = timeSeries.reduce(
+      (sum, point) => sum + point.value,
+      0,
+    );
+    const maxPossibleActivity =
+      timeSeries.length * Math.max(...timeSeries.map((p) => p.value));
+    const activityLevel =
+      maxPossibleActivity > 0 ? totalActivity / maxPossibleActivity : 0;
 
     // Calculate growth rate
     const firstHalf = timeSeries.slice(0, Math.floor(timeSeries.length / 2));
     const secondHalf = timeSeries.slice(Math.floor(timeSeries.length / 2));
-    const firstHalfAvg = firstHalf.reduce((sum, p) => sum + p.value, 0) / firstHalf.length;
-    const secondHalfAvg = secondHalf.reduce((sum, p) => sum + p.value, 0) / secondHalf.length;
-    const growthRate = firstHalfAvg > 0 ? ((secondHalfAvg - firstHalfAvg) / firstHalfAvg) * 100 : 0;
+    const firstHalfAvg =
+      firstHalf.reduce((sum, p) => sum + p.value, 0) / firstHalf.length;
+    const secondHalfAvg =
+      secondHalf.reduce((sum, p) => sum + p.value, 0) / secondHalf.length;
+    const growthRate =
+      firstHalfAvg > 0
+        ? ((secondHalfAvg - firstHalfAvg) / firstHalfAvg) * 100
+        : 0;
 
     // Find peak activity
-    const peakPoint = timeSeries.reduce((max, point) => (point.value > max.value ? point : max));
+    const peakPoint = timeSeries.reduce((max, point) =>
+      point.value > max.value ? point : max,
+    );
     const peakActivity = {
       timestamp: peakPoint.timestamp,
       count: peakPoint.value,
@@ -217,17 +241,23 @@ export class TemporalMemoryAnalysis extends EventEmitter {
     // Calculate average interval
     const intervals = [];
     for (let i = 1; i < timeSeries.length; i++) {
-      intervals.push(timeSeries[i].timestamp.getTime() - timeSeries[i - 1].timestamp.getTime());
+      intervals.push(
+        timeSeries[i].timestamp.getTime() -
+          timeSeries[i - 1].timestamp.getTime(),
+      );
     }
     const averageInterval =
       intervals.length > 0
-        ? intervals.reduce((sum, interval) => sum + interval, 0) / intervals.length
+        ? intervals.reduce((sum, interval) => sum + interval, 0) /
+          intervals.length
         : 0;
 
     // Calculate consistency (inverse of coefficient of variation)
     const values = timeSeries.map((p) => p.value);
     const mean = values.reduce((sum, val) => sum + val, 0) / values.length;
-    const variance = values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / values.length;
+    const variance =
+      values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) /
+      values.length;
     const stdDev = Math.sqrt(variance);
     const consistency = mean > 0 ? Math.max(0, 1 - stdDev / mean) : 0;
 
@@ -250,15 +280,17 @@ export class TemporalMemoryAnalysis extends EventEmitter {
   /**
    * Make predictions based on temporal patterns
    */
-  async predictFutureActivity(query?: TemporalQuery): Promise<PredictionResult> {
+  async predictFutureActivity(
+    query?: TemporalQuery,
+  ): Promise<PredictionResult> {
     const defaultQuery: TemporalQuery = {
-      granularity: 'day',
-      aggregation: 'count',
+      granularity: "day",
+      aggregation: "count",
       timeRange: this.getDefaultTimeRange(),
     };
 
     const activeQuery = { ...defaultQuery, ...query };
-    const cacheKey = this.generateCacheKey('predictions', activeQuery);
+    const cacheKey = this.generateCacheKey("predictions", activeQuery);
 
     if (this.predictionCache.has(cacheKey)) {
       return this.predictionCache.get(cacheKey)!;
@@ -270,17 +302,29 @@ export class TemporalMemoryAnalysis extends EventEmitter {
     const timeSeries = await this.buildTimeSeries(activeQuery);
 
     // Predict next activity window
-    const nextActivity = await this.predictNextActivity(timeSeries, patterns, metrics);
+    const nextActivity = await this.predictNextActivity(
+      timeSeries,
+      patterns,
+      metrics,
+    );
 
     // Categorize trends
-    const shortTermPatterns = patterns.filter((p) => this.isShortTerm(p, activeQuery));
-    const longTermPatterns = patterns.filter((p) => this.isLongTerm(p, activeQuery));
+    const shortTermPatterns = patterns.filter((p) =>
+      this.isShortTerm(p, activeQuery),
+    );
+    const longTermPatterns = patterns.filter((p) =>
+      this.isLongTerm(p, activeQuery),
+    );
 
     // Detect anomalies
     const anomalies = await this.detectAnomalies(timeSeries, patterns);
 
     // Generate recommendations
-    const recommendations = this.generateRecommendations(patterns, metrics, anomalies);
+    const recommendations = this.generateRecommendations(
+      patterns,
+      metrics,
+      anomalies,
+    );
 
     const result: PredictionResult = {
       nextActivity,
@@ -309,8 +353,10 @@ export class TemporalMemoryAnalysis extends EventEmitter {
     // Pattern-based insights
     for (const pattern of patterns.filter((p) => p.confidence > 0.6)) {
       insights.push({
-        type: 'pattern',
-        title: `${pattern.type.charAt(0).toUpperCase() + pattern.type.slice(1)} Pattern Detected`,
+        type: "pattern",
+        title: `${
+          pattern.type.charAt(0).toUpperCase() + pattern.type.slice(1)
+        } Pattern Detected`,
         description: pattern.description,
         confidence: pattern.confidence,
         timeframe: this.getPatternTimeframe(pattern),
@@ -322,8 +368,8 @@ export class TemporalMemoryAnalysis extends EventEmitter {
     // Trend insights
     if (metrics.growthRate > 20) {
       insights.push({
-        type: 'trend',
-        title: 'Increasing Activity Trend',
+        type: "trend",
+        title: "Increasing Activity Trend",
         description: `Memory activity has increased by ${metrics.growthRate.toFixed(
           1,
         )}% over the analysis period`,
@@ -331,25 +377,29 @@ export class TemporalMemoryAnalysis extends EventEmitter {
         timeframe: query?.timeRange || this.getDefaultTimeRange(),
         actionable: true,
         recommendations: [
-          'Consider optimizing memory storage for increased load',
-          'Monitor system performance as activity grows',
-          'Evaluate current pruning policies',
+          "Consider optimizing memory storage for increased load",
+          "Monitor system performance as activity grows",
+          "Evaluate current pruning policies",
         ],
       });
     }
 
     // Anomaly insights
-    for (const anomaly of predictions.anomalies.filter((a) => a.severity > 0.7)) {
+    for (const anomaly of predictions.anomalies.filter(
+      (a) => a.severity > 0.7,
+    )) {
       insights.push({
-        type: 'anomaly',
-        title: `${anomaly.type.charAt(0).toUpperCase() + anomaly.type.slice(1)} Anomaly`,
+        type: "anomaly",
+        title: `${
+          anomaly.type.charAt(0).toUpperCase() + anomaly.type.slice(1)
+        } Anomaly`,
         description: anomaly.description,
         confidence: anomaly.severity,
         timeframe: {
           start: anomaly.timestamp,
           end: anomaly.timestamp,
           duration: 0,
-          label: 'Point Anomaly',
+          label: "Point Anomaly",
         },
         actionable: true,
         recommendations: this.getAnomalyRecommendations(anomaly),
@@ -359,18 +409,18 @@ export class TemporalMemoryAnalysis extends EventEmitter {
     // Prediction insights
     if (predictions.nextActivity.probability > 0.7) {
       insights.push({
-        type: 'prediction',
-        title: 'High Probability Activity Window',
-        description: `${(predictions.nextActivity.probability * 100).toFixed(1)}% chance of ${
-          predictions.nextActivity.expectedCount
-        } activities`,
+        type: "prediction",
+        title: "High Probability Activity Window",
+        description: `${(predictions.nextActivity.probability * 100).toFixed(
+          1,
+        )}% chance of ${predictions.nextActivity.expectedCount} activities`,
         confidence: predictions.nextActivity.confidence,
         timeframe: predictions.nextActivity.timeRange,
         actionable: true,
         recommendations: [
-          'Prepare system for predicted activity surge',
-          'Consider pre-emptive optimization',
-          'Monitor resource utilization during predicted window',
+          "Prepare system for predicted activity surge",
+          "Consider pre-emptive optimization",
+          "Monitor resource utilization during predicted window",
         ],
       });
     }
@@ -397,7 +447,11 @@ export class TemporalMemoryAnalysis extends EventEmitter {
 
     // Create time buckets based on granularity
     const buckets = this.createTimeBuckets(timeRange, query.granularity);
-    const timeSeries: Array<{ timestamp: Date; value: number; metadata?: any }> = [];
+    const timeSeries: Array<{
+      timestamp: Date;
+      value: number;
+      metadata?: any;
+    }> = [];
 
     for (const bucket of buckets) {
       const bucketEntries = entries.filter((entry) => {
@@ -409,21 +463,22 @@ export class TemporalMemoryAnalysis extends EventEmitter {
       const metadata: any = {};
 
       switch (query.aggregation) {
-        case 'count':
+        case "count":
           value = bucketEntries.length;
           break;
-        case 'success_rate': {
+        case "success_rate": {
           const successful = bucketEntries.filter(
-            (e) => e.data.outcome === 'success' || e.data.success === true,
+            (e) => e.data.outcome === "success" || e.data.success === true,
           ).length;
-          value = bucketEntries.length > 0 ? successful / bucketEntries.length : 0;
+          value =
+            bucketEntries.length > 0 ? successful / bucketEntries.length : 0;
           break;
         }
-        case 'activity_level':
+        case "activity_level":
           // Custom metric based on entry types and interactions
           value = this.calculateActivityLevel(bucketEntries);
           break;
-        case 'diversity': {
+        case "diversity": {
           const uniqueTypes = new Set(bucketEntries.map((e) => e.type));
           value = uniqueTypes.size;
           break;
@@ -452,28 +507,36 @@ export class TemporalMemoryAnalysis extends EventEmitter {
   /**
    * Get filtered entries based on query
    */
-  private async getFilteredEntries(query: TemporalQuery): Promise<MemoryEntry[]> {
+  private async getFilteredEntries(
+    query: TemporalQuery,
+  ): Promise<MemoryEntry[]> {
     let entries = await this.storage.getAll();
 
     // Apply time range filter
     if (query.timeRange) {
       entries = entries.filter((entry) => {
         const entryTime = new Date(entry.timestamp);
-        return entryTime >= query.timeRange!.start && entryTime <= query.timeRange!.end;
+        return (
+          entryTime >= query.timeRange!.start &&
+          entryTime <= query.timeRange!.end
+        );
       });
     }
 
     // Apply filters
     if (query.filters) {
       if (query.filters.types) {
-        entries = entries.filter((entry) => query.filters!.types!.includes(entry.type));
+        entries = entries.filter((entry) =>
+          query.filters!.types!.includes(entry.type),
+        );
       }
 
       if (query.filters.projects) {
         entries = entries.filter((entry) =>
           query.filters!.projects!.some(
             (project) =>
-              entry.data.projectPath?.includes(project) || entry.data.projectId === project,
+              entry.data.projectPath?.includes(project) ||
+              entry.data.projectId === project,
           ),
         );
       }
@@ -482,14 +545,17 @@ export class TemporalMemoryAnalysis extends EventEmitter {
         entries = entries.filter(
           (entry) =>
             query.filters!.outcomes!.includes(entry.data.outcome) ||
-            (entry.data.success === true && query.filters!.outcomes!.includes('success')) ||
-            (entry.data.success === false && query.filters!.outcomes!.includes('failure')),
+            (entry.data.success === true &&
+              query.filters!.outcomes!.includes("success")) ||
+            (entry.data.success === false &&
+              query.filters!.outcomes!.includes("failure")),
         );
       }
 
       if (query.filters.tags) {
         entries = entries.filter(
-          (entry) => entry.tags?.some((tag) => query.filters!.tags!.includes(tag)),
+          (entry) =>
+            entry.tags?.some((tag) => query.filters!.tags!.includes(tag)),
         );
       }
     }
@@ -500,7 +566,10 @@ export class TemporalMemoryAnalysis extends EventEmitter {
   /**
    * Create time buckets for analysis
    */
-  private createTimeBuckets(timeRange: TimeWindow, granularity: string): TimeWindow[] {
+  private createTimeBuckets(
+    timeRange: TimeWindow,
+    granularity: string,
+  ): TimeWindow[] {
     const buckets: TimeWindow[] = [];
     let current = new Date(timeRange.start);
     const end = new Date(timeRange.end);
@@ -510,19 +579,23 @@ export class TemporalMemoryAnalysis extends EventEmitter {
       let bucketEnd: Date;
 
       switch (granularity) {
-        case 'hour':
+        case "hour":
           bucketEnd = new Date(current.getTime() + 60 * 60 * 1000);
           break;
-        case 'day':
+        case "day":
           bucketEnd = new Date(current.getTime() + 24 * 60 * 60 * 1000);
           break;
-        case 'week':
+        case "week":
           bucketEnd = new Date(current.getTime() + 7 * 24 * 60 * 60 * 1000);
           break;
-        case 'month':
-          bucketEnd = new Date(current.getFullYear(), current.getMonth() + 1, 1);
+        case "month":
+          bucketEnd = new Date(
+            current.getFullYear(),
+            current.getMonth() + 1,
+            1,
+          );
           break;
-        case 'year':
+        case "year":
           bucketEnd = new Date(current.getFullYear() + 1, 0, 1);
           break;
         default:
@@ -560,14 +633,17 @@ export class TemporalMemoryAnalysis extends EventEmitter {
     const periods = [1, 7, 30, 365]; // days
 
     for (const period of periods) {
-      const adjustedPeriod = this.adjustPeriodForGranularity(period, query.granularity);
+      const adjustedPeriod = this.adjustPeriodForGranularity(
+        period,
+        query.granularity,
+      );
       if (adjustedPeriod >= values.length / 3) continue; // Need at least 3 cycles
 
       const correlation = this.calculateAutocorrelation(values, adjustedPeriod);
 
       if (correlation > 0.6) {
         patterns.push({
-          type: 'periodic',
+          type: "periodic",
           confidence: correlation,
           period: period * 24 * 60 * 60 * 1000, // Convert to milliseconds
           description: `${period}-${query.granularity} cycle detected with ${(
@@ -598,14 +674,17 @@ export class TemporalMemoryAnalysis extends EventEmitter {
 
     if (rSquared > 0.5) {
       // Good fit
-      const trend = slope > 0.01 ? 'increasing' : slope < -0.01 ? 'decreasing' : 'stable';
+      const trend =
+        slope > 0.01 ? "increasing" : slope < -0.01 ? "decreasing" : "stable";
 
-      if (trend !== 'stable') {
+      if (trend !== "stable") {
         patterns.push({
-          type: 'trending',
+          type: "trending",
           confidence: rSquared,
           trend,
-          description: `${trend} trend detected with R² = ${rSquared.toFixed(3)}`,
+          description: `${trend} trend detected with R² = ${rSquared.toFixed(
+            3,
+          )}`,
           dataPoints: timeSeries,
         });
       }
@@ -624,13 +703,13 @@ export class TemporalMemoryAnalysis extends EventEmitter {
     const patterns: TemporalPattern[] = [];
 
     // Check for daily patterns (hour of day)
-    if (query.granularity === 'hour') {
+    if (query.granularity === "hour") {
       const hourlyPattern = this.analyzeHourlyPattern(timeSeries);
       if (hourlyPattern.confidence > 0.6) {
         patterns.push({
-          type: 'seasonal',
+          type: "seasonal",
           confidence: hourlyPattern.confidence,
-          seasonality: 'daily',
+          seasonality: "daily",
           description: `Daily pattern: peak activity at ${hourlyPattern.peakHour}:00`,
           dataPoints: timeSeries,
         });
@@ -638,13 +717,13 @@ export class TemporalMemoryAnalysis extends EventEmitter {
     }
 
     // Check for weekly patterns (day of week)
-    if (['hour', 'day'].includes(query.granularity)) {
+    if (["hour", "day"].includes(query.granularity)) {
       const weeklyPattern = this.analyzeWeeklyPattern(timeSeries);
       if (weeklyPattern.confidence > 0.6) {
         patterns.push({
-          type: 'seasonal',
+          type: "seasonal",
           confidence: weeklyPattern.confidence,
-          seasonality: 'weekly',
+          seasonality: "weekly",
           description: `Weekly pattern: peak activity on ${weeklyPattern.peakDay}`,
           dataPoints: timeSeries,
         });
@@ -666,7 +745,8 @@ export class TemporalMemoryAnalysis extends EventEmitter {
 
     const mean = values.reduce((sum, val) => sum + val, 0) / values.length;
     const stdDev = Math.sqrt(
-      values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / values.length,
+      values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) /
+        values.length,
     );
 
     const threshold = mean + 2 * stdDev; // 2 standard deviations above mean
@@ -683,11 +763,11 @@ export class TemporalMemoryAnalysis extends EventEmitter {
       const confidence = Math.min(0.9, bursts.length / (values.length * 0.05));
 
       patterns.push({
-        type: 'burst',
+        type: "burst",
         confidence,
-        description: `${bursts.length} burst events detected (${(threshold / mean).toFixed(
-          1,
-        )}x normal activity)`,
+        description: `${bursts.length} burst events detected (${(
+          threshold / mean
+        ).toFixed(1)}x normal activity)`,
         dataPoints: bursts.map((i) => timeSeries[i]),
       });
     }
@@ -714,11 +794,11 @@ export class TemporalMemoryAnalysis extends EventEmitter {
     if (slope < -0.05 && rSquared > 0.7) {
       // Significant decay with good fit
       patterns.push({
-        type: 'decay',
+        type: "decay",
         confidence: rSquared,
-        description: `Exponential decay detected (half-life ≈ ${(-0.693 / slope).toFixed(
-          1,
-        )} periods)`,
+        description: `Exponential decay detected (half-life ≈ ${(
+          -0.693 / slope
+        ).toFixed(1)} periods)`,
         dataPoints: timeSeries,
       });
     }
@@ -743,7 +823,7 @@ export class TemporalMemoryAnalysis extends EventEmitter {
 
     // Bonus for successful outcomes
     const successful = entries.filter(
-      (e) => e.data.outcome === 'success' || e.data.success === true,
+      (e) => e.data.outcome === "success" || e.data.success === true,
     ).length;
     score += (successful / entries.length) * 0.3;
 
@@ -761,10 +841,10 @@ export class TemporalMemoryAnalysis extends EventEmitter {
     let smoothedValues: number[];
 
     switch (smoothing.method) {
-      case 'moving_average':
+      case "moving_average":
         smoothedValues = this.applyMovingAverage(values, smoothing.window);
         break;
-      case 'exponential':
+      case "exponential":
         smoothedValues = this.applyExponentialSmoothing(values, 0.3);
         break;
       default:
@@ -787,7 +867,8 @@ export class TemporalMemoryAnalysis extends EventEmitter {
       const start = Math.max(0, i - Math.floor(window / 2));
       const end = Math.min(values.length, i + Math.ceil(window / 2));
       const windowValues = values.slice(start, end);
-      const average = windowValues.reduce((sum, val) => sum + val, 0) / windowValues.length;
+      const average =
+        windowValues.reduce((sum, val) => sum + val, 0) / windowValues.length;
       smoothed.push(average);
     }
 
@@ -870,7 +951,10 @@ export class TemporalMemoryAnalysis extends EventEmitter {
       const predicted = slope * i + intercept;
       return sum + Math.pow(val - predicted, 2);
     }, 0);
-    const ssTot = values.reduce((sum, val) => sum + Math.pow(val - meanY, 2), 0);
+    const ssTot = values.reduce(
+      (sum, val) => sum + Math.pow(val - meanY, 2),
+      0,
+    );
     const rSquared = ssTot > 0 ? 1 - ssRes / ssTot : 0;
 
     return { slope, intercept, rSquared };
@@ -883,32 +967,37 @@ export class TemporalMemoryAnalysis extends EventEmitter {
     timeSeries: Array<{ timestamp: Date; value: number; metadata?: any }>,
     patterns: TemporalPattern[],
     _metrics: TemporalMetrics,
-  ): Promise<PredictionResult['nextActivity']> {
+  ): Promise<PredictionResult["nextActivity"]> {
     const lastPoint = timeSeries[timeSeries.length - 1];
-    const averageValue = timeSeries.reduce((sum, p) => sum + p.value, 0) / timeSeries.length;
+    const averageValue =
+      timeSeries.reduce((sum, p) => sum + p.value, 0) / timeSeries.length;
 
     // Base prediction on recent trend
     let expectedCount = averageValue;
     let probability = 0.5;
 
     // Adjust based on trends
-    const trendPattern = patterns.find((p) => p.type === 'trending');
-    if (trendPattern && trendPattern.trend === 'increasing') {
+    const trendPattern = patterns.find((p) => p.type === "trending");
+    if (trendPattern && trendPattern.trend === "increasing") {
       expectedCount *= 1.2;
       probability += 0.2;
-    } else if (trendPattern && trendPattern.trend === 'decreasing') {
+    } else if (trendPattern && trendPattern.trend === "decreasing") {
       expectedCount *= 0.8;
       probability -= 0.1;
     }
 
     // Adjust based on periodic patterns
-    const periodicPattern = patterns.find((p) => p.type === 'periodic' && p.confidence > 0.7);
+    const periodicPattern = patterns.find(
+      (p) => p.type === "periodic" && p.confidence > 0.7,
+    );
     if (periodicPattern) {
       probability += 0.3;
     }
 
     // Determine time range for next activity (next period based on granularity)
-    const nextStart = new Date(lastPoint.timestamp.getTime() + 24 * 60 * 60 * 1000); // Next day
+    const nextStart = new Date(
+      lastPoint.timestamp.getTime() + 24 * 60 * 60 * 1000,
+    ); // Next day
     const nextEnd = new Date(nextStart.getTime() + 24 * 60 * 60 * 1000);
 
     return {
@@ -917,7 +1006,7 @@ export class TemporalMemoryAnalysis extends EventEmitter {
         start: nextStart,
         end: nextEnd,
         duration: 24 * 60 * 60 * 1000,
-        label: 'Next 24 hours',
+        label: "Next 24 hours",
       },
       expectedCount: Math.round(expectedCount),
       confidence: Math.min(
@@ -933,13 +1022,14 @@ export class TemporalMemoryAnalysis extends EventEmitter {
   private async detectAnomalies(
     timeSeries: Array<{ timestamp: Date; value: number; metadata?: any }>,
     _patterns: TemporalPattern[],
-  ): Promise<PredictionResult['anomalies']> {
-    const anomalies: PredictionResult['anomalies'] = [];
+  ): Promise<PredictionResult["anomalies"]> {
+    const anomalies: PredictionResult["anomalies"] = [];
     const values = timeSeries.map((p) => p.value);
 
     const mean = values.reduce((sum, val) => sum + val, 0) / values.length;
     const stdDev = Math.sqrt(
-      values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / values.length,
+      values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) /
+        values.length,
     );
 
     for (let i = 0; i < timeSeries.length; i++) {
@@ -950,11 +1040,12 @@ export class TemporalMemoryAnalysis extends EventEmitter {
       if (value > mean + 3 * stdDev) {
         anomalies.push({
           timestamp: point.timestamp,
-          type: 'spike',
+          type: "spike",
           severity: Math.min(1, (value - mean) / (3 * stdDev)),
-          description: `Activity spike: ${value} (${((value / mean - 1) * 100).toFixed(
-            0,
-          )}% above normal)`,
+          description: `Activity spike: ${value} (${(
+            (value / mean - 1) *
+            100
+          ).toFixed(0)}% above normal)`,
         });
       }
 
@@ -962,11 +1053,12 @@ export class TemporalMemoryAnalysis extends EventEmitter {
       if (value < mean - 2 * stdDev && mean > 1) {
         anomalies.push({
           timestamp: point.timestamp,
-          type: 'drought',
+          type: "drought",
           severity: Math.min(1, (mean - value) / (2 * stdDev)),
-          description: `Activity drought: ${value} (${((1 - value / mean) * 100).toFixed(
-            0,
-          )}% below normal)`,
+          description: `Activity drought: ${value} (${(
+            (1 - value / mean) *
+            100
+          ).toFixed(0)}% below normal)`,
         });
       }
     }
@@ -983,9 +1075,18 @@ export class TemporalMemoryAnalysis extends EventEmitter {
    */
   private detectRegimeShifts(
     timeSeries: Array<{ timestamp: Date; value: number; metadata?: any }>,
-  ): Array<{ timestamp: Date; type: 'shift'; severity: number; description: string }> {
-    const shifts: Array<{ timestamp: Date; type: 'shift'; severity: number; description: string }> =
-      [];
+  ): Array<{
+    timestamp: Date;
+    type: "shift";
+    severity: number;
+    description: string;
+  }> {
+    const shifts: Array<{
+      timestamp: Date;
+      type: "shift";
+      severity: number;
+      description: string;
+    }> = [];
     const values = timeSeries.map((p) => p.value);
 
     if (values.length < 20) return shifts; // Need sufficient data
@@ -996,7 +1097,8 @@ export class TemporalMemoryAnalysis extends EventEmitter {
       const before = values.slice(i - windowSize, i);
       const after = values.slice(i, i + windowSize);
 
-      const meanBefore = before.reduce((sum, val) => sum + val, 0) / before.length;
+      const meanBefore =
+        before.reduce((sum, val) => sum + val, 0) / before.length;
       const meanAfter = after.reduce((sum, val) => sum + val, 0) / after.length;
 
       const changeMagnitude = Math.abs(meanAfter - meanBefore);
@@ -1006,11 +1108,13 @@ export class TemporalMemoryAnalysis extends EventEmitter {
         // 50% change
         shifts.push({
           timestamp: timeSeries[i].timestamp,
-          type: 'shift',
+          type: "shift",
           severity: Math.min(1, relativeChange),
-          description: `Regime shift: ${meanBefore.toFixed(1)} → ${meanAfter.toFixed(1)} (${(
-            relativeChange * 100
-          ).toFixed(0)}% change)`,
+          description: `Regime shift: ${meanBefore.toFixed(
+            1,
+          )} → ${meanAfter.toFixed(1)} (${(relativeChange * 100).toFixed(
+            0,
+          )}% change)`,
         });
       }
     }
@@ -1024,50 +1128,60 @@ export class TemporalMemoryAnalysis extends EventEmitter {
   private generateRecommendations(
     patterns: TemporalPattern[],
     metrics: TemporalMetrics,
-    anomalies: PredictionResult['anomalies'],
+    anomalies: PredictionResult["anomalies"],
   ): string[] {
     const recommendations: string[] = [];
 
     // Pattern-based recommendations
-    const periodicPattern = patterns.find((p) => p.type === 'periodic' && p.confidence > 0.7);
+    const periodicPattern = patterns.find(
+      (p) => p.type === "periodic" && p.confidence > 0.7,
+    );
     if (periodicPattern) {
       recommendations.push(
-        'Schedule maintenance and optimizations during low-activity periods based on detected cycles',
+        "Schedule maintenance and optimizations during low-activity periods based on detected cycles",
       );
     }
 
-    const trendPattern = patterns.find((p) => p.type === 'trending');
-    if (trendPattern?.trend === 'increasing') {
+    const trendPattern = patterns.find((p) => p.type === "trending");
+    if (trendPattern?.trend === "increasing") {
       recommendations.push(
-        'Plan for increased storage and processing capacity based on growing activity trend',
+        "Plan for increased storage and processing capacity based on growing activity trend",
       );
-    } else if (trendPattern?.trend === 'decreasing') {
+    } else if (trendPattern?.trend === "decreasing") {
       recommendations.push(
-        'Investigate causes of declining activity and consider engagement strategies',
+        "Investigate causes of declining activity and consider engagement strategies",
       );
     }
 
     // Metrics-based recommendations
     if (metrics.consistency < 0.5) {
       recommendations.push(
-        'High variability detected - consider implementing activity smoothing mechanisms',
+        "High variability detected - consider implementing activity smoothing mechanisms",
       );
     }
 
     if (metrics.growthRate > 50) {
-      recommendations.push('Rapid growth detected - implement proactive scaling measures');
+      recommendations.push(
+        "Rapid growth detected - implement proactive scaling measures",
+      );
     }
 
     // Anomaly-based recommendations
-    const spikes = anomalies.filter((a) => a.type === 'spike' && a.severity > 0.7);
+    const spikes = anomalies.filter(
+      (a) => a.type === "spike" && a.severity > 0.7,
+    );
     if (spikes.length > 0) {
-      recommendations.push('Implement burst handling to manage activity spikes effectively');
+      recommendations.push(
+        "Implement burst handling to manage activity spikes effectively",
+      );
     }
 
-    const droughts = anomalies.filter((a) => a.type === 'drought' && a.severity > 0.7);
+    const droughts = anomalies.filter(
+      (a) => a.type === "drought" && a.severity > 0.7,
+    );
     if (droughts.length > 0) {
       recommendations.push(
-        'Investigate causes of activity droughts and implement retention strategies',
+        "Investigate causes of activity droughts and implement retention strategies",
       );
     }
 
@@ -1085,7 +1199,7 @@ export class TemporalMemoryAnalysis extends EventEmitter {
       start,
       end,
       duration: end.getTime() - start.getTime(),
-      label: 'Last 30 days',
+      label: "Last 30 days",
     };
   }
 
@@ -1093,17 +1207,20 @@ export class TemporalMemoryAnalysis extends EventEmitter {
     return `${type}_${JSON.stringify(query)}`;
   }
 
-  private adjustPeriodForGranularity(period: number, granularity: string): number {
+  private adjustPeriodForGranularity(
+    period: number,
+    granularity: string,
+  ): number {
     switch (granularity) {
-      case 'hour':
+      case "hour":
         return period * 24;
-      case 'day':
+      case "day":
         return period;
-      case 'week':
+      case "week":
         return Math.ceil(period / 7);
-      case 'month':
+      case "month":
         return Math.ceil(period / 30);
-      case 'year':
+      case "year":
         return Math.ceil(period / 365);
       default:
         return period;
@@ -1112,22 +1229,27 @@ export class TemporalMemoryAnalysis extends EventEmitter {
 
   private formatTimeLabel(date: Date, granularity: string): string {
     switch (granularity) {
-      case 'hour':
-        return date.toISOString().slice(0, 13) + ':00';
-      case 'day':
+      case "hour":
+        return date.toISOString().slice(0, 13) + ":00";
+      case "day":
         return date.toISOString().slice(0, 10);
-      case 'week':
+      case "week":
         return `Week of ${date.toISOString().slice(0, 10)}`;
-      case 'month':
-        return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
-      case 'year':
+      case "month":
+        return `${date.getFullYear()}-${(date.getMonth() + 1)
+          .toString()
+          .padStart(2, "0")}`;
+      case "year":
         return date.getFullYear().toString();
       default:
         return date.toISOString().slice(0, 10);
     }
   }
 
-  private isShortTerm(pattern: TemporalPattern, _query: TemporalQuery): boolean {
+  private isShortTerm(
+    pattern: TemporalPattern,
+    _query: TemporalQuery,
+  ): boolean {
     if (pattern.period) {
       const days = pattern.period / (24 * 60 * 60 * 1000);
       return days <= 7;
@@ -1151,60 +1273,76 @@ export class TemporalMemoryAnalysis extends EventEmitter {
         start,
         end,
         duration: end.getTime() - start.getTime(),
-        label: `${start.toISOString().slice(0, 10)} to ${end.toISOString().slice(0, 10)}`,
+        label: `${start.toISOString().slice(0, 10)} to ${end
+          .toISOString()
+          .slice(0, 10)}`,
       };
     }
     return this.getDefaultTimeRange();
   }
 
   private isActionablePattern(pattern: TemporalPattern): boolean {
-    return pattern.confidence > 0.7 && ['periodic', 'trending', 'seasonal'].includes(pattern.type);
+    return (
+      pattern.confidence > 0.7 &&
+      ["periodic", "trending", "seasonal"].includes(pattern.type)
+    );
   }
 
   private getPatternRecommendations(pattern: TemporalPattern): string[] {
     const recommendations: string[] = [];
 
     switch (pattern.type) {
-      case 'periodic':
-        recommendations.push('Schedule regular maintenance during low-activity periods');
-        recommendations.push('Optimize resource allocation based on predictable cycles');
+      case "periodic":
+        recommendations.push(
+          "Schedule regular maintenance during low-activity periods",
+        );
+        recommendations.push(
+          "Optimize resource allocation based on predictable cycles",
+        );
         break;
-      case 'trending':
-        if (pattern.trend === 'increasing') {
-          recommendations.push('Plan for capacity expansion');
-          recommendations.push('Implement proactive monitoring');
-        } else if (pattern.trend === 'decreasing') {
-          recommendations.push('Investigate root causes of decline');
-          recommendations.push('Consider engagement interventions');
+      case "trending":
+        if (pattern.trend === "increasing") {
+          recommendations.push("Plan for capacity expansion");
+          recommendations.push("Implement proactive monitoring");
+        } else if (pattern.trend === "decreasing") {
+          recommendations.push("Investigate root causes of decline");
+          recommendations.push("Consider engagement interventions");
         }
         break;
-      case 'seasonal':
-        recommendations.push('Adjust system configuration for seasonal patterns');
-        recommendations.push('Plan marketing and engagement around peak periods');
+      case "seasonal":
+        recommendations.push(
+          "Adjust system configuration for seasonal patterns",
+        );
+        recommendations.push(
+          "Plan marketing and engagement around peak periods",
+        );
         break;
     }
 
     return recommendations;
   }
 
-  private getAnomalyRecommendations(anomaly: { type: string; severity: number }): string[] {
+  private getAnomalyRecommendations(anomaly: {
+    type: string;
+    severity: number;
+  }): string[] {
     const recommendations: string[] = [];
 
     switch (anomaly.type) {
-      case 'spike':
-        recommendations.push('Implement burst protection mechanisms');
-        recommendations.push('Investigate spike triggers for prevention');
-        recommendations.push('Consider auto-scaling capabilities');
+      case "spike":
+        recommendations.push("Implement burst protection mechanisms");
+        recommendations.push("Investigate spike triggers for prevention");
+        recommendations.push("Consider auto-scaling capabilities");
         break;
-      case 'drought':
-        recommendations.push('Implement activity monitoring alerts');
-        recommendations.push('Investigate user engagement issues');
-        recommendations.push('Consider proactive outreach strategies');
+      case "drought":
+        recommendations.push("Implement activity monitoring alerts");
+        recommendations.push("Investigate user engagement issues");
+        recommendations.push("Consider proactive outreach strategies");
         break;
-      case 'shift':
-        recommendations.push('Investigate underlying system changes');
-        recommendations.push('Update baseline metrics and thresholds');
-        recommendations.push('Review configuration changes during this period');
+      case "shift":
+        recommendations.push("Investigate underlying system changes");
+        recommendations.push("Update baseline metrics and thresholds");
+        recommendations.push("Review configuration changes during this period");
         break;
     }
 
@@ -1233,7 +1371,9 @@ export class TemporalMemoryAnalysis extends EventEmitter {
 
     // Calculate confidence based on variance
     const mean = hourlyAverages.reduce((sum, val) => sum + val, 0) / 24;
-    const variance = hourlyAverages.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / 24;
+    const variance =
+      hourlyAverages.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) /
+      24;
     const stdDev = Math.sqrt(variance);
     const confidence = mean > 0 ? Math.min(0.9, stdDev / mean) : 0;
 
@@ -1245,7 +1385,15 @@ export class TemporalMemoryAnalysis extends EventEmitter {
   ): { confidence: number; peakDay: string } {
     const weeklyActivity = new Array(7).fill(0);
     const weeklyCounts = new Array(7).fill(0);
-    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const dayNames = [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ];
 
     for (const point of timeSeries) {
       const day = point.timestamp.getDay();
@@ -1264,7 +1412,8 @@ export class TemporalMemoryAnalysis extends EventEmitter {
 
     // Calculate confidence
     const mean = weeklyAverages.reduce((sum, val) => sum + val, 0) / 7;
-    const variance = weeklyAverages.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / 7;
+    const variance =
+      weeklyAverages.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / 7;
     const stdDev = Math.sqrt(variance);
     const confidence = mean > 0 ? Math.min(0.9, stdDev / mean) : 0;
 
@@ -1280,9 +1429,11 @@ export class TemporalMemoryAnalysis extends EventEmitter {
       async () => {
         try {
           const insights = await this.getTemporalInsights();
-          this.emit('periodic_analysis_completed', { insights: insights.length });
+          this.emit("periodic_analysis_completed", {
+            insights: insights.length,
+          });
         } catch (error) {
-          this.emit('periodic_analysis_error', {
+          this.emit("periodic_analysis_error", {
             error: error instanceof Error ? error.message : String(error),
           });
         }

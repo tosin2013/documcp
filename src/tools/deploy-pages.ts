@@ -1,36 +1,64 @@
-import { promises as fs } from 'fs';
-import path from 'path';
-import { z } from 'zod';
-import { MCPToolResponse, formatMCPResponse } from '../types/api.js';
+import { promises as fs } from "fs";
+import path from "path";
+import { z } from "zod";
+import { MCPToolResponse, formatMCPResponse } from "../types/api.js";
+import {
+  createOrUpdateProject,
+  trackDeployment,
+} from "../memory/kg-integration.js";
+import { getUserPreferenceManager } from "../memory/user-preferences.js";
 
 const inputSchema = z.object({
   repository: z.string(),
-  ssg: z.enum(['jekyll', 'hugo', 'docusaurus', 'mkdocs', 'eleventy']),
-  branch: z.string().optional().default('gh-pages'),
+  ssg: z.enum(["jekyll", "hugo", "docusaurus", "mkdocs", "eleventy"]),
+  branch: z.string().optional().default("gh-pages"),
   customDomain: z.string().optional(),
+  projectPath: z
+    .string()
+    .optional()
+    .describe("Local path to the project for tracking"),
+  projectName: z.string().optional().describe("Project name for tracking"),
+  analysisId: z
+    .string()
+    .optional()
+    .describe("ID from repository analysis for linking"),
+  userId: z
+    .string()
+    .optional()
+    .default("default")
+    .describe("User ID for preference tracking"),
 });
 
 export async function deployPages(args: unknown): Promise<{ content: any[] }> {
   const startTime = Date.now();
-  const { repository, ssg, branch, customDomain } = inputSchema.parse(args);
+  const {
+    repository,
+    ssg,
+    branch,
+    customDomain,
+    projectPath,
+    projectName,
+    analysisId,
+    userId,
+  } = inputSchema.parse(args);
 
   try {
     // Determine repository path (local or remote)
-    const repoPath = repository.startsWith('http') ? '.' : repository;
+    const repoPath = repository.startsWith("http") ? "." : repository;
 
     // Create .github/workflows directory
-    const workflowsDir = path.join(repoPath, '.github', 'workflows');
+    const workflowsDir = path.join(repoPath, ".github", "workflows");
     await fs.mkdir(workflowsDir, { recursive: true });
 
     // Generate workflow based on SSG
     const workflow = generateWorkflow(ssg, branch, customDomain);
-    const workflowPath = path.join(workflowsDir, 'deploy-docs.yml');
+    const workflowPath = path.join(workflowsDir, "deploy-docs.yml");
     await fs.writeFile(workflowPath, workflow);
 
     // Create CNAME file if custom domain is specified
     let cnameCreated = false;
     if (customDomain) {
-      const cnamePath = path.join(repoPath, 'CNAME');
+      const cnamePath = path.join(repoPath, "CNAME");
       await fs.writeFile(cnamePath, customDomain);
       cnameCreated = true;
     }
@@ -40,30 +68,73 @@ export async function deployPages(args: unknown): Promise<{ content: any[] }> {
       ssg,
       branch,
       customDomain,
-      workflowPath: 'deploy-docs.yml',
+      workflowPath: "deploy-docs.yml",
       cnameCreated,
       repoPath,
     };
+
+    // Phase 2.3: Track deployment setup in knowledge graph
+    try {
+      // Create or update project in knowledge graph
+      if (projectPath || projectName) {
+        const timestamp = new Date().toISOString();
+        const project = await createOrUpdateProject({
+          id:
+            analysisId ||
+            `deploy_${repository.replace(/[^a-zA-Z0-9]/g, "_")}_${Date.now()}`,
+          timestamp,
+          path: projectPath || repository,
+          projectName: projectName || repository,
+          structure: {
+            totalFiles: 0, // Unknown at this point
+            languages: {},
+            hasTests: false,
+            hasCI: true, // We just added CI
+            hasDocs: true, // Setting up docs deployment
+          },
+        });
+
+        // Track successful deployment setup
+        await trackDeployment(project.id, ssg, true, {
+          buildTime: Date.now() - startTime,
+        });
+
+        // Update user preferences with SSG usage
+        const userPreferenceManager = await getUserPreferenceManager(userId);
+        await userPreferenceManager.trackSSGUsage({
+          ssg,
+          success: true, // Setup successful
+          timestamp,
+          projectType: projectPath || repository,
+        });
+      }
+    } catch (trackingError) {
+      // Don't fail the whole deployment if tracking fails
+      console.warn(
+        "Failed to track deployment in knowledge graph:",
+        trackingError,
+      );
+    }
 
     const response: MCPToolResponse<typeof deploymentResult> = {
       success: true,
       data: deploymentResult,
       metadata: {
-        toolVersion: '1.0.0',
+        toolVersion: "1.0.0",
         executionTime: Date.now() - startTime,
         timestamp: new Date().toISOString(),
       },
       recommendations: [
         {
-          type: 'info',
-          title: 'Deployment Workflow Created',
+          type: "info",
+          title: "Deployment Workflow Created",
           description: `GitHub Actions workflow configured for ${ssg} deployment to ${branch} branch`,
         },
         ...(customDomain
           ? [
               {
-                type: 'info' as const,
-                title: 'Custom Domain Configured',
+                type: "info" as const,
+                title: "Custom Domain Configured",
                 description: `CNAME file created for ${customDomain}`,
               },
             ]
@@ -71,31 +142,70 @@ export async function deployPages(args: unknown): Promise<{ content: any[] }> {
       ],
       nextSteps: [
         {
-          action: 'Verify Deployment Setup',
-          toolRequired: 'verify_deployment',
-          description: 'Check that all deployment requirements are met',
-          priority: 'high',
+          action: "Verify Deployment Setup",
+          toolRequired: "verify_deployment",
+          description: "Check that all deployment requirements are met",
+          priority: "high",
         },
         {
-          action: 'Commit and Push',
-          toolRequired: 'git',
-          description: 'Commit workflow files and push to trigger deployment',
-          priority: 'high',
+          action: "Commit and Push",
+          toolRequired: "git",
+          description: "Commit workflow files and push to trigger deployment",
+          priority: "high",
         },
       ],
     };
 
     return formatMCPResponse(response);
   } catch (error) {
+    // Phase 2.3: Track failed deployment setup
+    try {
+      if (projectPath || projectName) {
+        const timestamp = new Date().toISOString();
+        const project = await createOrUpdateProject({
+          id:
+            analysisId ||
+            `deploy_${repository.replace(/[^a-zA-Z0-9]/g, "_")}_${Date.now()}`,
+          timestamp,
+          path: projectPath || repository,
+          projectName: projectName || repository,
+          structure: {
+            totalFiles: 0,
+            languages: {},
+            hasTests: false,
+            hasCI: false,
+            hasDocs: false,
+          },
+        });
+
+        // Track failed deployment
+        await trackDeployment(project.id, ssg, false, {
+          errorMessage: String(error),
+        });
+
+        // Update user preferences with failed SSG usage
+        const userPreferenceManager = await getUserPreferenceManager(userId);
+        await userPreferenceManager.trackSSGUsage({
+          ssg,
+          success: false,
+          timestamp,
+          projectType: projectPath || repository,
+        });
+      }
+    } catch (trackingError) {
+      console.warn("Failed to track deployment failure:", trackingError);
+    }
+
     const errorResponse: MCPToolResponse = {
       success: false,
       error: {
-        code: 'DEPLOYMENT_SETUP_FAILED',
+        code: "DEPLOYMENT_SETUP_FAILED",
         message: `Failed to setup deployment: ${error}`,
-        resolution: 'Ensure repository path is accessible and GitHub Actions are enabled',
+        resolution:
+          "Ensure repository path is accessible and GitHub Actions are enabled",
       },
       metadata: {
-        toolVersion: '1.0.0',
+        toolVersion: "1.0.0",
         executionTime: Date.now() - startTime,
         timestamp: new Date().toISOString(),
       },
@@ -104,7 +214,11 @@ export async function deployPages(args: unknown): Promise<{ content: any[] }> {
   }
 }
 
-function generateWorkflow(ssg: string, branch: string, _customDomain?: string): string {
+function generateWorkflow(
+  ssg: string,
+  branch: string,
+  _customDomain?: string,
+): string {
   const workflows: Record<string, string> = {
     docusaurus: `name: Deploy Docusaurus to GitHub Pages
 

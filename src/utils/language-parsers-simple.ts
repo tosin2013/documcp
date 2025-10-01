@@ -1,5 +1,5 @@
-import { CodeElement, APIEndpoint } from './code-scanner.js';
-import { spawn } from 'child_process';
+import { CodeElement, APIEndpoint } from "./code-scanner.js";
+import { spawn } from "child_process";
 
 export interface LanguageParser {
   extensions: string[];
@@ -43,7 +43,10 @@ export class MultiLanguageCodeScanner {
     }
   }
 
-  async parseFile(content: string, filePath: string): Promise<LanguageParseResult> {
+  async parseFile(
+    content: string,
+    filePath: string,
+  ): Promise<LanguageParseResult> {
     const extension = this.getFileExtension(filePath);
     const parser = this.parsers.get(extension);
 
@@ -56,7 +59,7 @@ export class MultiLanguageCodeScanner {
   }
 
   private getFileExtension(filePath: string): string {
-    return filePath.split('.').pop()?.toLowerCase() || '';
+    return filePath.split(".").pop()?.toLowerCase() || "";
   }
 
   private getEmptyResult(): LanguageParseResult {
@@ -88,12 +91,15 @@ export class MultiLanguageCodeScanner {
 
 // Python Parser Implementation using subprocess + regex fallback
 export class PythonParser implements LanguageParser {
-  extensions = ['py', 'pyi', 'pyx', 'pxd'];
-  name = 'Python';
+  extensions = ["py", "pyi", "pyx", "pxd"];
+  name = "Python";
   supportsApiEndpoints = true;
   supportsFrameworkDetection = true;
 
-  async parseFile(content: string, filePath: string): Promise<LanguageParseResult> {
+  async parseFile(
+    content: string,
+    filePath: string,
+  ): Promise<LanguageParseResult> {
     const result: LanguageParseResult = {
       functions: [],
       classes: [],
@@ -128,7 +134,10 @@ export class PythonParser implements LanguageParser {
     return result;
   }
 
-  private async parseWithPythonAST(content: string, _filePath: string): Promise<any> {
+  private async parseWithPythonAST(
+    content: string,
+    _filePath: string,
+  ): Promise<any> {
     return new Promise((resolve) => {
       // Create a Python script to parse the AST
       const pythonScript = `
@@ -207,26 +216,26 @@ except Exception as e:
 `;
 
       // Try to execute Python AST parsing
-      const process = spawn('python3', ['-c', pythonScript], {
-        stdio: ['pipe', 'pipe', 'pipe'],
+      const process = spawn("python3", ["-c", pythonScript], {
+        stdio: ["pipe", "pipe", "pipe"],
       });
 
       // Send content via stdin
       process.stdin.write(content);
       process.stdin.end();
 
-      let output = '';
-      let errorOutput = '';
+      let output = "";
+      let errorOutput = "";
 
-      process.stdout.on('data', (data) => {
+      process.stdout.on("data", (data) => {
         output += data.toString();
       });
 
-      process.stderr.on('data', (data) => {
+      process.stderr.on("data", (data) => {
         errorOutput += data.toString();
       });
 
-      process.on('close', (code) => {
+      process.on("close", (code) => {
         if (code === 0 && output.trim()) {
           try {
             const result = JSON.parse(output.trim());
@@ -236,16 +245,16 @@ except Exception as e:
             }
           } catch (e) {
             // JSON parsing failed
-            console.warn('Failed to parse Python AST output:', e);
+            console.warn("Failed to parse Python AST output:", e);
           }
         }
         if (errorOutput) {
-          console.warn('Python AST parsing errors:', errorOutput);
+          console.warn("Python AST parsing errors:", errorOutput);
         }
         resolve(null); // Fall back to regex parsing
       });
 
-      process.on('error', () => {
+      process.on("error", () => {
         resolve(null); // Python not available or failed
       });
 
@@ -265,7 +274,7 @@ except Exception as e:
     astResult.functions?.forEach((func: any) => {
       result.functions.push({
         name: func.name,
-        type: 'function',
+        type: "function",
         filePath,
         line: func.line,
         column: 0,
@@ -279,7 +288,7 @@ except Exception as e:
     astResult.classes?.forEach((cls: any) => {
       result.classes.push({
         name: cls.name,
-        type: 'class',
+        type: "class",
         filePath,
         line: cls.line,
         column: 0,
@@ -292,7 +301,7 @@ except Exception as e:
     astResult.imports?.forEach((imp: any) => {
       result.imports.push({
         name: imp.name,
-        type: 'import',
+        type: "import",
         filePath,
         line: imp.line,
         column: 0,
@@ -303,7 +312,7 @@ except Exception as e:
     astResult.constants?.forEach((constant: any) => {
       result.constants.push({
         name: constant.name,
-        type: 'variable',
+        type: "variable",
         filePath,
         line: constant.line,
         column: 0,
@@ -315,7 +324,7 @@ except Exception as e:
     astResult.variables?.forEach((variable: any) => {
       result.variables.push({
         name: variable.name,
-        type: 'variable',
+        type: "variable",
         filePath,
         line: variable.line,
         column: 0,
@@ -325,14 +334,20 @@ except Exception as e:
     });
   }
 
-  private parseWithRegex(content: string, result: LanguageParseResult, filePath: string): void {
-    const lines = content.split('\n');
+  private parseWithRegex(
+    content: string,
+    result: LanguageParseResult,
+    filePath: string,
+  ): void {
+    const lines = content.split("\n");
 
     lines.forEach((line, index) => {
       const lineNum = index + 1;
 
       // Function definitions
-      const funcMatch = line.match(/^\s*(async\s+)?def\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(/);
+      const funcMatch = line.match(
+        /^\s*(async\s+)?def\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(/,
+      );
       if (funcMatch) {
         const isAsync = !!funcMatch[1];
         const funcName = funcMatch[2];
@@ -340,11 +355,11 @@ except Exception as e:
 
         result.functions.push({
           name: funcName,
-          type: 'function',
+          type: "function",
           filePath,
           line: lineNum,
           column: 0,
-          exported: !funcName.startsWith('_'),
+          exported: !funcName.startsWith("_"),
           isAsync,
           hasJSDoc: hasDocstring,
         });
@@ -358,22 +373,24 @@ except Exception as e:
 
         result.classes.push({
           name: className,
-          type: 'class',
+          type: "class",
           filePath,
           line: lineNum,
           column: 0,
-          exported: !className.startsWith('_'),
+          exported: !className.startsWith("_"),
           hasJSDoc: hasDocstring,
         });
       }
 
       // Import statements
-      const importMatch = line.match(/^\s*(?:from\s+([^\s]+)\s+)?import\s+(.+)/);
+      const importMatch = line.match(
+        /^\s*(?:from\s+([^\s]+)\s+)?import\s+(.+)/,
+      );
       if (importMatch) {
-        const module = importMatch[1] || importMatch[2].split(',')[0].trim();
+        const module = importMatch[1] || importMatch[2].split(",")[0].trim();
         result.imports.push({
           name: module,
-          type: 'import',
+          type: "import",
           filePath,
           line: lineNum,
           column: 0,
@@ -386,7 +403,7 @@ except Exception as e:
       if (assignMatch) {
         result.constants.push({
           name: assignMatch[1],
-          type: 'variable',
+          type: "variable",
           filePath,
           line: lineNum,
           column: 0,
@@ -399,7 +416,11 @@ except Exception as e:
 
   private hasDocstringAfterLine(lines: string[], lineIndex: number): boolean {
     // Check if next few lines contain a docstring
-    for (let i = lineIndex + 1; i < Math.min(lineIndex + 3, lines.length); i++) {
+    for (
+      let i = lineIndex + 1;
+      i < Math.min(lineIndex + 3, lines.length);
+      i++
+    ) {
       const line = lines[i].trim();
       if (line.startsWith('"""') || line.startsWith("'''")) {
         return true;
@@ -408,7 +429,11 @@ except Exception as e:
     return false;
   }
 
-  private findPythonApiEndpoints(content: string, result: LanguageParseResult, filePath: string) {
+  private findPythonApiEndpoints(
+    content: string,
+    result: LanguageParseResult,
+    filePath: string,
+  ) {
     // Flask patterns
     const flaskPatterns = [
       /@app\.(route|get|post|put|delete|patch)\s*\(\s*['"]([^'"]+)['"]/g,
@@ -422,40 +447,59 @@ except Exception as e:
     ];
 
     // Django patterns
-    const djangoPatterns = [/path\s*\(\s*['"]([^'"]+)['"]/g, /url\s*\(\s*r?['"]([^'"]+)['"]/g];
+    const djangoPatterns = [
+      /path\s*\(\s*['"]([^'"]+)['"]/g,
+      /url\s*\(\s*r?['"]([^'"]+)['"]/g,
+    ];
 
-    const allPatterns = [...flaskPatterns, ...fastApiPatterns, ...djangoPatterns];
+    const allPatterns = [
+      ...flaskPatterns,
+      ...fastApiPatterns,
+      ...djangoPatterns,
+    ];
 
     allPatterns.forEach((pattern) => {
       let match;
       while ((match = pattern.exec(content)) !== null) {
         const method =
-          match[1] === 'route' ? 'ALL' : (match[1].toUpperCase() as APIEndpoint['method']);
+          match[1] === "route"
+            ? "ALL"
+            : (match[1].toUpperCase() as APIEndpoint["method"]);
         const path = match[2] || match[1]; // Handle different capture groups
 
         // Find line number
         const beforeMatch = content.substring(0, match.index!);
-        const line = beforeMatch.split('\n').length;
+        const line = beforeMatch.split("\n").length;
 
         result.apiEndpoints.push({
           method,
           path,
           filePath,
           line,
-          hasDocumentation: this.hasEndpointDocumentation(content, match.index!),
+          hasDocumentation: this.hasEndpointDocumentation(
+            content,
+            match.index!,
+          ),
         });
       }
     });
   }
 
-  private hasEndpointDocumentation(content: string, matchIndex: number): boolean {
+  private hasEndpointDocumentation(
+    content: string,
+    matchIndex: number,
+  ): boolean {
     const beforeMatch = content.substring(0, matchIndex);
-    const lines = beforeMatch.split('\n');
+    const lines = beforeMatch.split("\n");
 
     // Check last few lines for docstrings or comments
     for (let i = Math.max(0, lines.length - 5); i < lines.length; i++) {
       const line = lines[i].trim();
-      if (line.startsWith('"""') || line.startsWith("'''") || line.startsWith('#')) {
+      if (
+        line.startsWith('"""') ||
+        line.startsWith("'''") ||
+        line.startsWith("#")
+      ) {
         return true;
       }
     }
@@ -465,11 +509,14 @@ except Exception as e:
 
 // Go Parser Implementation (regex-based)
 export class GoParser implements LanguageParser {
-  extensions = ['go'];
-  name = 'Go';
+  extensions = ["go"];
+  name = "Go";
   supportsApiEndpoints = true;
 
-  async parseFile(content: string, filePath: string): Promise<LanguageParseResult> {
+  async parseFile(
+    content: string,
+    filePath: string,
+  ): Promise<LanguageParseResult> {
     const result: LanguageParseResult = {
       functions: [],
       classes: [],
@@ -483,18 +530,20 @@ export class GoParser implements LanguageParser {
       variables: [],
     };
 
-    const lines = content.split('\n');
+    const lines = content.split("\n");
 
     lines.forEach((line, index) => {
       const lineNum = index + 1;
 
       // Function declarations
-      const funcMatch = line.match(/^\s*func\s+(?:\([^)]*\)\s+)?([a-zA-Z_][a-zA-Z0-9_]*)\s*\(/);
+      const funcMatch = line.match(
+        /^\s*func\s+(?:\([^)]*\)\s+)?([a-zA-Z_][a-zA-Z0-9_]*)\s*\(/,
+      );
       if (funcMatch) {
         const funcName = funcMatch[1];
         result.functions.push({
           name: funcName,
-          type: 'function',
+          type: "function",
           filePath,
           line: lineNum,
           column: 0,
@@ -504,25 +553,27 @@ export class GoParser implements LanguageParser {
       }
 
       // Type declarations (struct, interface, etc.)
-      const typeMatch = line.match(/^\s*type\s+([a-zA-Z_][a-zA-Z0-9_]*)\s+(struct|interface)/);
+      const typeMatch = line.match(
+        /^\s*type\s+([a-zA-Z_][a-zA-Z0-9_]*)\s+(struct|interface)/,
+      );
       if (typeMatch) {
         const typeName = typeMatch[1];
         const typeKind = typeMatch[2];
 
-        if (typeKind === 'struct') {
+        if (typeKind === "struct") {
           result.classes.push({
             name: typeName,
-            type: 'class',
+            type: "class",
             filePath,
             line: lineNum,
             column: 0,
             exported: this.isGoExported(typeName),
             hasJSDoc: this.hasGoDocComment(lines, index),
           });
-        } else if (typeKind === 'interface') {
+        } else if (typeKind === "interface") {
           result.interfaces.push({
             name: typeName,
-            type: 'interface',
+            type: "interface",
             filePath,
             line: lineNum,
             column: 0,
@@ -537,7 +588,7 @@ export class GoParser implements LanguageParser {
       if (importMatch) {
         result.imports.push({
           name: importMatch[1],
-          type: 'import',
+          type: "import",
           filePath,
           line: lineNum,
           column: 0,
@@ -546,14 +597,16 @@ export class GoParser implements LanguageParser {
       }
 
       // Constants and variables
-      const constMatch = line.match(/^\s*(const|var)\s+([a-zA-Z_][a-zA-Z0-9_]*)/);
+      const constMatch = line.match(
+        /^\s*(const|var)\s+([a-zA-Z_][a-zA-Z0-9_]*)/,
+      );
       if (constMatch) {
         const declType = constMatch[1];
         const varName = constMatch[2];
 
         const element: CodeElement = {
           name: varName,
-          type: 'variable',
+          type: "variable",
           filePath,
           line: lineNum,
           column: 0,
@@ -561,7 +614,7 @@ export class GoParser implements LanguageParser {
           hasJSDoc: this.hasGoDocComment(lines, index),
         };
 
-        if (declType === 'const') {
+        if (declType === "const") {
           result.constants.push(element);
         } else {
           result.variables.push(element);
@@ -584,12 +637,16 @@ export class GoParser implements LanguageParser {
     // Check if previous line has a doc comment
     if (lineIndex > 0) {
       const prevLine = lines[lineIndex - 1].trim();
-      return prevLine.startsWith('//');
+      return prevLine.startsWith("//");
     }
     return false;
   }
 
-  private findGoApiEndpoints(content: string, result: LanguageParseResult, filePath: string) {
+  private findGoApiEndpoints(
+    content: string,
+    result: LanguageParseResult,
+    filePath: string,
+  ) {
     // Common Go web framework patterns
     const patterns = [
       // Gin framework
@@ -605,37 +662,43 @@ export class GoParser implements LanguageParser {
     patterns.forEach((pattern) => {
       let match;
       while ((match = pattern.exec(content)) !== null) {
-        let method: APIEndpoint['method'] = 'ALL';
+        let method: APIEndpoint["method"] = "ALL";
         let path: string;
 
         if (match[1] && match[2]) {
-          method = match[1].toUpperCase() as APIEndpoint['method'];
+          method = match[1].toUpperCase() as APIEndpoint["method"];
           path = match[2];
         } else {
           path = match[1] || match[2];
         }
 
         const beforeMatch = content.substring(0, match.index!);
-        const line = beforeMatch.split('\n').length;
+        const line = beforeMatch.split("\n").length;
 
         result.apiEndpoints.push({
           method,
           path,
           filePath,
           line,
-          hasDocumentation: this.hasEndpointDocumentation(content, match.index!),
+          hasDocumentation: this.hasEndpointDocumentation(
+            content,
+            match.index!,
+          ),
         });
       }
     });
   }
 
-  private hasEndpointDocumentation(content: string, matchIndex: number): boolean {
+  private hasEndpointDocumentation(
+    content: string,
+    matchIndex: number,
+  ): boolean {
     const beforeMatch = content.substring(0, matchIndex);
-    const lines = beforeMatch.split('\n');
+    const lines = beforeMatch.split("\n");
 
     for (let i = Math.max(0, lines.length - 5); i < lines.length; i++) {
       const line = lines[i].trim();
-      if (line.startsWith('//') || line.startsWith('/*')) {
+      if (line.startsWith("//") || line.startsWith("/*")) {
         return true;
       }
     }
@@ -645,11 +708,14 @@ export class GoParser implements LanguageParser {
 
 // YAML Parser for Kubernetes, Terraform, etc.
 export class YamlParser implements LanguageParser {
-  extensions = ['yml', 'yaml'];
-  name = 'YAML';
+  extensions = ["yml", "yaml"];
+  name = "YAML";
   supportsFrameworkDetection = true;
 
-  async parseFile(content: string, filePath: string): Promise<LanguageParseResult> {
+  async parseFile(
+    content: string,
+    filePath: string,
+  ): Promise<LanguageParseResult> {
     const result: LanguageParseResult = {
       functions: [],
       classes: [],
@@ -676,9 +742,9 @@ export class YamlParser implements LanguageParser {
     result: LanguageParseResult,
     filePath: string,
   ) {
-    const lines = content.split('\n');
-    let apiVersion = '';
-    let kind = '';
+    const lines = content.split("\n");
+    let apiVersion = "";
+    let kind = "";
 
     lines.forEach((line, index) => {
       const lineNum = index + 1;
@@ -694,7 +760,7 @@ export class YamlParser implements LanguageParser {
 
         result.types.push({
           name: `${kind} (${apiVersion})`,
-          type: 'type',
+          type: "type",
           filePath,
           line: lineNum,
           column: 0,
@@ -712,10 +778,10 @@ export class YamlParser implements LanguageParser {
   ) {
     let inServicesSection = false;
 
-    const lines = content.split('\n');
+    const lines = content.split("\n");
 
     lines.forEach((line, index) => {
-      if (line.trim() === 'services:') {
+      if (line.trim() === "services:") {
         inServicesSection = true;
         return;
       }
@@ -729,7 +795,7 @@ export class YamlParser implements LanguageParser {
         if (serviceMatch) {
           result.types.push({
             name: `service: ${serviceMatch[1]}`,
-            type: 'type',
+            type: "type",
             filePath,
             line: index + 1,
             column: 0,
@@ -741,14 +807,18 @@ export class YamlParser implements LanguageParser {
     });
   }
 
-  private identifyGitHubActions(content: string, result: LanguageParseResult, filePath: string) {
-    if (!filePath.includes('.github/workflows/')) return;
+  private identifyGitHubActions(
+    content: string,
+    result: LanguageParseResult,
+    filePath: string,
+  ) {
+    if (!filePath.includes(".github/workflows/")) return;
 
-    const lines = content.split('\n');
+    const lines = content.split("\n");
     let inJobsSection = false;
 
     lines.forEach((line, index) => {
-      if (line.trim() === 'jobs:') {
+      if (line.trim() === "jobs:") {
         inJobsSection = true;
         return;
       }
@@ -762,7 +832,7 @@ export class YamlParser implements LanguageParser {
         if (jobMatch) {
           result.functions.push({
             name: `job: ${jobMatch[1]}`,
-            type: 'function',
+            type: "function",
             filePath,
             line: index + 1,
             column: 0,
@@ -777,10 +847,13 @@ export class YamlParser implements LanguageParser {
 
 // Bash Parser for DevOps scripts
 export class BashParser implements LanguageParser {
-  extensions = ['sh', 'bash', 'zsh'];
-  name = 'Bash';
+  extensions = ["sh", "bash", "zsh"];
+  name = "Bash";
 
-  async parseFile(content: string, filePath: string): Promise<LanguageParseResult> {
+  async parseFile(
+    content: string,
+    filePath: string,
+  ): Promise<LanguageParseResult> {
     const result: LanguageParseResult = {
       functions: [],
       classes: [],
@@ -794,19 +867,21 @@ export class BashParser implements LanguageParser {
       variables: [],
     };
 
-    const lines = content.split('\n');
+    const lines = content.split("\n");
 
     lines.forEach((line, index) => {
       const lineNum = index + 1;
 
       // Function definitions
-      const funcMatch = line.match(/^\s*(?:function\s+)?([a-zA-Z_][a-zA-Z0-9_]*)\s*\(\)/);
+      const funcMatch = line.match(
+        /^\s*(?:function\s+)?([a-zA-Z_][a-zA-Z0-9_]*)\s*\(\)/,
+      );
       if (funcMatch) {
         const functionName = funcMatch[1];
 
         result.functions.push({
           name: functionName,
-          type: 'function',
+          type: "function",
           filePath,
           line: lineNum,
           column: 0,
@@ -823,7 +898,7 @@ export class BashParser implements LanguageParser {
 
         const element: CodeElement = {
           name: varName,
-          type: 'variable',
+          type: "variable",
           filePath,
           line: lineNum,
           column: 0,
@@ -846,7 +921,7 @@ export class BashParser implements LanguageParser {
     // Check if previous line has a comment
     if (lineIndex > 0) {
       const prevLine = lines[lineIndex - 1].trim();
-      return prevLine.startsWith('#');
+      return prevLine.startsWith("#");
     }
     return false;
   }

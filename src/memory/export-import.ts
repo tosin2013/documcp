@@ -3,18 +3,18 @@
  * Comprehensive data portability, backup, and migration capabilities
  */
 
-import { EventEmitter } from 'events';
-import { promises as fs } from 'fs';
-import { createWriteStream } from 'fs';
-import { MemoryEntry, JSONLStorage } from './storage.js';
-import { MemoryManager } from './manager.js';
-import { IncrementalLearningSystem } from './learning.js';
-import { KnowledgeGraph } from './knowledge-graph.js';
-import { MemoryPruningSystem } from './pruning.js';
+import { EventEmitter } from "events";
+import { promises as fs } from "fs";
+import { createWriteStream } from "fs";
+import { MemoryEntry, JSONLStorage } from "./storage.js";
+import { MemoryManager } from "./manager.js";
+import { IncrementalLearningSystem } from "./learning.js";
+import { KnowledgeGraph } from "./knowledge-graph.js";
+import { MemoryPruningSystem } from "./pruning.js";
 
 export interface ExportOptions {
-  format: 'json' | 'jsonl' | 'csv' | 'xml' | 'yaml' | 'sqlite' | 'archive';
-  compression?: 'gzip' | 'zip' | 'none';
+  format: "json" | "jsonl" | "csv" | "xml" | "yaml" | "sqlite" | "archive";
+  compression?: "gzip" | "zip" | "none";
   includeMetadata: boolean;
   includeLearning: boolean;
   includeKnowledgeGraph: boolean;
@@ -28,20 +28,20 @@ export interface ExportOptions {
   anonymize?: {
     enabled: boolean;
     fields: string[];
-    method: 'hash' | 'remove' | 'pseudonymize';
+    method: "hash" | "remove" | "pseudonymize";
   };
   encryption?: {
     enabled: boolean;
-    algorithm: 'aes-256-gcm' | 'aes-192-gcm' | 'aes-128-gcm';
+    algorithm: "aes-256-gcm" | "aes-192-gcm" | "aes-128-gcm";
     password?: string;
   };
 }
 
 export interface ImportOptions {
-  format: 'json' | 'jsonl' | 'csv' | 'xml' | 'yaml' | 'sqlite' | 'archive';
-  mode: 'merge' | 'replace' | 'append' | 'update';
-  validation: 'strict' | 'loose' | 'none';
-  conflictResolution: 'skip' | 'overwrite' | 'merge' | 'rename';
+  format: "json" | "jsonl" | "csv" | "xml" | "yaml" | "sqlite" | "archive";
+  mode: "merge" | "replace" | "append" | "update";
+  validation: "strict" | "loose" | "none";
+  conflictResolution: "skip" | "overwrite" | "merge" | "rename";
   backup: boolean;
   dryRun: boolean;
   mapping?: Record<string, string>; // Field mapping for different schemas
@@ -49,7 +49,7 @@ export interface ImportOptions {
     enabled: boolean;
     rules: Array<{
       field: string;
-      operation: 'convert' | 'transform' | 'validate';
+      operation: "convert" | "transform" | "validate";
       params: any;
     }>;
   };
@@ -106,7 +106,7 @@ export interface MigrationPlan {
   mapping: Record<string, string>;
   transformations: Array<{
     field: string;
-    type: 'rename' | 'convert' | 'merge' | 'split' | 'calculate';
+    type: "rename" | "convert" | "merge" | "split" | "calculate";
     source: string | string[];
     target: string;
     operation?: string;
@@ -147,7 +147,7 @@ export class MemoryExportImportSystem extends EventEmitter {
   private learningSystem: IncrementalLearningSystem;
   private knowledgeGraph: KnowledgeGraph;
   private pruningSystem?: MemoryPruningSystem;
-  private readonly version = '1.0.0';
+  private readonly version = "1.0.0";
 
   constructor(
     storage: JSONLStorage,
@@ -172,26 +172,26 @@ export class MemoryExportImportSystem extends EventEmitter {
     options: Partial<ExportOptions> = {},
   ): Promise<ExportResult> {
     const defaultOptions: ExportOptions = {
-      format: 'json',
-      compression: 'none',
+      format: "json",
+      compression: "none",
       includeMetadata: true,
       includeLearning: true,
       includeKnowledgeGraph: true,
       anonymize: {
         enabled: false,
-        fields: ['userId', 'email', 'personalInfo'],
-        method: 'hash',
+        fields: ["userId", "email", "personalInfo"],
+        method: "hash",
       },
       encryption: {
         enabled: false,
-        algorithm: 'aes-256-gcm',
+        algorithm: "aes-256-gcm",
       },
     };
 
     const activeOptions = { ...defaultOptions, ...options };
     const startTime = Date.now();
 
-    this.emit('export_started', { outputPath, options: activeOptions });
+    this.emit("export_started", { outputPath, options: activeOptions });
 
     try {
       // Get filtered entries
@@ -207,11 +207,11 @@ export class MemoryExportImportSystem extends EventEmitter {
 
       // Prepare output path - if compression is requested, use temp file first
       let actualOutputPath = outputPath;
-      if (activeOptions.compression && activeOptions.compression !== 'none') {
+      if (activeOptions.compression && activeOptions.compression !== "none") {
         // For compressed exports, export to temp file first
-        if (outputPath.endsWith('.gz')) {
+        if (outputPath.endsWith(".gz")) {
           actualOutputPath = outputPath.slice(0, -3); // Remove .gz suffix
-        } else if (outputPath.endsWith('.zip')) {
+        } else if (outputPath.endsWith(".zip")) {
           actualOutputPath = outputPath.slice(0, -4); // Remove .zip suffix
         }
       }
@@ -221,39 +221,74 @@ export class MemoryExportImportSystem extends EventEmitter {
       let size = 0;
 
       switch (activeOptions.format) {
-        case 'json':
-          filePath = await this.exportToJSON(actualOutputPath, exportData, activeOptions);
+        case "json":
+          filePath = await this.exportToJSON(
+            actualOutputPath,
+            exportData,
+            activeOptions,
+          );
           break;
-        case 'jsonl':
-          filePath = await this.exportToJSONL(actualOutputPath, exportData, activeOptions);
+        case "jsonl":
+          filePath = await this.exportToJSONL(
+            actualOutputPath,
+            exportData,
+            activeOptions,
+          );
           break;
-        case 'csv':
-          filePath = await this.exportToCSV(actualOutputPath, exportData, activeOptions);
+        case "csv":
+          filePath = await this.exportToCSV(
+            actualOutputPath,
+            exportData,
+            activeOptions,
+          );
           break;
-        case 'xml':
-          filePath = await this.exportToXML(actualOutputPath, exportData, activeOptions);
+        case "xml":
+          filePath = await this.exportToXML(
+            actualOutputPath,
+            exportData,
+            activeOptions,
+          );
           break;
-        case 'yaml':
-          filePath = await this.exportToYAML(actualOutputPath, exportData, activeOptions);
+        case "yaml":
+          filePath = await this.exportToYAML(
+            actualOutputPath,
+            exportData,
+            activeOptions,
+          );
           break;
-        case 'sqlite':
-          filePath = await this.exportToSQLite(actualOutputPath, exportData, activeOptions);
+        case "sqlite":
+          filePath = await this.exportToSQLite(
+            actualOutputPath,
+            exportData,
+            activeOptions,
+          );
           break;
-        case 'archive':
-          filePath = await this.exportToArchive(actualOutputPath, exportData, activeOptions);
+        case "archive":
+          filePath = await this.exportToArchive(
+            actualOutputPath,
+            exportData,
+            activeOptions,
+          );
           break;
         default:
           throw new Error(`Unsupported export format: ${activeOptions.format}`);
       }
 
       // Apply compression if specified
-      if (activeOptions.compression && activeOptions.compression !== 'none') {
-        filePath = await this.applyCompression(filePath, activeOptions.compression, outputPath);
+      if (activeOptions.compression && activeOptions.compression !== "none") {
+        filePath = await this.applyCompression(
+          filePath,
+          activeOptions.compression,
+          outputPath,
+        );
       }
 
       // Apply encryption if enabled
       if (activeOptions.encryption?.enabled) {
-        filePath = await this.applyEncryption(filePath, activeOptions.encryption);
+        filePath = await this.applyEncryption(
+          filePath,
+          activeOptions.encryption,
+        );
       }
 
       // Get file size
@@ -269,24 +304,28 @@ export class MemoryExportImportSystem extends EventEmitter {
         metadata: {
           exportedAt: new Date(),
           version: this.version,
-          source: 'DocuMCP Memory System',
+          source: "DocuMCP Memory System",
           includes: this.getIncludedComponents(activeOptions),
-          compression: activeOptions.compression !== 'none' ? activeOptions.compression : undefined,
+          compression:
+            activeOptions.compression !== "none"
+              ? activeOptions.compression
+              : undefined,
           encryption: activeOptions.encryption?.enabled,
         },
         warnings: [],
         errors: [],
       };
 
-      this.emit('export_completed', {
+      this.emit("export_completed", {
         result,
         duration: Date.now() - startTime,
       });
 
       return result;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      this.emit('export_error', { error: errorMessage });
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.emit("export_error", { error: errorMessage });
 
       return {
         success: false,
@@ -296,7 +335,7 @@ export class MemoryExportImportSystem extends EventEmitter {
         metadata: {
           exportedAt: new Date(),
           version: this.version,
-          source: 'DocuMCP Memory System',
+          source: "DocuMCP Memory System",
           includes: [],
         },
         warnings: [],
@@ -313,10 +352,10 @@ export class MemoryExportImportSystem extends EventEmitter {
     options: Partial<ImportOptions> = {},
   ): Promise<ImportResult> {
     const defaultOptions: ImportOptions = {
-      format: 'json',
-      mode: 'merge',
-      validation: 'strict',
-      conflictResolution: 'skip',
+      format: "json",
+      mode: "merge",
+      validation: "strict",
+      conflictResolution: "skip",
       backup: true,
       dryRun: false,
     };
@@ -324,7 +363,7 @@ export class MemoryExportImportSystem extends EventEmitter {
     const activeOptions = { ...defaultOptions, ...options };
     const startTime = Date.now();
 
-    this.emit('import_started', { inputPath, options: activeOptions });
+    this.emit("import_started", { inputPath, options: activeOptions });
 
     try {
       // Create backup if requested
@@ -335,7 +374,7 @@ export class MemoryExportImportSystem extends EventEmitter {
       // Detect and verify format
       const detectedFormat = await this.detectFormat(inputPath);
       if (detectedFormat !== activeOptions.format) {
-        this.emit('format_mismatch', {
+        this.emit("format_mismatch", {
           detected: detectedFormat,
           specified: activeOptions.format,
         });
@@ -345,24 +384,33 @@ export class MemoryExportImportSystem extends EventEmitter {
       const importData = await this.loadImportData(inputPath, activeOptions);
 
       // Validate import data
-      const validationResult = await this.validateImportData(importData, activeOptions);
+      const validationResult = await this.validateImportData(
+        importData,
+        activeOptions,
+      );
 
-      if (validationResult.invalid > 0 && activeOptions.validation === 'strict') {
-        throw new Error(`Validation failed: ${validationResult.invalid} invalid entries`);
+      if (
+        validationResult.invalid > 0 &&
+        activeOptions.validation === "strict"
+      ) {
+        throw new Error(
+          `Validation failed: ${validationResult.invalid} invalid entries`,
+        );
       }
 
       // Process import data
       const result = await this.processImportData(importData, activeOptions);
 
-      this.emit('import_completed', {
+      this.emit("import_completed", {
         result,
         duration: Date.now() - startTime,
       });
 
       return result;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      this.emit('import_error', { error: errorMessage });
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.emit("import_error", { error: errorMessage });
 
       return {
         success: false,
@@ -406,8 +454,8 @@ export class MemoryExportImportSystem extends EventEmitter {
     },
   ): Promise<MigrationPlan> {
     const plan: MigrationPlan = {
-      sourceSystem: sourceSchema.system || 'Unknown',
-      targetSystem: 'DocuMCP',
+      sourceSystem: sourceSchema.system || "Unknown",
+      targetSystem: "DocuMCP",
       mapping: {},
       transformations: [],
       validation: [],
@@ -425,7 +473,11 @@ export class MemoryExportImportSystem extends EventEmitter {
     }
 
     // Generate transformations
-    plan.transformations = this.generateTransformations(sourceSchema, targetSchema, plan.mapping);
+    plan.transformations = this.generateTransformations(
+      sourceSchema,
+      targetSchema,
+      plan.mapping,
+    );
 
     // Generate validation rules
     plan.validation = this.generateValidationRules(targetSchema);
@@ -444,24 +496,30 @@ export class MemoryExportImportSystem extends EventEmitter {
     migrationPlan: MigrationPlan,
     options?: Partial<ImportOptions>,
   ): Promise<ImportResult> {
-    this.emit('migration_started', { inputPath, plan: migrationPlan });
+    this.emit("migration_started", { inputPath, plan: migrationPlan });
 
     try {
       // Load source data
       const sourceData = await this.loadRawData(inputPath);
 
       // Apply transformations
-      const transformedData = await this.applyTransformations(sourceData, migrationPlan);
+      const transformedData = await this.applyTransformations(
+        sourceData,
+        migrationPlan,
+      );
 
       // Convert to import format
-      const importData = this.convertToImportFormat(transformedData, migrationPlan);
+      const importData = this.convertToImportFormat(
+        transformedData,
+        migrationPlan,
+      );
 
       // Execute import with migration settings
       const importOptions: ImportOptions = {
-        format: 'json',
-        mode: 'merge',
-        validation: 'strict',
-        conflictResolution: 'merge',
+        format: "json",
+        mode: "merge",
+        validation: "strict",
+        conflictResolution: "merge",
         backup: true,
         dryRun: false,
         ...options,
@@ -482,10 +540,10 @@ export class MemoryExportImportSystem extends EventEmitter {
         await this.executePostProcessing(migrationPlan.postProcessing);
       }
 
-      this.emit('migration_completed', { result });
+      this.emit("migration_completed", { result });
       return result;
     } catch (error) {
-      this.emit('migration_error', {
+      this.emit("migration_error", {
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;
@@ -502,10 +560,10 @@ export class MemoryExportImportSystem extends EventEmitter {
     encryption: string[];
   } {
     return {
-      export: ['json', 'jsonl', 'csv', 'xml', 'yaml', 'sqlite', 'archive'],
-      import: ['json', 'jsonl', 'csv', 'xml', 'yaml', 'sqlite', 'archive'],
-      compression: ['gzip', 'zip', 'none'],
-      encryption: ['aes-256-gcm', 'aes-192-gcm', 'aes-128-gcm'],
+      export: ["json", "jsonl", "csv", "xml", "yaml", "sqlite", "archive"],
+      import: ["json", "jsonl", "csv", "xml", "yaml", "sqlite", "archive"],
+      compression: ["gzip", "zip", "none"],
+      encryption: ["aes-256-gcm", "aes-192-gcm", "aes-128-gcm"],
     };
   }
 
@@ -514,7 +572,7 @@ export class MemoryExportImportSystem extends EventEmitter {
    */
   async validateCompatibility(
     sourcePath: string,
-    _targetSystem: string = 'DocuMCP',
+    _targetSystem: string = "DocuMCP",
   ): Promise<{
     compatible: boolean;
     issues: string[];
@@ -547,16 +605,18 @@ export class MemoryExportImportSystem extends EventEmitter {
       const integrityIssues = this.validateDataIntegrity(sampleData);
       if (integrityIssues.length > 0) {
         issues.push(...integrityIssues);
-        recommendations.push('Consider data cleaning before import');
+        recommendations.push("Consider data cleaning before import");
       }
 
       // Generate recommendations
       if (migrationRequired) {
-        recommendations.push('Create migration plan for schema transformation');
+        recommendations.push("Create migration plan for schema transformation");
       }
 
-      if (format === 'csv') {
-        recommendations.push('Consider using JSON or JSONL for better data preservation');
+      if (format === "csv") {
+        recommendations.push(
+          "Consider using JSON or JSONL for better data preservation",
+        );
       }
 
       return {
@@ -569,7 +629,7 @@ export class MemoryExportImportSystem extends EventEmitter {
       return {
         compatible: false,
         issues: [error instanceof Error ? error.message : String(error)],
-        recommendations: ['Verify file format and accessibility'],
+        recommendations: ["Verify file format and accessibility"],
         migrationRequired: false,
       };
     }
@@ -578,7 +638,9 @@ export class MemoryExportImportSystem extends EventEmitter {
   /**
    * Private helper methods
    */
-  private async getFilteredEntries(filters?: ExportOptions['filters']): Promise<MemoryEntry[]> {
+  private async getFilteredEntries(
+    filters?: ExportOptions["filters"],
+  ): Promise<MemoryEntry[]> {
     let entries = await this.storage.getAll();
 
     if (!filters) return entries;
@@ -592,7 +654,10 @@ export class MemoryExportImportSystem extends EventEmitter {
     if (filters.dateRange) {
       entries = entries.filter((entry) => {
         const entryDate = new Date(entry.timestamp);
-        return entryDate >= filters.dateRange!.start && entryDate <= filters.dateRange!.end;
+        return (
+          entryDate >= filters.dateRange!.start &&
+          entryDate <= filters.dateRange!.end
+        );
       });
     }
 
@@ -601,14 +666,17 @@ export class MemoryExportImportSystem extends EventEmitter {
       entries = entries.filter((entry) =>
         filters.projects!.some(
           (project) =>
-            entry.data.projectPath?.includes(project) || entry.data.projectId === project,
+            entry.data.projectPath?.includes(project) ||
+            entry.data.projectId === project,
         ),
       );
     }
 
     // Apply tags filter
     if (filters.tags && filters.tags.length > 0) {
-      entries = entries.filter((entry) => entry.tags?.some((tag) => filters.tags!.includes(tag)));
+      entries = entries.filter(
+        (entry) => entry.tags?.some((tag) => filters.tags!.includes(tag)),
+      );
     }
 
     // Apply outcomes filter
@@ -616,20 +684,25 @@ export class MemoryExportImportSystem extends EventEmitter {
       entries = entries.filter(
         (entry) =>
           filters.outcomes!.includes(entry.data.outcome) ||
-          (entry.data.success === true && filters.outcomes!.includes('success')) ||
-          (entry.data.success === false && filters.outcomes!.includes('failure')),
+          (entry.data.success === true &&
+            filters.outcomes!.includes("success")) ||
+          (entry.data.success === false &&
+            filters.outcomes!.includes("failure")),
       );
     }
 
     return entries;
   }
 
-  private async prepareExportData(entries: MemoryEntry[], options: ExportOptions): Promise<any> {
+  private async prepareExportData(
+    entries: MemoryEntry[],
+    options: ExportOptions,
+  ): Promise<any> {
     const exportData: any = {
       metadata: {
         version: this.version,
         exportedAt: new Date().toISOString(),
-        source: 'DocuMCP Memory System',
+        source: "DocuMCP Memory System",
         entries: entries.length,
         options: {
           includeMetadata: options.includeMetadata,
@@ -668,14 +741,14 @@ export class MemoryExportImportSystem extends EventEmitter {
     anonymizeOptions: { fields: string[]; method: string },
   ): void {
     const anonymizeValue = (value: any, method: string): any => {
-      if (typeof value !== 'string') return value;
+      if (typeof value !== "string") return value;
 
       switch (method) {
-        case 'hash':
+        case "hash":
           return this.hashValue(value);
-        case 'remove':
+        case "remove":
           return null;
-        case 'pseudonymize':
+        case "pseudonymize":
           return this.pseudonymizeValue(value);
         default:
           return value;
@@ -686,7 +759,7 @@ export class MemoryExportImportSystem extends EventEmitter {
       for (const [key, value] of Object.entries(obj)) {
         if (anonymizeOptions.fields.includes(key)) {
           obj[key] = anonymizeValue(value, anonymizeOptions.method);
-        } else if (typeof value === 'object' && value !== null) {
+        } else if (typeof value === "object" && value !== null) {
           anonymizeObject(value);
         }
       }
@@ -708,7 +781,7 @@ export class MemoryExportImportSystem extends EventEmitter {
 
   private pseudonymizeValue(_value: string): string {
     // Simple pseudonymization - in production, use proper techniques
-    const prefixes = ['user', 'project', 'system', 'item'];
+    const prefixes = ["user", "project", "system", "item"];
     const suffix = Math.random().toString(36).substr(2, 8);
     const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
     return `${prefix}_${suffix}`;
@@ -722,10 +795,10 @@ export class MemoryExportImportSystem extends EventEmitter {
     const jsonData = JSON.stringify(data, null, 2);
     // Handle compression-aware file paths (e.g., file.json.gz)
     let filePath = outputPath;
-    if (!outputPath.includes('.json')) {
+    if (!outputPath.includes(".json")) {
       filePath = `${outputPath}.json`;
     }
-    await fs.writeFile(filePath, jsonData, 'utf8');
+    await fs.writeFile(filePath, jsonData, "utf8");
     return filePath;
   }
 
@@ -734,36 +807,43 @@ export class MemoryExportImportSystem extends EventEmitter {
     data: any,
     _options: ExportOptions,
   ): Promise<string> {
-    const filePath = outputPath.endsWith('.jsonl') ? outputPath : `${outputPath}.jsonl`;
+    const filePath = outputPath.endsWith(".jsonl")
+      ? outputPath
+      : `${outputPath}.jsonl`;
 
     return new Promise((resolve, reject) => {
       const writeStream = createWriteStream(filePath);
 
-      writeStream.on('error', (error) => {
+      writeStream.on("error", (error) => {
         reject(error);
       });
 
-      writeStream.on('finish', () => {
+      writeStream.on("finish", () => {
         resolve(filePath);
       });
 
       // Write metadata as first line
-      writeStream.write(JSON.stringify(data.metadata) + '\n');
+      writeStream.write(JSON.stringify(data.metadata) + "\n");
 
       // Write each memory entry as a separate line
       for (const entry of data.memories) {
-        writeStream.write(JSON.stringify(entry) + '\n');
+        writeStream.write(JSON.stringify(entry) + "\n");
       }
 
       // Write learning data if included
       if (data.learning) {
-        writeStream.write(JSON.stringify({ type: 'learning', data: data.learning }) + '\n');
+        writeStream.write(
+          JSON.stringify({ type: "learning", data: data.learning }) + "\n",
+        );
       }
 
       // Write knowledge graph if included
       if (data.knowledgeGraph) {
         writeStream.write(
-          JSON.stringify({ type: 'knowledgeGraph', data: data.knowledgeGraph }) + '\n',
+          JSON.stringify({
+            type: "knowledgeGraph",
+            data: data.knowledgeGraph,
+          }) + "\n",
         );
       }
 
@@ -776,38 +856,41 @@ export class MemoryExportImportSystem extends EventEmitter {
     data: any,
     _options: ExportOptions,
   ): Promise<string> {
-    const filePath = outputPath.endsWith('.csv') ? outputPath : `${outputPath}.csv`;
+    const filePath = outputPath.endsWith(".csv")
+      ? outputPath
+      : `${outputPath}.csv`;
 
     // Flatten memory entries for CSV format
     const flattenedEntries = data.memories.map((entry: MemoryEntry) => ({
       id: entry.id,
       timestamp: entry.timestamp,
       type: entry.type,
-      projectPath: entry.data.projectPath || '',
-      projectId: entry.data.projectId || '',
-      language: entry.data.language || '',
-      framework: entry.data.framework || '',
-      outcome: entry.data.outcome || '',
+      projectPath: entry.data.projectPath || "",
+      projectId: entry.data.projectId || "",
+      language: entry.data.language || "",
+      framework: entry.data.framework || "",
+      outcome: entry.data.outcome || "",
       success: entry.data.success || false,
-      tags: entry.tags?.join(';') || '',
+      tags: entry.tags?.join(";") || "",
       metadata: JSON.stringify(entry.metadata || {}),
     }));
 
     // Generate CSV headers
     const headers = Object.keys(flattenedEntries[0] || {});
-    const csvLines = [headers.join(',')];
+    const csvLines = [headers.join(",")];
 
     // Generate CSV rows
     for (const entry of flattenedEntries) {
       const row = headers.map((header) => {
         const value = entry[header as keyof typeof entry];
-        const stringValue = typeof value === 'string' ? value : JSON.stringify(value);
+        const stringValue =
+          typeof value === "string" ? value : JSON.stringify(value);
         return `"${stringValue.replace(/"/g, '""')}"`;
       });
-      csvLines.push(row.join(','));
+      csvLines.push(row.join(","));
     }
 
-    await fs.writeFile(filePath, csvLines.join('\n'), 'utf8');
+    await fs.writeFile(filePath, csvLines.join("\n"), "utf8");
     return filePath;
   }
 
@@ -816,10 +899,12 @@ export class MemoryExportImportSystem extends EventEmitter {
     data: any,
     _options: ExportOptions,
   ): Promise<string> {
-    const filePath = outputPath.endsWith('.xml') ? outputPath : `${outputPath}.xml`;
+    const filePath = outputPath.endsWith(".xml")
+      ? outputPath
+      : `${outputPath}.xml`;
 
     const xmlData = this.convertToXML(data);
-    await fs.writeFile(filePath, xmlData, 'utf8');
+    await fs.writeFile(filePath, xmlData, "utf8");
     return filePath;
   }
 
@@ -828,11 +913,13 @@ export class MemoryExportImportSystem extends EventEmitter {
     data: any,
     _options: ExportOptions,
   ): Promise<string> {
-    const filePath = outputPath.endsWith('.yaml') ? outputPath : `${outputPath}.yaml`;
+    const filePath = outputPath.endsWith(".yaml")
+      ? outputPath
+      : `${outputPath}.yaml`;
 
     // Simple YAML conversion - in production, use a proper YAML library
     const yamlData = this.convertToYAML(data);
-    await fs.writeFile(filePath, yamlData, 'utf8');
+    await fs.writeFile(filePath, yamlData, "utf8");
     return filePath;
   }
 
@@ -843,7 +930,9 @@ export class MemoryExportImportSystem extends EventEmitter {
   ): Promise<string> {
     // This would require a SQLite library like better-sqlite3
     // For now, throw an error indicating additional dependencies needed
-    throw new Error('SQLite export requires additional dependencies (better-sqlite3)');
+    throw new Error(
+      "SQLite export requires additional dependencies (better-sqlite3)",
+    );
   }
 
   private async exportToArchive(
@@ -851,14 +940,16 @@ export class MemoryExportImportSystem extends EventEmitter {
     data: any,
     options: ExportOptions,
   ): Promise<string> {
-    const archivePath = outputPath.endsWith('.tar') ? outputPath : `${outputPath}.tar`;
+    const archivePath = outputPath.endsWith(".tar")
+      ? outputPath
+      : `${outputPath}.tar`;
 
     // Create archive metadata
     const metadata: ArchiveMetadata = {
       version: this.version,
       created: new Date(),
-      source: 'DocuMCP Memory System',
-      description: 'Complete memory system export archive',
+      source: "DocuMCP Memory System",
+      description: "Complete memory system export archive",
       manifest: {
         files: [],
         total: { files: 0, size: 0, entries: data.memories.length },
@@ -868,17 +959,17 @@ export class MemoryExportImportSystem extends EventEmitter {
 
     // This would require archiving capabilities
     // For now, create multiple files and reference them in metadata
-    const baseDir = archivePath.replace('.tar', '');
+    const baseDir = archivePath.replace(".tar", "");
     await fs.mkdir(baseDir, { recursive: true });
 
     // Export memories as JSON
     const memoriesPath = `${baseDir}/memories.json`;
     await this.exportToJSON(memoriesPath, { memories: data.memories }, options);
     metadata.manifest.files.push({
-      name: 'memories.json',
-      type: 'memories',
+      name: "memories.json",
+      type: "memories",
       size: (await fs.stat(memoriesPath)).size,
-      checksum: 'sha256-placeholder',
+      checksum: "sha256-placeholder",
       entries: data.memories.length,
     });
 
@@ -887,10 +978,10 @@ export class MemoryExportImportSystem extends EventEmitter {
       const learningPath = `${baseDir}/learning.json`;
       await this.exportToJSON(learningPath, data.learning, options);
       metadata.manifest.files.push({
-        name: 'learning.json',
-        type: 'learning',
+        name: "learning.json",
+        type: "learning",
         size: (await fs.stat(learningPath)).size,
-        checksum: 'sha256-placeholder',
+        checksum: "sha256-placeholder",
       });
     }
 
@@ -899,10 +990,10 @@ export class MemoryExportImportSystem extends EventEmitter {
       const kgPath = `${baseDir}/knowledge-graph.json`;
       await this.exportToJSON(kgPath, data.knowledgeGraph, options);
       metadata.manifest.files.push({
-        name: 'knowledge-graph.json',
-        type: 'knowledge-graph',
+        name: "knowledge-graph.json",
+        type: "knowledge-graph",
         size: (await fs.stat(kgPath)).size,
-        checksum: 'sha256-placeholder',
+        checksum: "sha256-placeholder",
       });
     }
 
@@ -918,11 +1009,11 @@ export class MemoryExportImportSystem extends EventEmitter {
     compression: string,
     targetPath?: string,
   ): Promise<string> {
-    if (compression === 'gzip') {
+    if (compression === "gzip") {
       const compressedPath = targetPath || `${filePath}.gz`;
-      const content = await fs.readFile(filePath, 'utf8');
+      const content = await fs.readFile(filePath, "utf8");
       // Simple mock compression - just add a header and write the content
-      await fs.writeFile(compressedPath, `GZIP_HEADER\n${content}`, 'utf8');
+      await fs.writeFile(compressedPath, `GZIP_HEADER\n${content}`, "utf8");
 
       // Clean up temp file if we used one
       if (targetPath && targetPath !== filePath) {
@@ -933,71 +1024,80 @@ export class MemoryExportImportSystem extends EventEmitter {
     }
 
     // For other compression types or 'none', return original path
-    this.emit('compression_skipped', { reason: 'Not implemented', compression });
+    this.emit("compression_skipped", {
+      reason: "Not implemented",
+      compression,
+    });
     return filePath;
   }
 
-  private async applyEncryption(filePath: string, encryption: any): Promise<string> {
+  private async applyEncryption(
+    filePath: string,
+    encryption: any,
+  ): Promise<string> {
     // This would require encryption capabilities
     // For now, return the original path
-    this.emit('encryption_skipped', { reason: 'Not implemented', encryption });
+    this.emit("encryption_skipped", { reason: "Not implemented", encryption });
     return filePath;
   }
 
   private getIncludedComponents(options: ExportOptions): string[] {
-    const components = ['memories'];
-    if (options.includeMetadata) components.push('metadata');
-    if (options.includeLearning) components.push('learning');
-    if (options.includeKnowledgeGraph) components.push('knowledge-graph');
+    const components = ["memories"];
+    if (options.includeMetadata) components.push("metadata");
+    if (options.includeLearning) components.push("learning");
+    if (options.includeKnowledgeGraph) components.push("knowledge-graph");
     return components;
   }
 
   private async detectFormat(filePath: string): Promise<string> {
-    const extension = filePath.split('.').pop()?.toLowerCase();
+    const extension = filePath.split(".").pop()?.toLowerCase();
 
     switch (extension) {
-      case 'json':
-        return 'json';
-      case 'jsonl':
-        return 'jsonl';
-      case 'csv':
-        return 'csv';
-      case 'xml':
-        return 'xml';
-      case 'yaml':
-      case 'yml':
-        return 'yaml';
-      case 'db':
-      case 'sqlite':
-        return 'sqlite';
-      case 'tar':
-      case 'zip':
-        return 'archive';
+      case "json":
+        return "json";
+      case "jsonl":
+        return "jsonl";
+      case "csv":
+        return "csv";
+      case "xml":
+        return "xml";
+      case "yaml":
+      case "yml":
+        return "yaml";
+      case "db":
+      case "sqlite":
+        return "sqlite";
+      case "tar":
+      case "zip":
+        return "archive";
       default: {
         // Try to detect by content
-        const content = await fs.readFile(filePath, 'utf8');
-        if (content.trim().startsWith('{') || content.trim().startsWith('[')) {
-          return 'json';
+        const content = await fs.readFile(filePath, "utf8");
+        if (content.trim().startsWith("{") || content.trim().startsWith("[")) {
+          return "json";
         }
-        if (content.includes('<?xml')) {
-          return 'xml';
+        if (content.includes("<?xml")) {
+          return "xml";
         }
-        return 'unknown';
+        return "unknown";
       }
     }
   }
 
-  private async loadImportData(filePath: string, options: ImportOptions): Promise<any> {
+  private async loadImportData(
+    filePath: string,
+    options: ImportOptions,
+  ): Promise<any> {
     switch (options.format) {
-      case 'json':
-        return JSON.parse(await fs.readFile(filePath, 'utf8'));
-      case 'jsonl':
+      case "json":
+        return JSON.parse(await fs.readFile(filePath, "utf8"));
+      case "jsonl":
         return this.loadJSONLData(filePath);
-      case 'csv':
+      case "csv":
         return this.loadCSVData(filePath);
-      case 'xml':
+      case "xml":
         return this.loadXMLData(filePath);
-      case 'yaml':
+      case "yaml":
         return this.loadYAMLData(filePath);
       default:
         throw new Error(`Unsupported import format: ${options.format}`);
@@ -1005,17 +1105,17 @@ export class MemoryExportImportSystem extends EventEmitter {
   }
 
   private async loadJSONLData(filePath: string): Promise<any> {
-    const content = await fs.readFile(filePath, 'utf8');
-    const lines = content.trim().split('\n');
+    const content = await fs.readFile(filePath, "utf8");
+    const lines = content.trim().split("\n");
 
     const data: any = { memories: [], learning: null, knowledgeGraph: null };
 
     for (const line of lines) {
       const parsed = JSON.parse(line);
 
-      if (parsed.type === 'learning') {
+      if (parsed.type === "learning") {
         data.learning = parsed.data;
-      } else if (parsed.type === 'knowledgeGraph') {
+      } else if (parsed.type === "knowledgeGraph") {
         data.knowledgeGraph = parsed.data;
       } else if (parsed.version) {
         data.metadata = parsed;
@@ -1028,9 +1128,9 @@ export class MemoryExportImportSystem extends EventEmitter {
   }
 
   private async loadCSVData(filePath: string): Promise<any> {
-    const content = await fs.readFile(filePath, 'utf8');
-    const lines = content.trim().split('\n');
-    const headers = lines[0].split(',').map((h) => h.replace(/"/g, ''));
+    const content = await fs.readFile(filePath, "utf8");
+    const lines = content.trim().split("\n");
+    const headers = lines[0].split(",").map((h) => h.replace(/"/g, ""));
 
     const memories = [];
     for (let i = 1; i < lines.length; i++) {
@@ -1042,19 +1142,25 @@ export class MemoryExportImportSystem extends EventEmitter {
         const value = values[j];
 
         // Parse special fields
-        if (header === 'tags') {
-          entry.tags = value ? value.split(';') : [];
-        } else if (header === 'metadata') {
+        if (header === "tags") {
+          entry.tags = value ? value.split(";") : [];
+        } else if (header === "metadata") {
           try {
             entry.metadata = JSON.parse(value);
           } catch {
             entry.metadata = {};
           }
-        } else if (header === 'success') {
+        } else if (header === "success") {
           entry.data = entry.data || {};
-          entry.data.success = value === 'true';
+          entry.data.success = value === "true";
         } else if (
-          ['projectPath', 'projectId', 'language', 'framework', 'outcome'].includes(header)
+          [
+            "projectPath",
+            "projectId",
+            "language",
+            "framework",
+            "outcome",
+          ].includes(header)
         ) {
           entry.data = entry.data || {};
           entry.data[header] = value;
@@ -1071,7 +1177,7 @@ export class MemoryExportImportSystem extends EventEmitter {
 
   private parseCSVLine(line: string): string[] {
     const values: string[] = [];
-    let current = '';
+    let current = "";
     let inQuotes = false;
 
     for (let i = 0; i < line.length; i++) {
@@ -1084,9 +1190,9 @@ export class MemoryExportImportSystem extends EventEmitter {
         } else {
           inQuotes = !inQuotes;
         }
-      } else if (char === ',' && !inQuotes) {
+      } else if (char === "," && !inQuotes) {
         values.push(current);
-        current = '';
+        current = "";
       } else {
         current += char;
       }
@@ -1098,12 +1204,12 @@ export class MemoryExportImportSystem extends EventEmitter {
 
   private async loadXMLData(_filePath: string): Promise<any> {
     // This would require an XML parser
-    throw new Error('XML import requires additional dependencies (xml2js)');
+    throw new Error("XML import requires additional dependencies (xml2js)");
   }
 
   private async loadYAMLData(_filePath: string): Promise<any> {
     // This would require a YAML parser
-    throw new Error('YAML import requires additional dependencies (js-yaml)');
+    throw new Error("YAML import requires additional dependencies (js-yaml)");
   }
 
   private async validateImportData(
@@ -1113,7 +1219,7 @@ export class MemoryExportImportSystem extends EventEmitter {
     const result = { valid: 0, invalid: 0, warnings: [] as string[] };
 
     if (!data.memories || !Array.isArray(data.memories)) {
-      result.warnings.push('No memories array found in import data');
+      result.warnings.push("No memories array found in import data");
       return result;
     }
 
@@ -1141,22 +1247,25 @@ export class MemoryExportImportSystem extends EventEmitter {
     }
 
     if (!entry.type) {
-      return validation !== 'strict';
+      return validation !== "strict";
     }
 
-    if (validation === 'strict') {
-      return Boolean(entry.data && typeof entry.data === 'object');
+    if (validation === "strict") {
+      return Boolean(entry.data && typeof entry.data === "object");
     }
 
     // For loose validation, still require data to be defined (not null)
-    if (validation === 'loose' && entry.data === null) {
+    if (validation === "loose" && entry.data === null) {
       return false;
     }
 
     return true;
   }
 
-  private async processImportData(data: any, options: ImportOptions): Promise<ImportResult> {
+  private async processImportData(
+    data: any,
+    options: ImportOptions,
+  ): Promise<ImportResult> {
     const result: ImportResult = {
       success: true,
       processed: 0,
@@ -1174,7 +1283,7 @@ export class MemoryExportImportSystem extends EventEmitter {
       },
       metadata: {
         importedAt: new Date(),
-        source: 'imported data',
+        source: "imported data",
         format: options.format,
         mode: options.mode,
       },
@@ -1183,7 +1292,7 @@ export class MemoryExportImportSystem extends EventEmitter {
     if (!data.memories || !Array.isArray(data.memories)) {
       result.success = false;
       result.errors = 1;
-      result.errorDetails = ['No valid memories array found in import data'];
+      result.errorDetails = ["No valid memories array found in import data"];
       return result;
     }
 
@@ -1202,7 +1311,9 @@ export class MemoryExportImportSystem extends EventEmitter {
           result.errors++;
           result.summary.failedEntries++;
           result.errorDetails.push(
-            `Invalid memory entry: ${transformedEntry.id || 'unknown'} - validation failed`,
+            `Invalid memory entry: ${
+              transformedEntry.id || "unknown"
+            } - validation failed`,
           );
           continue;
         }
@@ -1215,18 +1326,21 @@ export class MemoryExportImportSystem extends EventEmitter {
           result.conflicts++;
 
           switch (options.conflictResolution) {
-            case 'skip':
+            case "skip":
               result.skipped++;
               result.summary.duplicateEntries++;
               continue;
-            case 'overwrite':
+            case "overwrite":
               if (!options.dryRun) {
-                await this.storage.update(transformedEntry.id, transformedEntry);
+                await this.storage.update(
+                  transformedEntry.id,
+                  transformedEntry,
+                );
                 result.imported++;
                 result.summary.updatedEntries++;
               }
               break;
-            case 'merge':
+            case "merge":
               if (!options.dryRun) {
                 const merged = this.mergeEntries(existing, transformedEntry);
                 await this.storage.update(transformedEntry.id, merged);
@@ -1234,7 +1348,7 @@ export class MemoryExportImportSystem extends EventEmitter {
                 result.summary.updatedEntries++;
               }
               break;
-            case 'rename': {
+            case "rename": {
               const newId = `${transformedEntry.id}_imported_${Date.now()}`;
               if (!options.dryRun) {
                 await this.storage.store({ ...transformedEntry, id: newId });
@@ -1254,7 +1368,9 @@ export class MemoryExportImportSystem extends EventEmitter {
       } catch (error) {
         result.errors++;
         result.summary.failedEntries++;
-        result.errorDetails.push(error instanceof Error ? error.message : String(error));
+        result.errorDetails.push(
+          error instanceof Error ? error.message : String(error),
+        );
       }
     }
 
@@ -1271,7 +1387,10 @@ export class MemoryExportImportSystem extends EventEmitter {
     return result;
   }
 
-  private mergeEntries(existing: MemoryEntry, imported: MemoryEntry): MemoryEntry {
+  private mergeEntries(
+    existing: MemoryEntry,
+    imported: MemoryEntry,
+  ): MemoryEntry {
     return {
       ...existing,
       ...imported,
@@ -1287,7 +1406,7 @@ export class MemoryExportImportSystem extends EventEmitter {
       for (const pattern of learningData.patterns) {
         // This would require methods to import patterns into the learning system
         // For now, just emit an event
-        this.emit('learning_pattern_imported', pattern);
+        this.emit("learning_pattern_imported", pattern);
       }
     }
   }
@@ -1309,13 +1428,13 @@ export class MemoryExportImportSystem extends EventEmitter {
   private async createBackup(): Promise<string> {
     const backupPath = `backup_${Date.now()}.json`;
     const exportResult = await this.exportMemories(backupPath, {
-      format: 'json',
+      format: "json",
       includeMetadata: true,
       includeLearning: true,
       includeKnowledgeGraph: true,
     });
 
-    this.emit('backup_created', { path: exportResult.filePath });
+    this.emit("backup_created", { path: exportResult.filePath });
     return exportResult.filePath || backupPath;
   }
 
@@ -1323,16 +1442,18 @@ export class MemoryExportImportSystem extends EventEmitter {
     // Simple XML conversion - in production, use a proper XML library
     const escapeXML = (str: string) =>
       str
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#x27;');
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#x27;");
 
     let xml = '<?xml version="1.0" encoding="UTF-8"?>\n<export>\n';
     xml += `  <metadata>\n`;
     xml += `    <version>${escapeXML(data.metadata.version)}</version>\n`;
-    xml += `    <exportedAt>${escapeXML(data.metadata.exportedAt)}</exportedAt>\n`;
+    xml += `    <exportedAt>${escapeXML(
+      data.metadata.exportedAt,
+    )}</exportedAt>\n`;
     xml += `    <entries>${data.metadata.entries}</entries>\n`;
     xml += `  </metadata>\n`;
     xml += `  <memories>\n`;
@@ -1347,35 +1468,43 @@ export class MemoryExportImportSystem extends EventEmitter {
     }
 
     xml += `  </memories>\n`;
-    xml += '</export>';
+    xml += "</export>";
 
     return xml;
   }
 
   private convertToYAML(data: any): string {
     // Simple YAML conversion - in production, use a proper YAML library
-    const indent = (level: number) => '  '.repeat(level);
+    const indent = (level: number) => "  ".repeat(level);
     const toYAML = (obj: any, level: number = 0): string => {
-      if (obj === null) return 'null';
-      if (typeof obj === 'boolean') return obj.toString();
-      if (typeof obj === 'number') return obj.toString();
-      if (typeof obj === 'string') return `"${obj.replace(/"/g, '\\"')}"`;
+      if (obj === null) return "null";
+      if (typeof obj === "boolean") return obj.toString();
+      if (typeof obj === "number") return obj.toString();
+      if (typeof obj === "string") return `"${obj.replace(/"/g, '\\"')}"`;
 
       if (Array.isArray(obj)) {
-        if (obj.length === 0) return '[]';
+        if (obj.length === 0) return "[]";
         return (
-          '\n' + obj.map((item) => `${indent(level)}- ${toYAML(item, level + 1).trim()}`).join('\n')
+          "\n" +
+          obj
+            .map(
+              (item) => `${indent(level)}- ${toYAML(item, level + 1).trim()}`,
+            )
+            .join("\n")
         );
       }
 
-      if (typeof obj === 'object') {
+      if (typeof obj === "object") {
         const keys = Object.keys(obj);
-        if (keys.length === 0) return '{}';
+        if (keys.length === 0) return "{}";
         return (
-          '\n' +
+          "\n" +
           keys
-            .map((key) => `${indent(level)}${key}: ${toYAML(obj[key], level + 1).trim()}`)
-            .join('\n')
+            .map(
+              (key) =>
+                `${indent(level)}${key}: ${toYAML(obj[key], level + 1).trim()}`,
+            )
+            .join("\n")
         );
       }
 
@@ -1386,7 +1515,10 @@ export class MemoryExportImportSystem extends EventEmitter {
   }
 
   // Additional helper methods for migration
-  private generateFieldMappings(sourceSchema: any, targetSchema: any): Record<string, string> {
+  private generateFieldMappings(
+    sourceSchema: any,
+    targetSchema: any,
+  ): Record<string, string> {
     const mappings: Record<string, string> = {};
 
     // Simple field name matching - in production, use more sophisticated mapping
@@ -1419,8 +1551,8 @@ export class MemoryExportImportSystem extends EventEmitter {
     sourceSchema: any,
     targetSchema: any,
     mapping: Record<string, string>,
-  ): MigrationPlan['transformations'] {
-    const transformations: MigrationPlan['transformations'] = [];
+  ): MigrationPlan["transformations"] {
+    const transformations: MigrationPlan["transformations"] = [];
 
     // Generate transformations based on field mappings and type differences
     for (const [sourceField, targetField] of Object.entries(mapping)) {
@@ -1430,7 +1562,7 @@ export class MemoryExportImportSystem extends EventEmitter {
       if (sourceType !== targetType) {
         transformations.push({
           field: targetField,
-          type: 'convert',
+          type: "convert",
           source: sourceField,
           target: targetField,
           operation: `${sourceType}_to_${targetType}`,
@@ -1438,7 +1570,7 @@ export class MemoryExportImportSystem extends EventEmitter {
       } else {
         transformations.push({
           field: targetField,
-          type: 'rename',
+          type: "rename",
           source: sourceField,
           target: targetField,
         });
@@ -1448,8 +1580,10 @@ export class MemoryExportImportSystem extends EventEmitter {
     return transformations;
   }
 
-  private generateValidationRules(targetSchema: any): MigrationPlan['validation'] {
-    const validation: MigrationPlan['validation'] = [];
+  private generateValidationRules(
+    targetSchema: any,
+  ): MigrationPlan["validation"] {
+    const validation: MigrationPlan["validation"] = [];
 
     // Generate validation rules based on target schema
     if (targetSchema.fields) {
@@ -1458,7 +1592,7 @@ export class MemoryExportImportSystem extends EventEmitter {
         const fieldConfig = config as any;
 
         if (fieldConfig.required) {
-          rules.push('required');
+          rules.push("required");
         }
 
         if (fieldConfig.type) {
@@ -1484,23 +1618,23 @@ export class MemoryExportImportSystem extends EventEmitter {
     const steps: string[] = [];
 
     // Generate post-processing steps
-    steps.push('rebuild_indices');
-    steps.push('update_references');
-    steps.push('validate_integrity');
+    steps.push("rebuild_indices");
+    steps.push("update_references");
+    steps.push("validate_integrity");
 
     if (targetSchema.features?.learning) {
-      steps.push('retrain_models');
+      steps.push("retrain_models");
     }
 
     if (targetSchema.features?.knowledgeGraph) {
-      steps.push('rebuild_graph');
+      steps.push("rebuild_graph");
     }
 
     return steps;
   }
 
   private async loadRawData(inputPath: string): Promise<any> {
-    const content = await fs.readFile(inputPath, 'utf8');
+    const content = await fs.readFile(inputPath, "utf8");
     try {
       return JSON.parse(content);
     } catch {
@@ -1508,16 +1642,23 @@ export class MemoryExportImportSystem extends EventEmitter {
     }
   }
 
-  private async applyTransformations(data: any, plan: MigrationPlan): Promise<any> {
+  private async applyTransformations(
+    data: any,
+    plan: MigrationPlan,
+  ): Promise<any> {
     const transformed = JSON.parse(JSON.stringify(data)); // Deep clone
 
     for (const transformation of plan.transformations) {
       // Apply transformation based on type
       switch (transformation.type) {
-        case 'rename':
-          this.renameField(transformed, transformation.source as string, transformation.target);
+        case "rename":
+          this.renameField(
+            transformed,
+            transformation.source as string,
+            transformation.target,
+          );
           break;
-        case 'convert':
+        case "convert":
           this.convertField(
             transformed,
             transformation.source as string,
@@ -1533,7 +1674,7 @@ export class MemoryExportImportSystem extends EventEmitter {
   }
 
   private renameField(obj: any, oldName: string, newName: string): void {
-    if (typeof obj !== 'object' || obj === null) return;
+    if (typeof obj !== "object" || obj === null) return;
 
     if (Array.isArray(obj)) {
       obj.forEach((item) => this.renameField(item, oldName, newName));
@@ -1543,32 +1684,42 @@ export class MemoryExportImportSystem extends EventEmitter {
         delete obj[oldName];
       }
 
-      Object.values(obj).forEach((value) => this.renameField(value, oldName, newName));
+      Object.values(obj).forEach((value) =>
+        this.renameField(value, oldName, newName),
+      );
     }
   }
 
-  private convertField(obj: any, fieldName: string, targetName: string, operation?: string): void {
-    if (typeof obj !== 'object' || obj === null) return;
+  private convertField(
+    obj: any,
+    fieldName: string,
+    targetName: string,
+    operation?: string,
+  ): void {
+    if (typeof obj !== "object" || obj === null) return;
 
     if (Array.isArray(obj)) {
-      obj.forEach((item) => this.convertField(item, fieldName, targetName, operation));
+      obj.forEach((item) =>
+        this.convertField(item, fieldName, targetName, operation),
+      );
     } else {
       if (fieldName in obj) {
         const value = obj[fieldName];
 
         // Apply conversion based on operation
         switch (operation) {
-          case 'string_to_number':
+          case "string_to_number":
             obj[targetName] = Number(value);
             break;
-          case 'number_to_string':
+          case "number_to_string":
             obj[targetName] = String(value);
             break;
-          case 'array_to_string':
-            obj[targetName] = Array.isArray(value) ? value.join(',') : value;
+          case "array_to_string":
+            obj[targetName] = Array.isArray(value) ? value.join(",") : value;
             break;
-          case 'string_to_array':
-            obj[targetName] = typeof value === 'string' ? value.split(',') : value;
+          case "string_to_array":
+            obj[targetName] =
+              typeof value === "string" ? value.split(",") : value;
             break;
           default:
             obj[targetName] = value;
@@ -1598,25 +1749,39 @@ export class MemoryExportImportSystem extends EventEmitter {
 
       // Convert old flat format to new structured format
       const converted: any = {
-        id: entry.id || `migrated_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        type: entry.type || 'analysis',
+        id:
+          entry.id ||
+          `migrated_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        type: entry.type || "analysis",
         timestamp: entry.timestamp || new Date().toISOString(),
         data: {},
         metadata: {},
       };
 
       // Move known fields to appropriate locations
-      const dataFields = ['language', 'recommendation', 'framework', 'outcome', 'success'];
-      const metadataFields = ['project', 'projectId', 'repository', 'ssg', 'tags'];
+      const dataFields = [
+        "language",
+        "recommendation",
+        "framework",
+        "outcome",
+        "success",
+      ];
+      const metadataFields = [
+        "project",
+        "projectId",
+        "repository",
+        "ssg",
+        "tags",
+      ];
 
       for (const [key, value] of Object.entries(entry)) {
-        if (['id', 'type', 'timestamp'].includes(key)) {
+        if (["id", "type", "timestamp"].includes(key)) {
           // Already handled above
           continue;
         } else if (dataFields.includes(key)) {
           converted.data[key] = value;
         } else if (metadataFields.includes(key)) {
-          if (key === 'project') {
+          if (key === "project") {
             converted.metadata.projectId = value; // Convert old 'project' field to 'projectId'
           } else {
             converted.metadata[key] = value;
@@ -1645,26 +1810,26 @@ export class MemoryExportImportSystem extends EventEmitter {
     for (const step of steps) {
       try {
         switch (step) {
-          case 'rebuild_indices':
+          case "rebuild_indices":
             await this.storage.rebuildIndex();
             break;
-          case 'update_references':
+          case "update_references":
             // Update cross-references in data
             break;
-          case 'validate_integrity':
+          case "validate_integrity":
             // Validate data integrity
             break;
-          case 'retrain_models':
+          case "retrain_models":
             // Trigger learning system retraining
             break;
-          case 'rebuild_graph':
+          case "rebuild_graph":
             // Rebuild knowledge graph
             break;
         }
 
-        this.emit('post_processing_step_completed', { step });
+        this.emit("post_processing_step_completed", { step });
       } catch (error) {
-        this.emit('post_processing_step_failed', {
+        this.emit("post_processing_step_failed", {
           step,
           error: error instanceof Error ? error.message : String(error),
         });
@@ -1672,10 +1837,13 @@ export class MemoryExportImportSystem extends EventEmitter {
     }
   }
 
-  private async loadSampleData(sourcePath: string, format: string): Promise<any> {
+  private async loadSampleData(
+    sourcePath: string,
+    format: string,
+  ): Promise<any> {
     // Load a small sample of data for validation
-    if (format === 'json') {
-      const content = await fs.readFile(sourcePath, 'utf8');
+    if (format === "json") {
+      const content = await fs.readFile(sourcePath, "utf8");
       const data = JSON.parse(content);
 
       if (data.memories && Array.isArray(data.memories)) {
@@ -1693,28 +1861,29 @@ export class MemoryExportImportSystem extends EventEmitter {
     const issues: string[] = [];
 
     if (!sampleData.memories && !Array.isArray(sampleData)) {
-      issues.push('Expected memories array not found');
+      issues.push("Expected memories array not found");
     }
 
-    const memories = sampleData.memories || (Array.isArray(sampleData) ? sampleData : []);
+    const memories =
+      sampleData.memories || (Array.isArray(sampleData) ? sampleData : []);
 
     if (memories.length > 0) {
       const firstEntry = memories[0];
 
       if (!firstEntry.id) {
-        issues.push('Memory entries missing required id field');
+        issues.push("Memory entries missing required id field");
       }
 
       if (!firstEntry.timestamp) {
-        issues.push('Memory entries missing required timestamp field');
+        issues.push("Memory entries missing required timestamp field");
       }
 
       if (!firstEntry.type) {
-        issues.push('Memory entries missing required type field');
+        issues.push("Memory entries missing required type field");
       }
 
       if (!firstEntry.data) {
-        issues.push('Memory entries missing required data field');
+        issues.push("Memory entries missing required data field");
       }
     }
 
@@ -1724,7 +1893,8 @@ export class MemoryExportImportSystem extends EventEmitter {
   private validateDataIntegrity(sampleData: any): string[] {
     const issues: string[] = [];
 
-    const memories = sampleData.memories || (Array.isArray(sampleData) ? sampleData : []);
+    const memories =
+      sampleData.memories || (Array.isArray(sampleData) ? sampleData : []);
 
     // Check for duplicate IDs
     const ids = new Set();
@@ -1780,12 +1950,12 @@ export class MemoryExportImportSystem extends EventEmitter {
     if (options.transformation?.enabled && options.transformation.rules) {
       for (const rule of options.transformation.rules) {
         switch (rule.operation) {
-          case 'transform':
+          case "transform":
             if (rule.params?.value !== undefined) {
               this.setValueByPath(transformed, rule.field, rule.params.value);
             }
             break;
-          case 'convert':
+          case "convert":
             // Apply conversion based on params
             break;
         }
@@ -1799,14 +1969,14 @@ export class MemoryExportImportSystem extends EventEmitter {
    * Get value from object using dot notation path
    */
   private getValueByPath(obj: any, path: string): any {
-    return path.split('.').reduce((current, key) => current?.[key], obj);
+    return path.split(".").reduce((current, key) => current?.[key], obj);
   }
 
   /**
    * Set value in object using dot notation path
    */
   private setValueByPath(obj: any, path: string, value: any): void {
-    const keys = path.split('.');
+    const keys = path.split(".");
     const lastKey = keys.pop()!;
     const target = keys.reduce((current, key) => {
       if (!(key in current)) {
@@ -1821,10 +1991,10 @@ export class MemoryExportImportSystem extends EventEmitter {
    * Delete value from object using dot notation path
    */
   private deleteValueByPath(obj: any, path: string): void {
-    const keys = path.split('.');
+    const keys = path.split(".");
     const lastKey = keys.pop()!;
     const target = keys.reduce((current, key) => current?.[key], obj);
-    if (target && typeof target === 'object') {
+    if (target && typeof target === "object") {
       delete target[lastKey];
     }
   }

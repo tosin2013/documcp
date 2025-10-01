@@ -46,6 +46,7 @@ If applicable, add screenshots or log output to help explain your problem.
 ## Additional Context
 
 Add any other context about the problem here, such as:
+
 - Related configuration files
 - Recent changes to your environment
 - Workarounds you've tried

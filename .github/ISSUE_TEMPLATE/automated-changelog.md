@@ -4,24 +4,26 @@ description: "Add automated changelog generation from conventional commits"
 labels: ["enhancement", "automation", "documentation", "medium-priority"]
 assignees:
   - "tosinakinosho"
-
 ---
 
 ## 📋 Problem Description
 
 Currently, changelog updates are manual processes that can lead to:
+
 - Inconsistent formatting and content
 - Missed entries or inaccurate information
 - Time-consuming maintenance
 - Potential human error
 
 **Current State:**
+
 - Manual `CHANGELOG.md` updates
 - Basic automation in release workflow
 - Partial conventional commit adoption
 - Generic release notes in GitHub Releases
 
 **Impact:**
+
 - Reduced changelog reliability
 - Increased maintenance overhead
 - Inconsistent user communication
@@ -38,14 +40,17 @@ Currently, changelog updates are manual processes that can lead to:
 ## 🔧 Solution Proposal
 
 ### Phase 1: Conventional Commits Setup
+
 1. **Add commitlint configuration**:
+
    ```bash
    npm install --save-dev @commitlint/cli @commitlint/config-conventional
    ```
 
 2. **Create commitlint config** (`commitlint.config.js`):
+
    ```javascript
-   module.exports = { extends: ['@commitlint/config-conventional'] };
+   module.exports = { extends: ["@commitlint/config-conventional"] };
    ```
 
 3. **Set up husky hooks** for commit validation:
@@ -56,12 +61,15 @@ Currently, changelog updates are manual processes that can lead to:
    ```
 
 ### Phase 2: Automated Changelog Generation
+
 1. **Add standard-version** for automated releases:
+
    ```bash
    npm install --save-dev standard-version
    ```
 
 2. **Update package.json scripts**:
+
    ```json
    {
      "scripts": {
@@ -79,17 +87,19 @@ Currently, changelog updates are manual processes that can lead to:
        { type: "feat", section: "Features" },
        { type: "fix", section: "Bug Fixes" },
        { type: "chore", section: "Chores" },
-       { type: "docs", section: "Documentation" }
-     ]
+       { type: "docs", section: "Documentation" },
+     ],
    };
    ```
 
 ### Phase 3: Workflow Integration
+
 1. **Update release workflow** to use automated changelog:
+
    ```yaml
    - name: Generate changelog
      run: npx standard-version --release-as ${{ github.event.inputs.version_type }}
-     
+
    - name: Create GitHub Release
      uses: softprops/action-gh-release@v1
      with:
@@ -110,6 +120,7 @@ Currently, changelog updates are manual processes that can lead to:
 ## 🔍 Technical Details
 
 **Relevant Files:**
+
 - `.github/workflows/release.yml`
 - `CHANGELOG.md`
 - `package.json`
@@ -117,8 +128,9 @@ Currently, changelog updates are manual processes that can lead to:
 - `.husky/commit-msg`
 
 **Dependencies:**
+
 - @commitlint/cli
-- @commitlint/config-conventional  
+- @commitlint/config-conventional
 - husky
 - standard-version
 

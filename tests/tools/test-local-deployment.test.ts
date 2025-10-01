@@ -1,50 +1,50 @@
-import { testLocalDeployment } from '../../src/tools/test-local-deployment.js';
-import * as childProcess from 'child_process';
-import * as fs from 'fs';
+import { testLocalDeployment } from "../../src/tools/test-local-deployment.js";
+import * as childProcess from "child_process";
+import * as fs from "fs";
 
 // Create simpler mocking approach
 
-describe('testLocalDeployment', () => {
+describe("testLocalDeployment", () => {
   const testRepoPath = process.cwd();
 
   afterEach(() => {
     jest.restoreAllMocks();
   });
 
-  describe('Input validation', () => {
-    it('should handle invalid SSG parameter', async () => {
+  describe("Input validation", () => {
+    it("should handle invalid SSG parameter", async () => {
       await expect(
         testLocalDeployment({
-          repositoryPath: '/test/path',
-          ssg: 'invalid' as any,
+          repositoryPath: "/test/path",
+          ssg: "invalid" as any,
         }),
       ).rejects.toThrow();
     });
 
-    it('should handle missing required parameters', async () => {
+    it("should handle missing required parameters", async () => {
       await expect(
         testLocalDeployment({
-          ssg: 'docusaurus',
+          ssg: "docusaurus",
         } as any),
       ).rejects.toThrow();
     });
 
-    it('should handle unsupported SSG gracefully', async () => {
+    it("should handle unsupported SSG gracefully", async () => {
       // This should throw a ZodError due to input validation
       await expect(
         testLocalDeployment({
           repositoryPath: testRepoPath,
-          ssg: 'gatsby' as any,
+          ssg: "gatsby" as any,
         }),
-      ).rejects.toThrow('Invalid enum value');
+      ).rejects.toThrow("Invalid enum value");
     });
   });
 
-  describe('Basic functionality', () => {
-    it('should return proper response structure', async () => {
+  describe("Basic functionality", () => {
+    it("should return proper response structure", async () => {
       const result = await testLocalDeployment({
         repositoryPath: testRepoPath,
-        ssg: 'hugo',
+        ssg: "hugo",
         skipBuild: true,
       });
 
@@ -54,10 +54,10 @@ describe('testLocalDeployment', () => {
       expect(() => JSON.parse(result.content[0].text)).not.toThrow();
     });
 
-    it('should use default port when not specified', async () => {
+    it("should use default port when not specified", async () => {
       const result = await testLocalDeployment({
         repositoryPath: testRepoPath,
-        ssg: 'hugo',
+        ssg: "hugo",
         skipBuild: true,
       });
 
@@ -65,10 +65,10 @@ describe('testLocalDeployment', () => {
       expect(parsedResult.port).toBe(3000);
     });
 
-    it('should use custom port when specified', async () => {
+    it("should use custom port when specified", async () => {
       const result = await testLocalDeployment({
         repositoryPath: testRepoPath,
-        ssg: 'hugo',
+        ssg: "hugo",
         port: 4000,
         skipBuild: true,
       });
@@ -77,10 +77,10 @@ describe('testLocalDeployment', () => {
       expect(parsedResult.port).toBe(4000);
     });
 
-    it('should use custom timeout when specified', async () => {
+    it("should use custom timeout when specified", async () => {
       const result = await testLocalDeployment({
         repositoryPath: testRepoPath,
-        ssg: 'hugo',
+        ssg: "hugo",
         timeout: 120,
         skipBuild: true,
       });
@@ -90,9 +90,9 @@ describe('testLocalDeployment', () => {
     });
   });
 
-  describe('SSG support', () => {
-    it('should handle all supported SSG types', async () => {
-      const ssgs = ['jekyll', 'hugo', 'docusaurus', 'mkdocs', 'eleventy'];
+  describe("SSG support", () => {
+    it("should handle all supported SSG types", async () => {
+      const ssgs = ["jekyll", "hugo", "docusaurus", "mkdocs", "eleventy"];
 
       for (const ssg of ssgs) {
         const result = await testLocalDeployment({
@@ -107,8 +107,8 @@ describe('testLocalDeployment', () => {
       }
     });
 
-    it('should generate test script for all SSG types', async () => {
-      const ssgs = ['jekyll', 'hugo', 'docusaurus', 'mkdocs', 'eleventy'];
+    it("should generate test script for all SSG types", async () => {
+      const ssgs = ["jekyll", "hugo", "docusaurus", "mkdocs", "eleventy"];
 
       for (const ssg of ssgs) {
         const result = await testLocalDeployment({
@@ -119,84 +119,88 @@ describe('testLocalDeployment', () => {
         });
 
         const parsedResult = JSON.parse(result.content[0].text);
-        expect(parsedResult.testScript).toContain(`# Local Deployment Test Script for ${ssg}`);
-        expect(parsedResult.testScript).toContain('http://localhost:4000');
+        expect(parsedResult.testScript).toContain(
+          `# Local Deployment Test Script for ${ssg}`,
+        );
+        expect(parsedResult.testScript).toContain("http://localhost:4000");
       }
     });
 
-    it('should include install commands for Node.js-based SSGs', async () => {
+    it("should include install commands for Node.js-based SSGs", async () => {
       const result = await testLocalDeployment({
         repositoryPath: testRepoPath,
-        ssg: 'docusaurus',
+        ssg: "docusaurus",
         skipBuild: true,
       });
 
       const parsedResult = JSON.parse(result.content[0].text);
-      expect(parsedResult.testScript).toContain('npm install');
+      expect(parsedResult.testScript).toContain("npm install");
     });
 
-    it('should not include install commands for non-Node.js SSGs', async () => {
+    it("should not include install commands for non-Node.js SSGs", async () => {
       const result = await testLocalDeployment({
         repositoryPath: testRepoPath,
-        ssg: 'hugo',
+        ssg: "hugo",
         skipBuild: true,
       });
 
       const parsedResult = JSON.parse(result.content[0].text);
-      expect(parsedResult.testScript).not.toContain('npm install');
+      expect(parsedResult.testScript).not.toContain("npm install");
     });
   });
 
-  describe('Configuration handling', () => {
-    it('should provide recommendations when configuration is missing', async () => {
+  describe("Configuration handling", () => {
+    it("should provide recommendations when configuration is missing", async () => {
       const result = await testLocalDeployment({
         repositoryPath: testRepoPath,
-        ssg: 'jekyll', // Jekyll config unlikely to exist in this repo
+        ssg: "jekyll", // Jekyll config unlikely to exist in this repo
         skipBuild: true,
       });
 
       const parsedResult = JSON.parse(result.content[0].text);
       expect(parsedResult.recommendations).toEqual(
-        expect.arrayContaining([expect.stringContaining('Missing configuration file')]),
+        expect.arrayContaining([
+          expect.stringContaining("Missing configuration file"),
+        ]),
       );
     });
 
-    it('should provide next steps for missing configuration', async () => {
+    it("should provide next steps for missing configuration", async () => {
       const result = await testLocalDeployment({
         repositoryPath: testRepoPath,
-        ssg: 'jekyll',
+        ssg: "jekyll",
         skipBuild: true,
       });
 
       const parsedResult = JSON.parse(result.content[0].text);
       expect(parsedResult.nextSteps).toEqual(
-        expect.arrayContaining([expect.stringContaining('generate_config')]),
+        expect.arrayContaining([expect.stringContaining("generate_config")]),
       );
     });
   });
 
-  describe('Error handling', () => {
-    it('should handle general errors gracefully', async () => {
-      jest.spyOn(process, 'chdir').mockImplementation(() => {
-        throw new Error('Permission denied');
+  describe("Error handling", () => {
+    it("should handle general errors gracefully", async () => {
+      jest.spyOn(process, "chdir").mockImplementation(() => {
+        throw new Error("Permission denied");
       });
 
       const result = await testLocalDeployment({
         repositoryPath: testRepoPath,
-        ssg: 'hugo',
+        ssg: "hugo",
       });
 
       // The tool returns an error response structure instead of throwing
       const parsedResult = JSON.parse(result.content[0].text);
       expect(parsedResult.success).toBe(false);
-      expect(parsedResult.error.code).toBe('LOCAL_TEST_FAILED');
-      expect(parsedResult.error.message).toContain('Permission denied');
+      expect(parsedResult.error.code).toBe("LOCAL_TEST_FAILED");
+      expect(parsedResult.error.message).toContain("Permission denied");
     });
 
-    it('should handle non-existent repository path', async () => {
+    it("should handle non-existent repository path", async () => {
       const result = await testLocalDeployment({
-        repositoryPath: '/non/existent/path',
-        ssg: 'hugo',
+        repositoryPath: "/non/existent/path",
+        ssg: "hugo",
         skipBuild: true,
       });
 
@@ -207,27 +211,27 @@ describe('testLocalDeployment', () => {
     });
   });
 
-  describe('Response structure validation', () => {
-    it('should include all required response fields', async () => {
+  describe("Response structure validation", () => {
+    it("should include all required response fields", async () => {
       const result = await testLocalDeployment({
         repositoryPath: testRepoPath,
-        ssg: 'hugo',
+        ssg: "hugo",
         skipBuild: true,
       });
 
       const parsedResult = JSON.parse(result.content[0].text);
-      expect(parsedResult).toHaveProperty('buildSuccess');
-      expect(parsedResult).toHaveProperty('ssg');
-      expect(parsedResult).toHaveProperty('port');
-      expect(parsedResult).toHaveProperty('testScript');
-      expect(parsedResult).toHaveProperty('recommendations');
-      expect(parsedResult).toHaveProperty('nextSteps');
+      expect(parsedResult).toHaveProperty("buildSuccess");
+      expect(parsedResult).toHaveProperty("ssg");
+      expect(parsedResult).toHaveProperty("port");
+      expect(parsedResult).toHaveProperty("testScript");
+      expect(parsedResult).toHaveProperty("recommendations");
+      expect(parsedResult).toHaveProperty("nextSteps");
     });
 
-    it('should include tool recommendations in next steps', async () => {
+    it("should include tool recommendations in next steps", async () => {
       const result = await testLocalDeployment({
         repositoryPath: testRepoPath,
-        ssg: 'hugo',
+        ssg: "hugo",
         skipBuild: true,
       });
 
@@ -236,10 +240,10 @@ describe('testLocalDeployment', () => {
       expect(parsedResult.nextSteps.length).toBeGreaterThan(0);
     });
 
-    it('should validate test script content structure', async () => {
+    it("should validate test script content structure", async () => {
       const result = await testLocalDeployment({
         repositoryPath: testRepoPath,
-        ssg: 'hugo',
+        ssg: "hugo",
         port: 8080,
         skipBuild: true,
       });
@@ -247,19 +251,19 @@ describe('testLocalDeployment', () => {
       const parsedResult = JSON.parse(result.content[0].text);
       const testScript = parsedResult.testScript;
 
-      expect(testScript).toContain('# Local Deployment Test Script for hugo');
-      expect(testScript).toContain('http://localhost:8080');
-      expect(testScript).toContain('hugo server');
-      expect(testScript).toContain('--port 8080');
+      expect(testScript).toContain("# Local Deployment Test Script for hugo");
+      expect(testScript).toContain("http://localhost:8080");
+      expect(testScript).toContain("hugo server");
+      expect(testScript).toContain("--port 8080");
     });
 
-    it('should handle different timeout values', async () => {
+    it("should handle different timeout values", async () => {
       const timeouts = [30, 60, 120, 300];
 
       for (const timeout of timeouts) {
         const result = await testLocalDeployment({
           repositoryPath: testRepoPath,
-          ssg: 'hugo',
+          ssg: "hugo",
           timeout,
           skipBuild: true,
         });
@@ -270,13 +274,13 @@ describe('testLocalDeployment', () => {
       }
     });
 
-    it('should provide appropriate recommendations for each SSG type', async () => {
+    it("should provide appropriate recommendations for each SSG type", async () => {
       const ssgConfigs = {
-        jekyll: '_config.yml',
-        hugo: 'config.toml',
-        docusaurus: 'docusaurus.config.js',
-        mkdocs: 'mkdocs.yml',
-        eleventy: '.eleventy.js',
+        jekyll: "_config.yml",
+        hugo: "config.toml",
+        docusaurus: "docusaurus.config.js",
+        mkdocs: "mkdocs.yml",
+        eleventy: ".eleventy.js",
       };
 
       for (const [ssg, configFile] of Object.entries(ssgConfigs)) {
@@ -293,10 +297,10 @@ describe('testLocalDeployment', () => {
       }
     });
 
-    it('should include comprehensive next steps', async () => {
+    it("should include comprehensive next steps", async () => {
       const result = await testLocalDeployment({
         repositoryPath: testRepoPath,
-        ssg: 'jekyll', // Missing config will trigger recommendations
+        ssg: "jekyll", // Missing config will trigger recommendations
         skipBuild: true,
       });
 
@@ -308,14 +312,14 @@ describe('testLocalDeployment', () => {
 
       // Should include generate_config step for missing config
       expect(nextSteps).toEqual(
-        expect.arrayContaining([expect.stringContaining('generate_config')]),
+        expect.arrayContaining([expect.stringContaining("generate_config")]),
       );
     });
 
-    it('should handle edge case with empty repository path', async () => {
+    it("should handle edge case with empty repository path", async () => {
       const result = await testLocalDeployment({
-        repositoryPath: '',
-        ssg: 'hugo',
+        repositoryPath: "",
+        ssg: "hugo",
         skipBuild: true,
       });
 
@@ -325,13 +329,13 @@ describe('testLocalDeployment', () => {
       expect(result.content).toBeDefined();
     });
 
-    it('should validate port range handling', async () => {
+    it("should validate port range handling", async () => {
       const ports = [1000, 3000, 8080, 9000, 65535];
 
       for (const port of ports) {
         const result = await testLocalDeployment({
           repositoryPath: testRepoPath,
-          ssg: 'hugo',
+          ssg: "hugo",
           port,
           skipBuild: true,
         });
@@ -343,201 +347,222 @@ describe('testLocalDeployment', () => {
     });
   });
 
-  describe('Advanced coverage scenarios', () => {
+  describe("Advanced coverage scenarios", () => {
     beforeEach(() => {
-      jest.spyOn(process, 'chdir').mockImplementation(() => {});
+      jest.spyOn(process, "chdir").mockImplementation(() => {});
     });
 
     afterEach(() => {
       jest.restoreAllMocks();
     });
 
-    describe('Configuration file scenarios', () => {
-      it('should detect existing configuration file for hugo', async () => {
+    describe("Configuration file scenarios", () => {
+      it("should detect existing configuration file for hugo", async () => {
         // Mock fs.access to succeed for hugo config file
-        const mockFsAccess = jest.spyOn(fs.promises, 'access').mockResolvedValueOnce(undefined);
+        const mockFsAccess = jest
+          .spyOn(fs.promises, "access")
+          .mockResolvedValueOnce(undefined);
 
         const result = await testLocalDeployment({
           repositoryPath: testRepoPath,
-          ssg: 'hugo',
+          ssg: "hugo",
           skipBuild: true,
         });
 
         const parsedResult = JSON.parse(result.content[0].text);
         // Should not recommend missing config since file exists
         expect(parsedResult.recommendations).not.toEqual(
-          expect.arrayContaining([expect.stringContaining('Missing configuration file')]),
+          expect.arrayContaining([
+            expect.stringContaining("Missing configuration file"),
+          ]),
         );
 
         mockFsAccess.mockRestore();
       });
 
-      it('should detect existing configuration file for jekyll', async () => {
+      it("should detect existing configuration file for jekyll", async () => {
         // Mock fs.access to succeed for jekyll config file
-        const mockFsAccess = jest.spyOn(fs.promises, 'access').mockResolvedValueOnce(undefined);
+        const mockFsAccess = jest
+          .spyOn(fs.promises, "access")
+          .mockResolvedValueOnce(undefined);
 
         const result = await testLocalDeployment({
           repositoryPath: testRepoPath,
-          ssg: 'jekyll',
+          ssg: "jekyll",
           skipBuild: true,
         });
 
         const parsedResult = JSON.parse(result.content[0].text);
         // Should not recommend missing config since file exists
         expect(parsedResult.recommendations).not.toEqual(
-          expect.arrayContaining([expect.stringContaining('Missing configuration file')]),
+          expect.arrayContaining([
+            expect.stringContaining("Missing configuration file"),
+          ]),
         );
 
         mockFsAccess.mockRestore();
       });
 
-      it('should detect existing configuration file for docusaurus', async () => {
+      it("should detect existing configuration file for docusaurus", async () => {
         // Mock fs.access to succeed for docusaurus config file
-        const mockFsAccess = jest.spyOn(fs.promises, 'access').mockResolvedValueOnce(undefined);
+        const mockFsAccess = jest
+          .spyOn(fs.promises, "access")
+          .mockResolvedValueOnce(undefined);
 
         const result = await testLocalDeployment({
           repositoryPath: testRepoPath,
-          ssg: 'docusaurus',
+          ssg: "docusaurus",
           skipBuild: true,
         });
 
         const parsedResult = JSON.parse(result.content[0].text);
         // Should not recommend missing config since file exists
         expect(parsedResult.recommendations).not.toEqual(
-          expect.arrayContaining([expect.stringContaining('Missing configuration file')]),
+          expect.arrayContaining([
+            expect.stringContaining("Missing configuration file"),
+          ]),
         );
 
         mockFsAccess.mockRestore();
       });
 
-      it('should detect existing configuration file for mkdocs', async () => {
+      it("should detect existing configuration file for mkdocs", async () => {
         // Mock fs.access to succeed for mkdocs config file
-        const mockFsAccess = jest.spyOn(fs.promises, 'access').mockResolvedValueOnce(undefined);
+        const mockFsAccess = jest
+          .spyOn(fs.promises, "access")
+          .mockResolvedValueOnce(undefined);
 
         const result = await testLocalDeployment({
           repositoryPath: testRepoPath,
-          ssg: 'mkdocs',
+          ssg: "mkdocs",
           skipBuild: true,
         });
 
         const parsedResult = JSON.parse(result.content[0].text);
         // Should not recommend missing config since file exists
         expect(parsedResult.recommendations).not.toEqual(
-          expect.arrayContaining([expect.stringContaining('Missing configuration file')]),
+          expect.arrayContaining([
+            expect.stringContaining("Missing configuration file"),
+          ]),
         );
 
         mockFsAccess.mockRestore();
       });
 
-      it('should detect existing configuration file for eleventy', async () => {
+      it("should detect existing configuration file for eleventy", async () => {
         // Mock fs.access to succeed for eleventy config file
-        const mockFsAccess = jest.spyOn(fs.promises, 'access').mockResolvedValueOnce(undefined);
+        const mockFsAccess = jest
+          .spyOn(fs.promises, "access")
+          .mockResolvedValueOnce(undefined);
 
         const result = await testLocalDeployment({
           repositoryPath: testRepoPath,
-          ssg: 'eleventy',
+          ssg: "eleventy",
           skipBuild: true,
         });
 
         const parsedResult = JSON.parse(result.content[0].text);
         // Should not recommend missing config since file exists
         expect(parsedResult.recommendations).not.toEqual(
-          expect.arrayContaining([expect.stringContaining('Missing configuration file')]),
+          expect.arrayContaining([
+            expect.stringContaining("Missing configuration file"),
+          ]),
         );
 
         mockFsAccess.mockRestore();
       });
     });
 
-    describe('Build scenarios with actual executions', () => {
-      it('should handle successful build for eleventy without skipBuild', async () => {
+    describe("Build scenarios with actual executions", () => {
+      it("should handle successful build for eleventy without skipBuild", async () => {
         const result = await testLocalDeployment({
           repositoryPath: testRepoPath,
-          ssg: 'eleventy',
+          ssg: "eleventy",
           skipBuild: false,
           timeout: 10, // Short timeout to avoid long waits
         });
 
         const parsedResult = JSON.parse(result.content[0].text);
-        expect(parsedResult.ssg).toBe('eleventy');
+        expect(parsedResult.ssg).toBe("eleventy");
         expect(parsedResult.buildSuccess).toBeDefined();
-        expect(parsedResult.testScript).toContain('npx @11ty/eleventy');
+        expect(parsedResult.testScript).toContain("npx @11ty/eleventy");
       });
 
-      it('should handle successful build for mkdocs without skipBuild', async () => {
+      it("should handle successful build for mkdocs without skipBuild", async () => {
         const result = await testLocalDeployment({
           repositoryPath: testRepoPath,
-          ssg: 'mkdocs',
+          ssg: "mkdocs",
           skipBuild: false,
           timeout: 10, // Short timeout to avoid long waits
         });
 
         const parsedResult = JSON.parse(result.content[0].text);
-        expect(parsedResult.ssg).toBe('mkdocs');
+        expect(parsedResult.ssg).toBe("mkdocs");
         expect(parsedResult.buildSuccess).toBeDefined();
-        expect(parsedResult.testScript).toContain('mkdocs build');
+        expect(parsedResult.testScript).toContain("mkdocs build");
       });
 
-      it('should exercise server start paths with short timeout', async () => {
+      it("should exercise server start paths with short timeout", async () => {
         const result = await testLocalDeployment({
           repositoryPath: testRepoPath,
-          ssg: 'hugo',
+          ssg: "hugo",
           skipBuild: true,
           timeout: 5, // Very short timeout to trigger timeout path
         });
 
         const parsedResult = JSON.parse(result.content[0].text);
-        expect(parsedResult.ssg).toBe('hugo');
+        expect(parsedResult.ssg).toBe("hugo");
         expect(parsedResult.serverStarted).toBeDefined();
         // localUrl may be undefined if server doesn't start quickly enough
         expect(
-          typeof parsedResult.localUrl === 'string' || parsedResult.localUrl === undefined,
+          typeof parsedResult.localUrl === "string" ||
+            parsedResult.localUrl === undefined,
         ).toBe(true);
       });
 
-      it('should test port customization in serve commands', async () => {
+      it("should test port customization in serve commands", async () => {
         const result = await testLocalDeployment({
           repositoryPath: testRepoPath,
-          ssg: 'jekyll',
+          ssg: "jekyll",
           port: 4000,
           skipBuild: true,
         });
 
         const parsedResult = JSON.parse(result.content[0].text);
-        expect(parsedResult.testScript).toContain('--port 4000');
-        expect(parsedResult.testScript).toContain('http://localhost:4000');
+        expect(parsedResult.testScript).toContain("--port 4000");
+        expect(parsedResult.testScript).toContain("http://localhost:4000");
       });
 
-      it('should test mkdocs serve command with custom port', async () => {
+      it("should test mkdocs serve command with custom port", async () => {
         const result = await testLocalDeployment({
           repositoryPath: testRepoPath,
-          ssg: 'mkdocs',
+          ssg: "mkdocs",
           port: 8000,
           skipBuild: true,
         });
 
         const parsedResult = JSON.parse(result.content[0].text);
-        expect(parsedResult.testScript).toContain('--dev-addr localhost:8000');
-        expect(parsedResult.testScript).toContain('http://localhost:8000');
+        expect(parsedResult.testScript).toContain("--dev-addr localhost:8000");
+        expect(parsedResult.testScript).toContain("http://localhost:8000");
       });
 
-      it('should test eleventy serve command with custom port', async () => {
+      it("should test eleventy serve command with custom port", async () => {
         const result = await testLocalDeployment({
           repositoryPath: testRepoPath,
-          ssg: 'eleventy',
+          ssg: "eleventy",
           port: 3001,
           skipBuild: true,
         });
 
         const parsedResult = JSON.parse(result.content[0].text);
-        expect(parsedResult.testScript).toContain('--port 3001');
-        expect(parsedResult.testScript).toContain('http://localhost:3001');
+        expect(parsedResult.testScript).toContain("--port 3001");
+        expect(parsedResult.testScript).toContain("http://localhost:3001");
       });
 
-      it('should provide correct next steps recommendations', async () => {
+      it("should provide correct next steps recommendations", async () => {
         const result = await testLocalDeployment({
           repositoryPath: testRepoPath,
-          ssg: 'docusaurus',
+          ssg: "docusaurus",
           skipBuild: true,
         });
 

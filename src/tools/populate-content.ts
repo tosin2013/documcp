@@ -1,16 +1,16 @@
-import { Tool } from '@modelcontextprotocol/sdk/types.js';
-import * as fs from 'fs/promises';
-import * as path from 'path';
+import { Tool } from "@modelcontextprotocol/sdk/types.js";
+import * as fs from "fs/promises";
+import * as path from "path";
 import {
   handleMemoryRecall,
   handleMemoryEnhancedRecommendation,
   handleMemoryIntelligentAnalysis,
-} from '../memory/index.js';
+} from "../memory/index.js";
 
 interface PopulationOptions {
   analysisId: string;
   docsPath: string;
-  populationLevel: 'basic' | 'comprehensive' | 'intelligent';
+  populationLevel: "basic" | "comprehensive" | "intelligent";
   includeProjectSpecific: boolean;
   preserveExisting: boolean;
   technologyFocus?: string[];
@@ -157,14 +157,24 @@ class ContentPopulationEngine {
     );
 
     // 6. Generate cross-references and navigation updates
-    await this.updateNavigationAndCrossReferences(options.docsPath, contentPlan);
+    await this.updateNavigationAndCrossReferences(
+      options.docsPath,
+      contentPlan,
+    );
 
     return {
       success: true,
       filesCreated,
       contentPlan,
-      populationMetrics: this.calculatePopulationMetrics(filesCreated, contentPlan),
-      nextSteps: this.generateMemoryInformedNextSteps(analysis, contentPlan, this.memoryInsights),
+      populationMetrics: this.calculatePopulationMetrics(
+        filesCreated,
+        contentPlan,
+      ),
+      nextSteps: this.generateMemoryInformedNextSteps(
+        analysis,
+        contentPlan,
+        this.memoryInsights,
+      ),
     };
   }
 
@@ -176,13 +186,17 @@ class ContentPopulationEngine {
         return memoryRecall;
       }
     } catch (error) {
-      console.warn('Failed to retrieve from memory system:', error);
+      console.warn("Failed to retrieve from memory system:", error);
     }
 
     // Fallback to reading from cached analysis file
-    const analysisPath = path.join('.documcp', 'analyses', `${analysisId}.json`);
+    const analysisPath = path.join(
+      ".documcp",
+      "analyses",
+      `${analysisId}.json`,
+    );
     try {
-      const content = await fs.readFile(analysisPath, 'utf-8');
+      const content = await fs.readFile(analysisPath, "utf-8");
       return JSON.parse(content);
     } catch {
       throw new Error(
@@ -195,7 +209,7 @@ class ContentPopulationEngine {
     try {
       const result = await handleMemoryRecall({
         query: analysisId,
-        type: 'analysis',
+        type: "analysis",
         limit: 1,
       });
 
@@ -204,14 +218,25 @@ class ContentPopulationEngine {
         const memory = result.memories[0];
 
         // Handle wrapped content structure
-        if (memory.data && memory.data.content && Array.isArray(memory.data.content)) {
+        if (
+          memory.data &&
+          memory.data.content &&
+          Array.isArray(memory.data.content)
+        ) {
           // Extract the JSON from the first text content
           const firstContent = memory.data.content[0];
-          if (firstContent && firstContent.type === 'text' && firstContent.text) {
+          if (
+            firstContent &&
+            firstContent.type === "text" &&
+            firstContent.text
+          ) {
             try {
               return JSON.parse(firstContent.text);
             } catch (parseError) {
-              console.warn('Failed to parse analysis content from memory:', parseError);
+              console.warn(
+                "Failed to parse analysis content from memory:",
+                parseError,
+              );
               return memory.data;
             }
           }
@@ -230,40 +255,43 @@ class ContentPopulationEngine {
 
       return null;
     } catch (error) {
-      console.warn('Memory system recall failed:', error);
+      console.warn("Memory system recall failed:", error);
       return null;
     }
   }
 
-  private async loadMemoryInsights(analysis: any, options: PopulationOptions): Promise<void> {
+  private async loadMemoryInsights(
+    analysis: any,
+    options: PopulationOptions,
+  ): Promise<void> {
     try {
       // Get similar projects from memory system
-      const similarProjectsQuery = `${analysis.metadata?.primaryLanguage || ''} ${
-        analysis.metadata?.ecosystem || ''
-      } documentation`;
+      const similarProjectsQuery = `${
+        analysis.metadata?.primaryLanguage || ""
+      } ${analysis.metadata?.ecosystem || ""} documentation`;
       const similarProjects = await handleMemoryRecall({
         query: similarProjectsQuery,
-        type: 'recommendation',
+        type: "recommendation",
         limit: 5,
       });
 
       // Get memory-enhanced analysis
       const enhancedAnalysis = await handleMemoryIntelligentAnalysis({
-        projectPath: analysis.projectPath || '',
+        projectPath: analysis.projectPath || "",
         baseAnalysis: analysis,
       });
 
       // Get memory-enhanced recommendations for content strategy
       const enhancedRecommendations = await handleMemoryEnhancedRecommendation({
-        projectPath: analysis.projectPath || '',
+        projectPath: analysis.projectPath || "",
         baseRecommendation: {
-          contentStrategy: 'diataxis',
+          contentStrategy: "diataxis",
           populationLevel: options.populationLevel,
         },
         projectFeatures: {
-          ecosystem: analysis.metadata?.ecosystem || 'unknown',
-          primaryLanguage: analysis.metadata?.primaryLanguage || 'unknown',
-          complexity: analysis.complexity || 'medium',
+          ecosystem: analysis.metadata?.ecosystem || "unknown",
+          primaryLanguage: analysis.metadata?.primaryLanguage || "unknown",
+          complexity: analysis.complexity || "medium",
           hasTests: analysis.structure?.hasTests || false,
           hasCI: analysis.structure?.hasCI || false,
         },
@@ -273,12 +301,14 @@ class ContentPopulationEngine {
         similarProjects: similarProjects.memories || [],
         enhancedAnalysis: enhancedAnalysis,
         enhancedRecommendations: enhancedRecommendations,
-        patterns: this.extractPatternsFromSimilarProjects(similarProjects.memories || []),
+        patterns: this.extractPatternsFromSimilarProjects(
+          similarProjects.memories || [],
+        ),
       };
 
       this.similarProjects = similarProjects.memories || [];
     } catch (error) {
-      console.warn('Failed to load memory insights:', error);
+      console.warn("Failed to load memory insights:", error);
       // Fallback to minimal insights
       this.memoryInsights = {
         similarProjects: [],
@@ -303,7 +333,8 @@ class ContentPopulationEngine {
       // Extract framework patterns
       if (content.frameworks) {
         content.frameworks.forEach((framework: string) => {
-          patterns.commonFrameworks[framework] = (patterns.commonFrameworks[framework] || 0) + 1;
+          patterns.commonFrameworks[framework] =
+            (patterns.commonFrameworks[framework] || 0) + 1;
         });
       }
 
@@ -316,7 +347,8 @@ class ContentPopulationEngine {
       // Extract documentation structure patterns
       if (content.documentationApproach) {
         patterns.documentationStructures[content.documentationApproach] =
-          (patterns.documentationStructures[content.documentationApproach] || 0) + 1;
+          (patterns.documentationStructures[content.documentationApproach] ||
+            0) + 1;
       }
 
       // Extract deployment patterns
@@ -342,16 +374,32 @@ class ContentPopulationEngine {
     };
 
     // Generate tutorials based on project type AND memory patterns
-    plan.tutorials = this.generateMemoryInformedTutorialPlan(analysis, level, _memoryInsights);
+    plan.tutorials = this.generateMemoryInformedTutorialPlan(
+      analysis,
+      level,
+      _memoryInsights,
+    );
 
     // Generate how-to guides for common tasks (enhanced with successful patterns)
-    plan.howToGuides = this.generateMemoryInformedHowToPlan(analysis, level, _memoryInsights);
+    plan.howToGuides = this.generateMemoryInformedHowToPlan(
+      analysis,
+      level,
+      _memoryInsights,
+    );
 
     // Generate reference documentation (based on similar project structures)
-    plan.reference = this.generateMemoryInformedReferencePlan(analysis, level, _memoryInsights);
+    plan.reference = this.generateMemoryInformedReferencePlan(
+      analysis,
+      level,
+      _memoryInsights,
+    );
 
     // Generate explanation content (leveraging successful explanation patterns)
-    plan.explanation = this.generateMemoryInformedExplanationPlan(analysis, level, _memoryInsights);
+    plan.explanation = this.generateMemoryInformedExplanationPlan(
+      analysis,
+      level,
+      _memoryInsights,
+    );
 
     return plan;
   }
@@ -364,37 +412,58 @@ class ContentPopulationEngine {
     const tutorials: TutorialContent[] = [];
     const similarProjects = _memoryInsights?.similarProjects || [];
     tutorials.push({
-      title: `Getting Started with ${analysis.metadata?.projectName || 'the Project'}`,
+      title: `Getting Started with ${
+        analysis.metadata?.projectName || "the Project"
+      }`,
       description: this.generateMemoryInformedDescription(
         analysis,
         similarProjects,
-        'getting-started',
+        "getting-started",
       ),
-      content: this.generateMemoryInformedGettingStartedContent(analysis, _memoryInsights),
-      codeExamples: this.generateMemoryInformedGettingStartedExamples(analysis, _memoryInsights),
+      content: this.generateMemoryInformedGettingStartedContent(
+        analysis,
+        _memoryInsights,
+      ),
+      codeExamples: this.generateMemoryInformedGettingStartedExamples(
+        analysis,
+        _memoryInsights,
+      ),
     });
 
     // Add technology-specific tutorials based on what worked for similar projects
-    const ecosystem = analysis.metadata?.ecosystem || analysis.technologies?.runtime;
-    if (ecosystem === 'Node.js' || ecosystem === 'javascript' || ecosystem === 'typescript') {
-      const nodeSuccessPatterns = this.extractNodeSuccessPatterns(similarProjects);
+    const ecosystem =
+      analysis.metadata?.ecosystem || analysis.technologies?.runtime;
+    if (
+      ecosystem === "Node.js" ||
+      ecosystem === "javascript" ||
+      ecosystem === "typescript"
+    ) {
+      const nodeSuccessPatterns =
+        this.extractNodeSuccessPatterns(similarProjects);
       tutorials.push({
         title: this.generateMemoryInformedTutorialTitle(
-          'environment-setup',
+          "environment-setup",
           nodeSuccessPatterns,
           analysis,
         ),
-        description: 'Configure your development environment based on proven successful patterns',
-        content: this.generateMemoryInformedNodeSetupContent(analysis, nodeSuccessPatterns),
-        codeExamples: this.generateMemoryInformedNodeSetupExamples(analysis, nodeSuccessPatterns),
+        description:
+          "Configure your development environment based on proven successful patterns",
+        content: this.generateMemoryInformedNodeSetupContent(
+          analysis,
+          nodeSuccessPatterns,
+        ),
+        codeExamples: this.generateMemoryInformedNodeSetupExamples(
+          analysis,
+          nodeSuccessPatterns,
+        ),
       });
     }
 
     // Add testing tutorial if tests detected
     if (analysis.structure.hasTests) {
       tutorials.push({
-        title: 'Writing and Running Tests',
-        description: 'Learn how to test your code effectively',
+        title: "Writing and Running Tests",
+        description: "Learn how to test your code effectively",
         content: this.generateTestingTutorialContent(analysis),
         codeExamples: this.generateTestingExamples(analysis),
       });
@@ -417,16 +486,22 @@ class ContentPopulationEngine {
       tutorials.push({
         title: `Deploying to ${orchestrationTech.name}`,
         description: `Deploy your application to ${orchestrationTech.name}`,
-        content: this.generateOrchestrationTutorialContent(analysis, orchestrationTech),
-        codeExamples: this.generateOrchestrationExamples(analysis, orchestrationTech),
+        content: this.generateOrchestrationTutorialContent(
+          analysis,
+          orchestrationTech,
+        ),
+        codeExamples: this.generateOrchestrationExamples(
+          analysis,
+          orchestrationTech,
+        ),
       });
     }
 
     // Python-specific tutorials
-    if (analysis.metadata.primaryLanguage === 'Python') {
+    if (analysis.metadata.primaryLanguage === "Python") {
       tutorials.push({
-        title: 'Python Virtual Environment Setup',
-        description: 'Set up isolated Python development environment',
+        title: "Python Virtual Environment Setup",
+        description: "Set up isolated Python development environment",
         content: this.generatePythonEnvironmentContent(analysis),
         codeExamples: this.generatePythonEnvironmentExamples(),
       });
@@ -437,7 +512,10 @@ class ContentPopulationEngine {
         tutorials.push({
           title: `Building Applications with ${framework.name}`,
           description: `Complete guide to ${framework.name} development`,
-          content: this.generatePythonFrameworkTutorialContent(analysis, framework),
+          content: this.generatePythonFrameworkTutorialContent(
+            analysis,
+            framework,
+          ),
           codeExamples: this.generatePythonFrameworkExamples(framework),
         });
       });
@@ -451,19 +529,19 @@ class ContentPopulationEngine {
 
     // Common development tasks
     howTos.push({
-      title: 'How to Add a New Feature',
+      title: "How to Add a New Feature",
       content: this.generateFeatureGuideContent(analysis),
     });
 
     howTos.push({
-      title: 'How to Debug Common Issues',
+      title: "How to Debug Common Issues",
       content: this.generateDebuggingGuideContent(analysis),
     });
 
     // Deployment guides if CI detected
     if (analysis.structure.hasCI) {
       howTos.push({
-        title: 'How to Deploy Your Application',
+        title: "How to Deploy Your Application",
         content: this.generateDeploymentGuideContent(analysis),
       });
     }
@@ -476,19 +554,19 @@ class ContentPopulationEngine {
 
     // API reference
     reference.push({
-      title: 'API Reference',
+      title: "API Reference",
       content: this.generateAPIReference(analysis),
     });
 
     // Configuration reference
     reference.push({
-      title: 'Configuration Options',
+      title: "Configuration Options",
       content: this.generateConfigReference(analysis),
     });
 
     // CLI reference if applicable
     reference.push({
-      title: 'Command Line Interface',
+      title: "Command Line Interface",
       content: this.generateCLIReference(analysis),
     });
 
@@ -500,19 +578,19 @@ class ContentPopulationEngine {
 
     // Architecture overview
     explanations.push({
-      title: 'Architecture Overview',
+      title: "Architecture Overview",
       content: this.generateArchitectureContent(analysis),
     });
 
     // Design decisions
     explanations.push({
-      title: 'Design Decisions',
+      title: "Design Decisions",
       content: this.generateDesignDecisionsContent(analysis),
     });
 
     // Technology choices
     explanations.push({
-      title: 'Technology Stack',
+      title: "Technology Stack",
       content: this.generateTechnologyStackContent(analysis),
     });
 
@@ -520,14 +598,19 @@ class ContentPopulationEngine {
   }
 
   // Memory-informed helper methods
-  private getSuccessfulGettingStartedApproach(similarProjects: any[], analysis: any): any {
+  private getSuccessfulGettingStartedApproach(
+    similarProjects: any[],
+    analysis: any,
+  ): any {
     // Analyze successful getting-started approaches from similar projects
     const approaches = similarProjects
       .filter((p) => p.content?.gettingStartedApproach)
       .map((p) => p.content.gettingStartedApproach);
 
     // Return most common successful approach, or default based on project type
-    return approaches.length > 0 ? approaches[0] : this.getDefaultApproachForProjectType(analysis);
+    return approaches.length > 0
+      ? approaches[0]
+      : this.getDefaultApproachForProjectType(analysis);
   }
 
   private generateMemoryInformedDescription(
@@ -541,22 +624,26 @@ class ContentPopulationEngine {
 
     if (successfulDescriptions.length > 0) {
       // Adapt successful pattern for this project
-      return `Learn ${analysis.metadata?.primaryLanguage || 'development'} with ${
-        analysis.metadata?.projectName || 'this project'
-      } using proven patterns from ${successfulDescriptions.length} similar successful projects`;
+      return `Learn ${
+        analysis.metadata?.primaryLanguage || "development"
+      } with ${
+        analysis.metadata?.projectName || "this project"
+      } using proven patterns from ${
+        successfulDescriptions.length
+      } similar successful projects`;
     }
 
-    return `Learn ${analysis.metadata?.primaryLanguage || 'development'} development with ${
-      analysis.metadata?.projectName || 'this project'
-    }`;
+    return `Learn ${
+      analysis.metadata?.primaryLanguage || "development"
+    } development with ${analysis.metadata?.projectName || "this project"}`;
   }
 
   private extractNodeSuccessPatterns(similarProjects: any[]): any {
     const nodeProjects = similarProjects.filter(
       (p) =>
-        p.content?.ecosystem === 'Node.js' ||
-        p.content?.primaryLanguage === 'TypeScript' ||
-        p.content?.primaryLanguage === 'JavaScript',
+        p.content?.ecosystem === "Node.js" ||
+        p.content?.primaryLanguage === "TypeScript" ||
+        p.content?.primaryLanguage === "JavaScript",
     );
 
     return {
@@ -607,7 +694,8 @@ class ContentPopulationEngine {
       if (p.content?.versions) {
         Object.entries(p.content.versions).forEach(([tool, version]) => {
           if (!versions[tool]) versions[tool] = {};
-          versions[tool][version as string] = (versions[tool][version as string] || 0) + 1;
+          versions[tool][version as string] =
+            (versions[tool][version as string] || 0) + 1;
         });
       }
     });
@@ -642,14 +730,14 @@ class ContentPopulationEngine {
   }
 
   private getDefaultApproachForProjectType(analysis: any): any {
-    const projectType = analysis.metadata?.projectType || 'library';
-    const primaryLanguage = analysis.metadata?.primaryLanguage || 'JavaScript';
+    const projectType = analysis.metadata?.projectType || "library";
+    const primaryLanguage = analysis.metadata?.primaryLanguage || "JavaScript";
 
     return {
       type: projectType,
       language: primaryLanguage,
-      approach: 'hands-on',
-      complexity: 'progressive',
+      approach: "hands-on",
+      complexity: "progressive",
     };
   }
 
@@ -658,11 +746,11 @@ class ContentPopulationEngine {
     patterns: any,
     analysis: any,
   ): string {
-    const projectName = analysis.metadata?.projectName || 'Project';
-    const language = analysis.metadata?.primaryLanguage || 'Development';
+    const projectName = analysis.metadata?.projectName || "Project";
+    const language = analysis.metadata?.primaryLanguage || "Development";
 
     switch (tutorialType) {
-      case 'environment-setup':
+      case "environment-setup":
         return patterns.commonTools?.length > 0
           ? `Setting Up Your ${language} Development Environment`
           : `Development Environment Setup for ${projectName}`;
@@ -672,9 +760,12 @@ class ContentPopulationEngine {
   }
 
   // Enhanced content generation methods with memory insights
-  private generateMemoryInformedGettingStartedContent(analysis: any, _memoryInsights: any): string {
-    const projectName = analysis.metadata?.projectName || 'the project';
-    const language = analysis.metadata?.primaryLanguage || 'development';
+  private generateMemoryInformedGettingStartedContent(
+    analysis: any,
+    _memoryInsights: any,
+  ): string {
+    const projectName = analysis.metadata?.projectName || "the project";
+    const language = analysis.metadata?.primaryLanguage || "development";
     const patterns = _memoryInsights?.patterns || {};
     const similarProjects = _memoryInsights?.similarProjects || [];
 
@@ -682,7 +773,7 @@ class ContentPopulationEngine {
     const realDependencies = analysis.dependencies?.packages || [];
     const hasTests = analysis.structure?.hasTests;
     const hasCI = analysis.structure?.hasCI;
-    const ecosystem = analysis.metadata?.ecosystem || 'Node.js';
+    const ecosystem = analysis.metadata?.ecosystem || "Node.js";
 
     // Build getting started content based on actual project characteristics
     let content = `# Getting Started with ${projectName}\n\n`;
@@ -697,13 +788,18 @@ class ContentPopulationEngine {
     content += `## Prerequisites\n\n`;
     content += `Based on the project analysis, you'll need:\n\n`;
 
-    if (ecosystem === 'Node.js' || language === 'TypeScript' || language === 'JavaScript') {
-      const recommendedVersion = this.getRecommendedNodeVersion(similarProjects);
+    if (
+      ecosystem === "Node.js" ||
+      language === "TypeScript" ||
+      language === "JavaScript"
+    ) {
+      const recommendedVersion =
+        this.getRecommendedNodeVersion(similarProjects);
       content += `- Node.js (version ${recommendedVersion} or higher)\n`;
       content += `- npm or yarn package manager\n`;
     }
 
-    if (language === 'TypeScript') {
+    if (language === "TypeScript") {
       content += `- TypeScript (globally installed or via npx)\n`;
     }
 
@@ -719,7 +815,7 @@ class ContentPopulationEngine {
 
     content += `2. Install dependencies:\n`;
     content += `   \`\`\`bash\n`;
-    if (realDependencies.includes('yarn')) {
+    if (realDependencies.includes("yarn")) {
       content += `   yarn install\n`;
     } else {
       content += `   npm install\n`;
@@ -788,22 +884,32 @@ class ContentPopulationEngine {
     }
 
     // TypeScript config example if project uses TypeScript
-    if (analysis.metadata?.primaryLanguage === 'TypeScript') {
+    if (analysis.metadata?.primaryLanguage === "TypeScript") {
       const actualTsConfig = this.extractTsConfigPatterns(analysis);
-      examples.push(`// TypeScript configuration\n${JSON.stringify(actualTsConfig, null, 2)}`);
+      examples.push(
+        `// TypeScript configuration\n${JSON.stringify(
+          actualTsConfig,
+          null,
+          2,
+        )}`,
+      );
     }
 
     // Real package.json scripts
     const scripts = this.extractPackageScripts(analysis);
     if (scripts && Object.keys(scripts).length > 0) {
-      examples.push(`// Available scripts\n${JSON.stringify({ scripts }, null, 2)}`);
+      examples.push(
+        `// Available scripts\n${JSON.stringify({ scripts }, null, 2)}`,
+      );
     }
 
     return examples;
   }
 
   private getRecommendedNodeVersion(similarProjects: any[]): string {
-    const versions = similarProjects.map((p) => p.content?.versions?.node).filter(Boolean);
+    const versions = similarProjects
+      .map((p) => p.content?.versions?.node)
+      .filter(Boolean);
 
     if (versions.length > 0) {
       // Return most common version
@@ -818,17 +924,19 @@ class ContentPopulationEngine {
       const mostCommon = Object.entries(versionCounts).sort(
         ([, a], [, b]) => (b as number) - (a as number),
       )[0];
-      return mostCommon ? mostCommon[0] : '18';
+      return mostCommon ? mostCommon[0] : "18";
     }
 
-    return '18'; // Default modern version
+    return "18"; // Default modern version
   }
 
   private projectHasEnvFile(analysis: any): boolean {
     const files = analysis.files || [];
     return files.some(
       (f: any) =>
-        f.name === '.env.example' || f.name === '.env.template' || f.name === 'env.example',
+        f.name === ".env.example" ||
+        f.name === ".env.template" ||
+        f.name === "env.example",
     );
   }
 
@@ -838,9 +946,9 @@ class ContentPopulationEngine {
       const scripts = packageJson.scripts;
       const runCommands = [];
 
-      if (scripts.dev) runCommands.push('npm run dev');
-      else if (scripts.start) runCommands.push('npm start');
-      else if (scripts.serve) runCommands.push('npm run serve');
+      if (scripts.dev) runCommands.push("npm run dev");
+      else if (scripts.start) runCommands.push("npm start");
+      else if (scripts.serve) runCommands.push("npm run serve");
 
       return runCommands;
     }
@@ -851,10 +959,10 @@ class ContentPopulationEngine {
   private detectTestFramework(analysis: any): string | null {
     const dependencies = analysis.dependencies?.packages || [];
 
-    if (dependencies.includes('jest')) return 'Jest';
-    if (dependencies.includes('mocha')) return 'Mocha';
-    if (dependencies.includes('vitest')) return 'Vitest';
-    if (dependencies.includes('jasmine')) return 'Jasmine';
+    if (dependencies.includes("jest")) return "Jest";
+    if (dependencies.includes("mocha")) return "Mocha";
+    if (dependencies.includes("vitest")) return "Vitest";
+    if (dependencies.includes("jasmine")) return "Jasmine";
 
     return null;
   }
@@ -862,15 +970,19 @@ class ContentPopulationEngine {
   private findProjectEntryPoint(analysis: any): string | null {
     const packageJson = this.findPackageJson(analysis);
     if (packageJson?.main) {
-      return packageJson.main.replace(/\.(js|ts)$/, '');
+      return packageJson.main.replace(/\.(js|ts)$/, "");
     }
 
     // Look for common entry points
     const files = analysis.files || [];
-    const entryPoints = ['index', 'main', 'app', 'server'];
+    const entryPoints = ["index", "main", "app", "server"];
 
     for (const entry of entryPoints) {
-      if (files.some((f: any) => f.name === `${entry}.ts` || f.name === `${entry}.js`)) {
+      if (
+        files.some(
+          (f: any) => f.name === `${entry}.ts` || f.name === `${entry}.js`,
+        )
+      ) {
         return entry;
       }
     }
@@ -880,7 +992,7 @@ class ContentPopulationEngine {
 
   private findPackageJson(analysis: any): any {
     const files = analysis.files || [];
-    const packageFile = files.find((f: any) => f.name === 'package.json');
+    const packageFile = files.find((f: any) => f.name === "package.json");
 
     if (packageFile?.content) {
       try {
@@ -895,7 +1007,7 @@ class ContentPopulationEngine {
 
   private extractTsConfigPatterns(analysis: any): any {
     const files = analysis.files || [];
-    const tsConfigFile = files.find((f: any) => f.name === 'tsconfig.json');
+    const tsConfigFile = files.find((f: any) => f.name === "tsconfig.json");
 
     if (tsConfigFile?.content) {
       try {
@@ -904,8 +1016,8 @@ class ContentPopulationEngine {
         // Return sensible defaults based on project analysis
         return {
           compilerOptions: {
-            target: 'ES2020',
-            module: 'commonjs',
+            target: "ES2020",
+            module: "commonjs",
             strict: true,
             esModuleInterop: true,
             skipLibCheck: true,
@@ -1081,7 +1193,7 @@ Create a \`.vscode/launch.json\` file:
   }
 
   private generateTestingTutorialContent(_analysis: any): string {
-    const testFramework = _analysis.technologies.testing?.[0] || 'Jest';
+    const testFramework = _analysis.technologies.testing?.[0] || "Jest";
 
     return `# Writing and Running Tests
 
@@ -1940,8 +2052,9 @@ Complete overview of technologies used in ${_analysis.metadata.projectName}.
 
 ### Testing
 ${
-  _analysis.technologies.testing?.map((t: string) => `- **${t}**: Testing framework`).join('\\n') ||
-  '- **Jest**: Testing framework'
+  _analysis.technologies.testing
+    ?.map((t: string) => `- **${t}**: Testing framework`)
+    .join("\\n") || "- **Jest**: Testing framework"
 }
 - **Supertest**: API testing
 - **Coverage tools**: Code coverage reporting
@@ -1957,7 +2070,7 @@ ${
 ${
   _analysis.technologies.deployment
     ?.map((t: string) => `- **${t}**: Deployment platform`)
-    .join('\\n') || '- **Docker**: Containerization'
+    .join("\\n") || "- **Docker**: Containerization"
 }
 - **GitHub Pages**: Documentation hosting
 
@@ -2059,20 +2172,32 @@ ${
 `;
   }
 
-  private async generateTutorialContent(tutorials: any[], _analysis: any): Promise<any[]> {
+  private async generateTutorialContent(
+    tutorials: any[],
+    _analysis: any,
+  ): Promise<any[]> {
     // Transform tutorial plans into actual content
     return tutorials;
   }
 
-  private async generateHowToContent(howTos: any[], _analysis: any): Promise<any[]> {
+  private async generateHowToContent(
+    howTos: any[],
+    _analysis: any,
+  ): Promise<any[]> {
     return howTos;
   }
 
-  private async generateReferenceContent(reference: any[], _analysis: any): Promise<any[]> {
+  private async generateReferenceContent(
+    reference: any[],
+    _analysis: any,
+  ): Promise<any[]> {
     return reference;
   }
 
-  private async generateExplanationContent(explanation: any[], _analysis: any): Promise<any[]> {
+  private async generateExplanationContent(
+    explanation: any[],
+    _analysis: any,
+  ): Promise<any[]> {
     return explanation;
   }
 
@@ -2084,7 +2209,7 @@ ${
     let filesCreated = 0;
 
     // Create directory structure if it doesn't exist
-    const dirs = ['tutorials', 'how-to', 'reference', 'explanation'];
+    const dirs = ["tutorials", "how-to", "reference", "explanation"];
     for (const dir of dirs) {
       const dirPath = path.join(docsPath, dir);
       await fs.mkdir(dirPath, { recursive: true });
@@ -2092,8 +2217,8 @@ ${
 
     // Write tutorial content
     for (const tutorial of content.tutorials) {
-      const fileName = this.slugify(tutorial.title) + '.md';
-      const filePath = path.join(docsPath, 'tutorials', fileName);
+      const fileName = this.slugify(tutorial.title) + ".md";
+      const filePath = path.join(docsPath, "tutorials", fileName);
 
       if (preserveExisting) {
         try {
@@ -2104,14 +2229,14 @@ ${
         }
       }
 
-      await fs.writeFile(filePath, tutorial.content, 'utf-8');
+      await fs.writeFile(filePath, tutorial.content, "utf-8");
       filesCreated++;
     }
 
     // Write how-to guides
     for (const howTo of content.howTos) {
-      const fileName = this.slugify(howTo.title) + '.md';
-      const filePath = path.join(docsPath, 'how-to', fileName);
+      const fileName = this.slugify(howTo.title) + ".md";
+      const filePath = path.join(docsPath, "how-to", fileName);
 
       if (preserveExisting) {
         try {
@@ -2122,14 +2247,14 @@ ${
         }
       }
 
-      await fs.writeFile(filePath, howTo.content, 'utf-8');
+      await fs.writeFile(filePath, howTo.content, "utf-8");
       filesCreated++;
     }
 
     // Write reference documentation
     for (const ref of content.reference) {
-      const fileName = this.slugify(ref.title) + '.md';
-      const filePath = path.join(docsPath, 'reference', fileName);
+      const fileName = this.slugify(ref.title) + ".md";
+      const filePath = path.join(docsPath, "reference", fileName);
 
       if (preserveExisting) {
         try {
@@ -2140,14 +2265,14 @@ ${
         }
       }
 
-      await fs.writeFile(filePath, ref.content, 'utf-8');
+      await fs.writeFile(filePath, ref.content, "utf-8");
       filesCreated++;
     }
 
     // Write explanation content
     for (const exp of content.explanation) {
-      const fileName = this.slugify(exp.title) + '.md';
-      const filePath = path.join(docsPath, 'explanation', fileName);
+      const fileName = this.slugify(exp.title) + ".md";
+      const filePath = path.join(docsPath, "explanation", fileName);
 
       if (preserveExisting) {
         try {
@@ -2158,7 +2283,7 @@ ${
         }
       }
 
-      await fs.writeFile(filePath, exp.content, 'utf-8');
+      await fs.writeFile(filePath, exp.content, "utf-8");
       filesCreated++;
     }
 
@@ -2179,34 +2304,37 @@ Welcome to the documentation! This comprehensive guide is organized following th
 Start here if you're new to the project:
 ${contentPlan.tutorials
   .map((t) => `- [${t.title}](tutorials/${this.slugify(t.title)}.md)`)
-  .join('\\n')}
+  .join("\\n")}
 
 ## 🔧 Task-Oriented: How-To Guides
 
 Practical guides for specific tasks:
 ${contentPlan.howToGuides
   .map((h) => `- [${h.title}](how-to/${this.slugify(h.title)}.md)`)
-  .join('\\n')}
+  .join("\\n")}
 
 ## 📖 Information-Oriented: Reference
 
 Detailed technical reference:
 ${contentPlan.reference
   .map((r) => `- [${r.title}](reference/${this.slugify(r.title)}.md)`)
-  .join('\\n')}
+  .join("\\n")}
 
 ## 💡 Understanding-Oriented: Explanation
 
 Conceptual documentation and background:
 ${contentPlan.explanation
   .map((e) => `- [${e.title}](explanation/${this.slugify(e.title)}.md)`)
-  .join('\\n')}
+  .join("\\n")}
 `;
 
-    await fs.writeFile(path.join(docsPath, 'index.md'), indexContent, 'utf-8');
+    await fs.writeFile(path.join(docsPath, "index.md"), indexContent, "utf-8");
   }
 
-  private calculatePopulationMetrics(filesCreated: number, contentPlan: ContentPlan): any {
+  private calculatePopulationMetrics(
+    filesCreated: number,
+    contentPlan: ContentPlan,
+  ): any {
     const totalPlanned =
       contentPlan.tutorials.length +
       contentPlan.howToGuides.length +
@@ -2235,29 +2363,37 @@ ${contentPlan.explanation
         `Review and customize the generated content (based on ${_similarProjects.length} similar project patterns)`,
       );
     } else {
-      nextSteps.push('Review and customize the generated content');
+      nextSteps.push("Review and customize the generated content");
     }
 
     // Project-specific recommendations
     if (analysis.structure?.hasTests) {
-      nextSteps.push('Run and validate all code examples and commands');
+      nextSteps.push("Run and validate all code examples and commands");
     }
 
     if (analysis.structure?.hasCI) {
-      nextSteps.push('Set up automated documentation deployment using successful CI patterns');
+      nextSteps.push(
+        "Set up automated documentation deployment using successful CI patterns",
+      );
     }
 
     // Memory-informed improvements
     if (patterns.documentationStructures) {
-      nextSteps.push('Enhance documentation structure based on successful similar projects');
+      nextSteps.push(
+        "Enhance documentation structure based on successful similar projects",
+      );
     }
 
     if (patterns.deploymentStrategies) {
-      nextSteps.push('Implement proven deployment strategies from similar projects');
+      nextSteps.push(
+        "Implement proven deployment strategies from similar projects",
+      );
     }
 
     // Always include validation
-    nextSteps.push('Validate technical accuracy using project-specific analysis');
+    nextSteps.push(
+      "Validate technical accuracy using project-specific analysis",
+    );
 
     return nextSteps;
   }
@@ -2270,7 +2406,11 @@ ${contentPlan.explanation
   ): Promise<any[]> {
     return tutorials.map((tutorial) => ({
       ...tutorial,
-      content: this.enhanceContentWithMemoryInsights(tutorial.content, analysis, _memoryInsights),
+      content: this.enhanceContentWithMemoryInsights(
+        tutorial.content,
+        analysis,
+        _memoryInsights,
+      ),
       codeExamples: this.enhanceExamplesWithRealCode(
         tutorial.codeExamples || [],
         analysis,
@@ -2286,7 +2426,11 @@ ${contentPlan.explanation
   ): Promise<any[]> {
     return howTos.map((howTo) => ({
       ...howTo,
-      content: this.enhanceContentWithMemoryInsights(howTo.content, analysis, _memoryInsights),
+      content: this.enhanceContentWithMemoryInsights(
+        howTo.content,
+        analysis,
+        _memoryInsights,
+      ),
     }));
   }
 
@@ -2297,7 +2441,10 @@ ${contentPlan.explanation
   ): Promise<any[]> {
     return reference.map((ref) => ({
       ...ref,
-      content: this.generateMemoryInformedAPIReference(analysis, _memoryInsights),
+      content: this.generateMemoryInformedAPIReference(
+        analysis,
+        _memoryInsights,
+      ),
     }));
   }
 
@@ -2308,7 +2455,11 @@ ${contentPlan.explanation
   ): Promise<any[]> {
     return explanation.map((exp) => ({
       ...exp,
-      content: this.enhanceContentWithMemoryInsights(exp.content, analysis, _memoryInsights),
+      content: this.enhanceContentWithMemoryInsights(
+        exp.content,
+        analysis,
+        _memoryInsights,
+      ),
     }));
   }
 
@@ -2318,7 +2469,7 @@ ${contentPlan.explanation
     _memoryInsights: any,
   ): string {
     // Replace generic placeholders with real project information
-    const language = analysis.metadata?.primaryLanguage || 'development';
+    const language = analysis.metadata?.primaryLanguage || "development";
     const similarCount = _memoryInsights?.similarProjects?.length || 0;
 
     let enhancedContent = content;
@@ -2332,7 +2483,10 @@ ${contentPlan.explanation
     }
 
     // Replace generic examples with real ones
-    enhancedContent = this.replaceGenericExamplesWithReal(enhancedContent, analysis);
+    enhancedContent = this.replaceGenericExamplesWithReal(
+      enhancedContent,
+      analysis,
+    );
 
     return enhancedContent;
   }
@@ -2344,16 +2498,22 @@ ${contentPlan.explanation
   ): string[] {
     return examples.map((example) => {
       // Replace generic project names with actual project name
-      const projectName = analysis.metadata?.projectName || 'project';
-      return example.replace(/your-project|myproject|example-project/g, projectName);
+      const projectName = analysis.metadata?.projectName || "project";
+      return example.replace(
+        /your-project|myproject|example-project/g,
+        projectName,
+      );
     });
   }
 
-  private generateMemoryInformedAPIReference(analysis: any, _memoryInsights: any): string {
+  private generateMemoryInformedAPIReference(
+    analysis: any,
+    _memoryInsights: any,
+  ): string {
     // Extract actual API structure from project analysis
     const entryPoint = this.findProjectEntryPoint(analysis);
     const packageJson = this.findPackageJson(analysis);
-    const projectName = analysis.metadata?.projectName || 'the project';
+    const projectName = analysis.metadata?.projectName || "the project";
 
     let content = `# API Reference\n\n`;
     content += `Complete reference for ${projectName} APIs.\n\n`;
@@ -2383,9 +2543,12 @@ ${contentPlan.explanation
     return content;
   }
 
-  private replaceGenericExamplesWithReal(content: string, analysis: any): string {
-    const projectName = analysis.metadata?.projectName || 'project';
-    const language = analysis.metadata?.primaryLanguage || 'JavaScript';
+  private replaceGenericExamplesWithReal(
+    content: string,
+    analysis: any,
+  ): string {
+    const projectName = analysis.metadata?.projectName || "project";
+    const language = analysis.metadata?.primaryLanguage || "JavaScript";
 
     // Replace generic project references
     content = content.replace(/your-project-name/g, projectName);
@@ -2401,7 +2564,10 @@ ${contentPlan.explanation
 
   private getDefaultPortForProject(analysis: any): number {
     const packageJson = this.findPackageJson(analysis);
-    if (packageJson?.scripts?.start && packageJson.scripts.start.includes('port')) {
+    if (
+      packageJson?.scripts?.start &&
+      packageJson.scripts.start.includes("port")
+    ) {
       // Try to extract port from start script
       const portMatch = packageJson.scripts.start.match(/port[:\s=](\d+)/i);
       if (portMatch) {
@@ -2411,11 +2577,11 @@ ${contentPlan.explanation
 
     // Default ports based on project type
     const dependencies = analysis.dependencies?.packages || [];
-    if (dependencies.includes('express')) return 3000;
-    if (dependencies.includes('fastify')) return 3000;
-    if (dependencies.includes('next')) return 3000;
-    if (dependencies.includes('gatsby')) return 8000;
-    if (dependencies.includes('nuxt')) return 3000;
+    if (dependencies.includes("express")) return 3000;
+    if (dependencies.includes("fastify")) return 3000;
+    if (dependencies.includes("next")) return 3000;
+    if (dependencies.includes("gatsby")) return 8000;
+    if (dependencies.includes("nuxt")) return 3000;
 
     return 3000; // Generic default
   }
@@ -2445,31 +2611,40 @@ ${contentPlan.explanation
     return this.generateExplanationPlan(analysis, level);
   }
 
-  private generateMemoryInformedNodeSetupContent(_analysis: any, _patterns: any): string {
+  private generateMemoryInformedNodeSetupContent(
+    _analysis: any,
+    _patterns: any,
+  ): string {
     return this.generateNodeSetupContent(_analysis);
   }
 
-  private generateMemoryInformedNodeSetupExamples(_analysis: any, _patterns: any): string[] {
+  private generateMemoryInformedNodeSetupExamples(
+    _analysis: any,
+    _patterns: any,
+  ): string[] {
     return this.generateNodeSetupExamples();
   }
 
-  private generateNextSteps(_analysis: any, _contentPlan: ContentPlan): string[] {
+  private generateNextSteps(
+    _analysis: any,
+    _contentPlan: ContentPlan,
+  ): string[] {
     return [
-      'Review and customize the generated content',
-      'Add project-specific examples and use cases',
-      'Validate technical accuracy of code examples',
-      'Add screenshots and diagrams where helpful',
-      'Test all commands and code snippets',
-      'Set up automated documentation deployment',
+      "Review and customize the generated content",
+      "Add project-specific examples and use cases",
+      "Validate technical accuracy of code examples",
+      "Add screenshots and diagrams where helpful",
+      "Test all commands and code snippets",
+      "Set up automated documentation deployment",
     ];
   }
 
   private slugify(text: string): string {
     return text
       .toLowerCase()
-      .replace(/[^\w\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/--+/g, '-')
+      .replace(/[^\w\s-]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/--+/g, "-")
       .trim();
   }
 
@@ -2491,27 +2666,27 @@ ${contentPlan.explanation
 
     // Docker detection
     if (
-      files.some((f: any) => f.name === 'Dockerfile') ||
-      files.some((f: any) => f.name === 'docker-compose.yml') ||
-      files.some((f: any) => f.name === 'docker-compose.yaml')
+      files.some((f: any) => f.name === "Dockerfile") ||
+      files.some((f: any) => f.name === "docker-compose.yml") ||
+      files.some((f: any) => f.name === "docker-compose.yaml")
     ) {
       detected.push({
-        name: 'docker',
+        name: "docker",
         version: this.extractDockerVersion(analysis),
         configFiles: this.getDockerFiles(analysis),
-        usage: 'containerization',
+        usage: "containerization",
       });
     }
 
     // Podman detection
     if (
-      files.some((f: any) => f.name === 'Containerfile') ||
-      files.some((f: any) => f.name === 'podman-compose.yml')
+      files.some((f: any) => f.name === "Containerfile") ||
+      files.some((f: any) => f.name === "podman-compose.yml")
     ) {
       detected.push({
-        name: 'podman',
+        name: "podman",
         configFiles: this.getPodmanFiles(analysis),
-        usage: 'containerization',
+        usage: "containerization",
       });
     }
 
@@ -2523,9 +2698,13 @@ ${contentPlan.explanation
     const files = analysis.files || [];
 
     // Kubernetes detection
-    if (files.some((f: any) => f.path?.includes('k8s/') || f.path?.includes('kubernetes/'))) {
+    if (
+      files.some(
+        (f: any) => f.path?.includes("k8s/") || f.path?.includes("kubernetes/"),
+      )
+    ) {
       detected.push({
-        name: 'kubernetes',
+        name: "kubernetes",
         manifests: this.getKubernetesManifests(analysis),
         resources: this.analyzeKubernetesResources(analysis),
         namespaces: this.extractNamespaces(analysis),
@@ -2534,11 +2713,11 @@ ${contentPlan.explanation
 
     // OpenShift detection
     if (
-      files.some((f: any) => f.path?.includes('.s2i/')) ||
-      this.hasFileContent(analysis, 'kind: DeploymentConfig')
+      files.some((f: any) => f.path?.includes(".s2i/")) ||
+      this.hasFileContent(analysis, "kind: DeploymentConfig")
     ) {
       detected.push({
-        name: 'openshift',
+        name: "openshift",
       });
     }
 
@@ -2550,19 +2729,19 @@ ${contentPlan.explanation
     const files = analysis.files || [];
 
     // GitHub Actions detection
-    if (files.some((f: any) => f.path?.includes('.github/workflows/'))) {
+    if (files.some((f: any) => f.path?.includes(".github/workflows/"))) {
       detected.push({
-        name: 'github-actions',
+        name: "github-actions",
       });
     }
 
     // Tekton detection
     if (
-      files.some((f: any) => f.path?.includes('.tekton/')) ||
-      this.hasFileContent(analysis, 'apiVersion: tekton.dev')
+      files.some((f: any) => f.path?.includes(".tekton/")) ||
+      this.hasFileContent(analysis, "apiVersion: tekton.dev")
     ) {
       detected.push({
-        name: 'tekton',
+        name: "tekton",
       });
     }
 
@@ -2575,21 +2754,21 @@ ${contentPlan.explanation
 
     // Ansible detection
     if (
-      files.some((f: any) => f.name === 'ansible.cfg') ||
-      files.some((f: any) => f.path?.includes('playbooks/')) ||
-      files.some((f: any) => f.path?.includes('roles/'))
+      files.some((f: any) => f.name === "ansible.cfg") ||
+      files.some((f: any) => f.path?.includes("playbooks/")) ||
+      files.some((f: any) => f.path?.includes("roles/"))
     ) {
       detected.push({
-        name: 'ansible',
+        name: "ansible",
         playbooks: this.getAnsiblePlaybooks(analysis),
         roles: this.getAnsibleRoles(analysis),
       });
     }
 
     // Terraform detection
-    if (files.some((f: any) => f.name?.endsWith('.tf'))) {
+    if (files.some((f: any) => f.name?.endsWith(".tf"))) {
       detected.push({
-        name: 'terraform',
+        name: "terraform",
       });
     }
 
@@ -2599,12 +2778,12 @@ ${contentPlan.explanation
   private detectMonitoring(analysis: any): MonitoringTechnology[] {
     const detected: MonitoringTechnology[] = [];
 
-    if (this.hasFileContent(analysis, 'prometheus')) {
-      detected.push({ name: 'prometheus' });
+    if (this.hasFileContent(analysis, "prometheus")) {
+      detected.push({ name: "prometheus" });
     }
 
-    if (this.hasFileContent(analysis, 'grafana')) {
-      detected.push({ name: 'grafana' });
+    if (this.hasFileContent(analysis, "grafana")) {
+      detected.push({ name: "grafana" });
     }
 
     return detected;
@@ -2613,8 +2792,8 @@ ${contentPlan.explanation
   private detectSecurity(analysis: any): SecurityTechnology[] {
     const detected: SecurityTechnology[] = [];
 
-    if (this.hasFileContent(analysis, 'falco')) {
-      detected.push({ name: 'falco' });
+    if (this.hasFileContent(analysis, "falco")) {
+      detected.push({ name: "falco" });
     }
 
     return detected;
@@ -2625,16 +2804,16 @@ ${contentPlan.explanation
     const frameworks: any[] = [];
     const dependencies = analysis.dependencies?.packages || [];
 
-    if (dependencies.includes('django')) {
-      frameworks.push({ name: 'django', type: 'web-framework' });
+    if (dependencies.includes("django")) {
+      frameworks.push({ name: "django", type: "web-framework" });
     }
 
-    if (dependencies.includes('fastapi')) {
-      frameworks.push({ name: 'fastapi', type: 'web-framework' });
+    if (dependencies.includes("fastapi")) {
+      frameworks.push({ name: "fastapi", type: "web-framework" });
     }
 
-    if (dependencies.includes('flask')) {
-      frameworks.push({ name: 'flask', type: 'web-framework' });
+    if (dependencies.includes("flask")) {
+      frameworks.push({ name: "flask", type: "web-framework" });
     }
 
     return frameworks;
@@ -2653,42 +2832,54 @@ ${contentPlan.explanation
   private getDockerFiles(analysis: any): string[] {
     const files = analysis.files || [];
     return files
-      .filter((f: any) => f.name === 'Dockerfile' || f.name.includes('docker-compose'))
+      .filter(
+        (f: any) =>
+          f.name === "Dockerfile" || f.name.includes("docker-compose"),
+      )
       .map((f: any) => f.name);
   }
 
   private getPodmanFiles(analysis: any): string[] {
     const files = analysis.files || [];
     return files
-      .filter((f: any) => f.name === 'Containerfile' || f.name.includes('podman-compose'))
+      .filter(
+        (f: any) =>
+          f.name === "Containerfile" || f.name.includes("podman-compose"),
+      )
       .map((f: any) => f.name);
   }
 
   private getKubernetesManifests(analysis: any): string[] {
     const files = analysis.files || [];
     return files
-      .filter((f: any) => f.path?.includes('k8s/') || f.path?.includes('kubernetes/'))
+      .filter(
+        (f: any) => f.path?.includes("k8s/") || f.path?.includes("kubernetes/"),
+      )
       .map((f: any) => f.name);
   }
 
   private analyzeKubernetesResources(_analysis: any): string[] {
-    return ['Deployment', 'Service', 'ConfigMap']; // Simplified
+    return ["Deployment", "Service", "ConfigMap"]; // Simplified
   }
 
   private extractNamespaces(_analysis: any): string[] {
-    return ['default']; // Simplified
+    return ["default"]; // Simplified
   }
 
   private getAnsiblePlaybooks(analysis: any): string[] {
     const files = analysis.files || [];
     return files
-      .filter((f: any) => f.path?.includes('playbooks/') && f.name?.endsWith('.yml'))
+      .filter(
+        (f: any) => f.path?.includes("playbooks/") && f.name?.endsWith(".yml"),
+      )
       .map((f: any) => f.name);
   }
 
   private getAnsibleRoles(analysis: any): string[] {
     const files = analysis.files || [];
-    return files.filter((f: any) => f.path?.includes('roles/')).map((f: any) => f.name);
+    return files
+      .filter((f: any) => f.path?.includes("roles/"))
+      .map((f: any) => f.name);
   }
 
   // Content generation methods for new features
@@ -2696,7 +2887,9 @@ ${contentPlan.explanation
     _analysis: any,
     _containerTech: ContainerTechnology,
   ): string {
-    return `# Containerizing ${_analysis.metadata.projectName} with ${_containerTech.name}
+    return `# Containerizing ${_analysis.metadata.projectName} with ${
+      _containerTech.name
+    }
 
 Learn how to package your ${
       _analysis.metadata.primaryLanguage
@@ -2712,10 +2905,12 @@ Learn how to package your ${
 
 Containers provide a lightweight, portable way to package applications with all their dependencies. This ensures your application runs consistently across different environments.
 
-## Creating a ${_containerTech.name === 'docker' ? 'Dockerfile' : 'Containerfile'}
+## Creating a ${
+      _containerTech.name === "docker" ? "Dockerfile" : "Containerfile"
+    }
 
 1. Create a ${
-      _containerTech.name === 'docker' ? 'Dockerfile' : 'Containerfile'
+      _containerTech.name === "docker" ? "Dockerfile" : "Containerfile"
     } in your project root:
 
 \`\`\`dockerfile
@@ -2753,7 +2948,9 @@ ${_containerTech.name} run -p 3000:3000 ${_analysis.metadata.projectName}:latest
     _analysis: any,
     _orchestrationTech: OrchestrationTechnology,
   ): string {
-    return `# Deploying ${_analysis.metadata.projectName} to ${_orchestrationTech.name}
+    return `# Deploying ${_analysis.metadata.projectName} to ${
+      _orchestrationTech.name
+    }
 
 Deploy your containerized application to ${
       _orchestrationTech.name
@@ -2776,13 +2973,13 @@ ${
 1. Create a deployment configuration:
 
 \`\`\`yaml
-${this.generateKubernetesManifest(_analysis, 'deployment')}
+${this.generateKubernetesManifest(_analysis, "deployment")}
 \`\`\`
 
 2. Create a service configuration:
 
 \`\`\`yaml
-${this.generateKubernetesManifest(_analysis, 'service')}
+${this.generateKubernetesManifest(_analysis, "service")}
 \`\`\`
 
 ## Deploying to ${_orchestrationTech.name}
@@ -2893,12 +3090,15 @@ deactivate
 `;
   }
 
-  private generatePythonFrameworkTutorialContent(_analysis: any, framework: any): string {
-    if (framework.name === 'django') {
+  private generatePythonFrameworkTutorialContent(
+    _analysis: any,
+    framework: any,
+  ): string {
+    if (framework.name === "django") {
       return this.generateDjangoTutorialContent(_analysis);
-    } else if (framework.name === 'fastapi') {
+    } else if (framework.name === "fastapi") {
       return this.generateFastAPITutorialContent(_analysis);
-    } else if (framework.name === 'flask') {
+    } else if (framework.name === "flask") {
       return this.generateFlaskTutorialContent(_analysis);
     }
 
@@ -3164,7 +3364,7 @@ Popular Flask extensions:
   ): string {
     const language = _analysis.metadata.primaryLanguage?.toLowerCase();
 
-    if (language === 'python') {
+    if (language === "python") {
       return `FROM python:3.11-slim
 
 WORKDIR /app
@@ -3177,7 +3377,7 @@ COPY . .
 EXPOSE 8000
 
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]`;
-    } else if (language === 'javascript' || language === 'typescript') {
+    } else if (language === "javascript" || language === "typescript") {
       return `FROM node:18-alpine
 
 WORKDIR /app
@@ -3206,7 +3406,7 @@ CMD ["./start.sh"]`;
   }
 
   private generateKubernetesManifest(analysis: any, type: string): string {
-    if (type === 'deployment') {
+    if (type === "deployment") {
       return `apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -3231,7 +3431,7 @@ spec:
         env:
         - name: NODE_ENV
           value: "production"`;
-    } else if (type === 'service') {
+    } else if (type === "service") {
       return `apiVersion: v1
 kind: Service
 metadata:
@@ -3246,10 +3446,13 @@ spec:
   type: LoadBalancer`;
     }
 
-    return '';
+    return "";
   }
 
-  private generateContainerExamples(_analysis: any, _containerTech: ContainerTechnology): string[] {
+  private generateContainerExamples(
+    _analysis: any,
+    _containerTech: ContainerTechnology,
+  ): string[] {
     return [
       `# Build the container image
 ${_containerTech.name} build -t ${_analysis.metadata.projectName}:latest .`,
@@ -3292,7 +3495,7 @@ pip install -r requirements.txt`,
   }
 
   private generatePythonFrameworkExamples(framework: any): string[] {
-    if (framework.name === 'django') {
+    if (framework.name === "django") {
       return [
         `# Create Django project
 django-admin startproject myproject`,
@@ -3311,46 +3514,49 @@ python manage.py createsuperuser`,
 
 // Export the tool implementation
 export const populateDiataxisContent: Tool = {
-  name: 'populate_diataxis_content',
-  description: 'Intelligently populate Diataxis documentation with project-specific content',
+  name: "populate_diataxis_content",
+  description:
+    "Intelligently populate Diataxis documentation with project-specific content",
   inputSchema: {
-    type: 'object',
+    type: "object",
     properties: {
       analysisId: {
-        type: 'string',
-        description: 'Repository analysis ID from analyze_repository tool',
+        type: "string",
+        description: "Repository analysis ID from analyze_repository tool",
       },
       docsPath: {
-        type: 'string',
-        description: 'Path to documentation directory',
+        type: "string",
+        description: "Path to documentation directory",
       },
       populationLevel: {
-        type: 'string',
-        enum: ['basic', 'comprehensive', 'intelligent'],
-        default: 'comprehensive',
-        description: 'Level of content generation detail',
+        type: "string",
+        enum: ["basic", "comprehensive", "intelligent"],
+        default: "comprehensive",
+        description: "Level of content generation detail",
       },
       includeProjectSpecific: {
-        type: 'boolean',
+        type: "boolean",
         default: true,
-        description: 'Generate project-specific examples and code',
+        description: "Generate project-specific examples and code",
       },
       preserveExisting: {
-        type: 'boolean',
+        type: "boolean",
         default: true,
-        description: 'Preserve any existing content',
+        description: "Preserve any existing content",
       },
       technologyFocus: {
-        type: 'array',
-        items: { type: 'string' },
-        description: 'Specific technologies to emphasize in content',
+        type: "array",
+        items: { type: "string" },
+        description: "Specific technologies to emphasize in content",
       },
     },
-    required: ['analysisId', 'docsPath'],
+    required: ["analysisId", "docsPath"],
   },
 };
 
-export async function handlePopulateDiataxisContent(args: any): Promise<PopulationResult> {
+export async function handlePopulateDiataxisContent(
+  args: any,
+): Promise<PopulationResult> {
   const engine = new ContentPopulationEngine();
   return await engine.populateContent(args);
 }

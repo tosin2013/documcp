@@ -3,11 +3,11 @@
  * Intelligent memory cleanup, storage optimization, and performance tuning
  */
 
-import { EventEmitter } from 'events';
-import { MemoryEntry, JSONLStorage } from './storage.js';
-import { MemoryManager } from './manager.js';
-import { IncrementalLearningSystem } from './learning.js';
-import { KnowledgeGraph } from './knowledge-graph.js';
+import { EventEmitter } from "events";
+import { MemoryEntry, JSONLStorage } from "./storage.js";
+import { MemoryManager } from "./manager.js";
+import { IncrementalLearningSystem } from "./learning.js";
+import { KnowledgeGraph } from "./knowledge-graph.js";
 
 export interface PruningPolicy {
   maxAge: number; // Maximum age in days
@@ -39,7 +39,7 @@ export interface PruningResult {
 }
 
 export interface CompressionStrategy {
-  type: 'gzip' | 'lz4' | 'semantic';
+  type: "gzip" | "lz4" | "semantic";
   threshold: number;
   ratio: number;
 }
@@ -79,7 +79,11 @@ export class MemoryPruningSystem extends EventEmitter {
       maxAge: 180, // 6 months
       maxSize: 500, // 500MB
       maxEntries: 50000,
-      preservePatterns: ['successful_deployment', 'user_preference', 'critical_error'],
+      preservePatterns: [
+        "successful_deployment",
+        "user_preference",
+        "critical_error",
+      ],
       compressionThreshold: 30, // Compress after 30 days
       redundancyThreshold: 0.85, // 85% similarity threshold
     };
@@ -94,7 +98,7 @@ export class MemoryPruningSystem extends EventEmitter {
     const activePolicy = { ...this.defaultPolicy, ...policy };
     const startTime = Date.now();
 
-    this.emit('pruning_started', { policy: activePolicy });
+    this.emit("pruning_started", { policy: activePolicy });
 
     try {
       // Get current metrics
@@ -119,7 +123,8 @@ export class MemoryPruningSystem extends EventEmitter {
       const finalMetrics = await this.getOptimizationMetrics();
 
       const result: PruningResult = {
-        entriesRemoved: agedResult.removed + sizeResult.removed + redundancyResult.removed,
+        entriesRemoved:
+          agedResult.removed + sizeResult.removed + redundancyResult.removed,
         spaceSaved: initialMetrics.storageSize - finalMetrics.storageSize,
         patternsPreserved: agedResult.preserved + sizeResult.preserved,
         compressionApplied: compressionResult.compressed,
@@ -130,14 +135,16 @@ export class MemoryPruningSystem extends EventEmitter {
       // Update learning system with pruning results
       await this.updateLearningFromPruning(result);
 
-      this.emit('pruning_completed', {
+      this.emit("pruning_completed", {
         result,
         duration: Date.now() - startTime,
       });
 
       return result;
     } catch (error) {
-      this.emit('pruning_error', { error: error instanceof Error ? error.message : String(error) });
+      this.emit("pruning_error", {
+        error: error instanceof Error ? error.message : String(error),
+      });
       throw error;
     }
   }
@@ -148,7 +155,9 @@ export class MemoryPruningSystem extends EventEmitter {
   private async removeAgedEntries(
     policy: PruningPolicy,
   ): Promise<{ removed: number; preserved: number }> {
-    const cutoffDate = new Date(Date.now() - policy.maxAge * 24 * 60 * 60 * 1000);
+    const cutoffDate = new Date(
+      Date.now() - policy.maxAge * 24 * 60 * 60 * 1000,
+    );
     const allEntries = await this.storage.getAll();
 
     let removed = 0;
@@ -185,7 +194,10 @@ export class MemoryPruningSystem extends EventEmitter {
   ): Promise<{ removed: number; preserved: number }> {
     const metrics = await this.getOptimizationMetrics();
 
-    if (metrics.storageSize <= policy.maxSize && metrics.totalEntries <= policy.maxEntries) {
+    if (
+      metrics.storageSize <= policy.maxSize &&
+      metrics.totalEntries <= policy.maxEntries
+    ) {
       return { removed: 0, preserved: 0 };
     }
 
@@ -207,7 +219,10 @@ export class MemoryPruningSystem extends EventEmitter {
     let currentEntries = metrics.totalEntries;
 
     for (const { entry, score } of scoredEntries) {
-      if (currentSize <= policy.maxSize && currentEntries <= policy.maxEntries) {
+      if (
+        currentSize <= policy.maxSize &&
+        currentEntries <= policy.maxEntries
+      ) {
         break;
       }
 
@@ -236,7 +251,9 @@ export class MemoryPruningSystem extends EventEmitter {
   private async removeRedundantEntries(
     policy: PruningPolicy,
   ): Promise<{ removed: number; merged: number }> {
-    const redundantPatterns = await this.findRedundantPatterns(policy.redundancyThreshold);
+    const redundantPatterns = await this.findRedundantPatterns(
+      policy.redundancyThreshold,
+    );
 
     let removed = 0;
     let merged = 0;
@@ -251,7 +268,10 @@ export class MemoryPruningSystem extends EventEmitter {
 
         // Optionally merge information into representative
         if (pattern.count > 2) {
-          await this.mergeRedundantEntries(pattern.representative, pattern.duplicates.slice(1));
+          await this.mergeRedundantEntries(
+            pattern.representative,
+            pattern.duplicates.slice(1),
+          );
           merged++;
         }
       }
@@ -266,7 +286,9 @@ export class MemoryPruningSystem extends EventEmitter {
   private async applyCompression(
     policy: PruningPolicy,
   ): Promise<{ compressed: number; spaceSaved: number }> {
-    const cutoffDate = new Date(Date.now() - policy.compressionThreshold * 24 * 60 * 60 * 1000);
+    const cutoffDate = new Date(
+      Date.now() - policy.compressionThreshold * 24 * 60 * 60 * 1000,
+    );
     const allEntries = await this.storage.getAll();
 
     let compressed = 0;
@@ -293,21 +315,24 @@ export class MemoryPruningSystem extends EventEmitter {
   /**
    * Optimize storage structure and indices
    */
-  private async optimizeStorage(): Promise<{ applied: boolean; improvements: string[] }> {
+  private async optimizeStorage(): Promise<{
+    applied: boolean;
+    improvements: string[];
+  }> {
     const improvements: string[] = [];
 
     try {
       // Rebuild indices
       await this.storage.rebuildIndex();
-      improvements.push('rebuilt_indices');
+      improvements.push("rebuilt_indices");
 
       // Defragment storage files
       await this.defragmentStorage();
-      improvements.push('defragmented_storage');
+      improvements.push("defragmented_storage");
 
       // Optimize cache sizes
       this.optimizeCaches();
-      improvements.push('optimized_caches');
+      improvements.push("optimized_caches");
 
       return { applied: true, improvements };
     } catch (error) {
@@ -356,7 +381,7 @@ export class MemoryPruningSystem extends EventEmitter {
     }
 
     // Success indicator (0-0.15)
-    if (entry.data.outcome === 'success' || entry.data.success === true) {
+    if (entry.data.outcome === "success" || entry.data.success === true) {
       score += 0.15;
     }
 
@@ -366,17 +391,23 @@ export class MemoryPruningSystem extends EventEmitter {
   /**
    * Check if entry should be preserved based on policy
    */
-  private shouldPreserveEntry(entry: MemoryEntry, policy: PruningPolicy): boolean {
+  private shouldPreserveEntry(
+    entry: MemoryEntry,
+    policy: PruningPolicy,
+  ): boolean {
     // Check preserve patterns
     for (const pattern of policy.preservePatterns) {
-      if (entry.type.includes(pattern) || JSON.stringify(entry.data).includes(pattern)) {
+      if (
+        entry.type.includes(pattern) ||
+        JSON.stringify(entry.data).includes(pattern)
+      ) {
         return true;
       }
     }
 
     // Preserve high-value entries
     if (
-      entry.data.outcome === 'success' ||
+      entry.data.outcome === "success" ||
       entry.data.success === true ||
       entry.data.critical === true
     ) {
@@ -389,7 +420,9 @@ export class MemoryPruningSystem extends EventEmitter {
   /**
    * Find patterns of redundant entries
    */
-  private async findRedundantPatterns(threshold: number): Promise<RedundancyPattern[]> {
+  private async findRedundantPatterns(
+    threshold: number,
+  ): Promise<RedundancyPattern[]> {
     const allEntries = await this.storage.getAll();
     const patterns: RedundancyPattern[] = [];
     const processed = new Set<string>();
@@ -397,7 +430,11 @@ export class MemoryPruningSystem extends EventEmitter {
     for (const entry of allEntries) {
       if (processed.has(entry.id)) continue;
 
-      const similar = await this.findSimilarEntries(entry, allEntries, threshold);
+      const similar = await this.findSimilarEntries(
+        entry,
+        allEntries,
+        threshold,
+      );
 
       if (similar.length > 1) {
         patterns.push({
@@ -440,7 +477,10 @@ export class MemoryPruningSystem extends EventEmitter {
   /**
    * Calculate similarity between two entries
    */
-  private async calculateSimilarity(entry1: MemoryEntry, entry2: MemoryEntry): Promise<number> {
+  private async calculateSimilarity(
+    entry1: MemoryEntry,
+    entry2: MemoryEntry,
+  ): Promise<number> {
     // Check cache first
     if (
       this.similarityCache.has(entry1.id) &&
@@ -458,13 +498,17 @@ export class MemoryPruningSystem extends EventEmitter {
 
     // Temporal similarity (0-0.2)
     const timeDiff = Math.abs(
-      new Date(entry1.timestamp).getTime() - new Date(entry2.timestamp).getTime(),
+      new Date(entry1.timestamp).getTime() -
+        new Date(entry2.timestamp).getTime(),
     );
     const maxTimeDiff = 7 * 24 * 60 * 60 * 1000; // 7 days
     similarity += Math.max(0, 1 - timeDiff / maxTimeDiff) * 0.2;
 
     // Data similarity (0-0.5)
-    const dataSimilarity = this.calculateDataSimilarity(entry1.data, entry2.data);
+    const dataSimilarity = this.calculateDataSimilarity(
+      entry1.data,
+      entry2.data,
+    );
     similarity += dataSimilarity * 0.5;
 
     // Cache result
@@ -492,9 +536,15 @@ export class MemoryPruningSystem extends EventEmitter {
       if (keys1.has(key) && keys2.has(key)) {
         if (data1[key] === data2[key]) {
           matches++;
-        } else if (typeof data1[key] === 'string' && typeof data2[key] === 'string') {
+        } else if (
+          typeof data1[key] === "string" &&
+          typeof data2[key] === "string"
+        ) {
           // String similarity for text fields
-          const stringSim = this.calculateStringSimilarity(data1[key], data2[key]);
+          const stringSim = this.calculateStringSimilarity(
+            data1[key],
+            data2[key],
+          );
           matches += stringSim;
         }
       }
@@ -549,7 +599,7 @@ export class MemoryPruningSystem extends EventEmitter {
         if (Array.isArray(data1[key]) && Array.isArray(data2[key])) {
           continue; // Arrays can be merged
         }
-        if (typeof data1[key] === 'object' && typeof data2[key] === 'object') {
+        if (typeof data1[key] === "object" && typeof data2[key] === "object") {
           continue; // Objects can be merged
         }
         return true; // Conflicting primitive values
@@ -568,7 +618,9 @@ export class MemoryPruningSystem extends EventEmitter {
     const representative = await this.storage.get(representativeId);
     if (!representative) return;
 
-    const duplicates = await Promise.all(duplicateIds.map((id) => this.storage.get(id)));
+    const duplicates = await Promise.all(
+      duplicateIds.map((id) => this.storage.get(id)),
+    );
 
     // Merge data from duplicates
     const mergedData = { ...representative.data };
@@ -580,7 +632,10 @@ export class MemoryPruningSystem extends EventEmitter {
       for (const [key, value] of Object.entries(duplicate.data)) {
         if (Array.isArray(value) && Array.isArray(mergedData[key])) {
           mergedData[key] = [...new Set([...mergedData[key], ...value])];
-        } else if (typeof value === 'object' && typeof mergedData[key] === 'object') {
+        } else if (
+          typeof value === "object" &&
+          typeof mergedData[key] === "object"
+        ) {
           mergedData[key] = { ...mergedData[key], ...value };
         } else if (!(key in mergedData)) {
           mergedData[key] = value;
@@ -621,7 +676,7 @@ export class MemoryPruningSystem extends EventEmitter {
       metadata: {
         ...entry.metadata,
         compressed: true,
-        compressionType: 'simple',
+        compressionType: "simple",
         compressedAt: new Date().toISOString(),
         originalSize: JSON.stringify(entry.data).length,
       },
@@ -634,12 +689,12 @@ export class MemoryPruningSystem extends EventEmitter {
   private simpleCompress(data: any): any {
     // This is a placeholder - in production, use proper compression
     const stringified = JSON.stringify(data);
-    const compressed = stringified.replace(/\s+/g, ' ').trim();
+    const compressed = stringified.replace(/\s+/g, " ").trim();
 
     return {
       _compressed: true,
       _data: compressed,
-      _type: 'simple',
+      _type: "simple",
     };
   }
 
@@ -651,7 +706,10 @@ export class MemoryPruningSystem extends EventEmitter {
     const allEntries = await this.storage.getAll();
 
     // Sort entries for optimal access patterns
-    allEntries.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    allEntries.sort(
+      (a, b) =>
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+    );
 
     // This would typically rewrite storage files
     // For now, just trigger a rebuild
@@ -724,11 +782,13 @@ export class MemoryPruningSystem extends EventEmitter {
   /**
    * Update learning system based on pruning results
    */
-  private async updateLearningFromPruning(result: PruningResult): Promise<void> {
+  private async updateLearningFromPruning(
+    result: PruningResult,
+  ): Promise<void> {
     // Create a learning entry about pruning effectiveness
     const pruningLearning = {
-      action: 'memory_pruning',
-      outcome: result.spaceSaved > 0 ? 'success' : 'neutral',
+      action: "memory_pruning",
+      outcome: result.spaceSaved > 0 ? "success" : "neutral",
       metrics: {
         entriesRemoved: result.entriesRemoved,
         spaceSaved: result.spaceSaved,
@@ -739,7 +799,7 @@ export class MemoryPruningSystem extends EventEmitter {
 
     // This would integrate with the learning system
     // For now, just emit an event
-    this.emit('learning_update', pruningLearning);
+    this.emit("learning_update", pruningLearning);
   }
 
   /**
@@ -751,9 +811,9 @@ export class MemoryPruningSystem extends EventEmitter {
       async () => {
         try {
           await this.prune();
-          this.emit('periodic_cleanup_completed');
+          this.emit("periodic_cleanup_completed");
         } catch (error) {
-          this.emit('periodic_cleanup_error', {
+          this.emit("periodic_cleanup_error", {
             error: error instanceof Error ? error.message : String(error),
           });
         }
@@ -779,7 +839,9 @@ export class MemoryPruningSystem extends EventEmitter {
     // Check storage size
     if (metrics.storageSize > this.defaultPolicy.maxSize * 0.8) {
       shouldPrune = true;
-      reasons.push(`Storage size (${metrics.storageSize.toFixed(2)}MB) approaching limit`);
+      reasons.push(
+        `Storage size (${metrics.storageSize.toFixed(2)}MB) approaching limit`,
+      );
       estimatedSavings += metrics.storageSize * 0.2;
     }
 
@@ -791,7 +853,7 @@ export class MemoryPruningSystem extends EventEmitter {
 
     // Check compression ratio
     if (metrics.compressionRatio < 0.3) {
-      reasons.push('Low compression ratio indicates optimization opportunity');
+      reasons.push("Low compression ratio indicates optimization opportunity");
       estimatedSavings += metrics.storageSize * 0.15;
     }
 
@@ -800,7 +862,7 @@ export class MemoryPruningSystem extends EventEmitter {
       (Date.now() - metrics.lastOptimization.getTime()) / (24 * 60 * 60 * 1000);
     if (daysSinceLastOptimization > 7) {
       shouldPrune = true;
-      reasons.push('Regular maintenance window (weekly optimization)');
+      reasons.push("Regular maintenance window (weekly optimization)");
     }
 
     return {
@@ -809,7 +871,10 @@ export class MemoryPruningSystem extends EventEmitter {
       estimatedSavings,
       recommendedPolicy: {
         maxAge: Math.max(30, this.defaultPolicy.maxAge - 30), // More aggressive if needed
-        compressionThreshold: Math.max(7, this.defaultPolicy.compressionThreshold - 7),
+        compressionThreshold: Math.max(
+          7,
+          this.defaultPolicy.compressionThreshold - 7,
+        ),
       },
     };
   }
