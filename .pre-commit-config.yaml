@@ -12,7 +12,7 @@ repos:
       - id: end-of-file-fixer
         exclude: '\.md$'
       - id: check-yaml
-        args: ['--unsafe'] # Allow custom YAML tags
+        args: ["--unsafe"] # Allow custom YAML tags
       - id: check-json
         exclude: 'tsconfig\.json$' # Allow JSON with comments
       - id: check-toml
@@ -22,11 +22,11 @@ repos:
       # Security and secrets
       - id: detect-private-key
       - id: check-added-large-files
-        args: ['--maxkb=1000']
+        args: ["--maxkb=1000"]
 
       # Code quality basics
       - id: mixed-line-ending
-        args: ['--fix=lf']
+        args: ["--fix=lf"]
 
   # GitHub Actions linting
   - repo: https://github.com/rhysd/actionlint
@@ -123,7 +123,7 @@ repos:
 
 # Global configuration
 default_language_version:
-  node: '20.11.0'
+  node: "20.11.0"
 
 # Performance and behavior settings
 default_stages: [pre-commit]
@@ -142,4 +142,4 @@ exclude: |
   )$
 
 # Minimum pre-commit version
-minimum_pre_commit_version: '3.5.0'
+minimum_pre_commit_version: "3.5.0"

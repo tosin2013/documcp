@@ -14,20 +14,22 @@ labels: ["documentation"]
 ## Location
 
 **Where is this documentation located?**
+
 - [ ] README.md
-- [ ] CONTRIBUTING.md  
+- [ ] CONTRIBUTING.md
 - [ ] API Documentation
 - [ ] Tutorials
 - [ ] How-To Guides
 - [ ] Reference
 - [ ] Explanation
-- [ ] Other: _________________
+- [ ] Other: **\*\*\*\***\_**\*\*\*\***
 
 **Specific file(s) and section(s)**:
 
 ## Problem Description
 
 **What's wrong with the current documentation?**
+
 - [ ] Missing information
 - [ ] Outdated information
 - [ ] Incorrect information
@@ -35,7 +37,7 @@ labels: ["documentation"]
 - [ ] Broken links
 - [ ] Typos/grammar issues
 - [ ] Lack of examples
-- [ ] Other: _________________
+- [ ] Other: **\*\*\*\***\_**\*\*\*\***
 
 ## Suggested Improvement
 
