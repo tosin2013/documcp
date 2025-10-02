@@ -15,7 +15,17 @@
   "excludeInternal": false,
   "theme": "default",
   "readme": "README.md",
-  "exclude": ["**/node_modules/**", "**/.*", "**/*.test.ts", "**/*.spec.ts"],
+  "exclude": [
+    "**/node_modules/**",
+    "**/.*",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "**/.github/**",
+    "**/CODE_OF_CONDUCT.md",
+    "**/CONTRIBUTING.md",
+    "**/SECURITY.md",
+    "**/LICENSE"
+  ],
   "sort": ["source-order"],
   "navigation": {
     "includeCategories": true,
