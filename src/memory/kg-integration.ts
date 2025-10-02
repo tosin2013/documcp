@@ -81,6 +81,16 @@ export async function getKGStorage(): Promise<KGStorage> {
 }
 
 /**
+ * Get the global Memory Manager instance
+ */
+export async function getMemoryManager(): Promise<MemoryManager> {
+  if (!globalMemoryManager) {
+    await initializeKnowledgeGraph();
+  }
+  return globalMemoryManager!;
+}
+
+/**
  * Save the Knowledge Graph to persistent storage
  */
 export async function saveKnowledgeGraph(): Promise<void> {
@@ -275,6 +285,9 @@ export async function getProjectContext(projectPath: string): Promise<{
   };
 }
 
+// Counter to ensure unique deployment IDs even when timestamps collide
+let deploymentCounter = 0;
+
 /**
  * Track a deployment outcome in the Knowledge Graph
  */
@@ -337,19 +350,23 @@ export async function trackDeployment(
     }
   }
 
-  // Create deployment relationship
+  // Create deployment relationship with unique timestamp+counter to allow multiple deployments
+  const timestamp = new Date().toISOString();
+  const uniqueId = `${timestamp}:${deploymentCounter++}`;
   kg.addEdge({
     source: projectNode.id,
     target: configNode.id,
-    type: "project_deployed_with",
+    type: `project_deployed_with:${uniqueId}`,
     weight: success ? 1.0 : 0.5,
     confidence: 1.0,
     properties: {
       success,
-      timestamp: new Date().toISOString(),
+      timestamp,
       buildTime: metadata?.buildTime,
       errorMessage: metadata?.errorMessage,
       deploymentUrl: metadata?.deploymentUrl,
+      // Store the base type for filtering
+      baseType: "project_deployed_with",
     },
   });
 

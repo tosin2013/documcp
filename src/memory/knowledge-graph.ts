@@ -52,7 +52,8 @@ export interface GraphEdge {
     | "project_deployed_with"
     | "documents"
     | "references"
-    | "outdated_for";
+    | "outdated_for"
+    | (string & NonNullable<unknown>); // Allow any string (for timestamped types like "project_deployed_with:2024-...")
   weight: number;
   properties: Record<string, any>;
   confidence: number;

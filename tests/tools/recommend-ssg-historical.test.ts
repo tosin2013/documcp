@@ -11,6 +11,7 @@ import {
   initializeKnowledgeGraph,
   createOrUpdateProject,
   trackDeployment,
+  getMemoryManager,
 } from "../../src/memory/kg-integration.js";
 import { recommendSSG } from "../../src/tools/recommend-ssg.js";
 import { MemoryManager } from "../../src/memory/manager.js";
@@ -29,10 +30,11 @@ describe("recommendSSG with Historical Data (Phase 2.1)", () => {
     originalEnv = process.env.DOCUMCP_STORAGE_DIR;
     process.env.DOCUMCP_STORAGE_DIR = testDir;
 
-    // Initialize KG and memory
+    // Initialize KG and memory - this creates the global memory manager
     await initializeKnowledgeGraph(testDir);
-    memoryManager = new MemoryManager(testDir);
-    await memoryManager.initialize();
+
+    // Use the same memory manager instance that kg-integration created
+    memoryManager = await getMemoryManager();
   });
 
   afterEach(async () => {

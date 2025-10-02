@@ -1,9 +1,9 @@
 import { z } from "zod";
 import { MCPToolResponse, formatMCPResponse } from "../types/api.js";
-import { initializeMemory } from "../memory/index.js";
 import {
   getKnowledgeGraph,
   getProjectContext,
+  getMemoryManager,
 } from "../memory/kg-integration.js";
 import { getUserPreferenceManager } from "../memory/user-preferences.js";
 
@@ -56,23 +56,53 @@ async function getHistoricalDeploymentData(
     successRate: number;
     deploymentCount: number;
   };
+  globalTopPerformer?: {
+    ssg: string;
+    successRate: number;
+    deploymentCount: number;
+  };
 }> {
   try {
     const kg = await getKnowledgeGraph();
 
+    // Get ALL projects for finding global top performers
+    const allProjects = await kg.findNodes({ type: "project" });
+
     // Find similar projects (either by path or by shared technologies)
-    let similarProjects = await kg.findNodes({ type: "project" });
+    let similarProjects = allProjects;
 
     if (projectPath) {
       // Get context for current project
       const context = await getProjectContext(projectPath);
-      similarProjects = context.similarProjects;
+
+      // If project exists in KG, use its similar projects
+      if (context.similarProjects.length > 0) {
+        similarProjects = context.similarProjects;
+      } else if (technologies && technologies.length > 0) {
+        // Project doesn't exist yet, but we have technologies - find similar by tech
+        const techSet = new Set(technologies.map((t) => t.toLowerCase()));
+        const projectsWithTech = [] as typeof similarProjects;
+
+        for (const project of allProjects) {
+          const projectTechs = project.properties.technologies || [];
+          const hasShared = projectTechs.some((t: string) =>
+            techSet.has(t.toLowerCase()),
+          );
+          if (hasShared) {
+            projectsWithTech.push(project);
+          }
+        }
+        similarProjects = projectsWithTech;
+      } else {
+        // No project found and no technologies provided
+        similarProjects = [];
+      }
     } else if (technologies && technologies.length > 0) {
       // Filter by shared technologies
       const techSet = new Set(technologies.map((t) => t.toLowerCase()));
       const projectsWithTech = [] as typeof similarProjects;
 
-      for (const project of similarProjects) {
+      for (const project of allProjects) {
         const projectTechs = project.properties.technologies || [];
         const hasShared = projectTechs.some((t: string) =>
           techSet.has(t.toLowerCase()),
@@ -82,42 +112,67 @@ async function getHistoricalDeploymentData(
         }
       }
       similarProjects = projectsWithTech;
+    } else {
+      // No criteria provided
+      similarProjects = [];
     }
 
-    // Aggregate deployment data by SSG
+    // Aggregate deployment data by SSG for similar projects
     const ssgStats: Record<
       string,
       { successes: number; failures: number; total: number }
     > = {};
 
-    for (const project of similarProjects) {
-      const deployments = await kg.findEdges({
-        source: project.id,
-        type: "project_deployed_with",
-      });
+    // Also track global stats across ALL projects for finding top performers
+    const globalSSGStats: Record<
+      string,
+      { successes: number; failures: number; total: number }
+    > = {};
 
-      for (const deployment of deployments) {
-        // Get configuration node
-        const allNodes = await kg.getAllNodes();
-        const configNode = allNodes.find((n) => n.id === deployment.target);
+    // Helper function to aggregate stats for a set of projects
+    const aggregateStats = async (projects: typeof allProjects) => {
+      const stats: Record<
+        string,
+        { successes: number; failures: number; total: number }
+      > = {};
 
-        if (configNode && configNode.type === "configuration") {
-          const ssg = configNode.properties.ssg;
-          if (!ssgStats[ssg]) {
-            ssgStats[ssg] = { successes: 0, failures: 0, total: 0 };
-          }
+      for (const project of projects) {
+        const allEdges = await kg.findEdges({ source: project.id });
+        const deployments = allEdges.filter(
+          (e) =>
+            e.type.startsWith("project_deployed_with") ||
+            e.properties.baseType === "project_deployed_with",
+        );
 
-          ssgStats[ssg].total++;
-          if (deployment.properties.success) {
-            ssgStats[ssg].successes++;
-          } else {
-            ssgStats[ssg].failures++;
+        for (const deployment of deployments) {
+          const allNodes = await kg.getAllNodes();
+          const configNode = allNodes.find((n) => n.id === deployment.target);
+
+          if (configNode && configNode.type === "configuration") {
+            const ssg = configNode.properties.ssg;
+            if (!stats[ssg]) {
+              stats[ssg] = { successes: 0, failures: 0, total: 0 };
+            }
+
+            stats[ssg].total++;
+            if (deployment.properties.success) {
+              stats[ssg].successes++;
+            } else {
+              stats[ssg].failures++;
+            }
           }
         }
       }
-    }
+      return stats;
+    };
 
-    // Calculate success rates
+    // Aggregate for similar projects
+    Object.assign(ssgStats, await aggregateStats(similarProjects));
+
+    // Aggregate for ALL projects (for global top performer)
+    Object.assign(globalSSGStats, await aggregateStats(allProjects));
+
+    // Calculate success rates for similar projects
     const successRates: Record<string, { rate: number; sampleSize: number }> =
       {};
     let topPerformer:
@@ -133,10 +188,30 @@ async function getHistoricalDeploymentData(
           sampleSize: stats.total,
         };
 
-        // Track top performer (require at least 2 deployments)
+        // Track top performer in similar projects (require at least 2 deployments)
         if (stats.total >= 2 && rate > maxRate) {
           maxRate = rate;
           topPerformer = {
+            ssg,
+            successRate: rate,
+            deploymentCount: stats.total,
+          };
+        }
+      }
+    }
+
+    // Calculate global top performer from ALL projects
+    let globalTopPerformer:
+      | { ssg: string; successRate: number; deploymentCount: number }
+      | undefined;
+    let globalMaxRate = 0;
+
+    for (const [ssg, stats] of Object.entries(globalSSGStats)) {
+      if (stats.total >= 2) {
+        const rate = stats.successes / stats.total;
+        if (rate > globalMaxRate) {
+          globalMaxRate = rate;
+          globalTopPerformer = {
             ssg,
             successRate: rate,
             deploymentCount: stats.total,
@@ -149,6 +224,7 @@ async function getHistoricalDeploymentData(
       similarProjectCount: similarProjects.length,
       successRates,
       topPerformer,
+      globalTopPerformer,
     };
   } catch (error) {
     console.warn("Failed to retrieve historical deployment data:", error);
@@ -173,7 +249,7 @@ export async function recommendSSG(args: unknown): Promise<{ content: any[] }> {
     // Try to retrieve analysis from memory
     let analysisData = null;
     try {
-      const manager = await initializeMemory();
+      const manager = await getMemoryManager();
       const analysis = await manager.recall(analysisId);
       if (analysis && analysis.data) {
         // Handle the wrapped content structure
@@ -211,6 +287,11 @@ export async function recommendSSG(args: unknown): Promise<{ content: any[] }> {
           similarProjectCount: number;
           successRates: Record<string, { rate: number; sampleSize: number }>;
           topPerformer?: {
+            ssg: string;
+            successRate: number;
+            deploymentCount: number;
+          };
+          globalTopPerformer?: {
             ssg: string;
             successRate: number;
             deploymentCount: number;
@@ -355,17 +436,24 @@ export async function recommendSSG(args: unknown): Promise<{ content: any[] }> {
       }
 
       // Phase 2.1: Adjust recommendation and confidence based on historical data
-      if (historicalData && historicalData.similarProjectCount > 0) {
+      if (historicalData && historicalData.similarProjectCount >= 0) {
         const recommendedSuccessRate =
           historicalData.successRates[finalRecommendation];
 
         if (recommendedSuccessRate) {
           // Boost confidence if historically successful
-          if (
+          if (recommendedSuccessRate.rate >= 1.0) {
+            // Perfect success rate - maximum boost
+            confidence = Math.min(0.98, confidence + 0.2);
+            reasoning.unshift(
+              `✅ 100% success rate in ${recommendedSuccessRate.sampleSize} similar project(s)`,
+            );
+          } else if (
             recommendedSuccessRate.rate > 0.8 &&
-            recommendedSuccessRate.sampleSize >= 3
+            recommendedSuccessRate.sampleSize >= 2
           ) {
-            confidence = Math.min(0.98, confidence + 0.1);
+            // High success rate - good boost
+            confidence = Math.min(0.98, confidence + 0.15);
             reasoning.unshift(
               `✅ ${(recommendedSuccessRate.rate * 100).toFixed(
                 0,
@@ -387,21 +475,66 @@ export async function recommendSSG(args: unknown): Promise<{ content: any[] }> {
               } similar project(s)`,
             );
           }
+        } else {
+          // No deployment history for recommended SSG
+          // Check if similar projects had poor outcomes with OTHER SSGs
+          // This indicates general deployment challenges
+          const allSuccessRates = Object.values(historicalData.successRates);
+          if (allSuccessRates.length > 0) {
+            const avgSuccessRate =
+              allSuccessRates.reduce((sum, data) => sum + data.rate, 0) /
+              allSuccessRates.length;
+            const totalSamples = allSuccessRates.reduce(
+              (sum, data) => sum + data.sampleSize,
+              0,
+            );
+
+            // If similar projects had poor deployment success overall, reduce confidence
+            if (avgSuccessRate < 0.5 && totalSamples >= 2) {
+              confidence = Math.max(0.6, confidence - 0.2);
+              // Find the SSG with worst performance to mention
+              const worstSSG = Object.entries(
+                historicalData.successRates,
+              ).reduce(
+                (worst, [ssg, data]) =>
+                  data.rate < worst.rate ? { ssg, rate: data.rate } : worst,
+                { ssg: "", rate: 1.0 },
+              );
+              reasoning.unshift(
+                `⚠️ Similar projects had deployment challenges (${
+                  worstSSG.ssg
+                }: ${(worstSSG.rate * 100).toFixed(0)}% success rate)`,
+              );
+            }
+          }
         }
 
         // Consider switching to top performer if significantly better
-        if (
-          historicalData.topPerformer &&
-          historicalData.topPerformer.ssg !== finalRecommendation
-        ) {
-          const topPerformer = historicalData.topPerformer;
-          const currentRate = recommendedSuccessRate?.rate || 0.5;
+        // Prefer similar project top performer, fall back to global top performer
+        const performerToConsider =
+          historicalData.topPerformer || historicalData.globalTopPerformer;
 
-          // Switch if top performer has 20%+ better success rate and enough samples
-          if (
+        if (
+          performerToConsider &&
+          performerToConsider.ssg !== finalRecommendation
+        ) {
+          const topPerformer = performerToConsider;
+          const currentRate = recommendedSuccessRate?.rate || 0.5;
+          const isFromSimilarProjects = !!historicalData.topPerformer;
+
+          // Only switch if from similar projects (same ecosystem/technologies)
+          // For cross-ecosystem recommendations, just mention as alternative
+          const shouldSwitch =
+            isFromSimilarProjects &&
             topPerformer.successRate > currentRate + 0.2 &&
-            topPerformer.deploymentCount >= 3
-          ) {
+            topPerformer.deploymentCount >= 2;
+
+          const shouldMention =
+            !shouldSwitch &&
+            topPerformer.successRate >= 0.8 &&
+            topPerformer.deploymentCount >= 2;
+
+          if (shouldSwitch) {
             reasoning.unshift(
               `📊 Switching to ${topPerformer.ssg} based on ${(
                 topPerformer.successRate * 100
@@ -416,12 +549,15 @@ export async function recommendSSG(args: unknown): Promise<{ content: any[] }> {
               | "mkdocs"
               | "eleventy";
             confidence = Math.min(0.95, topPerformer.successRate + 0.1);
-          } else if (topPerformer.successRate > 0.9) {
-            // Add as strong reasoning even if not switching
+          } else if (shouldMention) {
+            // Mention as alternative if it has good success rate
+            const projectScope = isFromSimilarProjects
+              ? "similar projects"
+              : "all projects";
             reasoning.push(
               `💡 Alternative: ${topPerformer.ssg} has ${(
                 topPerformer.successRate * 100
-              ).toFixed(0)}% success rate in similar projects`,
+              ).toFixed(0)}% success rate in ${projectScope}`,
             );
           }
         }
