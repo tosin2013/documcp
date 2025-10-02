@@ -73,6 +73,15 @@ jobs:
           cache: "npm"
           registry-url: "https://registry.npmjs.org"
 
+      - name: Verify NPM Token
+        run: |
+          if [ -z "$NODE_AUTH_TOKEN" ]; then
+            echo "Error: NODE_AUTH_TOKEN is not set"
+            echo "Please configure NPM_TOKEN in repository secrets"
+            exit 1
+          fi
+          echo "NPM token is configured"
+
       - name: Install dependencies
         run: npm ci
 
@@ -145,10 +154,16 @@ jobs:
             ```
           draft: false
           prerelease: false
+          skipIfReleaseExists: true
+          makeLatest: true
 
       - name: Publish to npm
         if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-        run: npm publish
+        run: |
+          echo "Publishing to npm..."
+          npm whoami
+          npm publish
+          echo "Successfully published to npm!"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
@@ -173,17 +188,24 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Generate test coverage
-        run: npm run test:coverage
+      - name: Generate API documentation
+        run: npm run docs:generate
 
-      - name: Generate documentation
+      - name: Remove problematic media directory
+        run: rm -rf docs/api/media
+
+      - name: Install Docusaurus dependencies
+        run: cd docs && npm ci
+
+      - name: Copy API documentation to build directory
         run: |
-          mkdir -p docs-site
-          cp README.md docs-site/index.md
-          cp -r docs/ docs-site/
-          if [ -d "coverage/" ]; then
-            cp -r coverage/ docs-site/coverage/
-          fi
+          mkdir -p docs/build/api
+          cp -r docs/api/* docs/build/api/
+
+      - name: Build Docusaurus site
+        run: cd docs && npm run build
+        env:
+          NODE_ENV: production
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -191,7 +213,7 @@ jobs:
       - name: Upload to GitHub Pages
         uses: actions/upload-pages-artifact@v3
         with:
-          path: docs-site
+          path: ./docs/build
 
       - name: Deploy to GitHub Pages
         id: deployment
