@@ -28,6 +28,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Clean up any existing memory files
+        run: rm -rf .documcp
+
       - name: Type check
         run: npm run typecheck
 
@@ -67,6 +70,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Clean up any existing memory files
+        run: rm -rf .documcp
 
       - name: Build project
         run: npm run build
