@@ -5,57 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.4.0](https://github.com/tosin2013/documcp/compare/v0.3.4...v0.4.0) (2025-10-02)
 
-### 🚀 Features - Phase 2: Intelligence & Learning System
+### 🚀 Features
 
-**Phase 2.1: Historical Deployment Intelligence**
+- Complete API documentation and user onboarding system ([7e7944e](https://github.com/tosin2013/documcp/commit/7e7944e65d576d2531c627560288d61ae88717d1))
+- implement Phase 2 Intelligence & Learning System ([26b3370](https://github.com/tosin2013/documcp/commit/26b3370e64796a6f02534b6e6a9170043edc0a0a))
+- integrate Release Drafter for automated release notes ([d06d88a](https://github.com/tosin2013/documcp/commit/d06d88a116ee56f42c3a8bcd8adc58220fce9b95))
 
-- Enhanced `recommend_ssg` with historical deployment data from Knowledge Graph
-- Intelligent scoring based on success rates from similar projects
-- Confidence boosting for SSGs with proven track records
-- Automatic switching to top performers when significantly better
+### 🐛 Bug Fixes
 
-**Phase 2.2: User Preference Management**
-
-- New `manage_preferences` tool for personalized recommendations
-- SSG usage history tracking with success/failure rates
-- User preference schema with documentation style, expertise level, and preferred technologies
-- Preference scoring algorithm (40% usage + 30% explicit + 30% compatibility)
-- Export/import functionality for preference backup and restore
-
-**Phase 2.3: Deployment Outcome Tracking**
-
-- Enhanced `deploy_pages` with deployment outcome tracking
-- Automatic project and deployment recording in Knowledge Graph
-- User preference updates based on deployment outcomes
-- Graceful degradation when tracking fails
-- Build time tracking and error message capture
-
-**Phase 2.4: Deployment Analytics & Insights**
-
-- New `analyze_deployments` tool with 5 analysis types
-- Full report generation with patterns, insights, and recommendations
-- Per-SSG statistics with success rates and build times
-- Multi-SSG comparison sorted by performance
-- Health score calculation (0-100) with 4 weighted factors
-- Trend analysis over configurable time periods
-- Automated insight generation and smart recommendations
-
-### 📚 Documentation
-
-- Added comprehensive Phase 2 documentation (`docs/phase-2-intelligence.md`)
-- Updated README with Intelligence & Learning features
-- Added usage examples for all Phase 2 tools
-- Documented feedback loop and data storage
-
-### ✅ Testing
-
-- Phase 2.1: 8 tests for historical integration
-- Phase 2.2: User preference management tests
-- Phase 2.3: 10 tests for deployment tracking
-- Phase 2.4: 20 tests for deployment analytics
-- All tests passing with comprehensive coverage
+- adjust coverage threshold for kg-storage error handling ([0b3e121](https://github.com/tosin2013/documcp/commit/0b3e1210e778aa2b7a9b05e7d64403076da8eaaa))
+- resolve GitHub Actions workflow build failures ([0baddff](https://github.com/tosin2013/documcp/commit/0baddff738519ca598555af4c32ab582394d98b0))
+- resolve Phase 2.1 edge case test failures with nuanced logic ([52d1f32](https://github.com/tosin2013/documcp/commit/52d1f32c4c4f26eba9b5b0894cc61b7637349f26))
+- resolve Phase 2.1 test failures with comprehensive fixes ([736f104](https://github.com/tosin2013/documcp/commit/736f1049c1ac1b9deb61d63d7f69ff970e4ccb49))
+- resolve pre-commit shellcheck and prettier issues ([54b90bf](https://github.com/tosin2013/documcp/commit/54b90bf9753ae018ed7983c6e703415f35f71156))
+- update Docusaurus sidebar configuration with correct document IDs ([b9dcd99](https://github.com/tosin2013/documcp/commit/b9dcd99fea130a69cfef205b20fa6ca0ee9b143a))
+- update GitHub Actions to latest versions to resolve deprecated artifact actions ([fabbbf3](https://github.com/tosin2013/documcp/commit/fabbbf3a22fcc07b546f383c5ff67570adeab9e3))
+- update GitHub Actions to use latest artifact actions ([37bdda0](https://github.com/tosin2013/documcp/commit/37bdda01ef3cdb29ab805cfcecb98067846bfa52))
+- update GitHub Pages deployment from Jekyll to Docusaurus ([09d7133](https://github.com/tosin2013/documcp/commit/09d7133580c228b5cb0615228e3e7946b6e6889d))
+- update GitHub Pages deployment workflow for Docusaurus ([7623671](https://github.com/tosin2013/documcp/commit/7623671d72f7fbc088dba9923f45eb01265278a1))
 
 ### [0.3.4](https://github.com/tosin2013/documcp/compare/v0.3.3...v0.3.4) (2025-09-18)
 
