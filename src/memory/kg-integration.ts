@@ -348,6 +348,9 @@ export async function trackDeployment(
       configNode.properties.buildTimeAverage =
         (currentAvg * currentCount + metadata.buildTime) / (currentCount + 1);
     }
+
+    // Re-add the node to update it in the knowledge graph
+    kg.addNode(configNode);
   }
 
   // Create deployment relationship with unique timestamp+counter to allow multiple deployments

@@ -7,7 +7,7 @@
  */
 
 import { promises as fs } from "fs";
-import { join } from "path";
+import { join, dirname } from "path";
 import { GraphNode, GraphEdge } from "./knowledge-graph.js";
 import { SCHEMA_METADATA } from "./schemas.js";
 
@@ -128,6 +128,9 @@ export class KGStorage {
    */
   async saveEntities(entities: GraphNode[]): Promise<void> {
     try {
+      // Ensure parent directory exists
+      await fs.mkdir(dirname(this.entityFilePath), { recursive: true });
+
       // Create backup if enabled
       if (this.config.backupOnWrite) {
         await this.backupFile(this.entityFilePath, "entities");
@@ -204,6 +207,9 @@ export class KGStorage {
    */
   async saveRelationships(relationships: GraphEdge[]): Promise<void> {
     try {
+      // Ensure parent directory exists
+      await fs.mkdir(dirname(this.relationshipFilePath), { recursive: true });
+
       // Create backup if enabled
       if (this.config.backupOnWrite) {
         await this.backupFile(this.relationshipFilePath, "relationships");
@@ -314,6 +320,9 @@ export class KGStorage {
       // Check if file exists
       await fs.access(filePath);
 
+      // Ensure backup directory exists
+      await fs.mkdir(this.backupDir, { recursive: true });
+
       // Create backup filename with timestamp
       const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
       const backupFilename = `${type}-${timestamp}.jsonl`;
@@ -340,6 +349,9 @@ export class KGStorage {
     keepCount: number = 10,
   ): Promise<void> {
     try {
+      // Ensure backup directory exists before reading
+      await fs.mkdir(this.backupDir, { recursive: true });
+
       const files = await fs.readdir(this.backupDir);
 
       // Filter files by type
@@ -350,20 +362,33 @@ export class KGStorage {
       // Sort by modification time (newest first)
       const filesWithStats = await Promise.all(
         typeFiles.map(async (file) => {
-          const stats = await fs.stat(file);
-          return { file, mtime: stats.mtime.getTime() };
+          try {
+            const stats = await fs.stat(file);
+            return { file, mtime: stats.mtime.getTime() };
+          } catch (error) {
+            // File might have been deleted, return null
+            return null;
+          }
         }),
       );
 
-      filesWithStats.sort((a, b) => b.mtime - a.mtime);
+      // Filter out null values and sort
+      const validFiles = filesWithStats.filter((f) => f !== null) as Array<{
+        file: string;
+        mtime: number;
+      }>;
+      validFiles.sort((a, b) => b.mtime - a.mtime);
 
       // Delete old files
-      const filesToDelete = filesWithStats.slice(keepCount);
+      const filesToDelete = validFiles.slice(keepCount);
       await Promise.all(
         filesToDelete.map(({ file }) => fs.unlink(file).catch(() => {})),
       );
     } catch (error) {
-      console.warn(`Failed to cleanup old backups:`, error);
+      // Only log if it's not a missing directory error
+      if ((error as any).code !== "ENOENT") {
+        console.warn(`Failed to cleanup old backups:`, error);
+      }
     }
   }
 

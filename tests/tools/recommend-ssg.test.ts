@@ -5,21 +5,54 @@
 import { jest } from "@jest/globals";
 import { recommendSSG } from "../../src/tools/recommend-ssg.js";
 
-// Mock the memory initialization
-jest.mock("../../src/memory/index.js", () => ({
-  initializeMemory: jest.fn(),
+// Mock the memory and KG integration
+jest.mock("../../src/memory/kg-integration.js", () => ({
+  getMemoryManager: jest.fn(),
+  getKnowledgeGraph: jest.fn(),
+  getUserPreferenceManager: jest.fn(),
+  getProjectContext: jest.fn(),
+  saveKnowledgeGraph: (jest.fn() as any).mockResolvedValue(undefined),
 }));
 
 describe("recommendSSG", () => {
   let mockManager: any;
+  let mockKG: any;
+  let mockPreferenceManager: any;
 
   beforeEach(() => {
     mockManager = {
-      recall: jest.fn(),
-    };
+      recall: jest.fn() as any,
+    } as any;
 
-    const { initializeMemory } = require("../../src/memory/index.js");
-    initializeMemory.mockResolvedValue(mockManager);
+    mockKG = {
+      findNode: (jest.fn() as any).mockResolvedValue(null),
+      findNodes: (jest.fn() as any).mockResolvedValue([]),
+      findEdges: (jest.fn() as any).mockResolvedValue([]),
+      getAllNodes: (jest.fn() as any).mockResolvedValue([]),
+      addNode: (jest.fn() as any).mockImplementation((node: any) => node),
+      addEdge: (jest.fn() as any).mockReturnValue(undefined),
+    } as any;
+
+    mockPreferenceManager = {
+      getPreference: (jest.fn() as any).mockResolvedValue(null),
+    } as any;
+
+    const {
+      getMemoryManager,
+      getKnowledgeGraph,
+      getUserPreferenceManager,
+      getProjectContext,
+    } = require("../../src/memory/kg-integration.js");
+
+    getMemoryManager.mockResolvedValue(mockManager);
+    getKnowledgeGraph.mockResolvedValue(mockKG);
+    getUserPreferenceManager.mockResolvedValue(mockPreferenceManager);
+    getProjectContext.mockResolvedValue({
+      previousAnalyses: 0,
+      lastAnalyzed: null,
+      knownTechnologies: [],
+      similarProjects: [],
+    });
   });
 
   afterEach(() => {
@@ -486,8 +519,10 @@ describe("recommendSSG", () => {
 
   describe("Memory Error Handling", () => {
     it("should handle memory initialization failure", async () => {
-      const { initializeMemory } = require("../../src/memory/index.js");
-      initializeMemory.mockRejectedValue(new Error("Memory failed"));
+      const {
+        getMemoryManager,
+      } = require("../../src/memory/kg-integration.js");
+      getMemoryManager.mockRejectedValue(new Error("Memory failed"));
 
       const result = await recommendSSG({
         analysisId: "test-id",
@@ -495,6 +530,9 @@ describe("recommendSSG", () => {
 
       expect(result.content).toBeDefined();
       expect(result.content[0].type).toBe("text");
+
+      // Reset the mock
+      getMemoryManager.mockResolvedValue(mockManager);
     });
 
     it("should handle memory recall failure", async () => {

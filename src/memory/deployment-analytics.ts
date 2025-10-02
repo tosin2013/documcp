@@ -60,7 +60,7 @@ export class DeploymentAnalytics {
     // Get all projects and deployments
     const projects = await kg.findNodes({ type: "project" });
     const deploymentEdges = await kg.findEdges({
-      type: "project_deployed_with",
+      properties: { baseType: "project_deployed_with" },
     });
 
     // Aggregate deployment data by SSG
@@ -96,7 +96,7 @@ export class DeploymentAnalytics {
     const kg = await getKnowledgeGraph();
 
     const deployments = await kg.findEdges({
-      type: "project_deployed_with",
+      properties: { baseType: "project_deployed_with" },
     });
 
     const allNodes = await kg.getAllNodes();
@@ -179,7 +179,7 @@ export class DeploymentAnalytics {
   async identifyTrends(periodDays: number = 30): Promise<DeploymentTrend[]> {
     const kg = await getKnowledgeGraph();
     const deployments = await kg.findEdges({
-      type: "project_deployed_with",
+      properties: { baseType: "project_deployed_with" },
     });
 
     // Group deployments by time period

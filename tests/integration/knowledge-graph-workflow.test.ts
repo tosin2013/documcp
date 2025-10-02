@@ -220,7 +220,7 @@ describe("Knowledge Graph Workflow Integration", () => {
       const kg = await getKnowledgeGraph();
       const edges = await kg.findEdges({
         source: projectNode.id,
-        type: "project_deployed_with",
+        properties: { baseType: "project_deployed_with" },
       });
 
       expect(edges.length).toBeGreaterThan(0);
@@ -253,7 +253,7 @@ describe("Knowledge Graph Workflow Integration", () => {
       const kg = await getKnowledgeGraph();
       const edges = await kg.findEdges({
         source: projectNode.id,
-        type: "project_deployed_with",
+        properties: { baseType: "project_deployed_with" },
       });
 
       expect(edges.length).toBeGreaterThan(0);
@@ -421,7 +421,7 @@ describe("Knowledge Graph Workflow Integration", () => {
       // Check deployments
       const deployments = await kg.findEdges({
         source: projectNode!.id,
-        type: "project_deployed_with",
+        properties: { baseType: "project_deployed_with" },
       });
       expect(deployments).toHaveLength(2);
 

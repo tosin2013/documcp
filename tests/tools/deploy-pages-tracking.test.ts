@@ -81,7 +81,7 @@ describe("deployPages with Deployment Tracking (Phase 2.3)", () => {
 
       // Find deployments
       const deployments = await kg.findEdges({
-        type: "project_deployed_with",
+        properties: { baseType: "project_deployed_with" },
       });
       expect(deployments.length).toBeGreaterThan(0);
       expect(deployments[0].properties.success).toBe(true);
@@ -129,7 +129,7 @@ describe("deployPages with Deployment Tracking (Phase 2.3)", () => {
 
       // Verify deployment was tracked
       const deployments = await kg.findEdges({
-        type: "project_deployed_with",
+        properties: { baseType: "project_deployed_with" },
       });
       expect(deployments.length).toBeGreaterThan(0);
     });

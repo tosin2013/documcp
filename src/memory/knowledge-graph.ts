@@ -1072,6 +1072,7 @@ export class KnowledgeGraph {
     source?: string;
     target?: string;
     type?: string;
+    properties?: Record<string, any>;
   }): Promise<GraphEdge[]> {
     const results: GraphEdge[] = [];
 
@@ -1079,6 +1080,18 @@ export class KnowledgeGraph {
       if (criteria.source && edge.source !== criteria.source) continue;
       if (criteria.target && edge.target !== criteria.target) continue;
       if (criteria.type && edge.type !== criteria.type) continue;
+
+      // Match properties if provided
+      if (criteria.properties) {
+        let propertiesMatch = true;
+        for (const [key, value] of Object.entries(criteria.properties)) {
+          if (edge.properties[key] !== value) {
+            propertiesMatch = false;
+            break;
+          }
+        }
+        if (!propertiesMatch) continue;
+      }
 
       results.push(edge);
     }
