@@ -7,15 +7,6 @@ sidebar_position: 3
 
 # ADR-003: Static Site Generator Recommendation Engine Design
 
----
-
-id: 003-static-site-generator-recommendation-engine
-title: 'ADR-003: SSG Recommendation Engine Design'
-sidebar_label: 'ADR-3: SSG Recommendation Engine Design'
-sidebar_position: 3
-
----
-
 ## Status
 
 Accepted

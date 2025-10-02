@@ -28,6 +28,8 @@
     "release:minor": "standard-version --release-as minor",
     "release:major": "standard-version --release-as major",
     "release:patch": "standard-version --release-as patch",
+    "docs:generate": "typedoc",
+    "docs:watch": "typedoc --watch",
     "release:dry-run": "standard-version --dry-run",
     "prepare": "husky",
     "benchmark:run": "tsx src/scripts/benchmark.ts run",
@@ -92,6 +94,7 @@
     "standard-version": "^9.5.0",
     "ts-jest": "^29.1.1",
     "tsx": "^4.7.0",
+    "typedoc": "^0.28.13",
     "typescript": "^5.3.3"
   },
   "engines": {

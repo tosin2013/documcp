@@ -10,6 +10,7 @@ module.exports = {
   favicon: "img/favicon.ico",
   organizationName: "tosin2013",
   projectName: "documcp",
+  staticDirectories: ["api"],
 
   presets: [
     [
@@ -41,6 +42,11 @@ module.exports = {
           label: "Documentation",
         },
         {
+          href: "/api/",
+          position: "left",
+          label: "API Reference",
+        },
+        {
           href: "https://github.com/tosin2013/documcp",
           label: "GitHub",
           position: "right",
@@ -55,11 +61,11 @@ module.exports = {
           items: [
             {
               label: "Getting Started",
-              to: "/tutorials/getting-started-with-documcp",
+              to: "/tutorials/getting-started",
             },
             {
               label: "API Reference",
-              to: "/reference/api-reference",
+              to: "/api/",
             },
             {
               label: "Architecture",

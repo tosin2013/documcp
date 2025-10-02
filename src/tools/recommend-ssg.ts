@@ -235,6 +235,50 @@ async function getHistoricalDeploymentData(
   }
 }
 
+/**
+ * Recommends the optimal static site generator (SSG) for a project based on analysis and historical data.
+ *
+ * This function provides intelligent SSG recommendations by analyzing project characteristics,
+ * considering user preferences, and leveraging historical deployment data from the knowledge graph.
+ * It uses a multi-criteria decision analysis approach to score different SSGs and provide
+ * confidence-weighted recommendations with detailed reasoning.
+ *
+ * @param args - The input arguments for SSG recommendation
+ * @param args.analysisId - Unique identifier from a previous repository analysis
+ * @param args.userId - User identifier for personalized recommendations (defaults to "default")
+ * @param args.preferences - Optional user preferences for recommendation weighting
+ * @param args.preferences.priority - Priority focus: "simplicity", "features", or "performance"
+ * @param args.preferences.ecosystem - Preferred technology ecosystem: "javascript", "python", "ruby", "go", or "any"
+ *
+ * @returns Promise resolving to SSG recommendation results
+ * @returns content - Array containing the recommendation results in MCP tool response format
+ *
+ * @throws {Error} When the analysis ID is invalid or not found
+ * @throws {Error} When historical data cannot be retrieved
+ * @throws {Error} When recommendation scoring fails
+ *
+ * @example
+ * ```typescript
+ * // Basic recommendation
+ * const recommendation = await recommendSSG({
+ *   analysisId: "analysis_abc123_def456",
+ *   userId: "user123"
+ * });
+ *
+ * // With preferences
+ * const personalized = await recommendSSG({
+ *   analysisId: "analysis_abc123_def456",
+ *   userId: "user123",
+ *   preferences: {
+ *     priority: "performance",
+ *     ecosystem: "javascript"
+ *   }
+ * });
+ * ```
+ *
+ * @since 1.0.0
+ * @version 1.2.0 - Added historical data integration and user preferences
+ */
 export async function recommendSSG(args: unknown): Promise<{ content: any[] }> {
   const startTime = Date.now();
   const { analysisId, userId, preferences } = inputSchema.parse(args);

@@ -29,6 +29,46 @@ const DIATAXIS_STRUCTURE = {
   },
 };
 
+/**
+ * Sets up the Diataxis-compliant documentation structure for a project.
+ *
+ * Creates a comprehensive documentation structure following the Diataxis framework,
+ * organizing content into four categories: tutorials (learning-oriented), how-to
+ * guides (problem-oriented), reference (information-oriented), and explanation
+ * (understanding-oriented). Includes support for different static site generators
+ * and optional example content.
+ *
+ * @param args - The input arguments for structure setup
+ * @param args.path - The root path where documentation structure should be created
+ * @param args.ssg - The static site generator type for structure optimization
+ * @param args.includeExamples - Whether to include example content (default: true)
+ *
+ * @returns Promise resolving to structure setup results
+ * @returns content - Array containing the setup results in MCP tool response format
+ *
+ * @throws {Error} When the output path is inaccessible or invalid
+ * @throws {Error} When the SSG type is unsupported
+ * @throws {Error} When directory structure creation fails
+ *
+ * @example
+ * ```typescript
+ * // Set up Docusaurus structure
+ * const result = await setupStructure({
+ *   path: "./docs",
+ *   ssg: "docusaurus",
+ *   includeExamples: true
+ * });
+ *
+ * // Set up minimal Hugo structure
+ * const minimal = await setupStructure({
+ *   path: "./site/content",
+ *   ssg: "hugo",
+ *   includeExamples: false
+ * });
+ * ```
+ *
+ * @since 1.0.0
+ */
 export async function setupStructure(
   args: unknown,
 ): Promise<{ content: any[] }> {

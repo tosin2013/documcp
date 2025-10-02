@@ -70,6 +70,35 @@ export class CodeScanner {
     this.multiLanguageScanner = new MultiLanguageCodeScanner();
   }
 
+  /**
+   * Performs comprehensive code analysis of the repository.
+   *
+   * Analyzes all source files in the repository to extract code elements including
+   * functions, classes, interfaces, API endpoints, and framework detection. Uses
+   * multi-language parsing to support various programming languages and provides
+   * detailed metadata about each code element including documentation status.
+   *
+   * @returns Promise resolving to comprehensive code analysis results
+   * @returns functions - Array of discovered functions with metadata
+   * @returns classes - Array of discovered classes with metadata
+   * @returns interfaces - Array of discovered interfaces with metadata
+   * @returns apiEndpoints - Array of discovered API endpoints
+   * @returns frameworks - Array of detected frameworks and libraries
+   * @returns hasTests - Boolean indicating if test files are present
+   *
+   * @throws {Error} When repository analysis fails
+   * @throws {Error} When file system access is denied
+   *
+   * @example
+   * ```typescript
+   * const scanner = new CodeScanner("/path/to/repository");
+   * const analysis = await scanner.analyzeRepository();
+   * console.log(`Found ${analysis.functions.length} functions`);
+   * console.log(`Detected frameworks: ${analysis.frameworks.join(', ')}`);
+   * ```
+   *
+   * @since 1.0.0
+   */
   async analyzeRepository(): Promise<CodeAnalysisResult> {
     const result: CodeAnalysisResult = {
       functions: [],

@@ -7,15 +7,6 @@ sidebar_position: 2
 
 # ADR-002: Multi-Layered Repository Analysis Engine Design
 
----
-
-id: 002-repository-analysis-engine
-title: 'ADR-002: Repository Analysis Engine Design'
-sidebar_label: 'ADR-2: Repository Analysis Engine Design'
-sidebar_position: 2
-
----
-
 ## Status
 
 Accepted

@@ -1,6 +1,14 @@
 # How to Deploy to GitHub Pages
 
-This guide shows you how to deploy your documentation to GitHub Pages using DocuMCP's automated workflows.
+This guide shows you how to deploy your documentation to GitHub Pages using DocuMCP's automated workflows. DocuMCP uses a dual-static-site-generator approach for optimal deployment.
+
+## Architecture Overview
+
+DocuMCP employs a **dual SSG strategy**:
+
+- **Docusaurus**: Primary documentation system for development and rich content
+- **Jekyll**: GitHub Pages deployment for reliable hosting
+- **Docker**: Alternative testing and deployment method
 
 ## Quick Deployment
 
@@ -16,7 +24,7 @@ For immediate deployment:
 - Repository with documentation content
 - GitHub account with repository access
 - GitHub Pages enabled in repository settings
-- Chosen static site generator (from DocuMCP recommendations)
+- Node.js 20.0.0+ for Docusaurus development
 
 ## Deployment Methods
 
@@ -32,12 +40,67 @@ Use DocuMCP's intelligent deployment:
 This will:
 
 1. Analyze your project structure
-2. Recommend optimal SSG
-3. Generate configuration files
+2. Set up Docusaurus for development
+3. Configure Jekyll for GitHub Pages deployment
 4. Create GitHub Actions workflow
 5. Deploy to Pages
 
-### Method 2: Manual Configuration
+### Method 2: Current DocuMCP Setup
+
+DocuMCP currently uses the following deployment workflow:
+
+#### GitHub Actions Workflow
+
+```yaml
+name: Deploy Jekyll to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.1"
+          bundler-cache: true
+      - name: Build with Jekyll
+        run: bundle exec jekyll build
+        env:
+          JEKYLL_ENV: production
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v2
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v3
+```
+
+#### Development vs Production
+
+- **Development**: Use Docusaurus (`cd docs && npm start`)
+- **Production**: Jekyll builds and deploys to GitHub Pages
+- **Testing**: Use Docker (`docker-compose -f docker-compose.docs.yml up`)
+
+### Method 3: Manual Configuration
 
 If you prefer manual setup:
 

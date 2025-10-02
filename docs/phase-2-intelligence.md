@@ -398,20 +398,20 @@ The analytics engine automatically generates insights:
 
 - High success rates (>80%)
 - Perfect track records (100% with ≥3 deployments)
-- Fast builds (<30s average)
+- Fast builds (&lt;30s average)
 
 **Warning Insights:**
 
-- Low success rates (<50%)
-- Struggling SSGs (<50% success, ≥2 deployments)
-- Slow builds (>120s average)
+- Low success rates (&lt;50%)
+- Struggling SSGs (&lt;50% success, ≥2 deployments)
+- Slow builds (&gt;120s average)
 
 ### Smart Recommendations
 
 The system generates actionable recommendations:
 
-1. **Best SSG Suggestion**: Recommends SSGs with >80% success rate
-2. **Problem Identification**: Flags SSGs with <50% success and ≥3 failures
+1. **Best SSG Suggestion**: Recommends SSGs with &gt;80% success rate
+2. **Problem Identification**: Flags SSGs with &lt;50% success and ≥3 failures
 3. **Diversity Advice**: Suggests experimenting with different SSGs
 4. **Activity Recommendations**: Encourages more deployments for better data
 5. **Multi-Issue Alerts**: Warns when multiple deployment issues detected

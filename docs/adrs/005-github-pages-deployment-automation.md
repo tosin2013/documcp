@@ -7,15 +7,6 @@ sidebar_position: 5
 
 # ADR-005: GitHub Pages Deployment Automation Architecture
 
----
-
-id: 005-github-pages-deployment-automation
-title: 'ADR-005: GitHub Pages Deployment Automation'
-sidebar_label: 'ADR-5: GitHub Pages Deployment Automation'
-sidebar_position: 5
-
----
-
 ## Status
 
 Accepted

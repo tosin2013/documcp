@@ -8,6 +8,33 @@ import { MemoryEntry } from "./storage.js";
 
 let memoryManager: MemoryManager | null = null;
 
+/**
+ * Initializes the DocuMCP memory system for persistent learning and context.
+ *
+ * Sets up the memory manager with optional custom storage directory, configures
+ * event listeners for debugging in development mode, and ensures the memory
+ * system is ready for storing and retrieving project analysis data, user
+ * preferences, and deployment patterns.
+ *
+ * @param storageDir - Optional custom directory path for memory storage (defaults to .documcp/memory)
+ *
+ * @returns Promise resolving to the initialized MemoryManager instance
+ *
+ * @throws {Error} When memory system initialization fails
+ * @throws {Error} When storage directory cannot be created or accessed
+ *
+ * @example
+ * ```typescript
+ * // Initialize with default storage
+ * const memory = await initializeMemory();
+ *
+ * // Initialize with custom storage directory
+ * const customMemory = await initializeMemory("/custom/memory/path");
+ * ```
+ *
+ * @since 1.0.0
+ * @version 1.2.0 - Added development mode event logging
+ */
 export async function initializeMemory(
   storageDir?: string,
 ): Promise<MemoryManager> {
@@ -37,6 +64,33 @@ export async function initializeMemory(
   return memoryManager;
 }
 
+/**
+ * Stores repository analysis data in the memory system for future reference.
+ *
+ * Persists comprehensive repository analysis results including structure, dependencies,
+ * documentation status, and recommendations. This data is used for learning patterns,
+ * improving future recommendations, and providing historical context for similar projects.
+ *
+ * @param projectPath - The file system path to the analyzed repository
+ * @param analysisData - The complete repository analysis results to store
+ *
+ * @returns Promise resolving to the unique memory entry ID
+ *
+ * @throws {Error} When memory system is not initialized
+ * @throws {Error} When analysis data cannot be stored
+ *
+ * @example
+ * ```typescript
+ * const analysisId = await rememberAnalysis("/path/to/project", {
+ *   id: "analysis_123",
+ *   structure: { totalFiles: 150, languages: { ".ts": 100 } },
+ *   dependencies: { ecosystem: "javascript", packages: ["react"] },
+ *   // ... other analysis data
+ * });
+ * ```
+ *
+ * @since 1.0.0
+ */
 export async function rememberAnalysis(
   projectPath: string,
   analysisData: any,
@@ -60,6 +114,36 @@ export async function rememberAnalysis(
   return entry.id;
 }
 
+/**
+ * Stores SSG recommendation data in the memory system for learning and pattern recognition.
+ *
+ * Persists recommendation results including the chosen SSG, confidence scores, reasoning,
+ * and alternatives. This data is used to improve future recommendations by learning from
+ * successful patterns and user choices.
+ *
+ * @param analysisId - The unique identifier of the associated repository analysis
+ * @param recommendation - The complete SSG recommendation results to store
+ *
+ * @returns Promise resolving to the unique memory entry ID
+ *
+ * @throws {Error} When memory system is not initialized
+ * @throws {Error} When recommendation data cannot be stored
+ * @throws {Error} When the associated analysis cannot be found
+ *
+ * @example
+ * ```typescript
+ * const recommendationId = await rememberRecommendation("analysis_123", {
+ *   recommended: "docusaurus",
+ *   confidence: 0.92,
+ *   reasoning: ["React-based project", "Documentation focus"],
+ *   alternatives: [
+ *     { name: "hugo", score: 0.85, pros: ["Performance"], cons: ["Learning curve"] }
+ *   ]
+ * });
+ * ```
+ *
+ * @since 1.0.0
+ */
 export async function rememberRecommendation(
   analysisId: string,
   recommendation: any,
@@ -85,6 +169,35 @@ export async function rememberRecommendation(
   return entry.id;
 }
 
+/**
+ * Stores deployment data in the memory system for success tracking and analytics.
+ *
+ * Persists deployment results including success status, timing, configuration used,
+ * and any issues encountered. This data enables deployment analytics, success rate
+ * tracking, and identification of deployment patterns for optimization.
+ *
+ * @param repository - The repository URL or identifier for the deployment
+ * @param deploymentData - The complete deployment results and metadata
+ *
+ * @returns Promise resolving to the unique memory entry ID
+ *
+ * @throws {Error} When memory system is not initialized
+ * @throws {Error} When deployment data cannot be stored
+ *
+ * @example
+ * ```typescript
+ * const deploymentId = await rememberDeployment("https://github.com/user/repo", {
+ *   success: true,
+ *   ssg: "docusaurus",
+ *   deploymentTime: 180000,
+ *   url: "https://user.github.io/repo",
+ *   issues: [],
+ *   configuration: { theme: "classic", plugins: ["search"] }
+ * });
+ * ```
+ *
+ * @since 1.0.0
+ */
 export async function rememberDeployment(
   repository: string,
   deploymentData: any,
@@ -143,6 +256,34 @@ export async function recallProjectHistory(projectId: string): Promise<any> {
   };
 }
 
+/**
+ * Retrieves intelligent insights about a project based on historical data and patterns.
+ *
+ * Analyzes stored project data to provide actionable insights including technology
+ * trends, successful patterns, optimization opportunities, and recommendations for
+ * improvement. Uses machine learning and pattern recognition to generate contextual
+ * insights.
+ *
+ * @param projectId - The unique identifier of the project to analyze
+ *
+ * @returns Promise resolving to an array of insight strings
+ *
+ * @throws {Error} When memory system is not initialized
+ * @throws {Error} When project data cannot be retrieved
+ *
+ * @example
+ * ```typescript
+ * const insights = await getProjectInsights("project_abc123");
+ * console.log(insights);
+ * // Output: [
+ * //   "Consider upgrading to Docusaurus v3 for better performance",
+ * //   "Similar projects show 95% success rate with current configuration",
+ * //   "Documentation could benefit from additional API examples"
+ * // ]
+ * ```
+ *
+ * @since 1.0.0
+ */
 export async function getProjectInsights(projectId: string): Promise<string[]> {
   const manager = await initializeMemory();
 
@@ -179,6 +320,30 @@ export async function getProjectInsights(projectId: string): Promise<string[]> {
   return insights;
 }
 
+/**
+ * Finds similar projects based on analysis data and historical patterns.
+ *
+ * Uses similarity algorithms to identify projects with comparable characteristics
+ * including technology stack, project structure, documentation patterns, and
+ * deployment history. Useful for providing relevant examples and recommendations.
+ *
+ * @param analysisData - The analysis data to use for similarity comparison
+ * @param limit - Maximum number of similar projects to return (default: 5)
+ *
+ * @returns Promise resolving to an array of similar project data
+ *
+ * @throws {Error} When memory system is not initialized
+ * @throws {Error} When similarity analysis fails
+ *
+ * @example
+ * ```typescript
+ * const similar = await getSimilarProjects(analysisData, 3);
+ * console.log(similar.map(p => p.metadata.projectId));
+ * // Output: ["project_xyz", "project_abc", "project_def"]
+ * ```
+ *
+ * @since 1.0.0
+ */
 export async function getSimilarProjects(
   analysisData: any,
   limit: number = 5,

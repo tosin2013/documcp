@@ -49,6 +49,54 @@ interface RestructuringChange {
   impact: string;
 }
 
+/**
+ * Optimizes README content by restructuring, condensing, and extracting detailed sections.
+ *
+ * Performs intelligent README optimization including length reduction, structure improvement,
+ * content extraction to separate documentation, and TL;DR generation. Uses different strategies
+ * based on target audience (community, enterprise, developer, general) to maximize effectiveness.
+ *
+ * @param input - The input parameters for README optimization
+ * @param input.readme_path - The file system path to the README file to optimize
+ * @param input.strategy - The optimization strategy to apply (default: "community_focused")
+ * @param input.max_length - Target maximum length in lines (default: 300)
+ * @param input.include_tldr - Whether to generate a TL;DR section (default: true)
+ * @param input.preserve_existing - Whether to preserve existing content structure (default: false)
+ * @param input.output_path - Optional output path for optimized README
+ * @param input.create_docs_directory - Whether to create docs/ directory for extracted content (default: true)
+ *
+ * @returns Promise resolving to README optimization results
+ * @returns optimization - Complete optimization results including length reduction and restructuring
+ * @returns nextSteps - Array of recommended next actions after optimization
+ *
+ * @throws {Error} When README file is inaccessible or invalid
+ * @throws {Error} When optimization processing fails
+ * @throws {Error} When output directory cannot be created
+ *
+ * @example
+ * ```typescript
+ * // Optimize README for community contributors
+ * const result = await optimizeReadme({
+ *   readme_path: "./README.md",
+ *   strategy: "community_focused",
+ *   max_length: 300,
+ *   include_tldr: true
+ * });
+ *
+ * console.log(`Reduced from ${result.data.optimization.originalLength} to ${result.data.optimization.optimizedLength} lines`);
+ * console.log(`Reduction: ${result.data.optimization.reductionPercentage}%`);
+ *
+ * // Optimize for enterprise with aggressive reduction
+ * const enterprise = await optimizeReadme({
+ *   readme_path: "./README.md",
+ *   strategy: "enterprise_focused",
+ *   max_length: 200,
+ *   preserve_existing: true
+ * });
+ * ```
+ *
+ * @since 1.0.0
+ */
 export async function optimizeReadme(
   input: Partial<OptimizeReadmeInput>,
 ): Promise<

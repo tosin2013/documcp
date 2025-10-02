@@ -1,0 +1,47 @@
+{
+  "entryPoints": [
+    "src/index.ts",
+    "src/tools/*.ts",
+    "src/memory/*.ts",
+    "src/utils/*.ts",
+    "src/types/*.ts"
+  ],
+  "out": "docs/api",
+  "name": "DocuMCP API Documentation",
+  "includeVersion": true,
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "excludeExternals": true,
+  "excludeInternal": false,
+  "theme": "default",
+  "readme": "README.md",
+  "exclude": ["**/node_modules/**", "**/.*", "**/*.test.ts", "**/*.spec.ts"],
+  "sort": ["source-order"],
+  "navigation": {
+    "includeCategories": true,
+    "includeGroups": true
+  },
+  "categorizeByGroup": true,
+  "defaultCategory": "Other",
+  "categoryOrder": [
+    "Core Tools",
+    "Memory System",
+    "Utilities",
+    "Types",
+    "Other"
+  ],
+  "searchInComments": true,
+  "cleanOutputDir": true,
+  "emit": "docs",
+  "validation": {
+    "notExported": true,
+    "invalidLink": true,
+    "notDocumented": false
+  },
+  "visibilityFilters": {
+    "protected": false,
+    "private": false,
+    "inherited": true,
+    "external": false
+  }
+}

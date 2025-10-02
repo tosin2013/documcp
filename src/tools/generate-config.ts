@@ -10,6 +10,47 @@ const inputSchema = z.object({
   outputPath: z.string(),
 });
 
+/**
+ * Generates configuration files for a specified static site generator.
+ *
+ * Creates comprehensive configuration files tailored to the chosen SSG, including
+ * build configurations, theme settings, plugin configurations, and deployment
+ * settings. The generated configurations are optimized based on the project
+ * characteristics and follow best practices for each SSG.
+ *
+ * @param args - The input arguments for configuration generation
+ * @param args.ssg - The static site generator to generate configuration for
+ * @param args.projectName - The name of the project for configuration customization
+ * @param args.projectDescription - Optional description for the project
+ * @param args.outputPath - The directory path where configuration files should be written
+ *
+ * @returns Promise resolving to configuration generation results
+ * @returns content - Array containing the generation results in MCP tool response format
+ *
+ * @throws {Error} When the output path is inaccessible or invalid
+ * @throws {Error} When the SSG type is unsupported
+ * @throws {Error} When configuration file generation fails
+ *
+ * @example
+ * ```typescript
+ * // Generate Docusaurus configuration
+ * const result = await generateConfig({
+ *   ssg: "docusaurus",
+ *   projectName: "My Documentation",
+ *   projectDescription: "Comprehensive project documentation",
+ *   outputPath: "./docs"
+ * });
+ *
+ * // Generate Hugo configuration
+ * const hugoConfig = await generateConfig({
+ *   ssg: "hugo",
+ *   projectName: "My Site",
+ *   outputPath: "./site"
+ * });
+ * ```
+ *
+ * @since 1.0.0
+ */
 export async function generateConfig(
   args: unknown,
 ): Promise<{ content: any[] }> {

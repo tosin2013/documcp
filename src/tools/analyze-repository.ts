@@ -47,6 +47,44 @@ const inputSchema = z.object({
   depth: z.enum(["quick", "standard", "deep"]).optional().default("standard"),
 });
 
+/**
+ * Analyzes a repository to understand its structure, dependencies, and documentation needs.
+ *
+ * This is the core function of DocuMCP that performs multi-layered analysis of a codebase
+ * to provide intelligent insights for documentation generation and deployment recommendations.
+ * The analysis includes structural analysis, dependency detection, documentation assessment,
+ * and generates recommendations for optimal documentation strategies.
+ *
+ * @param args - The input arguments for repository analysis
+ * @param args.path - The file system path to the repository to analyze
+ * @param args.depth - The analysis depth level: "quick" (basic), "standard" (comprehensive), or "deep" (thorough)
+ *
+ * @returns Promise resolving to analysis results with content array and error status
+ * @returns content - Array containing the analysis results in MCP tool response format
+ * @returns isError - Boolean flag indicating if the analysis encountered errors
+ *
+ * @throws {Error} When the repository path is inaccessible or invalid
+ * @throws {Error} When permission is denied to read the repository
+ * @throws {Error} When the repository structure cannot be analyzed
+ *
+ * @example
+ * ```typescript
+ * // Basic repository analysis
+ * const result = await analyzeRepository({
+ *   path: "/path/to/my/repository",
+ *   depth: "standard"
+ * });
+ *
+ * // Quick analysis for large repositories
+ * const quickResult = await analyzeRepository({
+ *   path: "/path/to/large/repo",
+ *   depth: "quick"
+ * });
+ * ```
+ *
+ * @since 1.0.0
+ * @version 1.2.0 - Added Knowledge Graph integration and historical context
+ */
 export async function analyzeRepository(
   args: unknown,
 ): Promise<{ content: any[]; isError?: boolean }> {
@@ -179,6 +217,23 @@ export async function analyzeRepository(
 }
 
 // Helper function to generate unique analysis ID
+/**
+ * Generates a unique analysis ID for tracking repository analyses.
+ *
+ * Creates a unique identifier combining timestamp and random string for
+ * tracking individual repository analysis sessions and linking them to
+ * recommendations and deployments.
+ *
+ * @returns A unique analysis identifier string
+ *
+ * @example
+ * ```typescript
+ * const analysisId = generateAnalysisId();
+ * // Returns: "abc123def456"
+ * ```
+ *
+ * @since 1.0.0
+ */
 function generateAnalysisId(): string {
   const timestamp = Date.now().toString(36);
   const random = Math.random().toString(36).substring(2, 7);
@@ -241,6 +296,34 @@ function getLanguageFromExtension(ext: string): string | null {
 }
 
 // Analyze repository structure
+/**
+ * Analyzes the structural characteristics of a repository.
+ *
+ * Performs comprehensive structural analysis including file counting, directory
+ * structure analysis, language detection, and identification of key project
+ * components like tests, CI/CD, and documentation.
+ *
+ * @param repoPath - The file system path to the repository
+ * @param depth - Analysis depth level affecting thoroughness and performance
+ *
+ * @returns Promise resolving to repository structure analysis results
+ * @returns totalFiles - Total number of files in the repository
+ * @returns totalDirectories - Total number of directories
+ * @returns languages - Mapping of file extensions to counts
+ * @returns hasTests - Whether test files/directories are present
+ * @returns hasCI - Whether CI/CD configuration files are present
+ * @returns hasDocs - Whether documentation files are present
+ *
+ * @throws {Error} When repository structure cannot be analyzed
+ *
+ * @example
+ * ```typescript
+ * const structure = await analyzeStructure("/path/to/repo", "standard");
+ * console.log(`Found ${structure.totalFiles} files in ${structure.totalDirectories} directories`);
+ * ```
+ *
+ * @since 1.0.0
+ */
 async function analyzeStructure(
   repoPath: string,
   depth: "quick" | "standard" | "deep",

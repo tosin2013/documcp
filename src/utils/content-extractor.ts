@@ -39,6 +39,35 @@ export interface ExtractedContent {
   }>;
 }
 
+/**
+ * Extracts comprehensive content from a repository for documentation generation.
+ *
+ * Performs multi-layered content extraction including README analysis, existing
+ * documentation discovery, ADR (Architectural Decision Record) parsing, code
+ * examples identification, and API documentation extraction. This function is
+ * the foundation for intelligent content population and documentation generation.
+ *
+ * @param repoPath - The file system path to the repository to extract content from
+ *
+ * @returns Promise resolving to comprehensive extracted content
+ * @returns readme - README content with structured sections
+ * @returns existingDocs - Array of existing documentation files found
+ * @returns adrs - Array of Architectural Decision Records
+ * @returns codeExamples - Array of code examples with descriptions
+ * @returns apiDocs - Array of API documentation extracted from JSDoc comments
+ *
+ * @throws {Error} When repository path is inaccessible
+ * @throws {Error} When content extraction fails
+ *
+ * @example
+ * ```typescript
+ * const content = await extractRepositoryContent("/path/to/repository");
+ * console.log(`Found ${content.existingDocs.length} existing docs`);
+ * console.log(`Extracted ${content.codeExamples.length} code examples`);
+ * ```
+ *
+ * @since 1.0.0
+ */
 export async function extractRepositoryContent(
   repoPath: string,
 ): Promise<ExtractedContent> {

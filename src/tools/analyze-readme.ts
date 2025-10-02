@@ -84,6 +84,50 @@ interface OptimizationOpportunity {
   effort: "low" | "medium" | "high";
 }
 
+/**
+ * Analyzes README files for community health, accessibility, and onboarding effectiveness.
+ *
+ * Performs comprehensive README analysis including length assessment, structure evaluation,
+ * content completeness, and community readiness scoring. Provides actionable recommendations
+ * for improving README effectiveness and developer onboarding experience.
+ *
+ * @param input - The input parameters for README analysis
+ * @param input.project_path - The file system path to the project containing the README
+ * @param input.target_audience - The target audience for the README (default: "community_contributors")
+ * @param input.optimization_level - The level of optimization to apply (default: "moderate")
+ * @param input.max_length_target - Target maximum length in lines (default: 300)
+ *
+ * @returns Promise resolving to comprehensive README analysis results
+ * @returns analysis - Complete analysis including length, structure, content, and community readiness
+ * @returns nextSteps - Array of recommended next actions for README improvement
+ *
+ * @throws {Error} When project path is inaccessible or invalid
+ * @throws {Error} When README file cannot be found or read
+ * @throws {Error} When analysis processing fails
+ *
+ * @example
+ * ```typescript
+ * // Analyze README for community contributors
+ * const result = await analyzeReadme({
+ *   project_path: "/path/to/project",
+ *   target_audience: "community_contributors",
+ *   optimization_level: "moderate"
+ * });
+ *
+ * console.log(`README Score: ${result.data.analysis.overallScore}/100`);
+ * console.log(`Recommendations: ${result.data.nextSteps.length} suggestions`);
+ *
+ * // Analyze for enterprise users with aggressive optimization
+ * const enterprise = await analyzeReadme({
+ *   project_path: "/path/to/enterprise/project",
+ *   target_audience: "enterprise_users",
+ *   optimization_level: "aggressive",
+ *   max_length_target: 200
+ * });
+ * ```
+ *
+ * @since 1.0.0
+ */
 export async function analyzeReadme(
   input: Partial<AnalyzeReadmeInput>,
 ): Promise<MCPToolResponse<{ analysis: ReadmeAnalysis; nextSteps: string[] }>> {

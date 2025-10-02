@@ -297,6 +297,59 @@ export class ReadmeTemplateGenerator {
   }
 }
 
+/**
+ * Generates standardized README templates for different project types with best practices.
+ *
+ * Creates comprehensive README templates tailored to specific project types (library,
+ * application, CLI tool, API, documentation) following community best practices. Includes
+ * customizable sections, badges, contributing guidelines, and project-specific content
+ * to ensure professional documentation standards.
+ *
+ * @param input - The input parameters for README template generation
+ * @param input.projectName - Name of the project (required)
+ * @param input.description - Brief description of what the project does (required)
+ * @param input.templateType - Type of project template to generate
+ * @param input.author - Optional project author/organization name
+ * @param input.license - Project license (default: "MIT")
+ * @param input.includeScreenshots - Whether to include screenshot placeholders (default: false)
+ * @param input.includeBadges - Whether to include status badges (default: true)
+ * @param input.includeContributing - Whether to include contributing section (default: true)
+ * @param input.outputPath - Optional path to write the generated README.md file
+ *
+ * @returns Promise resolving to README template generation results
+ * @returns template - The generated README template content
+ * @returns metadata - Template metadata including type and estimated length
+ * @returns filePath - Path where the README was written (if outputPath provided)
+ *
+ * @throws {Error} When required parameters are missing
+ * @throws {Error} When output path is inaccessible
+ * @throws {Error} When template generation fails
+ *
+ * @example
+ * ```typescript
+ * // Generate library README template
+ * const result = await generateReadmeTemplate({
+ *   projectName: "MyAwesomeLibrary",
+ *   description: "A powerful utility library for data processing",
+ *   templateType: "library",
+ *   author: "Your Name",
+ *   license: "MIT",
+ *   includeBadges: true
+ * });
+ *
+ * console.log(`Generated ${result.metadata.estimatedLength} line README`);
+ *
+ * // Generate CLI tool template with output file
+ * const cliTemplate = await generateReadmeTemplate({
+ *   projectName: "my-cli-tool",
+ *   description: "Command-line interface for project management",
+ *   templateType: "cli-tool",
+ *   outputPath: "./README.md"
+ * });
+ * ```
+ *
+ * @since 1.0.0
+ */
 export async function generateReadmeTemplate(
   input: GenerateReadmeTemplateInput,
 ): Promise<{

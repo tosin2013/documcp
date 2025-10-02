@@ -1578,6 +1578,57 @@ export const validateDiataxisContent: Tool = {
   },
 };
 
+/**
+ * Validates Diataxis-compliant documentation content for accuracy, completeness, and compliance.
+ *
+ * Performs comprehensive validation of documentation content including accuracy verification,
+ * completeness assessment, compliance checking, and code example validation. Uses advanced
+ * confidence scoring and risk assessment to provide detailed validation results with
+ * actionable recommendations.
+ *
+ * @param args - The validation parameters
+ * @param args.contentPath - Path to the documentation content directory
+ * @param args.analysisId - Optional repository analysis ID for context-aware validation
+ * @param args.validationType - Type of validation to perform: "accuracy", "completeness", "compliance", or "all"
+ * @param args.includeCodeValidation - Whether to validate code examples and syntax
+ * @param args.confidence - Validation confidence level: "strict", "moderate", or "permissive"
+ *
+ * @returns Promise resolving to comprehensive validation results
+ * @returns success - Whether validation passed overall
+ * @returns confidence - Confidence metrics and risk assessment
+ * @returns issues - Array of validation issues found
+ * @returns uncertainties - Areas requiring clarification
+ * @returns codeValidation - Code example validation results
+ * @returns recommendations - Suggested improvements
+ * @returns nextSteps - Recommended next actions
+ *
+ * @throws {Error} When content path is inaccessible
+ * @throws {Error} When validation processing fails
+ *
+ * @example
+ * ```typescript
+ * // Comprehensive validation
+ * const result = await handleValidateDiataxisContent({
+ *   contentPath: "./docs",
+ *   validationType: "all",
+ *   includeCodeValidation: true,
+ *   confidence: "moderate"
+ * });
+ *
+ * console.log(`Validation success: ${result.success}`);
+ * console.log(`Overall confidence: ${result.confidence.overall}%`);
+ * console.log(`Issues found: ${result.issues.length}`);
+ *
+ * // Strict accuracy validation
+ * const accuracy = await handleValidateDiataxisContent({
+ *   contentPath: "./docs",
+ *   validationType: "accuracy",
+ *   confidence: "strict"
+ * });
+ * ```
+ *
+ * @since 1.0.0
+ */
 export async function handleValidateDiataxisContent(
   args: any,
 ): Promise<ValidationResult> {

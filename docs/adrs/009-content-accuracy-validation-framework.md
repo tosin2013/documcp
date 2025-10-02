@@ -7,15 +7,6 @@ sidebar_position: 9
 
 # ADR-009: Content Accuracy and Validation Framework for Generated Documentation
 
----
-
-id: 009-content-accuracy-validation-framework
-title: 'ADR-009: Content Accuracy Validation Framework'
-sidebar_label: 'ADR-9: Content Accuracy Validation Framework'
-sidebar_position: 9
-
----
-
 ## Status
 
 Accepted
