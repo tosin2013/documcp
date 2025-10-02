@@ -1,0 +1,73 @@
+name-template: "v$RESOLVED_VERSION"
+tag-template: "v$RESOLVED_VERSION"
+categories:
+  - title: "🚀 Features"
+    labels:
+      - "feature"
+      - "enhancement"
+  - title: "🐛 Bug Fixes"
+    labels:
+      - "fix"
+      - "bugfix"
+      - "bug"
+  - title: "🧪 Tests"
+    labels:
+      - "test"
+  - title: "📚 Documentation"
+    labels:
+      - "documentation"
+      - "docs"
+  - title: "🔧 Maintenance"
+    labels:
+      - "chore"
+      - "dependencies"
+  - title: "⚡ Performance"
+    labels:
+      - "performance"
+  - title: "🔒 Security"
+    labels:
+      - "security"
+change-template: "- $TITLE @$AUTHOR (#$NUMBER)"
+change-title-escapes: '\<*_&' # You can add # and @ to disable mentions, and add ` to disable code blocks.
+version-resolver:
+  major:
+    labels:
+      - "major"
+      - "breaking"
+  minor:
+    labels:
+      - "minor"
+      - "feature"
+  patch:
+    labels:
+      - "patch"
+      - "fix"
+      - "bugfix"
+  default: patch
+template: |
+  ## DocuMCP Release $RESOLVED_VERSION
+
+  ## Changes
+
+  $CHANGES
+
+  ## Installation
+  ```bash
+  npm install -g documcp@$RESOLVED_VERSION
+  ```
+
+  ## System Requirements
+  - Node.js 20.x or higher
+  - npm 9.x or higher
+
+  ## Quick Start
+  ```bash
+  # Install globally
+  npm install -g documcp
+
+  # Use with MCP client
+  documcp analyze-repository --path ./my-project
+  ```
+
+  ## Contributors
+  $CONTRIBUTORS
