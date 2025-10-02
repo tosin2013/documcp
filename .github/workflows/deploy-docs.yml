@@ -1,4 +1,4 @@
-name: Deploy Jekyll to GitHub Pages
+name: Deploy Docusaurus to GitHub Pages
 
 on:
   push:
@@ -21,19 +21,33 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Ruby
-        uses: ruby/setup-ruby@v1
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          ruby-version: '3.1'
-          bundler-cache: true
+          node-version: '20'
+          cache: 'npm'
 
-      - name: Build with Jekyll
-        run: bundle exec jekyll build
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install DocuMCP globally
+        run: npm install -g documcp
+
+      - name: Generate API documentation
+        run: npm run docs:generate
+
+      - name: Install Docusaurus dependencies
+        run: cd docs && npm ci
+
+      - name: Build Docusaurus site
+        run: cd docs && npm run build
         env:
-          JEKYLL_ENV: production
+          NODE_ENV: production
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v2
+        with:
+          path: ./docs/build
 
   deploy:
     environment:
