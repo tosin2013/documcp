@@ -25,8 +25,16 @@ describe("deployPages", () => {
       await expect(deployPages({})).rejects.toThrow();
     });
 
-    it("should validate required ssg parameter", async () => {
-      await expect(deployPages({ repository: "test-repo" })).rejects.toThrow();
+    it("should return error when ssg not provided and no analysisId", async () => {
+      const result = await deployPages({ repository: "test-repo" });
+      expect(result.content).toBeDefined();
+
+      // Parse the response to check for error
+      const textContent = result.content.find((c: any) => c.type === "text");
+      expect(textContent).toBeDefined();
+      const response = JSON.parse(textContent.text);
+      expect(response.success).toBe(false);
+      expect(response.error.code).toBe("SSG_NOT_SPECIFIED");
     });
 
     it("should validate ssg enum values", async () => {

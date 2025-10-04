@@ -155,6 +155,23 @@ export const TechnologyEntitySchema = z.object({
 
 export type TechnologyEntity = z.infer<typeof TechnologyEntitySchema>;
 
+/**
+ * LinkValidation Entity Schema
+ * Represents link validation results for documentation
+ */
+export const LinkValidationEntitySchema = z.object({
+  totalLinks: z.number().int().min(0).default(0),
+  validLinks: z.number().int().min(0).default(0),
+  brokenLinks: z.number().int().min(0).default(0),
+  warningLinks: z.number().int().min(0).default(0),
+  unknownLinks: z.number().int().min(0).default(0),
+  healthScore: z.number().min(0).max(100).default(100),
+  lastValidated: z.string().datetime(),
+  brokenLinksList: z.array(z.string()).default([]),
+});
+
+export type LinkValidationEntity = z.infer<typeof LinkValidationEntitySchema>;
+
 // ============================================================================
 // Relationship Schemas
 // ============================================================================

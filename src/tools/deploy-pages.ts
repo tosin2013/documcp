@@ -5,12 +5,19 @@ import { MCPToolResponse, formatMCPResponse } from "../types/api.js";
 import {
   createOrUpdateProject,
   trackDeployment,
+  getDeploymentRecommendations,
+  getKnowledgeGraph,
 } from "../memory/kg-integration.js";
 import { getUserPreferenceManager } from "../memory/user-preferences.js";
 
 const inputSchema = z.object({
   repository: z.string(),
-  ssg: z.enum(["jekyll", "hugo", "docusaurus", "mkdocs", "eleventy"]),
+  ssg: z
+    .enum(["jekyll", "hugo", "docusaurus", "mkdocs", "eleventy"])
+    .optional()
+    .describe(
+      "Static site generator to use. If not provided, will be retrieved from knowledge graph using analysisId",
+    ),
   branch: z.string().optional().default("gh-pages"),
   customDomain: z.string().optional(),
   projectPath: z
@@ -21,7 +28,7 @@ const inputSchema = z.object({
   analysisId: z
     .string()
     .optional()
-    .describe("ID from repository analysis for linking"),
+    .describe("ID from repository analysis for linking and SSG retrieval"),
   userId: z
     .string()
     .optional()
@@ -29,11 +36,216 @@ const inputSchema = z.object({
     .describe("User ID for preference tracking"),
 });
 
+interface BuildConfig {
+  workingDirectory: string | null;
+  buildCommand: string;
+  outputPath: string;
+  nodeVersion?: string;
+  packageManager?: "npm" | "yarn" | "pnpm";
+}
+
+/**
+ * Retrieve SSG from knowledge graph using analysisId
+ */
+async function getSSGFromKnowledgeGraph(
+  analysisId: string,
+): Promise<string | null> {
+  try {
+    const kg = await getKnowledgeGraph();
+
+    // Find project node by analysis ID
+    const projectNode = await kg.findNode({
+      type: "project",
+      properties: { id: analysisId },
+    });
+
+    if (!projectNode) {
+      return null;
+    }
+
+    // Get deployment recommendations for this project
+    const recommendations = await getDeploymentRecommendations(projectNode.id);
+
+    if (recommendations.length > 0) {
+      // Return the highest confidence SSG
+      const topRecommendation = recommendations.sort(
+        (a, b) => b.confidence - a.confidence,
+      )[0];
+      return topRecommendation.ssg;
+    }
+
+    // Fallback: check if there are any previous successful deployments
+    const edges = await kg.findEdges({
+      source: projectNode.id,
+    });
+
+    const deploymentEdges = edges.filter((e) =>
+      e.type.startsWith("project_deployed_with"),
+    );
+
+    if (deploymentEdges.length > 0) {
+      // Get the most recent successful deployment
+      const successfulDeployments = deploymentEdges.filter(
+        (e) => e.properties?.success === true,
+      );
+
+      if (successfulDeployments.length > 0) {
+        const mostRecent = successfulDeployments.sort(
+          (a, b) =>
+            new Date(b.properties?.timestamp || 0).getTime() -
+            new Date(a.properties?.timestamp || 0).getTime(),
+        )[0];
+
+        const configNode = (await kg.getAllNodes()).find(
+          (n) => n.id === mostRecent.target,
+        );
+
+        return configNode?.properties?.ssg || null;
+      }
+    }
+
+    return null;
+  } catch (error) {
+    console.warn("Failed to retrieve SSG from knowledge graph:", error);
+    return null;
+  }
+}
+
+/**
+ * Detect documentation folder in repository
+ */
+async function detectDocsFolder(repoPath: string): Promise<string | null> {
+  const commonFolders = [
+    "docs",
+    "documentation",
+    "website",
+    "doc",
+    "site",
+    "pages",
+  ];
+
+  for (const folder of commonFolders) {
+    const folderPath = path.join(repoPath, folder);
+    try {
+      const stat = await fs.stat(folderPath);
+      if (stat.isDirectory()) {
+        // Check if it has package.json or other SSG-specific files
+        const hasPackageJson = await fs
+          .access(path.join(folderPath, "package.json"))
+          .then(() => true)
+          .catch(() => false);
+        const hasMkDocsYml = await fs
+          .access(path.join(folderPath, "mkdocs.yml"))
+          .then(() => true)
+          .catch(() => false);
+        const hasConfigToml = await fs
+          .access(path.join(folderPath, "config.toml"))
+          .then(() => true)
+          .catch(() => false);
+
+        if (hasPackageJson || hasMkDocsYml || hasConfigToml) {
+          return folder;
+        }
+      }
+    } catch {
+      continue;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Detect build configuration from package.json
+ */
+async function detectBuildConfig(
+  repoPath: string,
+  ssg: string,
+  docsFolder: string | null,
+): Promise<BuildConfig> {
+  const workingDir = docsFolder || ".";
+  const packageJsonPath = path.join(repoPath, workingDir, "package.json");
+
+  const defaults: Record<string, BuildConfig> = {
+    docusaurus: {
+      workingDirectory: docsFolder,
+      buildCommand: "npm run build",
+      outputPath: "./build",
+    },
+    eleventy: {
+      workingDirectory: docsFolder,
+      buildCommand: "npm run build",
+      outputPath: "./_site",
+    },
+    hugo: {
+      workingDirectory: docsFolder,
+      buildCommand: "hugo --minify",
+      outputPath: "./public",
+    },
+    jekyll: {
+      workingDirectory: docsFolder,
+      buildCommand: "bundle exec jekyll build",
+      outputPath: "./_site",
+    },
+    mkdocs: {
+      workingDirectory: docsFolder,
+      buildCommand: "mkdocs build",
+      outputPath: "./site",
+    },
+  };
+
+  const config = defaults[ssg] || defaults.docusaurus;
+
+  try {
+    const packageJson = JSON.parse(await fs.readFile(packageJsonPath, "utf-8"));
+
+    // Detect build command from scripts
+    const scripts = packageJson.scripts || {};
+    if (scripts.build) {
+      config.buildCommand = "npm run build";
+    } else if (scripts["docs:build"]) {
+      config.buildCommand = "npm run docs:build";
+    } else if (scripts.start && scripts.start.includes("docusaurus")) {
+      config.buildCommand = "npm run build";
+    }
+
+    // Detect package manager
+    const hasYarnLock = await fs
+      .access(path.join(repoPath, workingDir, "yarn.lock"))
+      .then(() => true)
+      .catch(() => false);
+    const hasPnpmLock = await fs
+      .access(path.join(repoPath, workingDir, "pnpm-lock.yaml"))
+      .then(() => true)
+      .catch(() => false);
+
+    if (hasYarnLock) {
+      config.packageManager = "yarn";
+      config.buildCommand = config.buildCommand.replace("npm", "yarn");
+    } else if (hasPnpmLock) {
+      config.packageManager = "pnpm";
+      config.buildCommand = config.buildCommand.replace("npm", "pnpm");
+    } else {
+      config.packageManager = "npm";
+    }
+
+    // Detect Node version from engines field
+    if (packageJson.engines?.node) {
+      config.nodeVersion = packageJson.engines.node;
+    }
+  } catch (error) {
+    // If package.json doesn't exist or can't be read, use defaults
+    console.warn("Using default build configuration:", error);
+  }
+
+  return config;
+}
+
 export async function deployPages(args: unknown): Promise<{ content: any[] }> {
   const startTime = Date.now();
   const {
     repository,
-    ssg,
+    ssg: providedSSG,
     branch,
     customDomain,
     projectPath,
@@ -42,16 +254,64 @@ export async function deployPages(args: unknown): Promise<{ content: any[] }> {
     userId,
   } = inputSchema.parse(args);
 
+  // Declare ssg outside try block so it's accessible in catch
+  let ssg:
+    | "jekyll"
+    | "hugo"
+    | "docusaurus"
+    | "mkdocs"
+    | "eleventy"
+    | undefined = providedSSG;
+
   try {
     // Determine repository path (local or remote)
     const repoPath = repository.startsWith("http") ? "." : repository;
+
+    // Retrieve SSG from knowledge graph if not provided
+    ssg = providedSSG;
+    if (!ssg && analysisId) {
+      const retrievedSSG = await getSSGFromKnowledgeGraph(analysisId);
+      if (retrievedSSG) {
+        ssg = retrievedSSG as
+          | "jekyll"
+          | "hugo"
+          | "docusaurus"
+          | "mkdocs"
+          | "eleventy";
+      }
+    }
+
+    if (!ssg) {
+      const errorResponse: MCPToolResponse = {
+        success: false,
+        error: {
+          code: "SSG_NOT_SPECIFIED",
+          message:
+            "SSG parameter is required. Either provide it directly or ensure analysisId points to a project with SSG recommendations.",
+          resolution:
+            "Run analyze_repository and recommend_ssg first, or specify the SSG parameter explicitly.",
+        },
+        metadata: {
+          toolVersion: "1.0.0",
+          executionTime: Date.now() - startTime,
+          timestamp: new Date().toISOString(),
+        },
+      };
+      return formatMCPResponse(errorResponse);
+    }
+
+    // Detect documentation folder
+    const docsFolder = await detectDocsFolder(repoPath);
+
+    // Detect build configuration
+    const buildConfig = await detectBuildConfig(repoPath, ssg, docsFolder);
 
     // Create .github/workflows directory
     const workflowsDir = path.join(repoPath, ".github", "workflows");
     await fs.mkdir(workflowsDir, { recursive: true });
 
-    // Generate workflow based on SSG
-    const workflow = generateWorkflow(ssg, branch, customDomain);
+    // Generate workflow based on SSG and build config
+    const workflow = generateWorkflow(ssg, branch, customDomain, buildConfig);
     const workflowPath = path.join(workflowsDir, "deploy-docs.yml");
     await fs.writeFile(workflowPath, workflow);
 
@@ -71,6 +331,13 @@ export async function deployPages(args: unknown): Promise<{ content: any[] }> {
       workflowPath: "deploy-docs.yml",
       cnameCreated,
       repoPath,
+      detectedConfig: {
+        docsFolder: docsFolder || "root",
+        buildCommand: buildConfig.buildCommand,
+        outputPath: buildConfig.outputPath,
+        packageManager: buildConfig.packageManager || "npm",
+        workingDirectory: buildConfig.workingDirectory,
+      },
     };
 
     // Phase 2.3: Track deployment setup in knowledge graph
@@ -120,7 +387,7 @@ export async function deployPages(args: unknown): Promise<{ content: any[] }> {
       success: true,
       data: deploymentResult,
       metadata: {
-        toolVersion: "1.0.0",
+        toolVersion: "2.0.0",
         executionTime: Date.now() - startTime,
         timestamp: new Date().toISOString(),
       },
@@ -130,6 +397,33 @@ export async function deployPages(args: unknown): Promise<{ content: any[] }> {
           title: "Deployment Workflow Created",
           description: `GitHub Actions workflow configured for ${ssg} deployment to ${branch} branch`,
         },
+        ...(!providedSSG && analysisId
+          ? [
+              {
+                type: "info" as const,
+                title: "SSG Auto-Detected",
+                description: `Retrieved ${ssg} from knowledge graph using analysisId`,
+              },
+            ]
+          : []),
+        ...(docsFolder
+          ? [
+              {
+                type: "info" as const,
+                title: "Documentation Folder Detected",
+                description: `Found documentation in '${docsFolder}/' folder. Workflow configured with working-directory.`,
+              },
+            ]
+          : []),
+        ...(buildConfig.packageManager !== "npm"
+          ? [
+              {
+                type: "info" as const,
+                title: "Package Manager Detected",
+                description: `Using ${buildConfig.packageManager} based on lockfile detection`,
+              },
+            ]
+          : []),
         ...(customDomain
           ? [
               {
@@ -160,7 +454,7 @@ export async function deployPages(args: unknown): Promise<{ content: any[] }> {
   } catch (error) {
     // Phase 2.3: Track failed deployment setup
     try {
-      if (projectPath || projectName) {
+      if ((projectPath || projectName) && ssg) {
         const timestamp = new Date().toISOString();
         const project = await createOrUpdateProject({
           id:
@@ -178,7 +472,7 @@ export async function deployPages(args: unknown): Promise<{ content: any[] }> {
           },
         });
 
-        // Track failed deployment
+        // Track failed deployment (only if ssg is known)
         await trackDeployment(project.id, ssg, false, {
           errorMessage: String(error),
         });
@@ -217,8 +511,32 @@ export async function deployPages(args: unknown): Promise<{ content: any[] }> {
 function generateWorkflow(
   ssg: string,
   branch: string,
-  _customDomain?: string,
+  _customDomain: string | undefined,
+  buildConfig: BuildConfig,
 ): string {
+  const workingDirPrefix = buildConfig.workingDirectory
+    ? `      working-directory: ${buildConfig.workingDirectory}\n`
+    : "";
+
+  const nodeVersion = buildConfig.nodeVersion || "20";
+  const packageManager = buildConfig.packageManager || "npm";
+
+  // Helper to get install command
+  const getInstallCmd = () => {
+    if (packageManager === "yarn") return "yarn install --frozen-lockfile";
+    if (packageManager === "pnpm") return "pnpm install --frozen-lockfile";
+    return "npm ci";
+  };
+
+  // Helper to add working directory to steps
+  // const _addWorkingDir = (step: string) => {
+  //   if (!buildConfig.workingDirectory) return step;
+  //   return step.replace(
+  //     /^(\s+)run:/gm,
+  //     `$1working-directory: ${buildConfig.workingDirectory}\n$1run:`,
+  //   );
+  // };
+
   const workflows: Record<string, string> = {
     docusaurus: `name: Deploy Docusaurus to GitHub Pages
 
@@ -246,19 +564,27 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: '${nodeVersion}'
+          cache: '${packageManager}'${
+            buildConfig.workingDirectory
+              ? `\n          cache-dependency-path: ${buildConfig.workingDirectory}/package-lock.json`
+              : ""
+          }
 
       - name: Install dependencies
-        run: npm ci
+${workingDirPrefix}        run: ${getInstallCmd()}
 
       - name: Build website
-        run: npm run build
+${workingDirPrefix}        run: ${buildConfig.buildCommand}
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v2
         with:
-          path: ./build
+          path: ${
+            buildConfig.workingDirectory
+              ? `${buildConfig.workingDirectory}/${buildConfig.outputPath}`
+              : buildConfig.outputPath
+          }
 
   deploy:
     environment:
@@ -283,7 +609,11 @@ permissions:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest${
+      buildConfig.workingDirectory
+        ? `\n    defaults:\n      run:\n        working-directory: ${buildConfig.workingDirectory}`
+        : ""
+    }
     steps:
       - uses: actions/checkout@v4
 
@@ -317,7 +647,11 @@ concurrency:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest${
+      buildConfig.workingDirectory
+        ? `\n    defaults:\n      run:\n        working-directory: ${buildConfig.workingDirectory}`
+        : ""
+    }
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -331,12 +665,16 @@ jobs:
           extended: true
 
       - name: Build
-        run: hugo --minify
+        run: ${buildConfig.buildCommand}
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v2
         with:
-          path: ./public
+          path: ${
+            buildConfig.workingDirectory
+              ? `${buildConfig.workingDirectory}/${buildConfig.outputPath}`
+              : buildConfig.outputPath
+          }
 
   deploy:
     environment:
@@ -367,7 +705,11 @@ concurrency:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest${
+      buildConfig.workingDirectory
+        ? `\n    defaults:\n      run:\n        working-directory: ${buildConfig.workingDirectory}`
+        : ""
+    }
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -376,15 +718,23 @@ jobs:
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.1'
-          bundler-cache: true
+          bundler-cache: true${
+            buildConfig.workingDirectory
+              ? `\n          working-directory: ${buildConfig.workingDirectory}`
+              : ""
+          }
 
       - name: Build with Jekyll
-        run: bundle exec jekyll build
+        run: ${buildConfig.buildCommand}
         env:
           JEKYLL_ENV: production
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v2
+        uses: actions/upload-pages-artifact@v2${
+          buildConfig.workingDirectory
+            ? `\n        with:\n          path: ${buildConfig.workingDirectory}/${buildConfig.outputPath}`
+            : ""
+        }
 
   deploy:
     environment:
@@ -423,19 +773,27 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: '${nodeVersion}'
+          cache: '${packageManager}'${
+            buildConfig.workingDirectory
+              ? `\n          cache-dependency-path: ${buildConfig.workingDirectory}/package-lock.json`
+              : ""
+          }
 
       - name: Install dependencies
-        run: npm ci
+${workingDirPrefix}        run: ${getInstallCmd()}
 
       - name: Build site
-        run: npm run build
+${workingDirPrefix}        run: ${buildConfig.buildCommand}
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v2
         with:
-          path: ./_site
+          path: ${
+            buildConfig.workingDirectory
+              ? `${buildConfig.workingDirectory}/${buildConfig.outputPath}`
+              : buildConfig.outputPath
+          }
 
   deploy:
     environment:

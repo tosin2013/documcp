@@ -21,6 +21,7 @@ import { generateConfig } from "./tools/generate-config.js";
 import { setupStructure } from "./tools/setup-structure.js";
 import { deployPages } from "./tools/deploy-pages.js";
 import { verifyDeployment } from "./tools/verify-deployment.js";
+import { setupPlaywrightTests } from "./tools/setup-playwright-tests.js";
 import { handlePopulateDiataxisContent } from "./tools/populate-content.js";
 import {
   handleValidateDiataxisContent,
@@ -140,6 +141,20 @@ const TOOLS = [
       path: z.string().describe("Root path for documentation"),
       ssg: z.enum(["jekyll", "hugo", "docusaurus", "mkdocs", "eleventy"]),
       includeExamples: z.boolean().optional().default(true),
+    }),
+  },
+  {
+    name: "setup_playwright_tests",
+    description:
+      "Generate Playwright E2E test setup for documentation site (containers + CI/CD)",
+    inputSchema: z.object({
+      repositoryPath: z.string().describe("Path to documentation repository"),
+      ssg: z.enum(["jekyll", "hugo", "docusaurus", "mkdocs", "eleventy"]),
+      projectName: z.string().describe("Project name for tests"),
+      mainBranch: z.string().optional().default("main"),
+      includeAccessibilityTests: z.boolean().optional().default(true),
+      includeDockerfile: z.boolean().optional().default(true),
+      includeGitHubActions: z.boolean().optional().default(true),
     }),
   },
   {
@@ -1345,6 +1360,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return result;
       }
 
+      case "setup_playwright_tests": {
+        const result = await setupPlaywrightTests(args);
+        return result;
+      }
+
       case "deploy_pages": {
         const result = await deployPages(args);
 
@@ -1830,40 +1850,161 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
 
       case "memory_intelligent_analysis": {
+        const projectPath = args?.projectPath as string;
+        const baseAnalysis = args?.baseAnalysis as any;
+
+        // Get insights and similar projects
+        const insights = await getProjectInsights(projectPath);
+        const similar = await getSimilarProjects(baseAnalysis, 5);
+
+        // Build intelligent analysis
+        const intelligentAnalysis = {
+          projectPath,
+          contextualInsights: {
+            insights: insights,
+            similarProjects: similar.map((p: any) => ({
+              name: p.projectPath,
+              similarity: p.similarity,
+              technologies: p.technologies,
+              hasTests: p.hasTests,
+              hasDocs: p.hasDocs,
+            })),
+            documentationHealth: {
+              hasDocumentation: baseAnalysis?.documentation?.hasDocs || false,
+              coverage: baseAnalysis?.documentation?.coverage || "unknown",
+              recommendedImprovement: baseAnalysis?.documentation?.hasDocs
+                ? "Add missing documentation categories"
+                : "Create initial documentation structure",
+            },
+          },
+          patterns: {
+            technologyStack:
+              baseAnalysis?.technologies?.primaryLanguage || "unknown",
+            projectSize: baseAnalysis?.structure?.size || "unknown",
+            testingMaturity: baseAnalysis?.structure?.hasTests
+              ? "has tests"
+              : "no tests",
+            cicdMaturity: baseAnalysis?.structure?.hasCI
+              ? "has CI/CD"
+              : "no CI/CD",
+          },
+          predictions: {
+            recommendedSSG:
+              similar.length > 0
+                ? `Based on ${similar.length} similar projects`
+                : "Insufficient data",
+            estimatedEffort:
+              baseAnalysis?.structure?.size === "large"
+                ? "high"
+                : baseAnalysis?.structure?.size === "medium"
+                  ? "medium"
+                  : "low",
+          },
+          recommendations: [
+            ...(baseAnalysis?.documentation?.hasDocs
+              ? []
+              : ["Create documentation structure using Diataxis framework"]),
+            ...(baseAnalysis?.structure?.hasTests
+              ? []
+              : ["Add test coverage to improve reliability"]),
+            ...(baseAnalysis?.structure?.hasCI
+              ? []
+              : ["Set up CI/CD pipeline for automated deployment"]),
+          ],
+        };
+
         return {
           content: [
             {
               type: "text",
-              text: JSON.stringify(
-                {
-                  status: "development",
-                  message: "Intelligent analysis feature is being developed",
-                  projectPath: args?.projectPath,
-                  baseAnalysis: args?.baseAnalysis,
-                },
-                null,
-                2,
-              ),
+              text: JSON.stringify(intelligentAnalysis, null, 2),
             },
           ],
         };
       }
 
       case "memory_enhanced_recommendation": {
+        const projectPath = args?.projectPath as string;
+        const baseRecommendation = args?.baseRecommendation as any;
+        const projectFeatures = args?.projectFeatures as any;
+
+        // Get historical deployment data and similar projects
+        await getProjectInsights(projectPath);
+        const similar = await getSimilarProjects(projectFeatures, 10);
+
+        // Calculate success rates from similar projects
+        const successfulDeployments = similar.filter(
+          (p: any) => p.deploymentSuccess === true,
+        );
+        const ssgUsage: Record<string, number> = {};
+        similar.forEach((p: any) => {
+          if (p.recommendedSSG) {
+            ssgUsage[p.recommendedSSG] = (ssgUsage[p.recommendedSSG] || 0) + 1;
+          }
+        });
+
+        const enhancedRecommendation = {
+          baseRecommendation: baseRecommendation?.ssg || "unknown",
+          confidence: baseRecommendation?.confidence || 0,
+          historicalContext: {
+            similarProjectsAnalyzed: similar.length,
+            successfulDeployments: successfulDeployments.length,
+            successRate:
+              similar.length > 0
+                ? (
+                    (successfulDeployments.length / similar.length) *
+                    100
+                  ).toFixed(1) + "%"
+                : "N/A",
+          },
+          popularChoices: Object.entries(ssgUsage)
+            .sort(([, a], [, b]) => (b as number) - (a as number))
+            .slice(0, 3)
+            .map(([ssg, count]) => ({
+              ssg,
+              usage: count,
+              percentage:
+                similar.length > 0
+                  ? (((count as number) / similar.length) * 100).toFixed(1) +
+                    "%"
+                  : "N/A",
+            })),
+          enhancedRecommendations: [
+            {
+              ssg: baseRecommendation?.ssg || "Jekyll",
+              reason: "Base recommendation from analysis",
+              confidence: baseRecommendation?.confidence || 0.7,
+            },
+            ...Object.entries(ssgUsage)
+              .filter(([ssg]) => ssg !== baseRecommendation?.ssg)
+              .slice(0, 2)
+              .map(([ssg, count]) => ({
+                ssg,
+                reason: `Used by ${count} similar project(s)`,
+                confidence: similar.length > 0 ? count / similar.length : 0.5,
+              })),
+          ],
+          considerations: [
+            ...(projectFeatures.hasTests
+              ? ["Project has tests - consider SSG with good test integration"]
+              : []),
+            ...(projectFeatures.hasCI
+              ? ["Project has CI/CD - ensure SSG supports automated builds"]
+              : []),
+            ...(projectFeatures.complexity === "complex"
+              ? ["Complex project - consider robust SSG with plugin ecosystem"]
+              : []),
+            ...(projectFeatures.isOpenSource
+              ? ["Open source project - community support is important"]
+              : []),
+          ],
+        };
+
         return {
           content: [
             {
               type: "text",
-              text: JSON.stringify(
-                {
-                  status: "development",
-                  message: "Enhanced recommendation feature is being developed",
-                  baseRecommendation: args?.baseRecommendation,
-                  projectFeatures: args?.projectFeatures,
-                },
-                null,
-                2,
-              ),
+              text: JSON.stringify(enhancedRecommendation, null, 2),
             },
           ],
         };

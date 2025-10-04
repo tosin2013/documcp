@@ -17,9 +17,6 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: docs
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -29,17 +26,14 @@ jobs:
         with:
           ruby-version: '3.1'
           bundler-cache: true
-          working-directory: docs
 
       - name: Build with Jekyll
-        run: npm run build
+        run: bundle exec jekyll build
         env:
           JEKYLL_ENV: production
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v2
-        with:
-          path: docs/./_site
 
   deploy:
     environment:

@@ -6,8 +6,10 @@ import {
   createOrUpdateProject,
   getProjectContext,
 } from "../memory/kg-integration.js";
-// import { extractRepositoryContent, ExtractedContent } from '../utils/content-extractor.js'; // For future use
-type ExtractedContent = any;
+import {
+  extractRepositoryContent,
+  ExtractedContent,
+} from "../utils/content-extractor.js";
 
 // Analysis result schema based on ADR-002
 export interface RepositoryAnalysis {
@@ -136,6 +138,98 @@ export async function analyzeRepository(
       console.warn("Failed to store project in Knowledge Graph:", error);
     }
 
+    // Phase 1.3: Get intelligent analysis enrichment
+    let intelligentAnalysis;
+    let documentationHealth;
+    try {
+      const { getProjectInsights, getSimilarProjects } = await import(
+        "../memory/index.js"
+      );
+      const { getKnowledgeGraph } = await import("../memory/kg-integration.js");
+
+      const insights = await getProjectInsights(repoPath);
+      const similar = await getSimilarProjects(analysis, 5);
+
+      // Check documentation health from KG
+      try {
+        const kg = await getKnowledgeGraph();
+        const allEdges = await kg.getAllEdges();
+
+        // Find outdated documentation
+        const outdatedEdges = allEdges.filter((e) => e.type === "outdated_for");
+
+        // Find documentation coverage
+        const documentsEdges = allEdges.filter((e) => e.type === "documents");
+        const totalCodeFiles = allEdges.filter(
+          (e) => e.type === "depends_on" && e.target.startsWith("code_file:"),
+        ).length;
+
+        const documentedFiles = new Set(documentsEdges.map((e) => e.source))
+          .size;
+
+        const coveragePercent =
+          totalCodeFiles > 0
+            ? Math.round((documentedFiles / totalCodeFiles) * 100)
+            : 0;
+
+        documentationHealth = {
+          outdatedCount: outdatedEdges.length,
+          coveragePercent,
+          totalCodeFiles,
+          documentedFiles,
+        };
+      } catch (error) {
+        console.warn("Failed to calculate documentation health:", error);
+      }
+
+      intelligentAnalysis = {
+        insights,
+        similarProjects: similar.slice(0, 3).map((p: any) => ({
+          path: p.projectPath,
+          similarity: Math.round((p.similarity || 0) * 100) + "%",
+          technologies: p.technologies?.join(", ") || "unknown",
+        })),
+        ...(documentationHealth && { documentationHealth }),
+        recommendations: [
+          // Documentation health recommendations
+          ...(documentationHealth && documentationHealth.outdatedCount > 0
+            ? [
+                `${documentationHealth.outdatedCount} documentation section(s) may be outdated - code has changed since docs were updated`,
+              ]
+            : []),
+          ...(documentationHealth &&
+          documentationHealth.coveragePercent < 50 &&
+          documentationHealth.totalCodeFiles > 0
+            ? [
+                `Documentation covers only ${documentationHealth.coveragePercent}% of code files - consider documenting more`,
+              ]
+            : []),
+          // Only suggest creating README if it truly doesn't exist
+          // Don't suggest improvements yet - that requires deeper analysis
+          ...(analysis.documentation.hasReadme
+            ? []
+            : ["Consider creating a README.md for project documentation"]),
+          // Only suggest docs structure if no docs folder exists at all
+          ...(analysis.structure.hasDocs
+            ? []
+            : analysis.documentation.existingDocs.length === 0
+              ? [
+                  "Consider setting up documentation structure using Diataxis framework",
+                ]
+              : []),
+          // Infrastructure recommendations are safe as they're objective
+          ...(analysis.structure.hasTests
+            ? []
+            : ["Consider adding test coverage to improve reliability"]),
+          ...(analysis.structure.hasCI
+            ? []
+            : ["Consider setting up CI/CD pipeline for automation"]),
+        ],
+      };
+    } catch (error) {
+      console.warn("Failed to get intelligent analysis:", error);
+    }
+
     // Enhance response with historical context
     const contextInfo: string[] = [];
     if (projectContext.previousAnalyses > 0) {
@@ -170,6 +264,7 @@ export async function analyzeRepository(
         executionTime: Date.now() - startTime,
         timestamp: new Date().toISOString(),
         analysisId: analysis.id,
+        ...(intelligentAnalysis && { intelligentAnalysis }),
       },
       recommendations: [
         {
@@ -186,8 +281,44 @@ export async function analyzeRepository(
               },
             ]
           : []),
+        ...(intelligentAnalysis?.recommendations &&
+        intelligentAnalysis.recommendations.length > 0
+          ? [
+              {
+                type: "info" as const,
+                title: "AI Recommendations",
+                description: intelligentAnalysis.recommendations.join("\n• "),
+              },
+            ]
+          : []),
+        ...(intelligentAnalysis?.similarProjects &&
+        intelligentAnalysis.similarProjects.length > 0
+          ? [
+              {
+                type: "info" as const,
+                title: "Similar Projects",
+                description: intelligentAnalysis.similarProjects
+                  .map(
+                    (p: any) =>
+                      `${p.path} (${p.similarity} similar, ${p.technologies})`,
+                  )
+                  .join("\n"),
+              },
+            ]
+          : []),
       ],
       nextSteps: [
+        ...(analysis.documentation.hasReadme
+          ? [
+              {
+                action: "Analyze README Quality",
+                toolRequired: "analyze_readme",
+                description:
+                  "Evaluate README completeness and suggest improvements",
+                priority: "medium" as const,
+              },
+            ]
+          : []),
         {
           action: "Get SSG Recommendation",
           toolRequired: "recommend_ssg",
@@ -600,6 +731,14 @@ async function analyzeDocumentation(
       result.estimatedComplexity = "moderate";
     } else {
       result.estimatedComplexity = "complex";
+    }
+
+    // Extract comprehensive documentation content
+    try {
+      result.extractedContent = await extractRepositoryContent(repoPath);
+    } catch (error) {
+      console.warn("Failed to extract repository content:", error);
+      // Continue without extracted content
     }
 
     return result;

@@ -9,6 +9,11 @@
 import KnowledgeGraph, { GraphNode } from "./knowledge-graph.js";
 import { KGStorage } from "./kg-storage.js";
 import { MemoryManager } from "./manager.js";
+import {
+  createCodeFileEntities,
+  createDocumentationEntities,
+  linkCodeToDocs,
+} from "./kg-code-integration.js";
 
 let globalKnowledgeGraph: KnowledgeGraph | null = null;
 let globalKGStorage: KGStorage | null = null;
@@ -91,6 +96,42 @@ export async function getMemoryManager(): Promise<MemoryManager> {
 }
 
 /**
+ * Convert file extension to language name
+ */
+function convertExtToLanguage(ext: string): string | null {
+  const languageMap: Record<string, string> = {
+    ".js": "javascript",
+    ".jsx": "javascript",
+    ".ts": "typescript",
+    ".tsx": "typescript",
+    ".py": "python",
+    ".rb": "ruby",
+    ".go": "go",
+    ".java": "java",
+    ".c": "c",
+    ".cpp": "cpp",
+    ".cs": "csharp",
+    ".php": "php",
+    ".rs": "rust",
+    ".kt": "kotlin",
+    ".swift": "swift",
+    ".sh": "shell",
+    ".bash": "shell",
+    ".zsh": "shell",
+    ".fish": "shell",
+    ".yml": "yaml",
+    ".yaml": "yaml",
+    ".sql": "sql",
+    ".html": "html",
+    ".css": "css",
+    ".scss": "scss",
+    ".vue": "vue",
+    ".dart": "dart",
+  };
+  return languageMap[ext] || null;
+}
+
+/**
  * Save the Knowledge Graph to persistent storage
  */
 export async function saveKnowledgeGraph(): Promise<void> {
@@ -127,10 +168,33 @@ export async function createOrUpdateProject(analysis: any): Promise<GraphNode> {
 
   // Determine primary language
   const languages = analysis.structure.languages || {};
-  const primaryLanguage = Object.keys(languages).reduce(
+  const primaryKey = Object.keys(languages).reduce(
     (a, b) => (languages[a] > languages[b] ? a : b),
     Object.keys(languages)[0] || "unknown",
   );
+
+  // Convert to language name if it's an extension
+  let primaryLanguage: string;
+  if (analysis.recommendations?.primaryLanguage) {
+    primaryLanguage = analysis.recommendations.primaryLanguage;
+  } else if (primaryKey.startsWith(".")) {
+    primaryLanguage = convertExtToLanguage(primaryKey) || "unknown";
+  } else {
+    primaryLanguage = primaryKey; // Already a language name
+  }
+
+  // Convert all extensions to language names
+  // Handle both extensions (.ts) and language names (typescript)
+  const technologies = Object.keys(languages)
+    .map((key) => {
+      // If it starts with '.', it's an extension - convert it
+      if (key.startsWith(".")) {
+        return convertExtToLanguage(key);
+      }
+      // Otherwise it's already a language name - use as is
+      return key;
+    })
+    .filter((lang): lang is string => lang !== null && lang !== "unknown");
 
   // Create/update project node
   const projectNode = kg.addNode({
@@ -140,7 +204,7 @@ export async function createOrUpdateProject(analysis: any): Promise<GraphNode> {
     properties: {
       name: analysis.projectName,
       path: analysis.path,
-      technologies: Object.keys(languages),
+      technologies,
       size,
       primaryLanguage,
       hasTests: analysis.structure.hasTests || false,
@@ -156,24 +220,34 @@ export async function createOrUpdateProject(analysis: any): Promise<GraphNode> {
   });
 
   // Create technology nodes and relationships
-  for (const [tech, fileCount] of Object.entries(languages) as [
+  for (const [key, fileCount] of Object.entries(languages) as [
     string,
     number,
   ][]) {
-    const techNodeId = `technology:${tech.toLowerCase()}`;
+    // Handle both extensions (.ts) and language names (typescript)
+    let langName: string;
+    if (key.startsWith(".")) {
+      const converted = convertExtToLanguage(key);
+      if (!converted) continue; // Skip unknown extensions
+      langName = converted;
+    } else {
+      langName = key; // Already a language name
+    }
+
+    const techNodeId = `technology:${langName.toLowerCase()}`;
 
     // Create technology node if it doesn't exist
     const existingTech = await kg.findNode({
       type: "technology",
-      properties: { name: tech },
+      properties: { name: langName },
     });
 
     const techNode = kg.addNode({
       id: existingTech?.id || techNodeId,
       type: "technology",
-      label: tech,
+      label: langName,
       properties: {
-        name: tech,
+        name: langName,
         category: "language",
         usageCount: existingTech
           ? (existingTech.properties.usageCount || 0) + 1
@@ -192,9 +266,30 @@ export async function createOrUpdateProject(analysis: any): Promise<GraphNode> {
       properties: {
         fileCount,
         percentage: (fileCount / analysis.structure.totalFiles) * 100,
-        isPrimary: tech === primaryLanguage,
+        isPrimary: langName === primaryLanguage,
       },
     });
+  }
+
+  // Phase 1.2: Create code file and documentation entities
+  try {
+    const codeFiles = await createCodeFileEntities(
+      projectNode.id,
+      analysis.path,
+    );
+
+    if (analysis.documentation?.extractedContent) {
+      const docSections = await createDocumentationEntities(
+        projectNode.id,
+        analysis.documentation.extractedContent,
+      );
+
+      // Link code files to documentation sections
+      await linkCodeToDocs(codeFiles, docSections);
+    }
+  } catch (error) {
+    console.warn("Failed to populate code/docs entities:", error);
+    // Continue without code/docs entities - not a fatal error
   }
 
   // Save to persistent storage
