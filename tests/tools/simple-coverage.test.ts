@@ -12,10 +12,19 @@ import { verifyDeployment } from "../../src/tools/verify-deployment";
 
 describe("Simple Tool Coverage Tests", () => {
   let tempDir: string;
+  const originalCwd = process.cwd();
 
   beforeAll(async () => {
     tempDir = path.join(os.tmpdir(), "simple-coverage");
     await fs.mkdir(tempDir, { recursive: true });
+
+    // Clean up any existing KG data in temp directory
+    const kgDir = path.join(tempDir, ".documcp", "memory");
+    try {
+      await fs.rm(kgDir, { recursive: true, force: true });
+    } catch {
+      // Ignore if doesn't exist
+    }
   });
 
   afterAll(async () => {
@@ -27,11 +36,18 @@ describe("Simple Tool Coverage Tests", () => {
   });
 
   it("should test recommend_ssg tool", async () => {
-    const result = await recommendSSG({
-      analysisId: "test-123",
-    });
-    expect(result.content).toBeDefined();
-    expect(result.content.length).toBeGreaterThan(0);
+    // Change to temp directory to avoid KG conflicts
+    process.chdir(tempDir);
+
+    try {
+      const result = await recommendSSG({
+        analysisId: "test-123",
+      });
+      expect(result.content).toBeDefined();
+      expect(result.content.length).toBeGreaterThan(0);
+    } finally {
+      process.chdir(originalCwd);
+    }
   });
 
   it("should test generate_config for each SSG", async () => {
