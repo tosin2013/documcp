@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+### [0.4.1](https://github.com/tosin2013/documcp/compare/v0.4.0...v0.4.1) (2025-10-04)
+
+### 📚 Documentation
+
+- add release workflow fixes documentation ([44b8bc9](https://github.com/tosin2013/documcp/commit/44b8bc96adcedaeff70f5bdea0a8b0c7a49f1e52))
+
+### 🚀 Features
+
+- add Playwright testing integration and knowledge graph enhancements ([39dc058](https://github.com/tosin2013/documcp/commit/39dc058842dfcf2195ac71d0edc7d1f14077cb84))
+
+### 🐛 Bug Fixes
+
+- add cleanup step to CI workflow to prevent corrupted memory files ([b07692d](https://github.com/tosin2013/documcp/commit/b07692d41b6c57e4e0b8d50c84f886bd77f86adf))
+- correct workflow to build Docusaurus instead of Jekyll ([246302c](https://github.com/tosin2013/documcp/commit/246302c16b779d4caa38980496d2d211e8a1f2cd))
+- improve GitHub Actions release workflow for future releases ([f83e930](https://github.com/tosin2013/documcp/commit/f83e9308db3b7be4afc4d0afebb0d782269b7df8))
+- remove problematic setup-playwright-tests test file ([adb20f2](https://github.com/tosin2013/documcp/commit/adb20f2f09dd58143d12767ba9da92a686ca4237)), closes [#18245578186](https://github.com/tosin2013/documcp/issues/18245578186)
+- update deprecated GitHub Actions in deploy-docs workflow ([dc877d7](https://github.com/tosin2013/documcp/commit/dc877d748429ec1ccbe9873449f56315b3bae14b)), closes [#18246024667](https://github.com/tosin2013/documcp/issues/18246024667)
+
 ## [0.4.0](https://github.com/tosin2013/documcp/compare/v0.3.4...v0.4.0) (2025-10-02)
 
 ### 🚀 Features
