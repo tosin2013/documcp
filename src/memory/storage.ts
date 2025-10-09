@@ -96,6 +96,9 @@ export class JSONLStorage {
   }
 
   private async saveIndex(): Promise<void> {
+    // Ensure storage directory exists before writing index
+    await fs.promises.mkdir(this.storageDir, { recursive: true });
+
     const data = {
       entries: Array.from(this.index.entries()),
       lineCounters: Object.fromEntries(this.lineCounters.entries()),
@@ -139,6 +142,9 @@ export class JSONLStorage {
       completeEntry.timestamp,
     );
     const filePath = path.join(this.storageDir, fileName);
+
+    // Ensure storage directory exists before writing
+    await fs.promises.mkdir(this.storageDir, { recursive: true });
 
     const line = JSON.stringify(completeEntry);
     await fs.promises.appendFile(filePath, line + "\n");
@@ -268,6 +274,9 @@ export class JSONLStorage {
   }
 
   async compact(type?: MemoryEntry["type"]): Promise<void> {
+    // Ensure storage directory exists before compacting
+    await fs.promises.mkdir(this.storageDir, { recursive: true });
+
     const files = await this.getRelevantFiles({ type });
 
     for (const file of files) {
@@ -396,6 +405,9 @@ export class JSONLStorage {
         completeEntry.timestamp,
       );
       const filePath = path.join(this.storageDir, fileName);
+
+      // Ensure storage directory exists before writing
+      await fs.promises.mkdir(this.storageDir, { recursive: true });
 
       const line = JSON.stringify(completeEntry);
       await fs.promises.appendFile(filePath, line + "\n");
