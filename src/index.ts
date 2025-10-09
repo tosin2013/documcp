@@ -722,17 +722,20 @@ const PROMPTS = [
     arguments: [
       {
         name: "project_path",
-        description: "Path to the project directory",
+        description:
+          "Path to the project directory (used to analyze project context)",
         required: true,
       },
       {
         name: "target_audience",
-        description: "Target audience for the tutorial",
+        description:
+          "Target audience for the tutorial (default: 'beginners'). Options: 'beginners', 'intermediate', 'advanced'",
         required: false,
       },
       {
         name: "learning_goal",
-        description: "What users should learn",
+        description:
+          "What users should learn (default: 'get started with the project'). Examples: 'deploy first app', 'understand core concepts'",
         required: false,
       },
     ],
@@ -744,13 +747,20 @@ const PROMPTS = [
     arguments: [
       {
         name: "project_path",
-        description: "Path to the project directory",
+        description:
+          "Path to the project directory (used to analyze project context)",
         required: true,
       },
-      { name: "problem", description: "Problem to solve", required: false },
+      {
+        name: "problem",
+        description:
+          "Problem to solve (default: 'common development task'). Example: 'deploy to production', 'add authentication'",
+        required: false,
+      },
       {
         name: "user_experience",
-        description: "User experience level",
+        description:
+          "User experience level (default: 'intermediate'). Options: 'beginner', 'intermediate', 'advanced'",
         required: false,
       },
     ],
@@ -762,17 +772,20 @@ const PROMPTS = [
     arguments: [
       {
         name: "project_path",
-        description: "Path to the project directory",
+        description:
+          "Path to the project directory (used to analyze project context)",
         required: true,
       },
       {
         name: "reference_type",
-        description: "Type of reference (API, CLI, etc.)",
+        description:
+          "Type of reference (default: 'API'). Options: 'API', 'CLI', 'Configuration', 'Architecture'",
         required: false,
       },
       {
         name: "completeness",
-        description: "Level of completeness required",
+        description:
+          "Level of completeness required (default: 'comprehensive'). Options: 'basic', 'comprehensive', 'exhaustive'",
         required: false,
       },
     ],
@@ -784,11 +797,22 @@ const PROMPTS = [
     arguments: [
       {
         name: "project_path",
-        description: "Path to the project directory",
+        description:
+          "Path to the project directory (used to analyze project context)",
         required: true,
       },
-      { name: "concept", description: "Concept to explain", required: false },
-      { name: "depth", description: "Depth of explanation", required: false },
+      {
+        name: "concept",
+        description:
+          "Concept to explain (default: 'system architecture'). Examples: 'data flow', 'design patterns', 'security model'",
+        required: false,
+      },
+      {
+        name: "depth",
+        description:
+          "Depth of explanation (default: 'detailed'). Options: 'overview', 'detailed', 'deep-dive'",
+        required: false,
+      },
     ],
   },
   {
@@ -798,17 +822,20 @@ const PROMPTS = [
     arguments: [
       {
         name: "project_path",
-        description: "Path to the project directory",
+        description:
+          "Path to the project directory (used to analyze project context)",
         required: true,
       },
       {
         name: "current_docs",
-        description: "Description of current documentation",
+        description:
+          "Description of current documentation (default: 'mixed documentation'). Example: 'single README with everything', 'scattered wiki pages'",
         required: false,
       },
       {
         name: "priority",
-        description: "Organization priority",
+        description:
+          "Organization priority (default: 'user needs'). Options: 'user needs', 'completeness', 'maintainability'",
         required: false,
       },
     ],
@@ -819,12 +846,14 @@ const PROMPTS = [
     arguments: [
       {
         name: "project_path",
-        description: "Path to the project directory",
+        description:
+          "Path to the project directory (used to analyze README and project context)",
         required: true,
       },
       {
         name: "optimization_focus",
-        description: "Focus area for optimization",
+        description:
+          "Focus area for optimization (default: 'general'). Options: 'length', 'clarity', 'structure', 'onboarding'",
         required: false,
       },
     ],
@@ -836,17 +865,19 @@ const PROMPTS = [
     arguments: [
       {
         name: "project_path",
-        description: "Path to the project directory",
+        description: "Path to the project directory (used for analysis)",
         required: true,
       },
       {
         name: "analysis_depth",
-        description: "Analysis depth: quick, standard, deep",
+        description:
+          "Analysis depth (default: 'standard'). Options: 'quick' (basic scan), 'standard' (comprehensive), 'deep' (detailed with dependencies)",
         required: false,
       },
       {
         name: "preferences",
-        description: "SSG preferences (ecosystem, priority)",
+        description:
+          "SSG preferences as text (default: 'balanced approach'). Examples: 'prefer JavaScript ecosystem', 'prioritize simplicity', 'need fast builds'",
         required: false,
       },
     ],
@@ -858,17 +889,20 @@ const PROMPTS = [
     arguments: [
       {
         name: "project_path",
-        description: "Path to the project directory",
+        description:
+          "Path to the project directory (where docs will be created)",
         required: true,
       },
       {
         name: "ssg_type",
-        description: "Static site generator type",
+        description:
+          "Static site generator type (default: 'recommended based on analysis'). Options: 'jekyll', 'hugo', 'docusaurus', 'mkdocs', 'eleventy'",
         required: false,
       },
       {
         name: "include_examples",
-        description: "Include example content",
+        description:
+          "Include example content (default: 'true'). Set to 'false' for templates only, 'true' for populated examples",
         required: false,
       },
     ],
@@ -879,136 +913,99 @@ const PROMPTS = [
     arguments: [
       {
         name: "repository",
-        description: "Repository path or URL",
+        description:
+          "Repository path or URL (GitHub repository to troubleshoot)",
         required: true,
       },
       {
         name: "deployment_url",
-        description: "Expected deployment URL",
+        description:
+          "Expected deployment URL (default: derived from repository). Example: 'https://username.github.io/repo'",
         required: false,
       },
       {
         name: "issue_description",
-        description: "Description of the issue",
+        description:
+          "Description of the issue (default: 'deployment not working'). Examples: 'builds fail', '404 errors', 'outdated content'",
         required: false,
       },
     ],
   },
 ];
 
-// In-memory storage for resources
-const resourceStore = new Map<string, { content: string; mimeType: string }>();
+// MCP resources should serve APPLICATION needs, not store tool results
+// Resources are app-controlled and used for UI display, autocomplete, etc.
 
-// Helper function to store tool results as resources
-function storeResourceFromToolResult(
-  toolName: string,
-  args: any,
-  result: any,
-  id?: string,
-): string {
-  const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-  const resourceId =
-    id || `${timestamp}-${Math.random().toString(36).substring(2, 11)}`;
-  let uri: string;
-  let mimeType = "application/json";
-  let content: string;
-
-  // Determine URI and content based on tool type
-  switch (toolName) {
-    case "analyze_repository":
-      uri = `documcp://analysis/${resourceId}`;
-      content = JSON.stringify(result, null, 2);
-      break;
-    case "recommend_ssg":
-      uri = `documcp://recommendations/${resourceId}`;
-      content = JSON.stringify(result, null, 2);
-      break;
-    case "generate_config":
-      uri = `documcp://config/${args.ssg}/${resourceId}`;
-      mimeType = "text/plain";
-      content =
-        typeof result === "string" ? result : JSON.stringify(result, null, 2);
-      break;
-    case "setup_structure":
-      uri = `documcp://structure/${resourceId}`;
-      content = JSON.stringify(result, null, 2);
-      break;
-    case "deploy_pages":
-      uri = `documcp://deployment/${resourceId}`;
-      mimeType = "text/yaml";
-      content =
-        typeof result === "string" ? result : JSON.stringify(result, null, 2);
-      break;
-    case "verify_deployment":
-      uri = `documcp://verification/${resourceId}`;
-      content = JSON.stringify(result, null, 2);
-      break;
-    default:
-      uri = `documcp://results/${toolName}/${resourceId}`;
-      content = JSON.stringify(result, null, 2);
-  }
-
-  // Store the resource
-  resourceStore.set(uri, { content, mimeType });
-
-  return uri;
-}
-
-// Resource definitions following ADR-007
+// Resource definitions following ADR-007 and MCP best practices
+// Resources serve APPLICATIONS (UI needs) not tool result storage
 const RESOURCES = [
+  // Static Site Generators - for UI selection dropdowns
   {
-    uri: "documcp://analysis/",
-    name: "Repository Analysis Results",
-    description: "Results from repository analysis operations",
+    uri: "documcp://ssgs/available",
+    name: "Available Static Site Generators",
+    description: "List of supported SSGs with capabilities for UI selection",
     mimeType: "application/json",
   },
+  // Templates - static templates for documentation setup
   {
-    uri: "documcp://recommendations/",
-    name: "SSG Recommendations",
-    description:
-      "Static Site Generator recommendations based on project analysis",
-    mimeType: "application/json",
-  },
-  {
-    uri: "documcp://config/",
-    name: "Generated Configuration Files",
-    description: "Generated SSG configuration files",
-    mimeType: "text/plain",
-  },
-  {
-    uri: "documcp://structure/",
-    name: "Documentation Structure Templates",
-    description: "Diataxis-compliant documentation structures",
-    mimeType: "application/json",
-  },
-  {
-    uri: "documcp://deployment/",
-    name: "GitHub Actions Workflows",
-    description: "Generated deployment workflows",
+    uri: "documcp://templates/jekyll-config",
+    name: "Jekyll Configuration Template",
+    description: "Template for Jekyll _config.yml",
     mimeType: "text/yaml",
   },
   {
-    uri: "documcp://verification/",
-    name: "Deployment Verification Results",
-    description: "Results from deployment verification checks",
+    uri: "documcp://templates/hugo-config",
+    name: "Hugo Configuration Template",
+    description: "Template for Hugo config.yaml",
+    mimeType: "text/yaml",
+  },
+  {
+    uri: "documcp://templates/docusaurus-config",
+    name: "Docusaurus Configuration Template",
+    description: "Template for Docusaurus docusaurus.config.js",
+    mimeType: "text/javascript",
+  },
+  {
+    uri: "documcp://templates/mkdocs-config",
+    name: "MkDocs Configuration Template",
+    description: "Template for MkDocs mkdocs.yml",
+    mimeType: "text/yaml",
+  },
+  {
+    uri: "documcp://templates/eleventy-config",
+    name: "Eleventy Configuration Template",
+    description: "Template for Eleventy .eleventy.js",
+    mimeType: "text/javascript",
+  },
+  {
+    uri: "documcp://templates/diataxis-structure",
+    name: "Diataxis Structure Template",
+    description: "Diataxis documentation structure blueprint",
+    mimeType: "application/json",
+  },
+  // Workflows - for UI to display available workflows
+  {
+    uri: "documcp://workflows/all",
+    name: "All Documentation Workflows",
+    description: "Complete list of available documentation workflows",
     mimeType: "application/json",
   },
   {
-    uri: "documcp://templates/",
-    name: "Reusable Templates",
-    description: "Template files for documentation setup",
-    mimeType: "text/plain",
-  },
-  {
-    uri: "documcp://workflows/",
-    name: "Documentation Workflows",
-    description: "Guided workflows for different documentation scenarios",
+    uri: "documcp://workflows/quick-setup",
+    name: "Quick Documentation Setup Workflow",
+    description: "Fast-track workflow for basic documentation",
     mimeType: "application/json",
   },
   {
-    uri: "documcp://results/",
-    name: "Tool Results",
-    description: "Results from various DocuMCP tools",
+    uri: "documcp://workflows/full-setup",
+    name: "Full Documentation Setup Workflow",
+    description: "Comprehensive workflow for complete documentation",
+    mimeType: "application/json",
+  },
+  {
+    uri: "documcp://workflows/guidance",
+    name: "Workflow Execution Guidance",
+    description: "Guidelines for executing documentation workflows",
     mimeType: "application/json",
   },
 ];
@@ -1051,18 +1048,80 @@ server.setRequestHandler(ListResourcesRequestSchema, async () => ({
 }));
 
 // Read specific resource
+// Resources serve APPLICATION needs - static content for UI display
 server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
   const { uri } = request.params;
 
-  // Check if resource exists in store
-  const resource = resourceStore.get(uri);
-  if (resource) {
+  // Handle SSG list resource (for UI dropdowns/selection)
+  if (uri === "documcp://ssgs/available") {
     return {
       contents: [
         {
           uri,
-          mimeType: resource.mimeType,
-          text: resource.content,
+          mimeType: "application/json",
+          text: JSON.stringify(
+            {
+              ssgs: [
+                {
+                  id: "jekyll",
+                  name: "Jekyll",
+                  description: "Ruby-based SSG, great for GitHub Pages",
+                  language: "ruby",
+                  complexity: "low",
+                  buildSpeed: "medium",
+                  ecosystem: "mature",
+                  bestFor: ["blogs", "documentation", "simple-sites"],
+                },
+                {
+                  id: "hugo",
+                  name: "Hugo",
+                  description: "Go-based SSG, extremely fast builds",
+                  language: "go",
+                  complexity: "medium",
+                  buildSpeed: "very-fast",
+                  ecosystem: "mature",
+                  bestFor: ["documentation", "blogs", "large-sites"],
+                },
+                {
+                  id: "docusaurus",
+                  name: "Docusaurus",
+                  description:
+                    "React-based, optimized for technical documentation",
+                  language: "javascript",
+                  complexity: "medium",
+                  buildSpeed: "medium",
+                  ecosystem: "growing",
+                  bestFor: [
+                    "technical-documentation",
+                    "api-docs",
+                    "versioned-docs",
+                  ],
+                },
+                {
+                  id: "mkdocs",
+                  name: "MkDocs",
+                  description: "Python-based, simple and fast documentation",
+                  language: "python",
+                  complexity: "low",
+                  buildSpeed: "fast",
+                  ecosystem: "mature",
+                  bestFor: ["documentation", "technical-docs", "simple-setup"],
+                },
+                {
+                  id: "eleventy",
+                  name: "Eleventy",
+                  description: "JavaScript-based, simple and flexible",
+                  language: "javascript",
+                  complexity: "low",
+                  buildSpeed: "fast",
+                  ecosystem: "growing",
+                  bestFor: ["blogs", "documentation", "flexible-sites"],
+                },
+              ],
+            },
+            null,
+            2,
+          ),
         },
       ],
     };
@@ -1126,6 +1185,196 @@ markup:
   highlight:
     style: github
     lineNos: true
+`,
+            },
+          ],
+        };
+
+      case "docusaurus-config":
+        return {
+          contents: [
+            {
+              uri,
+              mimeType: "text/javascript",
+              text: `// Docusaurus Configuration Template
+// @ts-check
+
+/** @type {import('@docusaurus/types').Config} */
+const config = {
+  title: 'Documentation Site',
+  tagline: 'Project documentation',
+  url: 'https://username.github.io',
+  baseUrl: '/repository/',
+  onBrokenLinks: 'throw',
+  onBrokenMarkdownLinks: 'warn',
+  favicon: 'img/favicon.ico',
+
+  organizationName: 'username',
+  projectName: 'repository',
+
+  i18n: {
+    defaultLocale: 'en',
+    locales: ['en'],
+  },
+
+  presets: [
+    [
+      'classic',
+      /** @type {import('@docusaurus/preset-classic').Options} */
+      ({
+        docs: {
+          sidebarPath: require.resolve('./sidebars.js'),
+          editUrl: 'https://github.com/username/repository/tree/main/',
+        },
+        blog: false,
+        theme: {
+          customCss: require.resolve('./src/css/custom.css'),
+        },
+      }),
+    ],
+  ],
+
+  themeConfig:
+    /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
+    ({
+      navbar: {
+        title: 'Documentation',
+        items: [
+          {
+            type: 'doc',
+            docId: 'intro',
+            position: 'left',
+            label: 'Tutorial',
+          },
+          {
+            href: 'https://github.com/username/repository',
+            label: 'GitHub',
+            position: 'right',
+          },
+        ],
+      },
+      footer: {
+        style: 'dark',
+        copyright: \`Copyright © \${new Date().getFullYear()} Project Name\`,
+      },
+    }),
+};
+
+module.exports = config;
+`,
+            },
+          ],
+        };
+
+      case "mkdocs-config":
+        return {
+          contents: [
+            {
+              uri,
+              mimeType: "text/yaml",
+              text: `# MkDocs Configuration Template
+site_name: Documentation Site
+site_url: https://username.github.io/repository
+repo_url: https://github.com/username/repository
+repo_name: username/repository
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - toc.integrate
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+
+plugins:
+  - search
+  - awesome-pages
+
+markdown_extensions:
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - pymdownx.tabbed
+  - admonition
+  - pymdownx.details
+
+nav:
+  - Home: index.md
+  - Tutorials: tutorials/
+  - How-To Guides: how-to/
+  - Reference: reference/
+  - Explanation: explanation/
+`,
+            },
+          ],
+        };
+
+      case "eleventy-config":
+        return {
+          contents: [
+            {
+              uri,
+              mimeType: "text/javascript",
+              text: `// Eleventy Configuration Template
+module.exports = function(eleventyConfig) {
+  // Copy static assets
+  eleventyConfig.addPassthroughCopy("src/css");
+  eleventyConfig.addPassthroughCopy("src/js");
+  eleventyConfig.addPassthroughCopy("src/images");
+
+  // Add plugins
+  // eleventyConfig.addPlugin(require("@11ty/eleventy-plugin-syntaxhighlight"));
+
+  // Add filters
+  eleventyConfig.addFilter("readableDate", dateObj => {
+    return new Date(dateObj).toLocaleDateString();
+  });
+
+  // Add shortcodes
+  eleventyConfig.addShortcode("year", () => \`\${new Date().getFullYear()}\`);
+
+  // Markdown configuration
+  let markdownIt = require("markdown-it");
+  let markdownItAnchor = require("markdown-it-anchor");
+  let options = {
+    html: true,
+    breaks: true,
+    linkify: true
+  };
+
+  eleventyConfig.setLibrary("md", markdownIt(options)
+    .use(markdownItAnchor)
+  );
+
+  return {
+    dir: {
+      input: "src",
+      output: "_site",
+      includes: "_includes",
+      layouts: "_layouts",
+      data: "_data"
+    },
+    templateFormats: ["md", "njk", "html"],
+    markdownTemplateEngine: "njk",
+    htmlTemplateEngine: "njk",
+    dataTemplateEngine: "njk"
+  };
+};
 `,
             },
           ],
@@ -1265,9 +1514,28 @@ markup:
   throw new Error(`Resource not found: ${uri}`);
 });
 
-// Helper function to store resources
-function storeResource(uri: string, content: string, mimeType: string): void {
-  resourceStore.set(uri, { content, mimeType });
+// Helper to wrap tool results in standard MCP format
+function wrapToolResult<T>(result: T, _toolName: string) {
+  // If result is already in MCP format (has 'content' array), return as-is
+  if (
+    result &&
+    typeof result === "object" &&
+    "content" in result &&
+    Array.isArray((result as any).content)
+  ) {
+    return result;
+  }
+
+  // Otherwise, wrap in formatMCPResponse
+  return formatMCPResponse({
+    success: true,
+    data: result,
+    metadata: {
+      toolVersion: packageJson.version,
+      executionTime: Date.now(),
+      timestamp: new Date().toISOString(),
+    },
+  });
 }
 
 // Handle tool execution
@@ -1278,14 +1546,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     switch (name) {
       case "analyze_repository": {
         const result = await analyzeRepository(args);
-
-        // Store analysis result as resource
-        const resourceUri = storeResourceFromToolResult(
-          "analyze_repository",
-          args,
-          result,
-        );
-        (result as any).resourceUri = resourceUri;
 
         // Remember in persistent memory
         if (args?.path && typeof args.path === "string") {
@@ -1302,19 +1562,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           }
         }
 
-        return result;
+        return wrapToolResult(result, "analyze_repository");
       }
 
       case "recommend_ssg": {
         const result = await recommendSSG(args);
-
-        // Store recommendation as resource
-        const resourceUri = storeResourceFromToolResult(
-          "recommend_ssg",
-          args,
-          result,
-        );
-        (result as any).resourceUri = resourceUri;
 
         // Remember recommendation
         if (args?.analysisId && typeof args.analysisId === "string") {
@@ -1330,78 +1582,36 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             (result as any).projectHistory = projectInsights;
           }
         }
-        return result;
+        return wrapToolResult(result, "recommend_ssg");
       }
 
       case "generate_config": {
         const result = await generateConfig(args);
-
-        // Store generated config as resource
-        const resourceUri = storeResourceFromToolResult(
-          "generate_config",
-          args,
-          result,
-        );
-        (result as any).resourceUri = resourceUri;
-
-        return result;
+        return wrapToolResult(result, "generate_config");
       }
 
       case "setup_structure": {
         const result = await setupStructure(args);
-
-        // Store structure as resource
-        const resourceUri = storeResourceFromToolResult(
-          "setup_structure",
-          args,
-          result,
-        );
-        (result as any).resourceUri = resourceUri;
-        return result;
+        return wrapToolResult(result, "setup_structure");
       }
 
       case "setup_playwright_tests": {
         const result = await setupPlaywrightTests(args);
-        return result;
+        return wrapToolResult(result, "setup_playwright_tests");
       }
 
       case "deploy_pages": {
         const result = await deployPages(args);
-
-        // Store deployment workflow as resource
-        const resourceUri = storeResourceFromToolResult(
-          "deploy_pages",
-          args,
-          result,
-        );
-        (result as any).resourceUri = resourceUri;
-
-        return result;
+        return wrapToolResult(result, "deploy_pages");
       }
 
       case "verify_deployment": {
         const result = await verifyDeployment(args);
-
-        // Store verification result as resource
-        const resourceUri = storeResourceFromToolResult(
-          "verify_deployment",
-          args,
-          result,
-        );
-        (result as any).resourceUri = resourceUri;
-
-        return result;
+        return wrapToolResult(result, "verify_deployment");
       }
 
       case "populate_diataxis_content": {
         const result = await handlePopulateDiataxisContent(args);
-        // Store populated content info as resource
-        const populationId = `population-${Date.now()}`;
-        storeResource(
-          `documcp://structure/${populationId}`,
-          JSON.stringify(result, null, 2),
-          "application/json",
-        );
         return {
           content: [
             {
@@ -1428,13 +1638,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case "update_existing_documentation": {
         const result = await handleUpdateExistingDocumentation(args);
-        // Store update analysis as resource
-        const updateId = `update-${Date.now()}`;
-        storeResource(
-          `documcp://analysis/${updateId}`,
-          JSON.stringify(result, null, 2),
-          "application/json",
-        );
         return {
           content: [
             {
@@ -1473,13 +1676,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case "validate_diataxis_content": {
         const result = await handleValidateDiataxisContent(args);
-        // Store validation results as resource
-        const validationId = `validation-${Date.now()}`;
-        storeResource(
-          `documcp://analysis/${validationId}`,
-          JSON.stringify(result, null, 2),
-          "application/json",
-        );
 
         // Return structured validation results as JSON
         const validationSummary = {
@@ -1500,7 +1696,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           recommendations: result.recommendations,
           nextSteps: result.nextSteps,
           confidenceBreakdown: result.confidence.breakdown,
-          resourceId: validationId,
         };
 
         return {
@@ -1529,13 +1724,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case "validate_content": {
         const result = await validateGeneralContent(args);
-        // Store validation results as resource
-        const validationId = `content-validation-${Date.now()}`;
-        storeResource(
-          `documcp://analysis/${validationId}`,
-          JSON.stringify(result, null, 2),
-          "application/json",
-        );
 
         // Return structured validation results as JSON
         const contentSummary = {
@@ -1546,7 +1734,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           brokenLinks: result.brokenLinks || [],
           codeErrors: (result.codeErrors || []).slice(0, 10), // Limit to first 10 errors
           recommendations: result.recommendations || [],
-          resourceId: validationId,
         };
 
         return {
@@ -1573,73 +1760,31 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case "detect_documentation_gaps": {
         const result = await detectDocumentationGaps(args);
-        // Store gap analysis as resource
-        const gapAnalysisId = `gaps-${Date.now()}`;
-        storeResource(
-          `documcp://analysis/${gapAnalysisId}`,
-          JSON.stringify(result, null, 2),
-          "application/json",
-        );
-        return result;
+        return wrapToolResult(result, "detect_documentation_gaps");
       }
 
       case "test_local_deployment": {
         const result = await testLocalDeployment(args);
-        // Store test results as resource
-        const testId = `test-${args?.ssg || "unknown"}-${Date.now()}`;
-        storeResource(
-          `documcp://deployment/${testId}`,
-          JSON.stringify(result, null, 2),
-          "application/json",
-        );
-        return result;
+        return wrapToolResult(result, "test_local_deployment");
       }
 
       case "evaluate_readme_health": {
         const result = await evaluateReadmeHealth(args as any);
-        // Store health evaluation as resource
-        const healthId = `readme-health-${Date.now()}`;
-        storeResource(
-          `documcp://analysis/${healthId}`,
-          JSON.stringify(result, null, 2),
-          "application/json",
-        );
-        return result;
+        return wrapToolResult(result, "evaluate_readme_health");
       }
 
       case "readme_best_practices": {
         const result = await readmeBestPractices(args as any);
-        // Store best practices analysis as resource
-        const analysisId = `readme-best-practices-${Date.now()}`;
-        storeResource(
-          `documcp://analysis/${analysisId}`,
-          JSON.stringify(result, null, 2),
-          "application/json",
-        );
         return formatMCPResponse(result);
       }
 
       case "check_documentation_links": {
         const result = await checkDocumentationLinks(args as any);
-        // Store link check results as resource
-        const linkCheckId = `link-check-${Date.now()}`;
-        storeResource(
-          `documcp://analysis/${linkCheckId}`,
-          JSON.stringify(result, null, 2),
-          "application/json",
-        );
         return formatMCPResponse(result);
       }
 
       case "generate_readme_template": {
         const result = await generateReadmeTemplate(args as any);
-        // Store generated template as resource
-        const templateId = `readme-template-${Date.now()}`;
-        storeResource(
-          `documcp://template/${templateId}`,
-          result.content,
-          "text/markdown",
-        );
         return formatMCPResponse({
           success: true,
           data: result,
@@ -1653,13 +1798,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case "validate_readme_checklist": {
         const result = await validateReadmeChecklist(args as any);
-        // Store validation report as resource
-        const validationId = `readme-validation-${Date.now()}`;
-        storeResource(
-          `documcp://analysis/${validationId}`,
-          JSON.stringify(result, null, 2),
-          "application/json",
-        );
         return formatMCPResponse({
           success: true,
           data: result,
@@ -1673,35 +1811,21 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case "analyze_readme": {
         const result = await analyzeReadme(args as any);
-        // Store analysis results as resource
-        const analysisId = `readme-analysis-${Date.now()}`;
-        storeResource(
-          `documcp://analysis/${analysisId}`,
-          JSON.stringify(result, null, 2),
-          "application/json",
-        );
         return formatMCPResponse(result);
       }
 
       case "manage_preferences": {
         const result = await managePreferences(args);
-        return result;
+        return wrapToolResult(result, "manage_preferences");
       }
 
       case "analyze_deployments": {
         const result = await analyzeDeployments(args);
-        return result;
+        return wrapToolResult(result, "analyze_deployments");
       }
 
       case "optimize_readme": {
         const result = await optimizeReadme(args as any);
-        // Store optimization results as resource
-        const optimizationId = `readme-optimization-${Date.now()}`;
-        storeResource(
-          `documcp://analysis/${optimizationId}`,
-          JSON.stringify(result, null, 2),
-          "application/json",
-        );
         return formatMCPResponse(result);
       }
 
@@ -2243,15 +2367,22 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error occurred";
-    return {
-      content: [
-        {
-          type: "text",
-          text: `Error executing ${name}: ${errorMessage}`,
-        },
-      ],
-      isError: true,
-    };
+
+    return formatMCPResponse({
+      success: false,
+      error: {
+        code: "TOOL_EXECUTION_ERROR",
+        message: errorMessage,
+        details: error instanceof Error ? error.stack : undefined,
+        resolution:
+          "Check tool parameters and try again. If the issue persists, review server logs for details.",
+      },
+      metadata: {
+        toolVersion: packageJson.version,
+        executionTime: Date.now(),
+        timestamp: new Date().toISOString(),
+      },
+    });
   }
 });
 
