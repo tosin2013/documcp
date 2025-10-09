@@ -113,14 +113,37 @@ class ContentPopulationEngine {
   private memoryInsights: any = null;
   private similarProjects: any[] = [];
 
-  async populateContent(options: PopulationOptions): Promise<PopulationResult> {
+  async populateContent(
+    options: PopulationOptions,
+    context?: any,
+  ): Promise<PopulationResult> {
+    // Report initial progress
+    if (context?.meta?.progressToken) {
+      await context.meta.reportProgress?.({ progress: 0, total: 100 });
+    }
+
+    await context?.info?.("📝 Starting Diataxis content population...");
+
     // 1. Retrieve and validate repository analysis
+    await context?.info?.("📊 Retrieving repository analysis...");
     const analysis = await this.getRepositoryAnalysis(options.analysisId);
 
+    if (context?.meta?.progressToken) {
+      await context.meta.reportProgress?.({ progress: 20, total: 100 });
+    }
+
     // 2. Get memory-enhanced insights for intelligent content generation
+    await context?.info?.(
+      "🧠 Loading memory insights for intelligent generation...",
+    );
     await this.loadMemoryInsights(analysis, options);
 
+    if (context?.meta?.progressToken) {
+      await context.meta.reportProgress?.({ progress: 40, total: 100 });
+    }
+
     // 3. Generate content plan based on project characteristics AND memory insights
+    await context?.info?.("🗺️ Generating intelligent content plan...");
     const contentPlan = await this.generateIntelligentContentPlan(
       analysis,
       options.populationLevel,
@@ -157,9 +180,18 @@ class ContentPopulationEngine {
     );
 
     // 6. Generate cross-references and navigation updates
+    await context?.info?.("🔗 Generating cross-references and navigation...");
     await this.updateNavigationAndCrossReferences(
       options.docsPath,
       contentPlan,
+    );
+
+    if (context?.meta?.progressToken) {
+      await context.meta.reportProgress?.({ progress: 100, total: 100 });
+    }
+
+    await context?.info?.(
+      `✅ Content population complete! Generated ${filesCreated} file(s)`,
     );
 
     return {
@@ -3556,7 +3588,8 @@ export const populateDiataxisContent: Tool = {
 
 export async function handlePopulateDiataxisContent(
   args: any,
+  context?: any,
 ): Promise<PopulationResult> {
   const engine = new ContentPopulationEngine();
-  return await engine.populateContent(args);
+  return await engine.populateContent(args, context);
 }

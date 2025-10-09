@@ -241,7 +241,10 @@ async function detectBuildConfig(
   return config;
 }
 
-export async function deployPages(args: unknown): Promise<{ content: any[] }> {
+export async function deployPages(
+  args: unknown,
+  context?: any,
+): Promise<{ content: any[] }> {
   const startTime = Date.now();
   const {
     repository,
@@ -263,13 +266,34 @@ export async function deployPages(args: unknown): Promise<{ content: any[] }> {
     | "eleventy"
     | undefined = providedSSG;
 
+  // Report initial progress
+  if (context?.meta?.progressToken) {
+    await context.meta.reportProgress?.({
+      progress: 0,
+      total: 100,
+    });
+  }
+
+  await context?.info?.("🚀 Starting GitHub Pages deployment configuration...");
+
   try {
     // Determine repository path (local or remote)
     const repoPath = repository.startsWith("http") ? "." : repository;
+    await context?.info?.(`📂 Target repository: ${repository}`);
+
+    if (context?.meta?.progressToken) {
+      await context.meta.reportProgress?.({
+        progress: 10,
+        total: 100,
+      });
+    }
 
     // Retrieve SSG from knowledge graph if not provided
     ssg = providedSSG;
     if (!ssg && analysisId) {
+      await context?.info?.(
+        `🔍 Retrieving SSG recommendation from analysis ${analysisId}...`,
+      );
       const retrievedSSG = await getSSGFromKnowledgeGraph(analysisId);
       if (retrievedSSG) {
         ssg = retrievedSSG as
@@ -278,7 +302,10 @@ export async function deployPages(args: unknown): Promise<{ content: any[] }> {
           | "docusaurus"
           | "mkdocs"
           | "eleventy";
+        await context?.info?.(`✅ Found recommended SSG: ${ssg}`);
       }
+    } else if (ssg) {
+      await context?.info?.(`ℹ️ Using specified SSG: ${ssg}`);
     }
 
     if (!ssg) {
@@ -300,27 +327,76 @@ export async function deployPages(args: unknown): Promise<{ content: any[] }> {
       return formatMCPResponse(errorResponse);
     }
 
+    if (context?.meta?.progressToken) {
+      await context.meta.reportProgress?.({
+        progress: 25,
+        total: 100,
+      });
+    }
+
     // Detect documentation folder
+    await context?.info?.("📑 Detecting documentation folder...");
     const docsFolder = await detectDocsFolder(repoPath);
+    await context?.info?.(
+      `📁 Documentation folder: ${docsFolder || "root directory"}`,
+    );
+
+    if (context?.meta?.progressToken) {
+      await context.meta.reportProgress?.({
+        progress: 40,
+        total: 100,
+      });
+    }
 
     // Detect build configuration
+    await context?.info?.(`⚙️ Detecting build configuration for ${ssg}...`);
     const buildConfig = await detectBuildConfig(repoPath, ssg, docsFolder);
 
+    if (context?.meta?.progressToken) {
+      await context.meta.reportProgress?.({
+        progress: 55,
+        total: 100,
+      });
+    }
+
     // Create .github/workflows directory
+    await context?.info?.("📂 Creating GitHub Actions workflow directory...");
     const workflowsDir = path.join(repoPath, ".github", "workflows");
     await fs.mkdir(workflowsDir, { recursive: true });
 
+    if (context?.meta?.progressToken) {
+      await context.meta.reportProgress?.({
+        progress: 70,
+        total: 100,
+      });
+    }
+
     // Generate workflow based on SSG and build config
+    await context?.info?.(`✍️ Generating ${ssg} deployment workflow...`);
     const workflow = generateWorkflow(ssg, branch, customDomain, buildConfig);
     const workflowPath = path.join(workflowsDir, "deploy-docs.yml");
     await fs.writeFile(workflowPath, workflow);
+    await context?.info?.(
+      `✅ Workflow created: .github/workflows/deploy-docs.yml`,
+    );
+
+    if (context?.meta?.progressToken) {
+      await context.meta.reportProgress?.({
+        progress: 85,
+        total: 100,
+      });
+    }
 
     // Create CNAME file if custom domain is specified
     let cnameCreated = false;
     if (customDomain) {
+      await context?.info?.(
+        `🌐 Creating CNAME file for custom domain: ${customDomain}...`,
+      );
       const cnamePath = path.join(repoPath, "CNAME");
       await fs.writeFile(cnamePath, customDomain);
       cnameCreated = true;
+      await context?.info?.("✅ CNAME file created");
     }
 
     const deploymentResult = {
@@ -341,6 +417,7 @@ export async function deployPages(args: unknown): Promise<{ content: any[] }> {
     };
 
     // Phase 2.3: Track deployment setup in knowledge graph
+    await context?.info?.("💾 Tracking deployment in Knowledge Graph...");
     try {
       // Create or update project in knowledge graph
       if (projectPath || projectName) {
@@ -383,12 +460,26 @@ export async function deployPages(args: unknown): Promise<{ content: any[] }> {
       );
     }
 
+    if (context?.meta?.progressToken) {
+      await context.meta.reportProgress?.({
+        progress: 100,
+        total: 100,
+      });
+    }
+
+    const executionTime = Date.now() - startTime;
+    await context?.info?.(
+      `✅ Deployment configuration complete! ${ssg} workflow created in ${Math.round(
+        executionTime / 1000,
+      )}s`,
+    );
+
     const response: MCPToolResponse<typeof deploymentResult> = {
       success: true,
       data: deploymentResult,
       metadata: {
         toolVersion: "2.0.0",
-        executionTime: Date.now() - startTime,
+        executionTime,
         timestamp: new Date().toISOString(),
       },
       recommendations: [

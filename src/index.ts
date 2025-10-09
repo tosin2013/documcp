@@ -1539,13 +1539,13 @@ function wrapToolResult<T>(result: T, _toolName: string) {
 }
 
 // Handle tool execution
-server.setRequestHandler(CallToolRequestSchema, async (request) => {
+server.setRequestHandler(CallToolRequestSchema, async (request, extra) => {
   const { name, arguments: args } = request.params;
 
   try {
     switch (name) {
       case "analyze_repository": {
-        const result = await analyzeRepository(args);
+        const result = await analyzeRepository(args, extra);
 
         // Remember in persistent memory
         if (args?.path && typeof args.path === "string") {
@@ -1566,7 +1566,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
 
       case "recommend_ssg": {
-        const result = await recommendSSG(args);
+        const result = await recommendSSG(args, extra);
 
         // Remember recommendation
         if (args?.analysisId && typeof args.analysisId === "string") {
@@ -1601,7 +1601,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
 
       case "deploy_pages": {
-        const result = await deployPages(args);
+        const result = await deployPages(args, extra);
         return wrapToolResult(result, "deploy_pages");
       }
 
@@ -1611,7 +1611,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
 
       case "populate_diataxis_content": {
-        const result = await handlePopulateDiataxisContent(args);
+        const result = await handlePopulateDiataxisContent(args, extra);
         return {
           content: [
             {
@@ -1675,7 +1675,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
 
       case "validate_diataxis_content": {
-        const result = await handleValidateDiataxisContent(args);
+        const result = await handleValidateDiataxisContent(args, extra);
 
         // Return structured validation results as JSON
         const validationSummary = {

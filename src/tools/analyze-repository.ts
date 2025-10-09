@@ -89,12 +89,24 @@ const inputSchema = z.object({
  */
 export async function analyzeRepository(
   args: unknown,
+  context?: any,
 ): Promise<{ content: any[]; isError?: boolean }> {
   const startTime = Date.now();
   const { path: repoPath, depth } = inputSchema.parse(args);
 
   try {
+    // Report initial progress
+    if (context?.meta?.progressToken) {
+      await context.meta.reportProgress?.({
+        progress: 0,
+        total: 100,
+      });
+    }
+
+    await context?.info?.("🔍 Starting repository analysis...");
+
     // Verify path exists and is accessible
+    await context?.info?.(`📂 Verifying access to ${repoPath}...`);
     await fs.access(repoPath, fs.constants.R_OK);
 
     // Try to read the directory to catch permission issues early
@@ -107,10 +119,25 @@ export async function analyzeRepository(
       throw error;
     }
 
+    if (context?.meta?.progressToken) {
+      await context.meta.reportProgress?.({
+        progress: 10,
+        total: 100,
+      });
+    }
+
     // Phase 1.2: Get historical context from Knowledge Graph
+    await context?.info?.(
+      "📊 Retrieving historical context from Knowledge Graph...",
+    );
     let projectContext;
     try {
       projectContext = await getProjectContext(repoPath);
+      if (projectContext.previousAnalyses > 0) {
+        await context?.info?.(
+          `✨ Found ${projectContext.previousAnalyses} previous analysis(es) of this project`,
+        );
+      }
     } catch (error) {
       console.warn("Failed to retrieve project context:", error);
       projectContext = {
@@ -121,24 +148,80 @@ export async function analyzeRepository(
       };
     }
 
+    if (context?.meta?.progressToken) {
+      await context.meta.reportProgress?.({
+        progress: 20,
+        total: 100,
+      });
+    }
+
+    await context?.info?.("🔎 Analyzing repository structure...");
+    const structure = await analyzeStructure(repoPath, depth);
+
+    if (context?.meta?.progressToken) {
+      await context.meta.reportProgress?.({
+        progress: 40,
+        total: 100,
+      });
+    }
+
+    await context?.info?.("📦 Analyzing dependencies...");
+    const dependencies = await analyzeDependencies(repoPath);
+
+    if (context?.meta?.progressToken) {
+      await context.meta.reportProgress?.({
+        progress: 60,
+        total: 100,
+      });
+    }
+
+    await context?.info?.("📝 Analyzing documentation...");
+    const documentation = await analyzeDocumentation(repoPath);
+
+    if (context?.meta?.progressToken) {
+      await context.meta.reportProgress?.({
+        progress: 75,
+        total: 100,
+      });
+    }
+
+    await context?.info?.("💡 Generating recommendations...");
+    const recommendations = await generateRecommendations(repoPath);
+
     const analysis: RepositoryAnalysis = {
       id: generateAnalysisId(),
       timestamp: new Date().toISOString(),
       path: repoPath,
-      structure: await analyzeStructure(repoPath, depth),
-      dependencies: await analyzeDependencies(repoPath),
-      documentation: await analyzeDocumentation(repoPath),
-      recommendations: await generateRecommendations(repoPath),
+      structure,
+      dependencies,
+      documentation,
+      recommendations,
     };
 
     // Phase 1.2: Store project in Knowledge Graph
+    if (context?.meta?.progressToken) {
+      await context.meta.reportProgress?.({
+        progress: 85,
+        total: 100,
+      });
+    }
+
+    await context?.info?.("💾 Storing analysis in Knowledge Graph...");
     try {
       await createOrUpdateProject(analysis);
     } catch (error) {
       console.warn("Failed to store project in Knowledge Graph:", error);
     }
 
+    if (context?.meta?.progressToken) {
+      await context.meta.reportProgress?.({
+        progress: 90,
+        total: 100,
+      });
+    }
+
     // Phase 1.3: Get intelligent analysis enrichment
+    await context?.info?.("🧠 Enriching analysis with historical insights...");
     let intelligentAnalysis;
     let documentationHealth;
     try {
@@ -256,12 +339,26 @@ export async function analyzeRepository(
       );
     }
 
+    if (context?.meta?.progressToken) {
+      await context.meta.reportProgress?.({
+        progress: 100,
+        total: 100,
+      });
+    }
+
+    const executionTime = Date.now() - startTime;
+    await context?.info?.(
+      `✅ Analysis complete! Processed ${
+        analysis.structure.totalFiles
+      } files in ${Math.round(executionTime / 1000)}s`,
+    );
+
     const response: MCPToolResponse<RepositoryAnalysis> = {
       success: true,
       data: analysis,
       metadata: {
         toolVersion: "1.0.0",
-        executionTime: Date.now() - startTime,
+        executionTime,
         timestamp: new Date().toISOString(),
         analysisId: analysis.id,
         ...(intelligentAnalysis && { intelligentAnalysis }),

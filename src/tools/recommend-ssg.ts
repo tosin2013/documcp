@@ -279,18 +279,40 @@ async function getHistoricalDeploymentData(
  * @since 1.0.0
  * @version 1.2.0 - Added historical data integration and user preferences
  */
-export async function recommendSSG(args: unknown): Promise<{ content: any[] }> {
+export async function recommendSSG(
+  args: unknown,
+  context?: any,
+): Promise<{ content: any[] }> {
   const startTime = Date.now();
   const { analysisId, userId, preferences } = inputSchema.parse(args);
 
   const prioritizeSimplicity = preferences?.priority === "simplicity";
   const ecosystemPreference = preferences?.ecosystem;
 
+  // Report initial progress
+  if (context?.meta?.progressToken) {
+    await context.meta.reportProgress?.({
+      progress: 0,
+      total: 100,
+    });
+  }
+
+  await context?.info?.("🔍 Starting SSG recommendation engine...");
+
   // Phase 2.2: Get user preference manager
+  await context?.info?.(`👤 Loading preferences for user: ${userId}...`);
   const userPreferenceManager = await getUserPreferenceManager(userId);
+
+  if (context?.meta?.progressToken) {
+    await context.meta.reportProgress?.({
+      progress: 15,
+      total: 100,
+    });
+  }
 
   try {
     // Try to retrieve analysis from memory
+    await context?.info?.(`📊 Retrieving analysis: ${analysisId}...`);
     let analysisData = null;
     try {
       const manager = await getMemoryManager();
@@ -325,7 +347,15 @@ export async function recommendSSG(args: unknown): Promise<{ content: any[] }> {
       );
     }
 
+    if (context?.meta?.progressToken) {
+      await context.meta.reportProgress?.({
+        progress: 30,
+        total: 100,
+      });
+    }
+
     // Phase 2.1: Retrieve historical deployment data
+    await context?.info?.("📈 Analyzing historical deployment data...");
     let historicalData:
       | {
           similarProjectCount: number;
@@ -350,7 +380,22 @@ export async function recommendSSG(args: unknown): Promise<{ content: any[] }> {
         projectPath,
         technologies,
       );
+
+      if (historicalData && historicalData.similarProjectCount > 0) {
+        await context?.info?.(
+          `✨ Found ${historicalData.similarProjectCount} similar project(s) with deployment history`,
+        );
+      }
     }
+
+    if (context?.meta?.progressToken) {
+      await context.meta.reportProgress?.({
+        progress: 50,
+        total: 100,
+      });
+    }
+
+    await context?.info?.("🤔 Calculating SSG recommendations...");
 
     // Determine recommendation based on analysis data if available
     let finalRecommendation:
@@ -664,12 +709,26 @@ export async function recommendSSG(args: unknown): Promise<{ content: any[] }> {
       historicalData,
     };
 
+    if (context?.meta?.progressToken) {
+      await context.meta.reportProgress?.({
+        progress: 100,
+        total: 100,
+      });
+    }
+
+    const executionTime = Date.now() - startTime;
+    await context?.info?.(
+      `✅ Recommendation complete! Suggesting ${recommendation.recommended.toUpperCase()} with ${(
+        recommendation.confidence * 100
+      ).toFixed(0)}% confidence (${Math.round(executionTime / 1000)}s)`,
+    );
+
     const response: MCPToolResponse<SSGRecommendation> = {
       success: true,
       data: recommendation,
       metadata: {
         toolVersion: "1.0.0",
-        executionTime: Date.now() - startTime,
+        executionTime,
         timestamp: new Date().toISOString(),
         analysisId,
       },

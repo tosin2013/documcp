@@ -97,7 +97,14 @@ class ContentAccuracyValidator {
     this.tempDir = path.join(currentDir, ".tmp");
   }
 
-  async validateContent(options: ValidationOptions): Promise<ValidationResult> {
+  async validateContent(
+    options: ValidationOptions,
+    context?: any,
+  ): Promise<ValidationResult> {
+    if (context?.meta?.progressToken) {
+      await context.meta.reportProgress?.({ progress: 0, total: 100 });
+    }
+
     const result: ValidationResult = {
       success: false,
       confidence: this.initializeConfidenceMetrics(),
@@ -109,13 +116,23 @@ class ContentAccuracyValidator {
 
     // Load project context if analysis ID provided
     if (options.analysisId) {
+      await context?.info?.("📊 Loading project context...");
       this.projectContext = await this.loadProjectContext(options.analysisId);
     }
 
+    if (context?.meta?.progressToken) {
+      await context.meta.reportProgress?.({ progress: 20, total: 100 });
+    }
+
     // Determine if we should analyze application code vs documentation
+    await context?.info?.("🔎 Analyzing content type...");
     const isApplicationValidation = await this.shouldAnalyzeApplicationCode(
       options.contentPath,
     );
+
+    if (context?.meta?.progressToken) {
+      await context.meta.reportProgress?.({ progress: 40, total: 100 });
+    }
 
     // Perform different types of validation based on request
     if (
@@ -186,6 +203,15 @@ class ContentAccuracyValidator {
 
     // Generate recommendations and next steps
     this.generateRecommendations(result, options);
+
+    if (context?.meta?.progressToken) {
+      await context.meta.reportProgress?.({ progress: 100, total: 100 });
+    }
+
+    const status = result.success ? "PASSED" : "ISSUES FOUND";
+    await context?.info?.(
+      `✅ Validation complete! Status: ${status} (${result.confidence.overall}% confidence, ${result.issues.length} issue(s))`,
+    );
 
     return result;
   }
@@ -1631,7 +1657,10 @@ export const validateDiataxisContent: Tool = {
  */
 export async function handleValidateDiataxisContent(
   args: any,
+  context?: any,
 ): Promise<ValidationResult> {
+  await context?.info?.("🔍 Starting Diataxis content validation...");
+
   const validator = new ContentAccuracyValidator();
 
   // Add timeout protection to prevent infinite hangs
@@ -1649,7 +1678,7 @@ export async function handleValidateDiataxisContent(
     }, timeoutMs);
   });
 
-  const validationPromise = validator.validateContent(args);
+  const validationPromise = validator.validateContent(args, context);
 
   try {
     const result = await Promise.race([validationPromise, timeoutPromise]);
