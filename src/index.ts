@@ -8,12 +8,13 @@ import {
   GetPromptRequestSchema,
   ListResourcesRequestSchema,
   ReadResourceRequestSchema,
+  ListRootsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { readFileSync } from "fs";
 import { fileURLToPath } from "url";
-import { dirname, join } from "path";
+import path, { dirname, join } from "path";
 
 import { analyzeRepository } from "./tools/analyze-repository.js";
 import { recommendSSG } from "./tools/recommend-ssg.js";
@@ -40,6 +41,11 @@ import { optimizeReadme } from "./tools/optimize-readme.js";
 import { managePreferences } from "./tools/manage-preferences.js";
 import { analyzeDeployments } from "./tools/analyze-deployments.js";
 import { formatMCPResponse } from "./types/api.js";
+import {
+  isPathAllowed,
+  getPermissionDeniedMessage,
+} from "./utils/permission-checker.js";
+import { promises as fs } from "fs";
 import { generateTechnicalWriterPrompts } from "./prompts/technical-writer-prompts.js";
 import {
   DOCUMENTATION_WORKFLOWS,
@@ -65,6 +71,27 @@ const packageJson = JSON.parse(
   readFileSync(join(__dirname, "..", "package.json"), "utf-8"),
 );
 
+// Parse allowed roots from command line arguments
+const allowedRoots: string[] = [];
+process.argv.forEach((arg, index) => {
+  if (arg === "--root" && process.argv[index + 1]) {
+    const rootPath = process.argv[index + 1];
+    // Resolve to absolute path and expand ~ for home directory
+    const expandedPath = rootPath.startsWith("~")
+      ? join(
+          process.env.HOME || process.env.USERPROFILE || "",
+          rootPath.slice(1),
+        )
+      : rootPath;
+    allowedRoots.push(path.resolve(expandedPath));
+  }
+});
+
+// If no roots specified, allow current working directory by default
+if (allowedRoots.length === 0) {
+  allowedRoots.push(process.cwd());
+}
+
 const server = new Server(
   {
     name: "documcp",
@@ -78,6 +105,9 @@ const server = new Server(
       },
       resources: {
         subscribe: true,
+        listChanged: true,
+      },
+      roots: {
         listChanged: true,
       },
     },
@@ -681,6 +711,18 @@ const TOOLS = [
         .describe("Period in days for trend analysis"),
     }),
   },
+  {
+    name: "read_directory",
+    description:
+      "List files and directories within allowed roots. Use this to discover files without requiring full absolute paths from the user.",
+    inputSchema: z.object({
+      path: z
+        .string()
+        .describe(
+          "Path to directory (relative to root or absolute within root)",
+        ),
+    }),
+  },
   // Memory system tools
   ...memoryTools.map((tool) => ({
     ...tool,
@@ -1016,6 +1058,14 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     name: tool.name,
     description: tool.description,
     inputSchema: zodToJsonSchema(tool.inputSchema),
+  })),
+}));
+
+// List allowed roots
+server.setRequestHandler(ListRootsRequestSchema, async () => ({
+  roots: allowedRoots.map((root) => ({
+    uri: `file://${root}`,
+    name: path.basename(root),
   })),
 }));
 
@@ -1545,6 +1595,25 @@ server.setRequestHandler(CallToolRequestSchema, async (request, extra) => {
   try {
     switch (name) {
       case "analyze_repository": {
+        // Check if path is allowed
+        const repoPath = (args as any)?.path;
+        if (repoPath && !isPathAllowed(repoPath, allowedRoots)) {
+          return formatMCPResponse({
+            success: false,
+            error: {
+              code: "PERMISSION_DENIED",
+              message: getPermissionDeniedMessage(repoPath, allowedRoots),
+              resolution:
+                "Request access to this directory by starting the server with --root argument, or use a path within allowed roots.",
+            },
+            metadata: {
+              toolVersion: packageJson.version,
+              executionTime: 0,
+              timestamp: new Date().toISOString(),
+            },
+          });
+        }
+
         const result = await analyzeRepository(args, extra);
 
         // Remember in persistent memory
@@ -1591,6 +1660,25 @@ server.setRequestHandler(CallToolRequestSchema, async (request, extra) => {
       }
 
       case "setup_structure": {
+        // Check if basePath is allowed
+        const basePath = (args as any)?.basePath;
+        if (basePath && !isPathAllowed(basePath, allowedRoots)) {
+          return formatMCPResponse({
+            success: false,
+            error: {
+              code: "PERMISSION_DENIED",
+              message: getPermissionDeniedMessage(basePath, allowedRoots),
+              resolution:
+                "Request access to this directory by starting the server with --root argument.",
+            },
+            metadata: {
+              toolVersion: packageJson.version,
+              executionTime: 0,
+              timestamp: new Date().toISOString(),
+            },
+          });
+        }
+
         const result = await setupStructure(args);
         return wrapToolResult(result, "setup_structure");
       }
@@ -1611,6 +1699,25 @@ server.setRequestHandler(CallToolRequestSchema, async (request, extra) => {
       }
 
       case "populate_diataxis_content": {
+        // Check if docsPath is allowed
+        const docsPath = (args as any)?.docsPath;
+        if (docsPath && !isPathAllowed(docsPath, allowedRoots)) {
+          return formatMCPResponse({
+            success: false,
+            error: {
+              code: "PERMISSION_DENIED",
+              message: getPermissionDeniedMessage(docsPath, allowedRoots),
+              resolution:
+                "Request access to this directory by starting the server with --root argument.",
+            },
+            metadata: {
+              toolVersion: packageJson.version,
+              executionTime: 0,
+              timestamp: new Date().toISOString(),
+            },
+          });
+        }
+
         const result = await handlePopulateDiataxisContent(args, extra);
         return {
           content: [
@@ -1675,6 +1782,25 @@ server.setRequestHandler(CallToolRequestSchema, async (request, extra) => {
       }
 
       case "validate_diataxis_content": {
+        // Check if contentPath is allowed
+        const contentPath = (args as any)?.contentPath;
+        if (contentPath && !isPathAllowed(contentPath, allowedRoots)) {
+          return formatMCPResponse({
+            success: false,
+            error: {
+              code: "PERMISSION_DENIED",
+              message: getPermissionDeniedMessage(contentPath, allowedRoots),
+              resolution:
+                "Request access to this directory by starting the server with --root argument.",
+            },
+            metadata: {
+              toolVersion: packageJson.version,
+              executionTime: 0,
+              timestamp: new Date().toISOString(),
+            },
+          });
+        }
+
         const result = await handleValidateDiataxisContent(args, extra);
 
         // Return structured validation results as JSON
@@ -1779,6 +1905,25 @@ server.setRequestHandler(CallToolRequestSchema, async (request, extra) => {
       }
 
       case "check_documentation_links": {
+        // Check if docsPath is allowed
+        const docLinksPath = (args as any)?.docsPath;
+        if (docLinksPath && !isPathAllowed(docLinksPath, allowedRoots)) {
+          return formatMCPResponse({
+            success: false,
+            error: {
+              code: "PERMISSION_DENIED",
+              message: getPermissionDeniedMessage(docLinksPath, allowedRoots),
+              resolution:
+                "Request access to this directory by starting the server with --root argument.",
+            },
+            metadata: {
+              toolVersion: packageJson.version,
+              executionTime: 0,
+              timestamp: new Date().toISOString(),
+            },
+          });
+        }
+
         const result = await checkDocumentationLinks(args as any);
         return formatMCPResponse(result);
       }
@@ -1822,6 +1967,72 @@ server.setRequestHandler(CallToolRequestSchema, async (request, extra) => {
       case "analyze_deployments": {
         const result = await analyzeDeployments(args);
         return wrapToolResult(result, "analyze_deployments");
+      }
+
+      case "read_directory": {
+        const { path: dirPath } = args as { path: string };
+
+        // Check if path is allowed
+        if (!isPathAllowed(dirPath, allowedRoots)) {
+          return formatMCPResponse({
+            success: false,
+            error: {
+              code: "PERMISSION_DENIED",
+              message: getPermissionDeniedMessage(dirPath, allowedRoots),
+              resolution:
+                "Request access to this directory by starting the server with --root argument, or use a path within allowed roots.",
+            },
+            metadata: {
+              toolVersion: packageJson.version,
+              executionTime: 0,
+              timestamp: new Date().toISOString(),
+            },
+          });
+        }
+
+        try {
+          const entries = await fs.readdir(dirPath, { withFileTypes: true });
+          const files = [];
+          const directories = [];
+
+          for (const entry of entries) {
+            if (entry.isDirectory()) {
+              directories.push(entry.name);
+            } else if (entry.isFile()) {
+              files.push(entry.name);
+            }
+          }
+
+          return formatMCPResponse({
+            success: true,
+            data: {
+              path: dirPath,
+              files,
+              directories,
+              totalFiles: files.length,
+              totalDirectories: directories.length,
+            },
+            metadata: {
+              toolVersion: packageJson.version,
+              executionTime: 0,
+              timestamp: new Date().toISOString(),
+            },
+          });
+        } catch (error: any) {
+          return formatMCPResponse({
+            success: false,
+            error: {
+              code: "READ_DIRECTORY_FAILED",
+              message: `Failed to read directory: ${error.message}`,
+              resolution: "Ensure the directory exists and is accessible.",
+            },
+            metadata: {
+              toolVersion: packageJson.version,
+              executionTime: 0,
+              timestamp: new Date().toISOString(),
+            },
+          });
+        }
       }
 
       case "optimize_readme": {
