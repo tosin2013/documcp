@@ -1061,13 +1061,74 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
   })),
 }));
 
-// List allowed roots
-server.setRequestHandler(ListRootsRequestSchema, async () => ({
-  roots: allowedRoots.map((root) => ({
-    uri: `file://${root}`,
-    name: path.basename(root),
-  })),
-}));
+// Helper function to detect documentation directories
+async function detectDocsDirectories(
+  projectRoot: string,
+): Promise<Array<{ path: string; name: string }>> {
+  const commonDocsDirs = [
+    "docs",
+    "documentation",
+    "doc",
+    "wiki",
+    "website/docs", // Docusaurus pattern
+    ".vitepress", // VitePress
+    "book", // mdBook
+  ];
+
+  const detected: Array<{ path: string; name: string }> = [];
+
+  for (const dirName of commonDocsDirs) {
+    const fullPath = path.join(projectRoot, dirName);
+    try {
+      const stats = await fs.stat(fullPath);
+      if (stats.isDirectory()) {
+        detected.push({
+          path: fullPath,
+          name: dirName,
+        });
+      }
+    } catch {
+      // Directory doesn't exist, skip
+    }
+  }
+
+  return detected;
+}
+
+// List allowed roots (includes auto-detected docs directories)
+server.setRequestHandler(ListRootsRequestSchema, async () => {
+  const roots: Array<{
+    uri: string;
+    name: string;
+    type?: string;
+    description?: string;
+    parent?: string;
+  }> = [];
+
+  // Add project roots
+  for (const root of allowedRoots) {
+    roots.push({
+      uri: `file://${root}`,
+      name: path.basename(root),
+      type: "project",
+      description: "Project root containing source code and documentation",
+    });
+
+    // Auto-detect and add docs directories within this root
+    const docsDirectories = await detectDocsDirectories(root);
+    for (const docsDir of docsDirectories) {
+      roots.push({
+        uri: `file://${docsDir.path}`,
+        name: docsDir.name,
+        type: "documentation",
+        description: `Documentation directory within ${path.basename(root)}`,
+        parent: `file://${root}`,
+      });
+    }
+  }
+
+  return { roots };
+});
 
 // List available prompts
 server.setRequestHandler(ListPromptsRequestSchema, async () => ({
