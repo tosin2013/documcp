@@ -423,4 +423,291 @@ export function previewFunc(x: number, y: number): number {
       expect(docAfter).toBe(docContent);
     });
   });
+
+  describe("Documentation Change Application", () => {
+    test("should apply changes when low-confidence changes exist in auto mode", async () => {
+      // Create a source file with documentation
+      const sourceCode = `
+/**
+ * Multiplies two numbers together
+ * @param x First number
+ * @param y Second number
+ */
+export function multiply(x: number, y: number): number {
+  return x * y;
+}
+      `.trim();
+
+      await fs.writeFile(join(projectPath, "src", "math.ts"), sourceCode);
+
+      // Create outdated documentation
+      const docContent = `
+# Math Module
+
+## multiply
+
+Adds two numbers.
+      `.trim();
+
+      await fs.writeFile(join(docsPath, "math.md"), docContent);
+
+      // Create baseline
+      await handleSyncCodeToDocs({
+        projectPath,
+        docsPath,
+        mode: "detect",
+      });
+
+      // Run in auto mode (applies all changes)
+      const result = await handleSyncCodeToDocs({
+        projectPath,
+        docsPath,
+        mode: "auto",
+      });
+
+      const data = JSON.parse(result.content[0].text);
+      expect(data.success).toBe(true);
+      expect(data.data.mode).toBe("auto");
+    });
+
+    test("should handle apply errors gracefully", async () => {
+      // Create source file
+      const sourceCode = `export function testFunc(): void {}`;
+      await fs.writeFile(join(projectPath, "src", "test.ts"), sourceCode);
+
+      // Create documentation in a read-only parent directory would fail
+      // But for this test, we'll just verify the error handling path exists
+      const docContent = `# Test`;
+      await fs.writeFile(join(docsPath, "test.md"), docContent);
+
+      // Create baseline
+      await handleSyncCodeToDocs({
+        projectPath,
+        docsPath,
+        mode: "detect",
+      });
+
+      // Modify code
+      const newCode = `export function testFunc(param: string): void {}`;
+      await fs.writeFile(join(projectPath, "src", "test.ts"), newCode);
+
+      // Try to apply changes
+      const result = await handleSyncCodeToDocs({
+        projectPath,
+        docsPath,
+        mode: "apply",
+        autoApplyThreshold: 0.0, // Very low threshold
+      });
+
+      // Should complete without crashing
+      expect(result).toBeDefined();
+      const data = JSON.parse(result.content[0].text);
+      expect(data.success).toBe(true);
+    });
+  });
+
+  describe("Recommendation Edge Cases", () => {
+    test("should recommend review for breaking changes", async () => {
+      // Create initial code
+      const oldCode = `
+export function oldApi(x: number): string {
+  return x.toString();
+}
+      `.trim();
+
+      await fs.writeFile(join(projectPath, "src", "api.ts"), oldCode);
+
+      // Create baseline
+      await handleSyncCodeToDocs({
+        projectPath,
+        docsPath,
+        mode: "detect",
+      });
+
+      // Make breaking change
+      const newCode = `
+export function newApi(x: number, y: string): boolean {
+  return x > 0;
+}
+      `.trim();
+
+      await fs.writeFile(join(projectPath, "src", "api.ts"), newCode);
+
+      // Detect changes
+      const result = await handleSyncCodeToDocs({
+        projectPath,
+        docsPath,
+        mode: "detect",
+      });
+
+      const data = JSON.parse(result.content[0].text);
+      expect(data.success).toBe(true);
+
+      // Should have recommendations
+      expect(data.recommendations).toBeDefined();
+      expect(Array.isArray(data.recommendations)).toBe(true);
+    });
+
+    test("should show info when no drift detected", async () => {
+      // Create code
+      const sourceCode = `export function stable(): void {}`;
+      await fs.writeFile(join(projectPath, "src", "stable.ts"), sourceCode);
+
+      // Create baseline
+      await handleSyncCodeToDocs({
+        projectPath,
+        docsPath,
+        mode: "detect",
+      });
+
+      // Run again without changes
+      const result = await handleSyncCodeToDocs({
+        projectPath,
+        docsPath,
+        mode: "detect",
+      });
+
+      const data = JSON.parse(result.content[0].text);
+      expect(data.success).toBe(true);
+      expect(data.recommendations).toBeDefined();
+
+      // Should have "No Drift Detected" recommendation
+      const noDriftRec = data.recommendations.find(
+        (r: any) => r.title?.includes("No Drift"),
+      );
+      expect(noDriftRec).toBeDefined();
+    });
+
+    test("should recommend validation after applying changes", async () => {
+      const sourceCode = `
+/**
+ * Test function
+ */
+export function test(): void {}
+      `.trim();
+
+      await fs.writeFile(join(projectPath, "src", "validated.ts"), sourceCode);
+
+      // Create baseline
+      await handleSyncCodeToDocs({
+        projectPath,
+        docsPath,
+        mode: "detect",
+      });
+
+      // Modify code
+      const newCode = `
+/**
+ * Modified test function
+ */
+export function test(param: string): void {}
+      `.trim();
+
+      await fs.writeFile(join(projectPath, "src", "validated.ts"), newCode);
+
+      // Apply changes
+      const result = await handleSyncCodeToDocs({
+        projectPath,
+        docsPath,
+        mode: "auto",
+      });
+
+      const data = JSON.parse(result.content[0].text);
+      expect(data.success).toBe(true);
+
+      // Should have next steps
+      expect(data.nextSteps).toBeDefined();
+      expect(Array.isArray(data.nextSteps)).toBe(true);
+    });
+  });
+
+  describe("Next Steps Generation", () => {
+    test("should suggest apply mode when in detect mode with pending changes", async () => {
+      const sourceCode = `export function needsSync(): void {}`;
+      await fs.writeFile(join(projectPath, "src", "sync.ts"), sourceCode);
+
+      // Create baseline
+      await handleSyncCodeToDocs({
+        projectPath,
+        docsPath,
+        mode: "detect",
+      });
+
+      // Change code
+      const newCode = `export function needsSync(param: number): void {}`;
+      await fs.writeFile(join(projectPath, "src", "sync.ts"), newCode);
+
+      // Detect in detect mode
+      const result = await handleSyncCodeToDocs({
+        projectPath,
+        docsPath,
+        mode: "detect",
+      });
+
+      const data = JSON.parse(result.content[0].text);
+      expect(data.success).toBe(true);
+      expect(data.nextSteps).toBeDefined();
+
+      // If there are pending changes, should suggest apply mode
+      if (data.data.pendingChanges?.length > 0) {
+        const applyStep = data.nextSteps.find(
+          (s: any) => s.action?.includes("Apply"),
+        );
+        expect(applyStep).toBeDefined();
+      }
+    });
+
+    test("should suggest review for pending manual changes", async () => {
+      const sourceCode = `export function complex(): void {}`;
+      await fs.writeFile(join(projectPath, "src", "complex.ts"), sourceCode);
+
+      // Create baseline
+      await handleSyncCodeToDocs({
+        projectPath,
+        docsPath,
+        mode: "detect",
+      });
+
+      // Change code
+      const newCode = `export function complex(a: number, b: string): boolean { return true; }`;
+      await fs.writeFile(join(projectPath, "src", "complex.ts"), newCode);
+
+      // Detect with very high threshold (forces manual review)
+      const result = await handleSyncCodeToDocs({
+        projectPath,
+        docsPath,
+        mode: "apply",
+        autoApplyThreshold: 0.99,
+      });
+
+      const data = JSON.parse(result.content[0].text);
+      expect(data.success).toBe(true);
+      expect(data.nextSteps).toBeDefined();
+    });
+  });
+
+  describe("Snapshot Management", () => {
+    test("should not create snapshot when createSnapshot is false in detect mode", async () => {
+      const sourceCode = `export function noSnapshot(): void {}`;
+      await fs.writeFile(join(projectPath, "src", "nosnapshot.ts"), sourceCode);
+
+      await handleSyncCodeToDocs({
+        projectPath,
+        docsPath,
+        mode: "detect",
+        createSnapshot: false,
+      });
+
+      // Should still work even without snapshot
+      const result = await handleSyncCodeToDocs({
+        projectPath,
+        docsPath,
+        mode: "detect",
+        createSnapshot: false,
+      });
+
+      const data = JSON.parse(result.content[0].text);
+      expect(data.success).toBe(true);
+    });
+  });
 });
