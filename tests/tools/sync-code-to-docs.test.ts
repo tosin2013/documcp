@@ -7,6 +7,7 @@ import { promises as fs } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 import { mkdtemp, rm } from "fs/promises";
+import { DriftDetector } from "../../src/utils/drift-detector.js";
 
 describe("sync_code_to_docs tool", () => {
   let tempDir: string;
@@ -931,6 +932,569 @@ export function test(param: string): void {}
 
       const data = JSON.parse(result.content[0].text);
       expect(data.success).toBe(true);
+    });
+  });
+
+  describe("Mocked Drift Detector Tests", () => {
+    let mockDetector: jest.Mocked<DriftDetector>;
+
+    beforeEach(() => {
+      // Create a real detector instance but spy on its methods
+      mockDetector = new DriftDetector(
+        projectPath,
+      ) as jest.Mocked<DriftDetector>;
+    });
+
+    test("should apply high-confidence suggestions automatically", async () => {
+      // Create real documentation file
+      const docPath = join(docsPath, "api.md");
+      const originalDoc = `# API
+
+## oldFunction
+
+This is outdated.`;
+      await fs.writeFile(docPath, originalDoc);
+
+      // Mock drift detector to return suggestions
+      jest.spyOn(DriftDetector.prototype, "initialize").mockResolvedValue();
+      jest.spyOn(DriftDetector.prototype, "createSnapshot").mockResolvedValue({
+        timestamp: "2025-01-01T00:00:00.000Z",
+        projectPath,
+        files: new Map([
+          [
+            "src/api.ts",
+            {
+              filePath: "src/api.ts",
+              language: "typescript",
+              functions: [],
+              classes: [],
+              interfaces: [],
+              types: [],
+              imports: [],
+              exports: [],
+              contentHash: "abc123",
+              lastModified: "2025-01-01T00:00:00.000Z",
+              linesOfCode: 10,
+              complexity: 1,
+            },
+          ],
+        ]),
+        documentation: new Map(),
+      });
+
+      jest
+        .spyOn(DriftDetector.prototype, "loadLatestSnapshot")
+        .mockResolvedValue({
+          timestamp: "2025-01-01T00:00:00.000Z",
+          projectPath,
+          files: new Map(),
+          documentation: new Map(),
+        });
+
+      jest.spyOn(DriftDetector.prototype, "detectDrift").mockResolvedValue([
+        {
+          filePath: "src/api.ts",
+          hasDrift: true,
+          severity: "medium",
+          drifts: [
+            {
+              type: "outdated",
+              affectedDocs: [docPath],
+              codeChanges: [
+                {
+                  type: "modified",
+                  category: "function",
+                  name: "oldFunction",
+                  details: "Function renamed to newFunction",
+                  impactLevel: "major",
+                },
+              ],
+              description: "Function signature changed",
+              detectedAt: "2025-01-01T00:00:00.000Z",
+              severity: "medium",
+            },
+          ],
+          impactAnalysis: {
+            breakingChanges: 0,
+            majorChanges: 1,
+            minorChanges: 0,
+            affectedDocFiles: [docPath],
+            estimatedUpdateEffort: "medium",
+            requiresManualReview: false,
+          },
+          suggestions: [
+            {
+              docFile: docPath,
+              section: "oldFunction",
+              currentContent: "This is outdated.",
+              suggestedContent: `## newFunction
+
+Updated documentation for new function.`,
+              reasoning: "Function was renamed from oldFunction to newFunction",
+              confidence: 0.95,
+              autoApplicable: true,
+            },
+          ],
+        },
+      ]);
+
+      // Run in apply mode
+      const result = await handleSyncCodeToDocs({
+        projectPath,
+        docsPath,
+        mode: "apply",
+        autoApplyThreshold: 0.8,
+      });
+
+      const data = JSON.parse(result.content[0].text);
+      expect(data.success).toBe(true);
+      expect(data.data.appliedChanges.length).toBeGreaterThan(0);
+
+      // Verify the file was actually modified
+      const updatedDoc = await fs.readFile(docPath, "utf-8");
+      expect(updatedDoc).toContain("newFunction");
+    });
+
+    test("should not apply low-confidence suggestions", async () => {
+      const docPath = join(docsPath, "lowconf.md");
+      const originalDoc = `# Low Confidence
+
+## someFunction
+
+Original content.`;
+      await fs.writeFile(docPath, originalDoc);
+
+      jest.spyOn(DriftDetector.prototype, "initialize").mockResolvedValue();
+      jest.spyOn(DriftDetector.prototype, "createSnapshot").mockResolvedValue({
+        timestamp: "2025-01-01T00:00:00.000Z",
+        projectPath,
+        files: new Map(),
+        documentation: new Map(),
+      });
+
+      jest
+        .spyOn(DriftDetector.prototype, "loadLatestSnapshot")
+        .mockResolvedValue({
+          timestamp: "2025-01-01T00:00:00.000Z",
+          projectPath,
+          files: new Map(),
+          documentation: new Map(),
+        });
+
+      jest.spyOn(DriftDetector.prototype, "detectDrift").mockResolvedValue([
+        {
+          filePath: "src/lowconf.ts",
+          hasDrift: true,
+          severity: "low",
+          drifts: [
+            {
+              type: "outdated",
+              affectedDocs: [docPath],
+              codeChanges: [
+                {
+                  type: "modified",
+                  category: "function",
+                  name: "someFunction",
+                  details: "Minor change",
+                  impactLevel: "minor",
+                },
+              ],
+              description: "Minor change",
+              detectedAt: "2025-01-01T00:00:00.000Z",
+              severity: "low",
+            },
+          ],
+          impactAnalysis: {
+            breakingChanges: 0,
+            majorChanges: 0,
+            minorChanges: 1,
+            affectedDocFiles: [docPath],
+            estimatedUpdateEffort: "low",
+            requiresManualReview: false,
+          },
+          suggestions: [
+            {
+              docFile: docPath,
+              section: "someFunction",
+              currentContent: "Original content.",
+              suggestedContent: "Suggested content.",
+              reasoning: "Minor update needed",
+              confidence: 0.5, // Low confidence
+              autoApplicable: true,
+            },
+          ],
+        },
+      ]);
+
+      const result = await handleSyncCodeToDocs({
+        projectPath,
+        docsPath,
+        mode: "apply",
+        autoApplyThreshold: 0.8, // Higher than suggestion confidence
+      });
+
+      const data = JSON.parse(result.content[0].text);
+      expect(data.success).toBe(true);
+      expect(data.data.pendingChanges.length).toBeGreaterThan(0);
+      expect(data.data.appliedChanges.length).toBe(0);
+
+      // Verify file was NOT modified
+      const unchangedDoc = await fs.readFile(docPath, "utf-8");
+      expect(unchangedDoc).toBe(originalDoc);
+    });
+
+    test("should apply all suggestions in auto mode regardless of confidence", async () => {
+      const docPath = join(docsPath, "auto.md");
+      const originalDoc = `# Auto Mode
+
+## function1
+
+Old content.`;
+      await fs.writeFile(docPath, originalDoc);
+
+      jest.spyOn(DriftDetector.prototype, "initialize").mockResolvedValue();
+      jest.spyOn(DriftDetector.prototype, "createSnapshot").mockResolvedValue({
+        timestamp: "2025-01-01T00:00:00.000Z",
+        projectPath,
+        files: new Map(),
+        documentation: new Map(),
+      });
+
+      jest
+        .spyOn(DriftDetector.prototype, "loadLatestSnapshot")
+        .mockResolvedValue({
+          timestamp: "2025-01-01T00:00:00.000Z",
+          projectPath,
+          files: new Map(),
+          documentation: new Map(),
+        });
+
+      jest.spyOn(DriftDetector.prototype, "detectDrift").mockResolvedValue([
+        {
+          filePath: "src/auto.ts",
+          hasDrift: true,
+          severity: "low",
+          drifts: [
+            {
+              type: "outdated",
+              affectedDocs: [docPath],
+              codeChanges: [
+                {
+                  type: "modified",
+                  category: "function",
+                  name: "function1",
+                  details: "Change",
+                  impactLevel: "minor",
+                },
+              ],
+              description: "Change",
+              detectedAt: "2025-01-01T00:00:00.000Z",
+              severity: "low",
+            },
+          ],
+          impactAnalysis: {
+            breakingChanges: 0,
+            majorChanges: 0,
+            minorChanges: 1,
+            affectedDocFiles: [docPath],
+            estimatedUpdateEffort: "low",
+            requiresManualReview: false,
+          },
+          suggestions: [
+            {
+              docFile: docPath,
+              section: "function1",
+              currentContent: "Old content.",
+              suggestedContent: `## function1
+
+New content from auto mode.`,
+              reasoning: "Auto-applied update",
+              confidence: 0.3, // Very low confidence
+              autoApplicable: false, // Not auto-applicable
+            },
+          ],
+        },
+      ]);
+
+      const result = await handleSyncCodeToDocs({
+        projectPath,
+        docsPath,
+        mode: "auto", // Auto mode applies everything
+      });
+
+      const data = JSON.parse(result.content[0].text);
+      expect(data.success).toBe(true);
+      expect(data.data.appliedChanges.length).toBeGreaterThan(0);
+
+      // Verify file was modified
+      const updatedDoc = await fs.readFile(docPath, "utf-8");
+      expect(updatedDoc).toContain("New content from auto mode");
+    });
+
+    test("should handle apply errors and mark as pending", async () => {
+      const docPath = join(docsPath, "error.md");
+      // Don't create the file - this will cause an error
+
+      jest.spyOn(DriftDetector.prototype, "initialize").mockResolvedValue();
+      jest.spyOn(DriftDetector.prototype, "createSnapshot").mockResolvedValue({
+        timestamp: "2025-01-01T00:00:00.000Z",
+        projectPath,
+        files: new Map(),
+        documentation: new Map(),
+      });
+
+      jest
+        .spyOn(DriftDetector.prototype, "loadLatestSnapshot")
+        .mockResolvedValue({
+          timestamp: "2025-01-01T00:00:00.000Z",
+          projectPath,
+          files: new Map(),
+          documentation: new Map(),
+        });
+
+      jest.spyOn(DriftDetector.prototype, "detectDrift").mockResolvedValue([
+        {
+          filePath: "src/error.ts",
+          hasDrift: true,
+          severity: "medium",
+          drifts: [
+            {
+              type: "outdated",
+              affectedDocs: [docPath],
+              codeChanges: [
+                {
+                  type: "modified",
+                  category: "function",
+                  name: "errorFunction",
+                  details: "Change",
+                  impactLevel: "minor",
+                },
+              ],
+              description: "Change",
+              detectedAt: "2025-01-01T00:00:00.000Z",
+              severity: "medium",
+            },
+          ],
+          impactAnalysis: {
+            breakingChanges: 0,
+            majorChanges: 1,
+            minorChanges: 0,
+            affectedDocFiles: [docPath],
+            estimatedUpdateEffort: "medium",
+            requiresManualReview: false,
+          },
+          suggestions: [
+            {
+              docFile: docPath, // File doesn't exist
+              section: "errorSection",
+              currentContent: "N/A",
+              suggestedContent: "New content",
+              reasoning: "Should fail",
+              confidence: 0.95,
+              autoApplicable: true,
+            },
+          ],
+        },
+      ]);
+
+      const mockContext = {
+        info: jest.fn(),
+        warn: jest.fn(),
+      };
+
+      const result = await handleSyncCodeToDocs(
+        {
+          projectPath,
+          docsPath,
+          mode: "apply",
+          autoApplyThreshold: 0.8,
+        },
+        mockContext,
+      );
+
+      const data = JSON.parse(result.content[0].text);
+      expect(data.success).toBe(true);
+      // Failed applies should be added to pending changes
+      expect(data.data.pendingChanges.length).toBeGreaterThan(0);
+      expect(mockContext.warn).toHaveBeenCalled();
+    });
+
+    test("should add new section when section doesn't exist", async () => {
+      const docPath = join(docsPath, "newsection.md");
+      const originalDoc = `# New Section Test
+
+## existingSection
+
+Existing content.`;
+      await fs.writeFile(docPath, originalDoc);
+
+      jest.spyOn(DriftDetector.prototype, "initialize").mockResolvedValue();
+      jest.spyOn(DriftDetector.prototype, "createSnapshot").mockResolvedValue({
+        timestamp: "2025-01-01T00:00:00.000Z",
+        projectPath,
+        files: new Map(),
+        documentation: new Map(),
+      });
+
+      jest
+        .spyOn(DriftDetector.prototype, "loadLatestSnapshot")
+        .mockResolvedValue({
+          timestamp: "2025-01-01T00:00:00.000Z",
+          projectPath,
+          files: new Map(),
+          documentation: new Map(),
+        });
+
+      jest.spyOn(DriftDetector.prototype, "detectDrift").mockResolvedValue([
+        {
+          filePath: "src/new.ts",
+          hasDrift: true,
+          severity: "low",
+          drifts: [
+            {
+              type: "missing",
+              affectedDocs: [docPath],
+              codeChanges: [
+                {
+                  type: "added",
+                  category: "function",
+                  name: "newFunction",
+                  details: "New function added",
+                  impactLevel: "minor",
+                },
+              ],
+              description: "New function",
+              detectedAt: "2025-01-01T00:00:00.000Z",
+              severity: "low",
+            },
+          ],
+          impactAnalysis: {
+            breakingChanges: 0,
+            majorChanges: 0,
+            minorChanges: 1,
+            affectedDocFiles: [docPath],
+            estimatedUpdateEffort: "low",
+            requiresManualReview: false,
+          },
+          suggestions: [
+            {
+              docFile: docPath,
+              section: "newSection", // This section doesn't exist
+              currentContent: "",
+              suggestedContent: `## newSection
+
+This is a brand new section.`,
+              reasoning: "New function added",
+              confidence: 0.9,
+              autoApplicable: true,
+            },
+          ],
+        },
+      ]);
+
+      const result = await handleSyncCodeToDocs({
+        projectPath,
+        docsPath,
+        mode: "apply",
+        autoApplyThreshold: 0.8,
+      });
+
+      const data = JSON.parse(result.content[0].text);
+      expect(data.success).toBe(true);
+      expect(data.data.appliedChanges.length).toBeGreaterThan(0);
+
+      // Verify new section was appended
+      const updatedDoc = await fs.readFile(docPath, "utf-8");
+      expect(updatedDoc).toContain("newSection");
+      expect(updatedDoc).toContain("brand new section");
+    });
+
+    test("should handle breaking changes recommendation", async () => {
+      const docPath = join(docsPath, "breaking.md");
+      await fs.writeFile(docPath, "# Breaking");
+
+      jest.spyOn(DriftDetector.prototype, "initialize").mockResolvedValue();
+      jest.spyOn(DriftDetector.prototype, "createSnapshot").mockResolvedValue({
+        timestamp: "2025-01-01T00:00:00.000Z",
+        projectPath,
+        files: new Map(),
+        documentation: new Map(),
+      });
+
+      jest
+        .spyOn(DriftDetector.prototype, "loadLatestSnapshot")
+        .mockResolvedValue({
+          timestamp: "2025-01-01T00:00:00.000Z",
+          projectPath,
+          files: new Map(),
+          documentation: new Map(),
+        });
+
+      jest.spyOn(DriftDetector.prototype, "detectDrift").mockResolvedValue([
+        {
+          filePath: "src/breaking.ts",
+          hasDrift: true,
+          severity: "critical",
+          drifts: [
+            {
+              type: "breaking",
+              affectedDocs: [docPath],
+              codeChanges: [
+                {
+                  type: "removed",
+                  category: "function",
+                  name: "oldAPI",
+                  details: "Breaking change",
+                  impactLevel: "breaking",
+                },
+              ],
+              description: "Breaking change",
+              detectedAt: "2025-01-01T00:00:00.000Z",
+              severity: "critical",
+            },
+          ],
+          impactAnalysis: {
+            breakingChanges: 2, // Multiple breaking changes
+            majorChanges: 0,
+            minorChanges: 0,
+            affectedDocFiles: [docPath],
+            estimatedUpdateEffort: "high",
+            requiresManualReview: true,
+          },
+          suggestions: [
+            {
+              docFile: docPath,
+              section: "API",
+              currentContent: "Old API",
+              suggestedContent: "New API",
+              reasoning: "Breaking change",
+              confidence: 0.9,
+              autoApplicable: true,
+            },
+          ],
+        },
+      ]);
+
+      const result = await handleSyncCodeToDocs({
+        projectPath,
+        docsPath,
+        mode: "detect",
+      });
+
+      const data = JSON.parse(result.content[0].text);
+      expect(data.success).toBe(true);
+      expect(data.data.stats.breakingChanges).toBe(2);
+
+      // Should have critical recommendation
+      const criticalRec = data.recommendations.find(
+        (r: any) => r.type === "critical",
+      );
+      expect(criticalRec).toBeDefined();
+      expect(criticalRec.title).toContain("Breaking");
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
     });
   });
 });
