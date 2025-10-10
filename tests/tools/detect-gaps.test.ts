@@ -652,6 +652,108 @@ describe("detectDocumentationGaps (Real Filesystem)", () => {
       expect(result.content[0].text).toContain("GAP_DETECTION_FAILED");
       expect(result.content[0].text).toContain("Repository analysis failed");
     });
+
+    it("should detect missing React framework documentation", async () => {
+      const docsDir = path.join(testRepoDir, "docs");
+      await fs.mkdir(docsDir);
+      await createTestFile(path.join(docsDir, "index.md"), "# Documentation");
+
+      // Mock CodeScanner to return React framework
+      const { CodeScanner } = require("../../src/utils/code-scanner.js");
+      CodeScanner.mockImplementationOnce(() => ({
+        analyzeRepository: jest.fn().mockResolvedValue({
+          summary: {
+            totalFiles: 5,
+            parsedFiles: 3,
+            functions: 10,
+            classes: 2,
+            interfaces: 3,
+            types: 1,
+            constants: 2,
+            apiEndpoints: 0,
+          },
+          files: ["src/App.tsx"],
+          functions: [],
+          classes: [],
+          interfaces: [],
+          types: [],
+          constants: [],
+          apiEndpoints: [],
+          imports: [],
+          exports: [],
+          frameworks: ["React"], // Indicate React is used
+        }),
+      }));
+
+      const result = await detectDocumentationGaps({
+        repositoryPath: testRepoDir,
+        documentationPath: docsDir,
+        depth: "comprehensive",
+      });
+
+      const data = JSON.parse(result.content[0].text);
+
+      // Should detect missing React documentation
+      expect(data.gaps).toContainEqual(
+        expect.objectContaining({
+          category: "how-to",
+          gapType: "missing_section",
+          description: expect.stringContaining("React framework detected"),
+          priority: "medium",
+        }),
+      );
+    });
+
+    it("should detect missing Express framework documentation", async () => {
+      const docsDir = path.join(testRepoDir, "docs");
+      await fs.mkdir(docsDir);
+      await createTestFile(path.join(docsDir, "index.md"), "# Documentation");
+
+      // Mock CodeScanner to return Express framework
+      const { CodeScanner } = require("../../src/utils/code-scanner.js");
+      CodeScanner.mockImplementationOnce(() => ({
+        analyzeRepository: jest.fn().mockResolvedValue({
+          summary: {
+            totalFiles: 5,
+            parsedFiles: 3,
+            functions: 10,
+            classes: 2,
+            interfaces: 3,
+            types: 1,
+            constants: 2,
+            apiEndpoints: 0,
+          },
+          files: ["src/server.ts"],
+          functions: [],
+          classes: [],
+          interfaces: [],
+          types: [],
+          constants: [],
+          apiEndpoints: [],
+          imports: [],
+          exports: [],
+          frameworks: ["Express"], // Indicate Express is used
+        }),
+      }));
+
+      const result = await detectDocumentationGaps({
+        repositoryPath: testRepoDir,
+        documentationPath: docsDir,
+        depth: "comprehensive",
+      });
+
+      const data = JSON.parse(result.content[0].text);
+
+      // Should detect missing Express documentation
+      expect(data.gaps).toContainEqual(
+        expect.objectContaining({
+          category: "how-to",
+          gapType: "missing_section",
+          description: expect.stringContaining("Express framework detected"),
+          priority: "medium",
+        }),
+      );
+    });
   });
 
   describe("input validation", () => {
