@@ -376,7 +376,8 @@ describe("Integration Testing - Complete Workflows", () => {
 
       expect((errorResult as any).isError).toBe(true);
       const errorText = errorResult.content.map((c) => c.text).join(" ");
-      expect(errorText).toContain("Resolution:");
+      // Check for resolution in JSON format (lowercase) or formatted text (capitalized)
+      expect(errorText.toLowerCase()).toContain("resolution");
       expect(errorText.toLowerCase()).toContain("ensure");
     });
   });

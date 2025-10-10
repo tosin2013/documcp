@@ -30,7 +30,8 @@ export interface GraphNode {
     | "documentation"
     | "code_file"
     | "documentation_section"
-    | "link_validation";
+    | "link_validation"
+    | "sync_event";
   label: string;
   properties: Record<string, any>;
   weight: number;

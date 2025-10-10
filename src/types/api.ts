@@ -31,7 +31,7 @@ export interface Recommendation {
 
 export interface NextStep {
   action: string;
-  toolRequired: string;
+  toolRequired?: string;
   description?: string;
   priority?: "low" | "medium" | "high";
 }
@@ -89,85 +89,92 @@ export interface MCPContentWrapper {
 // Helper to convert MCPToolResponse to MCP format
 export function formatMCPResponse<T>(
   response: MCPToolResponse<T>,
+  options?: { fullResponse?: boolean },
 ): MCPContentWrapper {
   const content: Array<{ type: "text"; text: string }> = [];
 
-  if (response.success) {
-    // Main data response
-    if (response.data) {
-      content.push({
-        type: "text",
-        text: JSON.stringify(response.data, null, 2),
-      });
-    } else {
-      content.push({
-        type: "text",
-        text: "Operation completed successfully",
-      });
-    }
-
-    // Metadata
-    content.push({
-      type: "text",
-      text: `\nExecution completed in ${response.metadata.executionTime}ms at ${response.metadata.timestamp}`,
-    });
-
-    // Recommendations
-    if (response.recommendations?.length) {
-      content.push({
-        type: "text",
-        text:
-          "\nRecommendations:\n" +
-          response.recommendations
-            .map(
-              (r) =>
-                `${getRecommendationIcon(r.type)} ${r.title}: ${r.description}`,
-            )
-            .join("\n"),
-      });
-    }
-
-    // Next steps
-    if (response.nextSteps?.length) {
-      content.push({
-        type: "text",
-        text:
-          "\nNext Steps:\n" +
-          response.nextSteps
-            .map(
-              (s) =>
-                `→ ${s.action} (use ${s.toolRequired}${
-                  s.description ? ": " + s.description : ""
-                })`,
-            )
-            .join("\n"),
-      });
-    }
-
-    return { content, isError: false };
-  } else if (response.error) {
-    // For error cases, include both human-readable and structured data
+  // For backward compatibility: by default, use rich formatting with metadata, recommendations, etc.
+  // If fullResponse is true (Phase 3 tools), include the full response object as JSON
+  if (options?.fullResponse) {
     content.push({
       type: "text",
       text: JSON.stringify(response, null, 2),
     });
+  } else {
+    // Legacy format with rich formatting (original behavior)
+    if (response.success) {
+      // Main data response
+      if (response.data) {
+        content.push({
+          type: "text",
+          text: JSON.stringify(response.data, null, 2),
+        });
+      } else {
+        content.push({
+          type: "text",
+          text: "Operation completed successfully",
+        });
+      }
 
-    content.push({
-      type: "text",
-      text: `Error: ${response.error.message}`,
-    });
-
-    if (response.error.resolution) {
+      // Metadata section
       content.push({
         type: "text",
-        text: `Resolution: ${response.error.resolution}`,
+        text: `\nExecution completed in ${response.metadata.executionTime}ms at ${response.metadata.timestamp}`,
+      });
+
+      // Recommendations section with emoji icons
+      if (response.recommendations?.length) {
+        content.push({
+          type: "text",
+          text:
+            "\nRecommendations:\n" +
+            response.recommendations
+              .map(
+                (r) =>
+                  `${getRecommendationIcon(r.type)} ${r.title}: ${
+                    r.description
+                  }`,
+              )
+              .join("\n"),
+        });
+      }
+
+      // Next steps section with arrow symbols
+      if (response.nextSteps?.length) {
+        content.push({
+          type: "text",
+          text:
+            "\nNext Steps:\n" +
+            response.nextSteps
+              .map((s) => {
+                let stepText = `→ ${s.action}`;
+                if (s.toolRequired) {
+                  stepText += ` (use ${s.toolRequired}`;
+                  if (s.description) {
+                    stepText += `: ${s.description}`;
+                  }
+                  stepText += ")";
+                } else if (s.description) {
+                  stepText += `: ${s.description}`;
+                }
+                return stepText;
+              })
+              .join("\n"),
+        });
+      }
+    } else if (response.error) {
+      // Error responses need to be JSON for programmatic error handling
+      content.push({
+        type: "text",
+        text: JSON.stringify(response, null, 2),
       });
     }
-
-    return { content, isError: true };
   }
 
-  return { content, isError: false };
+  return {
+    content,
+    isError: !response.success,
+  };
 }
 
 function getRecommendationIcon(type: Recommendation["type"]): string {

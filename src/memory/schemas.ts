@@ -172,6 +172,41 @@ export const LinkValidationEntitySchema = z.object({
 
 export type LinkValidationEntity = z.infer<typeof LinkValidationEntitySchema>;
 
+/**
+ * Sitemap Entity Schema
+ * Represents a sitemap.xml file with generation and update tracking
+ */
+export const SitemapEntitySchema = z.object({
+  baseUrl: z.string().url("Valid base URL required"),
+  docsPath: z.string().min(1, "Documentation path is required"),
+  totalUrls: z.number().int().min(0).default(0),
+  lastGenerated: z.string().datetime(),
+  lastUpdated: z.string().datetime().optional(),
+  urlsByCategory: z.record(z.string(), z.number()).default({}),
+  urlsByPriority: z
+    .object({
+      high: z.number().int().min(0).default(0), // priority >= 0.9
+      medium: z.number().int().min(0).default(0), // priority 0.5-0.9
+      low: z.number().int().min(0).default(0), // priority < 0.5
+    })
+    .default({ high: 0, medium: 0, low: 0 }),
+  updateFrequency: z
+    .enum(["always", "hourly", "daily", "weekly", "monthly", "yearly", "never"])
+    .default("monthly"),
+  validationStatus: z
+    .enum(["valid", "invalid", "not_validated"])
+    .default("not_validated"),
+  validationErrors: z.array(z.string()).default([]),
+  sitemapPath: z.string().min(1),
+  ssg: z
+    .enum(["jekyll", "hugo", "docusaurus", "mkdocs", "eleventy"])
+    .optional(),
+  submittedToSearchEngines: z.boolean().default(false),
+  searchEngines: z.array(z.string()).default([]),
+});
+
+export type SitemapEntity = z.infer<typeof SitemapEntitySchema>;
+
 // ============================================================================
 // Relationship Schemas
 // ============================================================================
@@ -338,6 +373,24 @@ export const CreatedBySchema = BaseRelationshipSchema.extend({
 
 export type CreatedByRelationship = z.infer<typeof CreatedBySchema>;
 
+/**
+ * Project Has Sitemap Relationship
+ * Links a project to its sitemap with generation metrics
+ */
+export const ProjectHasSitemapSchema = BaseRelationshipSchema.extend({
+  type: z.literal("project_has_sitemap"),
+  generationCount: z.number().int().min(0).default(0),
+  lastAction: z.enum(["generate", "update", "validate"]).default("generate"),
+  urlsAdded: z.number().int().min(0).default(0),
+  urlsRemoved: z.number().int().min(0).default(0),
+  urlsUpdated: z.number().int().min(0).default(0),
+  successRate: z.number().min(0).max(1).default(1.0),
+});
+
+export type ProjectHasSitemapRelationship = z.infer<
+  typeof ProjectHasSitemapSchema
+>;
+
 // ============================================================================
 // Union Types and Type Guards
 // ============================================================================
@@ -365,6 +418,12 @@ const DocumentationSectionEntityWithType =
 const TechnologyEntityWithType = TechnologyEntitySchema.extend({
   type: z.literal("technology"),
 });
+const LinkValidationEntityWithType = LinkValidationEntitySchema.extend({
+  type: z.literal("link_validation"),
+});
+const SitemapEntityWithType = SitemapEntitySchema.extend({
+  type: z.literal("sitemap"),
+});
 
 export const EntitySchema = z.union([
   ProjectEntityWithType,
@@ -374,6 +433,8 @@ export const EntitySchema = z.union([
   CodeFileEntityWithType,
   DocumentationSectionEntityWithType,
   TechnologyEntityWithType,
+  LinkValidationEntityWithType,
+  SitemapEntityWithType,
 ]);
 
 export type Entity = z.infer<typeof EntitySchema>;
@@ -393,6 +454,7 @@ export const RelationshipSchema = z.union([
   RecommendsSchema,
   ResultsInSchema,
   CreatedBySchema,
+  ProjectHasSitemapSchema,
 ]);
 
 export type Relationship =
@@ -406,7 +468,8 @@ export type Relationship =
   | DependsOnRelationship
   | RecommendsRelationship
   | ResultsInRelationship
-  | CreatedByRelationship;
+  | CreatedByRelationship
+  | ProjectHasSitemapRelationship;
 
 // ============================================================================
 // Validation Helpers

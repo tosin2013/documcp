@@ -146,6 +146,13 @@ export async function setupStructure(
       ],
       nextSteps: [
         {
+          action: "Generate Sitemap",
+          toolRequired: "manage_sitemap",
+          description:
+            "Create sitemap.xml as source of truth for documentation links (required for SEO)",
+          priority: "high",
+        },
+        {
           action: "Setup GitHub Pages Deployment",
           toolRequired: "deploy_pages",
           description: "Create automated deployment workflow",

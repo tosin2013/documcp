@@ -2422,6 +2422,11 @@ ${contentPlan.explanation
       );
     }
 
+    // Update sitemap after content population
+    nextSteps.push(
+      "Update sitemap.xml using manage_sitemap tool (action: update) to include new pages",
+    );
+
     // Always include validation
     nextSteps.push(
       "Validate technical accuracy using project-specific analysis",

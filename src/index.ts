@@ -40,6 +40,12 @@ import { analyzeReadme } from "./tools/analyze-readme.js";
 import { optimizeReadme } from "./tools/optimize-readme.js";
 import { managePreferences } from "./tools/manage-preferences.js";
 import { analyzeDeployments } from "./tools/analyze-deployments.js";
+import { handleSyncCodeToDocs } from "./tools/sync-code-to-docs.js";
+import { handleGenerateContextualContent } from "./tools/generate-contextual-content.js";
+import {
+  manageSitemap,
+  ManageSitemapInputSchema,
+} from "./tools/manage-sitemap.js";
 import { formatMCPResponse } from "./types/api.js";
 import {
   isPathAllowed,
@@ -722,6 +728,64 @@ const TOOLS = [
           "Path to directory (relative to root or absolute within root)",
         ),
     }),
+  },
+  // Phase 3: Code-to-Documentation Synchronization
+  {
+    name: "sync_code_to_docs",
+    description:
+      "Automatically synchronize documentation with code changes using AST-based drift detection (Phase 3)",
+    inputSchema: z.object({
+      projectPath: z.string().describe("Path to the project root directory"),
+      docsPath: z.string().describe("Path to the documentation directory"),
+      mode: z
+        .enum(["detect", "preview", "apply", "auto"])
+        .default("detect")
+        .describe(
+          "Sync mode: detect=analyze only, preview=show changes, apply=apply safe changes, auto=apply all",
+        ),
+      autoApplyThreshold: z
+        .number()
+        .min(0)
+        .max(1)
+        .default(0.8)
+        .describe(
+          "Confidence threshold (0-1) for automatic application of changes",
+        ),
+      createSnapshot: z
+        .boolean()
+        .default(true)
+        .describe("Create a snapshot before making changes (recommended)"),
+    }),
+  },
+  {
+    name: "generate_contextual_content",
+    description:
+      "Generate context-aware documentation using AST analysis and knowledge graph insights (Phase 3)",
+    inputSchema: z.object({
+      filePath: z.string().describe("Path to the source code file to document"),
+      documentationType: z
+        .enum(["tutorial", "how-to", "reference", "explanation", "all"])
+        .default("reference")
+        .describe("Type of Diataxis documentation to generate"),
+      includeExamples: z
+        .boolean()
+        .default(true)
+        .describe("Include code examples in generated documentation"),
+      style: z
+        .enum(["concise", "detailed", "verbose"])
+        .default("detailed")
+        .describe("Documentation detail level"),
+      outputFormat: z
+        .enum(["markdown", "mdx", "html"])
+        .default("markdown")
+        .describe("Output format for generated content"),
+    }),
+  },
+  {
+    name: "manage_sitemap",
+    description:
+      "Generate, validate, and manage sitemap.xml as the source of truth for documentation links. Sitemap.xml is used for SEO, search engine submission, and deployment tracking.",
+    inputSchema: ManageSitemapInputSchema,
   },
   // Memory system tools
   ...memoryTools.map((tool) => ({
@@ -1966,8 +2030,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request, extra) => {
       }
 
       case "check_documentation_links": {
-        // Check if docsPath is allowed
-        const docLinksPath = (args as any)?.docsPath;
+        // Check if documentation_path is allowed
+        const docLinksPath = (args as any)?.documentation_path;
         if (docLinksPath && !isPathAllowed(docLinksPath, allowedRoots)) {
           return formatMCPResponse({
             success: false,
@@ -2028,6 +2092,100 @@ server.setRequestHandler(CallToolRequestSchema, async (request, extra) => {
       case "analyze_deployments": {
         const result = await analyzeDeployments(args);
         return wrapToolResult(result, "analyze_deployments");
+      }
+
+      // Phase 3: Code-to-Documentation Synchronization
+      case "sync_code_to_docs": {
+        const projectPath = (args as any)?.projectPath;
+        const docsPath = (args as any)?.docsPath;
+
+        // Check if paths are allowed
+        if (projectPath && !isPathAllowed(projectPath, allowedRoots)) {
+          return formatMCPResponse({
+            success: false,
+            error: {
+              code: "PERMISSION_DENIED",
+              message: getPermissionDeniedMessage(projectPath, allowedRoots),
+              resolution:
+                "Request access to this directory by starting the server with --root argument",
+            },
+            metadata: {
+              toolVersion: packageJson.version,
+              executionTime: 0,
+              timestamp: new Date().toISOString(),
+            },
+          });
+        }
+
+        if (docsPath && !isPathAllowed(docsPath, allowedRoots)) {
+          return formatMCPResponse({
+            success: false,
+            error: {
+              code: "PERMISSION_DENIED",
+              message: getPermissionDeniedMessage(docsPath, allowedRoots),
+              resolution:
+                "Request access to this directory by starting the server with --root argument",
+            },
+            metadata: {
+              toolVersion: packageJson.version,
+              executionTime: 0,
+              timestamp: new Date().toISOString(),
+            },
+          });
+        }
+
+        const result = await handleSyncCodeToDocs(args, extra);
+        return wrapToolResult(result, "sync_code_to_docs");
+      }
+
+      case "generate_contextual_content": {
+        const filePath = (args as any)?.filePath;
+
+        // Check if file path is allowed
+        if (filePath && !isPathAllowed(filePath, allowedRoots)) {
+          return formatMCPResponse({
+            success: false,
+            error: {
+              code: "PERMISSION_DENIED",
+              message: getPermissionDeniedMessage(filePath, allowedRoots),
+              resolution:
+                "Request access to this file by starting the server with --root argument",
+            },
+            metadata: {
+              toolVersion: packageJson.version,
+              executionTime: 0,
+              timestamp: new Date().toISOString(),
+            },
+          });
+        }
+
+        const result = await handleGenerateContextualContent(args, extra);
+        return wrapToolResult(result, "generate_contextual_content");
+      }
+
+      case "manage_sitemap": {
+        const docsPath = (args as any)?.docsPath;
+
+        // Check if docs path is allowed
+        if (docsPath && !isPathAllowed(docsPath, allowedRoots)) {
+          return formatMCPResponse({
+            success: false,
+            error: {
+              code: "PERMISSION_DENIED",
+              message: getPermissionDeniedMessage(docsPath, allowedRoots),
+              resolution:
+                "Request access to this directory by starting the server with --root argument",
+            },
+            metadata: {
+              toolVersion: packageJson.version,
+              executionTime: 0,
+              timestamp: new Date().toISOString(),
+            },
+          });
+        }
+
+        const result = await manageSitemap(args as any);
+        return wrapToolResult(result, "manage_sitemap");
       }
 
       case "read_directory": {
