@@ -321,6 +321,339 @@ describe("detectDocumentationGaps (Real Filesystem)", () => {
     });
   });
 
+  describe("code-based gap detection", () => {
+    it("should detect missing API documentation when endpoints exist", async () => {
+      // Create docs directory without API documentation
+      const docsDir = path.join(testRepoDir, "docs");
+      await fs.mkdir(docsDir);
+      await createTestFile(path.join(docsDir, "index.md"), "# Documentation");
+
+      // Mock CodeScanner to return API endpoints
+      const { CodeScanner } = require("../../src/utils/code-scanner.js");
+      CodeScanner.mockImplementationOnce(() => ({
+        analyzeRepository: jest.fn().mockResolvedValue({
+          summary: {
+            totalFiles: 5,
+            parsedFiles: 3,
+            functions: 10,
+            classes: 2,
+            interfaces: 3,
+            types: 1,
+            constants: 2,
+            apiEndpoints: 3,
+          },
+          files: ["src/api.ts", "src/routes.ts"],
+          functions: [],
+          classes: [],
+          interfaces: [],
+          types: [],
+          constants: [],
+          apiEndpoints: [
+            {
+              method: "GET",
+              path: "/api/users",
+              filePath: "src/api.ts",
+              line: 10,
+              hasDocumentation: true,
+            },
+            {
+              method: "POST",
+              path: "/api/users",
+              filePath: "src/api.ts",
+              line: 20,
+              hasDocumentation: true,
+            },
+            {
+              method: "DELETE",
+              path: "/api/users/:id",
+              filePath: "src/routes.ts",
+              line: 5,
+              hasDocumentation: true,
+            },
+          ],
+          imports: [],
+          exports: [],
+          frameworks: [],
+        }),
+      }));
+
+      const result = await detectDocumentationGaps({
+        repositoryPath: testRepoDir,
+        documentationPath: docsDir,
+        depth: "comprehensive",
+      });
+
+      const data = JSON.parse(result.content[0].text);
+
+      // Should detect missing API documentation section
+      expect(data.gaps).toContainEqual(
+        expect.objectContaining({
+          category: "reference",
+          gapType: "missing_section",
+          description: expect.stringContaining("API endpoints"),
+          priority: "critical",
+        }),
+      );
+    });
+
+    it("should detect undocumented API endpoints", async () => {
+      // Create docs directory with API section
+      const docsDir = path.join(testRepoDir, "docs");
+      await fs.mkdir(docsDir);
+      await fs.mkdir(path.join(docsDir, "reference"));
+      await createTestFile(
+        path.join(docsDir, "reference", "api.md"),
+        "# API Reference",
+      );
+
+      // Mock CodeScanner to return endpoints without documentation
+      const { CodeScanner } = require("../../src/utils/code-scanner.js");
+      CodeScanner.mockImplementationOnce(() => ({
+        analyzeRepository: jest.fn().mockResolvedValue({
+          summary: {
+            totalFiles: 5,
+            parsedFiles: 3,
+            functions: 10,
+            classes: 2,
+            interfaces: 3,
+            types: 1,
+            constants: 2,
+            apiEndpoints: 2,
+          },
+          files: ["src/api.ts"],
+          functions: [],
+          classes: [],
+          interfaces: [],
+          types: [],
+          constants: [],
+          apiEndpoints: [
+            {
+              method: "GET",
+              path: "/api/data",
+              filePath: "src/api.ts",
+              line: 15,
+              hasDocumentation: false, // No JSDoc
+            },
+            {
+              method: "POST",
+              path: "/api/data",
+              filePath: "src/api.ts",
+              line: 25,
+              hasDocumentation: false, // No JSDoc
+            },
+          ],
+          imports: [],
+          exports: [],
+          frameworks: [],
+        }),
+      }));
+
+      const result = await detectDocumentationGaps({
+        repositoryPath: testRepoDir,
+        documentationPath: docsDir,
+        depth: "comprehensive",
+      });
+
+      const data = JSON.parse(result.content[0].text);
+
+      // Should detect undocumented endpoints
+      expect(data.gaps).toContainEqual(
+        expect.objectContaining({
+          category: "reference",
+          gapType: "missing_examples",
+          description: expect.stringContaining("2 API endpoints lack"),
+          priority: "high",
+        }),
+      );
+    });
+
+    it("should detect undocumented exported classes", async () => {
+      const docsDir = path.join(testRepoDir, "docs");
+      await fs.mkdir(docsDir);
+      await createTestFile(path.join(docsDir, "index.md"), "# Documentation");
+
+      // Mock CodeScanner to return undocumented classes
+      const { CodeScanner } = require("../../src/utils/code-scanner.js");
+      CodeScanner.mockImplementationOnce(() => ({
+        analyzeRepository: jest.fn().mockResolvedValue({
+          summary: {
+            totalFiles: 5,
+            parsedFiles: 3,
+            functions: 10,
+            classes: 3,
+            interfaces: 2,
+            types: 1,
+            constants: 2,
+            apiEndpoints: 0,
+          },
+          files: ["src/models.ts"],
+          functions: [],
+          classes: [
+            {
+              name: "UserModel",
+              filePath: "src/models.ts",
+              line: 10,
+              exported: true,
+              hasJSDoc: false,
+            },
+            {
+              name: "PostModel",
+              filePath: "src/models.ts",
+              line: 30,
+              exported: true,
+              hasJSDoc: false,
+            },
+            {
+              name: "InternalHelper",
+              filePath: "src/models.ts",
+              line: 50,
+              exported: false, // Not exported, should be ignored
+              hasJSDoc: false,
+            },
+          ],
+          interfaces: [],
+          types: [],
+          constants: [],
+          apiEndpoints: [],
+          imports: [],
+          exports: [],
+          frameworks: [],
+        }),
+      }));
+
+      const result = await detectDocumentationGaps({
+        repositoryPath: testRepoDir,
+        documentationPath: docsDir,
+        depth: "comprehensive",
+      });
+
+      const data = JSON.parse(result.content[0].text);
+
+      // Should detect undocumented exported classes (only 2, not the non-exported one)
+      expect(data.gaps).toContainEqual(
+        expect.objectContaining({
+          category: "reference",
+          gapType: "incomplete_content",
+          description: expect.stringContaining("2 exported classes lack"),
+          priority: "medium",
+        }),
+      );
+    });
+
+    it("should detect undocumented exported interfaces", async () => {
+      const docsDir = path.join(testRepoDir, "docs");
+      await fs.mkdir(docsDir);
+      await createTestFile(path.join(docsDir, "index.md"), "# Documentation");
+
+      // Mock CodeScanner to return undocumented interfaces
+      const { CodeScanner } = require("../../src/utils/code-scanner.js");
+      CodeScanner.mockImplementationOnce(() => ({
+        analyzeRepository: jest.fn().mockResolvedValue({
+          summary: {
+            totalFiles: 5,
+            parsedFiles: 3,
+            functions: 10,
+            classes: 2,
+            interfaces: 3,
+            types: 1,
+            constants: 2,
+            apiEndpoints: 0,
+          },
+          files: ["src/types.ts"],
+          functions: [],
+          classes: [],
+          interfaces: [
+            {
+              name: "IUser",
+              filePath: "src/types.ts",
+              line: 5,
+              exported: true,
+              hasJSDoc: false,
+            },
+            {
+              name: "IConfig",
+              filePath: "src/types.ts",
+              line: 15,
+              exported: true,
+              hasJSDoc: false,
+            },
+            {
+              name: "IInternalState",
+              filePath: "src/types.ts",
+              line: 25,
+              exported: false, // Not exported
+              hasJSDoc: false,
+            },
+          ],
+          types: [],
+          constants: [],
+          apiEndpoints: [],
+          imports: [],
+          exports: [],
+          frameworks: [],
+        }),
+      }));
+
+      const result = await detectDocumentationGaps({
+        repositoryPath: testRepoDir,
+        documentationPath: docsDir,
+        depth: "comprehensive",
+      });
+
+      const data = JSON.parse(result.content[0].text);
+
+      // Should detect undocumented exported interfaces
+      expect(data.gaps).toContainEqual(
+        expect.objectContaining({
+          category: "reference",
+          gapType: "incomplete_content",
+          description: expect.stringContaining("2 exported interfaces lack"),
+          priority: "medium",
+        }),
+      );
+    });
+
+    it("should handle validation errors gracefully", async () => {
+      const docsDir = path.join(testRepoDir, "docs");
+      await fs.mkdir(docsDir);
+      await createTestFile(path.join(docsDir, "index.md"), "# Documentation");
+
+      // Mock validation to throw an error
+      mockValidateContent.mockRejectedValueOnce(
+        new Error("Validation service unavailable"),
+      );
+
+      const result = await detectDocumentationGaps({
+        repositoryPath: testRepoDir,
+        documentationPath: docsDir,
+        depth: "comprehensive",
+      });
+
+      const data = JSON.parse(result.content[0].text);
+
+      // Should still succeed without validation data
+      expect(data.analysisId).toBe("analysis_123");
+      expect(data.gaps).toBeInstanceOf(Array);
+      expect(data.repositoryPath).toBe(testRepoDir);
+    });
+
+    it("should handle empty repository analysis result", async () => {
+      // Mock analyze_repository to return empty/no content
+      mockAnalyzeRepository.mockResolvedValueOnce({
+        content: [], // Empty content array
+      });
+
+      const result = await detectDocumentationGaps({
+        repositoryPath: testRepoDir,
+        depth: "quick",
+      });
+
+      // Should return error about failed analysis
+      expect(result.content[0].text).toContain("GAP_DETECTION_FAILED");
+      expect(result.content[0].text).toContain("Repository analysis failed");
+    });
+  });
+
   describe("input validation", () => {
     it("should require repositoryPath", async () => {
       await expect(detectDocumentationGaps({} as any)).rejects.toThrow();
