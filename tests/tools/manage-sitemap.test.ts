@@ -10,6 +10,16 @@ import {
   ManageSitemapInputSchema,
 } from "../../src/tools/manage-sitemap.js";
 
+/**
+ * Helper to parse data from MCP tool response
+ */
+function parseMCPResponse(result: { content: any[] }): any {
+  if (!result.content || !result.content[0]) {
+    throw new Error("Invalid MCP response structure");
+  }
+  return JSON.parse(result.content[0].text);
+}
+
 describe("manage-sitemap tool", () => {
   let testDir: string;
   let docsDir: string;
@@ -76,9 +86,10 @@ describe("manage-sitemap tool", () => {
         "Sitemap generated successfully",
       );
 
-      // Verify metadata
-      expect(result.metadata?.action).toBe("generate");
-      expect(result.metadata?.totalUrls).toBe(2);
+      // Verify data is in the response
+      const data = JSON.parse(result.content[0].text);
+      expect(data.action).toBe("generate");
+      expect(data.totalUrls).toBe(2);
 
       // Verify file was created
       const sitemapPath = path.join(docsDir, "sitemap.xml");
@@ -95,8 +106,10 @@ describe("manage-sitemap tool", () => {
         docsPath: docsDir,
       });
 
-      expect(result.content[0].text).toContain("❌");
-      expect(result.content[0].text).toContain("baseUrl is required");
+      const data = parseMCPResponse(result);
+      expect(data.success).toBe(false);
+      expect(data.error.code).toBe("BASE_URL_REQUIRED");
+      expect(data.error.message).toContain("baseUrl is required");
     });
 
     it("should return error if docs directory does not exist", async () => {
@@ -106,8 +119,10 @@ describe("manage-sitemap tool", () => {
         baseUrl: "https://example.com",
       });
 
-      expect(result.content[0].text).toContain("❌");
-      expect(result.content[0].text).toContain("not found");
+      const data = parseMCPResponse(result);
+      expect(data.success).toBe(false);
+      expect(data.error.code).toBe("DOCS_DIR_NOT_FOUND");
+      expect(data.error.message).toContain("not found");
     });
 
     it("should include statistics in output", async () => {
@@ -149,7 +164,9 @@ describe("manage-sitemap tool", () => {
 
       expect(result.content[0].text).toContain("✅");
       expect(result.content[0].text).toContain("Sitemap is valid");
-      expect(result.metadata?.valid).toBe(true);
+
+      const data = parseMCPResponse(result);
+      expect(data.valid).toBe(true);
     });
 
     it("should return error if sitemap does not exist", async () => {
@@ -158,8 +175,10 @@ describe("manage-sitemap tool", () => {
         docsPath: docsDir,
       });
 
-      expect(result.content[0].text).toContain("❌");
-      expect(result.content[0].text).toContain("Sitemap not found");
+      const data = parseMCPResponse(result);
+      expect(data.success).toBe(false);
+      expect(data.error.code).toBe("SITEMAP_NOT_FOUND");
+      expect(data.error.message).toContain("Sitemap not found");
     });
 
     it("should detect invalid sitemap", async () => {
@@ -181,10 +200,12 @@ describe("manage-sitemap tool", () => {
         docsPath: docsDir,
       });
 
-      expect(result.content[0].text).toContain("❌");
-      expect(result.content[0].text).toContain("validation failed");
-      expect(result.metadata?.valid).toBe(false);
-      expect(result.metadata?.errorCount).toBeGreaterThan(0);
+      const data = parseMCPResponse(result);
+      expect(data.success).toBe(false);
+      expect(data.error.code).toBe("VALIDATION_FAILED");
+      expect(data.error.message).toContain("validation failed");
+      expect(data.data.valid).toBe(false);
+      expect(data.data.errorCount).toBeGreaterThan(0);
     });
   });
 
@@ -209,8 +230,10 @@ describe("manage-sitemap tool", () => {
 
       expect(result.content[0].text).toContain("✅");
       expect(result.content[0].text).toContain("Sitemap updated successfully");
-      expect(result.metadata?.added).toBe(1);
-      expect(result.metadata?.total).toBe(2);
+
+      const data = parseMCPResponse(result);
+      expect(data.added).toBe(1);
+      expect(data.total).toBe(2);
     });
 
     it("should require baseUrl for update action", async () => {
@@ -219,8 +242,10 @@ describe("manage-sitemap tool", () => {
         docsPath: docsDir,
       });
 
-      expect(result.content[0].text).toContain("❌");
-      expect(result.content[0].text).toContain("baseUrl is required");
+      const data = parseMCPResponse(result);
+      expect(data.success).toBe(false);
+      expect(data.error.code).toBe("BASE_URL_REQUIRED");
+      expect(data.error.message).toContain("baseUrl is required");
     });
 
     it("should show removed pages", async () => {
@@ -242,8 +267,9 @@ describe("manage-sitemap tool", () => {
         baseUrl: "https://example.com",
       });
 
-      expect(result.metadata?.removed).toBe(1);
-      expect(result.metadata?.total).toBe(1);
+      const data = parseMCPResponse(result);
+      expect(data.removed).toBe(1);
+      expect(data.total).toBe(1);
     });
 
     it("should detect no changes", async () => {
@@ -261,8 +287,10 @@ describe("manage-sitemap tool", () => {
       });
 
       expect(result.content[0].text).toContain("No changes detected");
-      expect(result.metadata?.added).toBe(0);
-      expect(result.metadata?.removed).toBe(0);
+
+      const data = parseMCPResponse(result);
+      expect(data.added).toBe(0);
+      expect(data.removed).toBe(0);
     });
   });
 
@@ -288,8 +316,10 @@ describe("manage-sitemap tool", () => {
 
       expect(result.content[0].text).toContain("Sitemap URLs");
       expect(result.content[0].text).toContain("Total: 2");
-      expect(result.metadata?.totalUrls).toBe(2);
-      expect(result.metadata?.urls).toHaveLength(2);
+
+      const data = parseMCPResponse(result);
+      expect(data.totalUrls).toBe(2);
+      expect(data.urls).toHaveLength(2);
     });
 
     it("should group URLs by category", async () => {
@@ -323,8 +353,10 @@ describe("manage-sitemap tool", () => {
         docsPath: docsDir,
       });
 
-      expect(result.content[0].text).toContain("❌");
-      expect(result.content[0].text).toContain("Sitemap not found");
+      const data = parseMCPResponse(result);
+      expect(data.success).toBe(false);
+      expect(data.error.code).toBe("SITEMAP_NOT_FOUND");
+      expect(data.error.message).toContain("Sitemap not found");
     });
   });
 
@@ -361,7 +393,8 @@ describe("manage-sitemap tool", () => {
         includePatterns: ["**/*.md"],
       });
 
-      expect(result.metadata?.totalUrls).toBe(1);
+      const data = parseMCPResponse(result);
+      expect(data.totalUrls).toBe(1);
     });
 
     it("should respect exclude patterns", async () => {
@@ -376,7 +409,8 @@ describe("manage-sitemap tool", () => {
         excludePatterns: ["**/drafts/**"],
       });
 
-      expect(result.metadata?.totalUrls).toBe(1);
+      const data = parseMCPResponse(result);
+      expect(data.totalUrls).toBe(1);
     });
   });
 
@@ -407,7 +441,9 @@ describe("manage-sitemap tool", () => {
         baseUrl: "https://example.com",
       });
 
-      expect(result.content[0].text).toContain("❌");
+      const data = parseMCPResponse(result);
+      expect(data.success).toBe(false);
+      expect(data.error).toBeDefined();
     });
 
     it("should handle file system errors", async () => {
@@ -420,7 +456,9 @@ describe("manage-sitemap tool", () => {
         baseUrl: "https://example.com",
       });
 
-      expect(result.content[0].text).toContain("❌");
+      const data = parseMCPResponse(result);
+      expect(data.success).toBe(false);
+      expect(data.error).toBeDefined();
     });
   });
 
@@ -442,11 +480,12 @@ describe("manage-sitemap tool", () => {
         baseUrl: "https://example.com",
       });
 
-      expect(result.metadata?.totalUrls).toBe(4);
-      expect(result.metadata?.categories).toHaveProperty("tutorial");
-      expect(result.metadata?.categories).toHaveProperty("how-to");
-      expect(result.metadata?.categories).toHaveProperty("reference");
-      expect(result.metadata?.categories).toHaveProperty("explanation");
+      const data = parseMCPResponse(result);
+      expect(data.totalUrls).toBe(4);
+      expect(data.categories).toHaveProperty("tutorial");
+      expect(data.categories).toHaveProperty("how-to");
+      expect(data.categories).toHaveProperty("reference");
+      expect(data.categories).toHaveProperty("explanation");
     });
   });
 });

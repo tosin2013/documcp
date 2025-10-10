@@ -238,11 +238,18 @@ function shouldExclude(filePath: string, patterns: string[]): boolean {
  * Convert glob pattern to regex
  */
 function patternToRegex(pattern: string): RegExp {
-  const escaped = pattern
+  let escaped = pattern
     .replace(/\./g, "\\.")
     .replace(/\*\*/g, "@@DOUBLE_STAR@@")
     .replace(/\*/g, "[^/]*")
     .replace(/@@DOUBLE_STAR@@/g, ".*");
+
+  // Handle leading **/ to match files in root or subdirectories
+  // Pattern "**/*.md" should match both "file.md" and "dir/file.md"
+  if (pattern.startsWith("**/")) {
+    // Make the leading ".*/" optional by wrapping in (?:...)?
+    escaped = escaped.replace(/^\.\*\//, "(?:.*/)?");
+  }
 
   // For patterns like **/node_modules/**, match both exact and partial paths
   // This allows matching "node_modules" and "path/to/node_modules/file"
@@ -310,14 +317,17 @@ async function createSitemapUrl(
 function detectCategory(filePath: string): string {
   const lower = filePath.toLowerCase();
 
+  // Check exact matches first for index/home pages
+  if (lower === "readme.md" || lower === "index.md" || lower === "index.html")
+    return "home";
+
+  // Then check for category patterns
   if (lower.includes("tutorial")) return "tutorial";
   if (lower.includes("how-to") || lower.includes("howto")) return "how-to";
   if (lower.includes("reference") || lower.includes("api")) return "reference";
   if (lower.includes("explanation") || lower.includes("concept"))
     return "explanation";
-  if (lower.includes("index") || lower === "index.md" || lower === "index.html")
-    return "index";
-  if (lower === "readme.md" || lower === "index.md") return "home";
+  if (lower.includes("index")) return "index";
 
   return "default";
 }
@@ -366,10 +376,10 @@ async function extractTitle(filePath: string): Promise<string | undefined> {
   try {
     const content = await fs.readFile(filePath, "utf-8");
 
-    // Try to extract from markdown heading
-    const mdMatch = content.match(/^#\s+(.+)$/m);
-    if (mdMatch) {
-      return mdMatch[1].trim();
+    // Try to extract from frontmatter first (highest priority)
+    const frontmatterMatch = content.match(/^---\s*\ntitle:\s*(.+?)\n/m);
+    if (frontmatterMatch) {
+      return frontmatterMatch[1].trim().replace(/['"]/g, "");
     }
 
     // Try to extract from HTML title tag
@@ -378,10 +388,10 @@ async function extractTitle(filePath: string): Promise<string | undefined> {
       return htmlMatch[1].trim();
     }
 
-    // Try to extract from frontmatter
-    const frontmatterMatch = content.match(/^---\s*\ntitle:\s*(.+?)\n/m);
-    if (frontmatterMatch) {
-      return frontmatterMatch[1].trim().replace(/['"]/g, "");
+    // Try to extract from markdown heading (fallback)
+    const mdMatch = content.match(/^#\s+(.+)$/m);
+    if (mdMatch) {
+      return mdMatch[1].trim();
     }
   } catch (error) {
     // Could not read file
@@ -473,8 +483,6 @@ export async function parseSitemap(sitemapPath: string): Promise<SitemapUrl[]> {
       const urlBlock = match[1];
 
       const loc = urlBlock.match(/<loc>(.*?)<\/loc>/)?.[1];
-      if (!loc) continue;
-
       const lastmod = urlBlock.match(/<lastmod>(.*?)<\/lastmod>/)?.[1];
       const changefreq = urlBlock.match(
         /<changefreq>(.*?)<\/changefreq>/,
@@ -483,8 +491,9 @@ export async function parseSitemap(sitemapPath: string): Promise<SitemapUrl[]> {
         urlBlock.match(/<priority>(.*?)<\/priority>/)?.[1] || "0.5",
       );
 
+      // Include all URLs, even those missing <loc>, for validation
       urls.push({
-        loc: unescapeXml(loc),
+        loc: loc ? unescapeXml(loc) : "",
         lastmod,
         changefreq,
         priority,

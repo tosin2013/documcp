@@ -61,7 +61,7 @@ export const ManageSitemapInputSchema = z.object({
     .describe("Custom path for sitemap.xml (default: docsPath/sitemap.xml)"),
 });
 
-export type ManageSitemapInput = z.infer<typeof ManageSitemapInputSchema>;
+export type ManageSitemapInput = z.input<typeof ManageSitemapInputSchema>;
 
 /**
  * Manage sitemap.xml for documentation
