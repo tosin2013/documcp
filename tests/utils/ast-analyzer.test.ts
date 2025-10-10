@@ -476,4 +476,207 @@ export function broken(
       expect(result1?.contentHash).not.toBe(result2?.contentHash);
     });
   });
+
+  describe("Multi-Language Support", () => {
+    test("should handle Python files with tree-sitter", async () => {
+      const pythonCode = `
+def hello_world():
+    print("Hello, World!")
+
+class MyClass:
+    def __init__(self):
+        self.value = 42
+      `.trim();
+
+      const filePath = join(tempDir, "test.py");
+      await fs.writeFile(filePath, pythonCode);
+
+      const result = await analyzer.analyzeFile(filePath);
+
+      expect(result).toBeDefined();
+      expect(result?.language).toBe("python");
+      expect(result?.filePath).toBe(filePath);
+      expect(result?.linesOfCode).toBeGreaterThan(0);
+    });
+
+    test("should handle Go files with tree-sitter", async () => {
+      const goCode = `
+package main
+
+func main() {
+    println("Hello, World!")
+}
+      `.trim();
+
+      const filePath = join(tempDir, "test.go");
+      await fs.writeFile(filePath, goCode);
+
+      const result = await analyzer.analyzeFile(filePath);
+
+      expect(result).toBeDefined();
+      expect(result?.language).toBe("go");
+    });
+
+    test("should handle Rust files with tree-sitter", async () => {
+      const rustCode = `
+fn main() {
+    println!("Hello, World!");
+}
+      `.trim();
+
+      const filePath = join(tempDir, "test.rs");
+      await fs.writeFile(filePath, rustCode);
+
+      const result = await analyzer.analyzeFile(filePath);
+
+      expect(result).toBeDefined();
+      expect(result?.language).toBe("rust");
+    });
+  });
+
+  describe("Advanced TypeScript Features", () => {
+    test("should extract default values from parameters", async () => {
+      const code = `
+export function withDefaults(
+  name: string = "default",
+  count: number = 42,
+  flag: boolean = true
+): void {
+  console.log(name, count, flag);
+}
+      `.trim();
+
+      const filePath = join(tempDir, "defaults.ts");
+      await fs.writeFile(filePath, code);
+
+      const result = await analyzer.analyzeFile(filePath);
+
+      expect(result).not.toBeNull();
+      const func = result?.functions.find((f) => f.name === "withDefaults");
+      expect(func).toBeDefined();
+      expect(func?.parameters.length).toBe(3);
+
+      const nameParam = func?.parameters.find((p) => p.name === "name");
+      expect(nameParam?.defaultValue).toBeTruthy();
+    });
+
+    test("should detect private methods with underscore prefix", async () => {
+      const code = `
+export class TestClass {
+  public publicMethod(): void {}
+
+  private _privateMethod(): void {}
+
+  #reallyPrivate(): void {}
+}
+      `.trim();
+
+      const filePath = join(tempDir, "private-methods.ts");
+      await fs.writeFile(filePath, code);
+
+      const result = await analyzer.analyzeFile(filePath);
+
+      expect(result).not.toBeNull();
+      const testClass = result?.classes[0];
+      expect(testClass).toBeDefined();
+      expect(testClass?.methods.length).toBeGreaterThanOrEqual(1);
+    });
+
+    test("should detect exported declarations correctly", async () => {
+      const code = `
+export function exportedFunc(): void {}
+
+function nonExportedFunc(): void {}
+
+export const exportedConst = () => {};
+
+const nonExportedConst = () => {};
+      `.trim();
+
+      const filePath = join(tempDir, "exports.ts");
+      await fs.writeFile(filePath, code);
+
+      const result = await analyzer.analyzeFile(filePath);
+
+      expect(result).not.toBeNull();
+
+      const exportedFunc = result?.functions.find(
+        (f) => f.name === "exportedFunc",
+      );
+      expect(exportedFunc?.isExported).toBe(true);
+
+      const exportedArrow = result?.functions.find(
+        (f) => f.name === "exportedConst",
+      );
+      expect(exportedArrow?.isExported).toBe(true);
+    });
+
+    test("should handle files without initialization", async () => {
+      const newAnalyzer = new ASTAnalyzer();
+      // Don't call initialize() - should auto-initialize
+
+      const code = `export function test(): void {}`;
+      const filePath = join(tempDir, "auto-init.ts");
+      await fs.writeFile(filePath, code);
+
+      const result = await newAnalyzer.analyzeFile(filePath);
+
+      expect(result).not.toBeNull();
+      expect(result?.functions.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe("Interface and Type Detection", () => {
+    test("should detect interface vs type differences", async () => {
+      const code = `
+export interface UserInterface {
+  id: string;
+  name: string;
+}
+
+export type UserType = {
+  id: string;
+  name: string;
+};
+
+export type StatusType = "active" | "inactive";
+      `.trim();
+
+      const filePath = join(tempDir, "types-vs-interfaces.ts");
+      await fs.writeFile(filePath, code);
+
+      const result = await analyzer.analyzeFile(filePath);
+
+      expect(result).not.toBeNull();
+      expect(result?.interfaces.length).toBe(1);
+      expect(result?.types.length).toBe(2);
+
+      const userInterface = result?.interfaces.find(
+        (i) => i.name === "UserInterface",
+      );
+      expect(userInterface?.isExported).toBe(true);
+
+      const statusType = result?.types.find((t) => t.name === "StatusType");
+      expect(statusType?.isExported).toBe(true);
+    });
+
+    test("should handle interface methods", async () => {
+      const code = `
+export interface Repository {
+  save(data: string): Promise<void>;
+  load(): Promise<string>;
+  delete(id: string): boolean;
+}
+      `.trim();
+
+      const filePath = join(tempDir, "interface-methods.ts");
+      await fs.writeFile(filePath, code);
+
+      const result = await analyzer.analyzeFile(filePath);
+
+      expect(result).not.toBeNull();
+      const repo = result?.interfaces.find((i) => i.name === "Repository");
+      expect(repo?.methods.length).toBe(3);
+    });
+  });
 });

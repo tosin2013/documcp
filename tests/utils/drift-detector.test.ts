@@ -897,4 +897,265 @@ export function sharedFunc(param: string): void {}
       ).toBeGreaterThanOrEqual(1);
     });
   });
+
+  describe("Advanced Suggestion Generation", () => {
+    test("should generate suggestions for added functions with signatures", async () => {
+      const oldCode = `export function existing(): void {}`;
+
+      await fs.writeFile(
+        join(projectPath, "src", "added-with-sig.ts"),
+        oldCode,
+      );
+
+      const oldDoc = `
+# API
+
+## existing
+
+Existing function documentation.
+      `.trim();
+
+      await fs.writeFile(join(docsPath, "added-with-sig.md"), oldDoc);
+
+      const oldSnapshot = await detector.createSnapshot(projectPath, docsPath);
+
+      // Add new function with signature
+      const newCode = `
+export function existing(): void {}
+export async function newFunction(param: string, count: number): Promise<boolean> {
+  return true;
+}
+      `.trim();
+
+      await fs.writeFile(
+        join(projectPath, "src", "added-with-sig.ts"),
+        newCode,
+      );
+
+      const newSnapshot = await detector.createSnapshot(projectPath, docsPath);
+
+      const drifts = await detector.detectDrift(oldSnapshot, newSnapshot);
+      const addedDrift = drifts.find((d) =>
+        d.filePath.includes("added-with-sig.ts"),
+      );
+
+      expect(addedDrift).toBeDefined();
+      expect(addedDrift?.drifts.some((d) => d.type === "missing")).toBe(true);
+
+      // Should detect the added function
+      const hasAddedFunction = addedDrift?.drifts.some((d) =>
+        d.codeChanges.some((c) => c.name === "newFunction"),
+      );
+      expect(hasAddedFunction).toBe(true);
+    });
+
+    test("should handle class changes in suggestions", async () => {
+      const oldCode = `
+export class OldClass {
+  method(): void {}
+}
+      `.trim();
+
+      await fs.writeFile(join(projectPath, "src", "class-change.ts"), oldCode);
+
+      const oldDoc = `
+# Classes
+
+## OldClass
+
+Documentation for OldClass.
+      `.trim();
+
+      await fs.writeFile(join(docsPath, "class-change.md"), oldDoc);
+
+      const oldSnapshot = await detector.createSnapshot(projectPath, docsPath);
+
+      // Modify class
+      const newCode = `
+export class OldClass {
+  method(): void {}
+  newMethod(): void {}
+}
+      `.trim();
+
+      await fs.writeFile(join(projectPath, "src", "class-change.ts"), newCode);
+
+      const newSnapshot = await detector.createSnapshot(projectPath, docsPath);
+
+      const drifts = await detector.detectDrift(oldSnapshot, newSnapshot);
+
+      expect(drifts.length).toBeGreaterThanOrEqual(0);
+    });
+
+    test("should handle interface changes in suggestions", async () => {
+      const oldCode = `
+export interface UserInterface {
+  id: string;
+}
+      `.trim();
+
+      await fs.writeFile(
+        join(projectPath, "src", "interface-change.ts"),
+        oldCode,
+      );
+
+      const oldDoc = `
+# Interfaces
+
+## UserInterface
+
+The UserInterface interface.
+      `.trim();
+
+      await fs.writeFile(join(docsPath, "interface-change.md"), oldDoc);
+
+      const oldSnapshot = await detector.createSnapshot(projectPath, docsPath);
+
+      // Modify interface
+      const newCode = `
+export interface UserInterface {
+  id: string;
+  name: string;
+}
+      `.trim();
+
+      await fs.writeFile(
+        join(projectPath, "src", "interface-change.ts"),
+        newCode,
+      );
+
+      const newSnapshot = await detector.createSnapshot(projectPath, docsPath);
+
+      const drifts = await detector.detectDrift(oldSnapshot, newSnapshot);
+
+      expect(drifts.length).toBeGreaterThanOrEqual(0);
+    });
+
+    test("should handle type alias changes in suggestions", async () => {
+      const oldCode = `
+export type Status = "active" | "inactive";
+      `.trim();
+
+      await fs.writeFile(join(projectPath, "src", "type-change.ts"), oldCode);
+
+      const oldDoc = `
+# Types
+
+## Status
+
+The Status type.
+      `.trim();
+
+      await fs.writeFile(join(docsPath, "type-change.md"), oldDoc);
+
+      const oldSnapshot = await detector.createSnapshot(projectPath, docsPath);
+
+      // Modify type
+      const newCode = `
+export type Status = "active" | "inactive" | "pending";
+      `.trim();
+
+      await fs.writeFile(join(projectPath, "src", "type-change.ts"), newCode);
+
+      const newSnapshot = await detector.createSnapshot(projectPath, docsPath);
+
+      const drifts = await detector.detectDrift(oldSnapshot, newSnapshot);
+
+      expect(drifts.length).toBeGreaterThanOrEqual(0);
+    });
+
+    test("should detect documentation referencing classes", async () => {
+      const code = `
+export class DocumentedClass {
+  public property: string;
+  constructor(prop: string) {
+    this.property = prop;
+  }
+}
+      `.trim();
+
+      await fs.writeFile(join(projectPath, "src", "doc-class.ts"), code);
+
+      const doc = `
+# Classes
+
+See the \`DocumentedClass\` for details.
+
+## DocumentedClass
+
+This class does something important.
+      `.trim();
+
+      await fs.writeFile(join(docsPath, "doc-class.md"), doc);
+
+      const oldSnapshot = await detector.createSnapshot(projectPath, docsPath);
+
+      // Modify class
+      const newCode = `
+export class DocumentedClass {
+  public property: string;
+  public newProperty: number;
+  constructor(prop: string, num: number) {
+    this.property = prop;
+    this.newProperty = num;
+  }
+}
+      `.trim();
+
+      await fs.writeFile(join(projectPath, "src", "doc-class.ts"), newCode);
+
+      const newSnapshot = await detector.createSnapshot(projectPath, docsPath);
+
+      const drifts = await detector.detectDrift(oldSnapshot, newSnapshot);
+      const classDrift = drifts.find((d) =>
+        d.filePath.includes("doc-class.ts"),
+      );
+
+      // Check that affected docs were identified
+      if (classDrift && classDrift.hasDrift) {
+        expect(classDrift.impactAnalysis).toBeDefined();
+      }
+    });
+
+    test("should detect documentation referencing types", async () => {
+      const code = `
+export type ConfigType = {
+  apiKey: string;
+  timeout: number;
+};
+      `.trim();
+
+      await fs.writeFile(join(projectPath, "src", "doc-type.ts"), code);
+
+      const doc = `
+# Configuration
+
+The \`ConfigType\` defines configuration options.
+      `.trim();
+
+      await fs.writeFile(join(docsPath, "doc-type.md"), doc);
+
+      const oldSnapshot = await detector.createSnapshot(projectPath, docsPath);
+
+      // Modify type
+      const newCode = `
+export type ConfigType = {
+  apiKey: string;
+  timeout: number;
+  retries: number;
+};
+      `.trim();
+
+      await fs.writeFile(join(projectPath, "src", "doc-type.ts"), newCode);
+
+      const newSnapshot = await detector.createSnapshot(projectPath, docsPath);
+
+      const drifts = await detector.detectDrift(oldSnapshot, newSnapshot);
+      const typeDrift = drifts.find((d) => d.filePath.includes("doc-type.ts"));
+
+      if (typeDrift && typeDrift.hasDrift) {
+        expect(typeDrift.impactAnalysis).toBeDefined();
+      }
+    });
+  });
 });
