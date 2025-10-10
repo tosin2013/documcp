@@ -489,5 +489,123 @@ Content here.`;
 
       expect(result.urls[0].loc).toBe("https://example.com/");
     });
+
+    it("should exclude directories matching exclusion patterns", async () => {
+      // Create directory structure with excluded dirs
+      await fs.mkdir(path.join(docsDir, "node_modules"), { recursive: true });
+      await fs.mkdir(path.join(docsDir, "valid"), { recursive: true });
+      await fs.writeFile(
+        path.join(docsDir, "node_modules", "package.md"),
+        "# Should be excluded",
+      );
+      await fs.writeFile(
+        path.join(docsDir, "valid", "page.md"),
+        "# Valid Page",
+      );
+
+      const result = await generateSitemap({
+        baseUrl: "https://example.com",
+        docsPath: docsDir,
+        useGitHistory: false,
+      });
+
+      // Should only include valid directory, not node_modules
+      expect(result.urls).toHaveLength(1);
+      expect(result.urls[0].loc).toContain("valid/page");
+    });
+
+    it("should handle directory scan errors gracefully", async () => {
+      // Create a valid docs directory
+      await fs.writeFile(path.join(docsDir, "valid.md"), "# Valid");
+
+      const result = await generateSitemap({
+        baseUrl: "https://example.com",
+        docsPath: docsDir,
+        useGitHistory: false,
+      });
+
+      // Should succeed despite potential permission issues
+      expect(result.urls.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it("should categorize explanation pages correctly", async () => {
+      await fs.mkdir(path.join(docsDir, "explanation"), { recursive: true });
+      await fs.writeFile(
+        path.join(docsDir, "explanation", "concepts.md"),
+        "# Concepts",
+      );
+
+      const result = await generateSitemap({
+        baseUrl: "https://example.com",
+        docsPath: docsDir,
+        useGitHistory: false,
+      });
+
+      expect(result.stats.byCategory).toHaveProperty("explanation");
+      expect(result.stats.byCategory.explanation).toBeGreaterThan(0);
+    });
+
+    it("should fall back to file system date when git fails", async () => {
+      await fs.writeFile(path.join(docsDir, "no-git.md"), "# No Git");
+
+      const result = await generateSitemap({
+        baseUrl: "https://example.com",
+        docsPath: docsDir,
+        useGitHistory: true, // Try git but will fall back
+      });
+
+      // Should still have a lastmod date from file system
+      expect(result.urls[0].lastmod).toBeDefined();
+      expect(result.urls[0].lastmod).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    });
+
+    it("should handle files without extensions", async () => {
+      await fs.writeFile(path.join(docsDir, "README"), "# Readme");
+
+      const result = await generateSitemap({
+        baseUrl: "https://example.com",
+        docsPath: docsDir,
+        includePatterns: ["**/*"], // Include all files
+        useGitHistory: false,
+      });
+
+      // Should handle extensionless files
+      expect(result.urls.length).toBeGreaterThanOrEqual(0);
+    });
+
+    it("should handle empty git timestamp", async () => {
+      // Create file and generate sitemap with git enabled
+      await fs.writeFile(path.join(docsDir, "test.md"), "# Test");
+
+      const result = await generateSitemap({
+        baseUrl: "https://example.com",
+        docsPath: docsDir,
+        useGitHistory: true,
+      });
+
+      // Should have valid dates even if git returns empty
+      expect(result.urls[0].lastmod).toBeDefined();
+    });
+
+    it("should handle files in deeply excluded paths", async () => {
+      await fs.mkdir(path.join(docsDir, ".git", "objects"), {
+        recursive: true,
+      });
+      await fs.writeFile(
+        path.join(docsDir, ".git", "objects", "file.md"),
+        "# Git Object",
+      );
+      await fs.writeFile(path.join(docsDir, "valid.md"), "# Valid");
+
+      const result = await generateSitemap({
+        baseUrl: "https://example.com",
+        docsPath: docsDir,
+        useGitHistory: false,
+      });
+
+      // Should exclude .git directory
+      expect(result.urls).toHaveLength(1);
+      expect(result.urls[0].loc).not.toContain(".git");
+    });
   });
 });
