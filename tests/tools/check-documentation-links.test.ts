@@ -759,4 +759,171 @@ describe("checkDocumentationLinks", () => {
       expect(contentText).toContain('"filesScanned": 4');
     });
   });
+
+  describe("Special Link Types", () => {
+    test("should skip mailto links during filtering", async () => {
+      await writeFile(
+        join(testDir, "README.md"),
+        "[Email](mailto:test@example.com)\n[Valid](./guide.md)",
+      );
+      await writeFile(join(testDir, "guide.md"), "# Guide");
+
+      const result = await checkDocumentationLinks({
+        documentation_path: testDir,
+        check_external_links: true,
+        check_internal_links: true,
+      });
+
+      const formatted = formatMCPResponse(result);
+      expect(formatted.isError).toBe(false);
+      const contentText = formatted.content.map((c) => c.text).join(" ");
+      // Should find only the internal link, mailto is filtered
+      expect(contentText).toContain('"totalLinks": 1');
+      expect(contentText).toContain("./guide.md");
+    });
+
+    test("should skip tel links during filtering", async () => {
+      await writeFile(
+        join(testDir, "README.md"),
+        "[Phone](tel:+1234567890)\n[Valid](./guide.md)",
+      );
+      await writeFile(join(testDir, "guide.md"), "# Guide");
+
+      const result = await checkDocumentationLinks({
+        documentation_path: testDir,
+        check_external_links: true,
+        check_internal_links: true,
+      });
+
+      const formatted = formatMCPResponse(result);
+      expect(formatted.isError).toBe(false);
+      const contentText = formatted.content.map((c) => c.text).join(" ");
+      // Should find only the internal link, tel is filtered
+      expect(contentText).toContain('"totalLinks": 1');
+      expect(contentText).toContain("./guide.md");
+    });
+
+    test("should check anchor links when enabled and file exists", async () => {
+      await writeFile(
+        join(testDir, "README.md"),
+        "[Guide Anchor](./guide.md#introduction)",
+      );
+      await writeFile(
+        join(testDir, "guide.md"),
+        "# Guide\n\n## Introduction\n\nContent here.",
+      );
+
+      const result = await checkDocumentationLinks({
+        documentation_path: testDir,
+        check_anchor_links: true,
+        check_internal_links: true,
+        check_external_links: false,
+      });
+
+      const formatted = formatMCPResponse(result);
+      expect(formatted.isError).toBe(false);
+      const contentText = formatted.content.map((c) => c.text).join(" ");
+      expect(contentText).toContain('"totalLinks": 1');
+      expect(contentText).toContain("./guide.md#introduction");
+    });
+
+    test("should handle anchor links to other files", async () => {
+      await writeFile(
+        join(testDir, "README.md"),
+        "[Guide Section](./guide.md#setup)",
+      );
+      await writeFile(
+        join(testDir, "guide.md"),
+        "# Guide\n\n## Setup\n\nSetup instructions.",
+      );
+
+      const result = await checkDocumentationLinks({
+        documentation_path: testDir,
+        check_anchor_links: true,
+        check_internal_links: true,
+        check_external_links: false,
+      });
+
+      const formatted = formatMCPResponse(result);
+      expect(formatted.isError).toBe(false);
+      const contentText = formatted.content.map((c) => c.text).join(" ");
+      expect(contentText).toContain('"totalLinks": 1');
+    });
+  });
+
+  describe("Error Handling Edge Cases", () => {
+    test("should handle internal link check errors gracefully", async () => {
+      await writeFile(
+        join(testDir, "README.md"),
+        "[Broken](./nonexistent/deeply/nested/file.md)",
+      );
+
+      const result = await checkDocumentationLinks({
+        documentation_path: testDir,
+        check_internal_links: true,
+        check_external_links: false,
+      });
+
+      const formatted = formatMCPResponse(result);
+      expect(formatted.isError).toBe(false);
+      const contentText = formatted.content.map((c) => c.text).join(" ");
+      // Should report broken link
+      expect(contentText).toContain('"brokenLinks": 1');
+    });
+
+    test("should handle network errors for external links", async () => {
+      await writeFile(
+        join(testDir, "README.md"),
+        "[Invalid](https://this-domain-should-not-exist-12345.com)",
+      );
+
+      const result = await checkDocumentationLinks({
+        documentation_path: testDir,
+        check_external_links: true,
+        timeout_ms: 2000,
+      });
+
+      const formatted = formatMCPResponse(result);
+      expect(formatted.isError).toBe(false);
+      // Should handle as broken or warning
+    });
+
+    test("should handle multiple link types in same document", async () => {
+      await writeFile(
+        join(testDir, "README.md"),
+        `
+# Documentation
+
+[Internal](./guide.md)
+[External](https://github.com)
+[Email](mailto:test@example.com)
+[Phone](tel:123-456-7890)
+[Anchor](./guide.md#section)
+
+## Section
+Content here.
+`,
+      );
+      await writeFile(
+        join(testDir, "guide.md"),
+        "# Guide\n\n## Section\n\nContent",
+      );
+
+      const result = await checkDocumentationLinks({
+        documentation_path: testDir,
+        check_internal_links: true,
+        check_external_links: true,
+        check_anchor_links: true,
+      });
+
+      const formatted = formatMCPResponse(result);
+      expect(formatted.isError).toBe(false);
+      const contentText = formatted.content.map((c) => c.text).join(" ");
+      // Should process checkable link types (internal, external, anchor to file)
+      // mailto and tel are filtered out
+      expect(contentText).toContain('"totalLinks": 3');
+      expect(contentText).toContain("./guide.md");
+      expect(contentText).toContain("https://github.com");
+    });
+  });
 });
