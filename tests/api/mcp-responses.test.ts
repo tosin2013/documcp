@@ -260,6 +260,34 @@ describe("API Response Standardization Tests", () => {
       expect(recommendationText).toContain("⚠️"); // Warning icon
       expect(recommendationText).toContain("🔴"); // Critical icon
     });
+
+    it("should format next steps without toolRequired but with description", () => {
+      const response: MCPToolResponse<{}> = {
+        success: true,
+        data: {},
+        metadata: {
+          toolVersion: "1.0.0",
+          executionTime: 10,
+          timestamp: "2023-01-01T12:00:00.000Z",
+        },
+        nextSteps: [
+          {
+            action: "Manual Step",
+            description: "This step requires manual intervention",
+            priority: "high",
+          },
+        ],
+      };
+
+      const formatted = formatMCPResponse(response);
+      const nextStepText =
+        formatted.content.find((c) => c.text.includes("Next Steps:"))?.text ||
+        "";
+
+      expect(nextStepText).toContain("Manual Step");
+      expect(nextStepText).toContain("This step requires manual intervention");
+      expect(nextStepText).not.toContain("use "); // Should not have "use" since no toolRequired
+    });
   });
 
   describe("Response Consistency Across Tools", () => {
