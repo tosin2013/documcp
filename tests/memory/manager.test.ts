@@ -410,4 +410,51 @@ describe("MemoryManager", () => {
       }, 50);
     });
   });
+
+  describe("Search with Grouping and Sorting", () => {
+    test("should group results by type", async () => {
+      await manager.remember("analysis", { test: 1 }, { projectId: "proj1" });
+      await manager.remember("deployment", { test: 2 }, { projectId: "proj1" });
+      await manager.remember("analysis", { test: 3 }, { projectId: "proj2" });
+
+      const grouped: any = await manager.search("", { groupBy: "type" });
+
+      expect(grouped).toHaveProperty("analysis");
+      expect(grouped).toHaveProperty("deployment");
+      expect(grouped.analysis.length).toBe(2);
+      expect(grouped.deployment.length).toBe(1);
+    });
+
+    test("should group results by project", async () => {
+      manager.setContext({ projectId: "proj1" });
+      await manager.remember("analysis", { test: 1 });
+
+      manager.setContext({ projectId: "proj2" });
+      await manager.remember("analysis", { test: 2 });
+
+      const grouped: any = await manager.search("", { groupBy: "project" });
+
+      expect(grouped).toHaveProperty("proj1");
+      expect(grouped).toHaveProperty("proj2");
+    });
+
+    test("should group results by date", async () => {
+      await manager.remember("analysis", { test: 1 }, { projectId: "proj1" });
+
+      const grouped: any = await manager.search("", { groupBy: "date" });
+
+      const today = new Date().toISOString().split("T")[0];
+      expect(grouped).toHaveProperty(today);
+    });
+
+    test("should sort results by type", async () => {
+      await manager.remember("recommendation", { test: 1 }, {});
+      await manager.remember("analysis", { test: 2 }, {});
+
+      const results = await manager.search("", { sortBy: "type" });
+
+      expect(results[0].type).toBe("analysis");
+      expect(results[1].type).toBe("recommendation");
+    });
+  });
 });
