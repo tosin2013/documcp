@@ -167,7 +167,7 @@ podman machine start
 **Solutions**:
 
 - Check that file paths in your markdown match actual file locations
-- Ensure relative links use correct syntax: `[text](../other-page.md)`
+- Ensure relative links use correct syntax (e.g., `[text](../reference/configuration.md)`)
 - Verify that `sidebars.js` references match actual file names
 
 ### Missing Pages

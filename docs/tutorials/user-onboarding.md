@@ -440,11 +440,11 @@ CMD ["documcp", "serve", "--port", "3000"]
 
 ## 📖 Additional Resources
 
-- [API Reference](/api/) - Complete API documentation
-- [Configuration Guide](/reference/configuration/) - Detailed configuration options
-- [MCP Tools Reference](/reference/mcp-tools/) - MCP tool specifications
-- [GitHub Pages Deployment](/how-to/github-pages-deployment/) - Deployment guide
-- [Troubleshooting Guide](/how-to/troubleshooting/) - Common issues and solutions
+- [API Reference](../api/) - Complete API documentation
+- [Configuration Guide](../reference/configuration.md) - Detailed configuration options
+- [MCP Tools Reference](../reference/mcp-tools.md) - MCP tool specifications
+- [GitHub Pages Deployment](../how-to/github-pages-deployment.md) - Deployment guide
+- [Troubleshooting Guide](../how-to/troubleshooting.md) - Common issues and solutions
 
 ## 🤝 Getting Help
 

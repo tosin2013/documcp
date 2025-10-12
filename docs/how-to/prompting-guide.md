@@ -2,6 +2,26 @@
 
 This guide shows you how to interact with DocuMCP using effective prompts to get the best results from the system.
 
+## 🎯 Pro Tip: Use @LLM_CONTEXT.md
+
+When using DocuMCP in your AI assistant (Claude, ChatGPT, etc.), **reference the LLM_CONTEXT.md file** for instant context about all 45 available tools:
+
+```
+@LLM_CONTEXT.md analyze my repository and recommend the best deployment strategy
+```
+
+The `LLM_CONTEXT.md` file provides:
+
+- Complete tool descriptions and parameters
+- Usage examples for all 45 tools
+- Common workflow patterns
+- Memory system documentation
+- Phase 3 code-to-docs sync capabilities
+
+**Location**: `/LLM_CONTEXT.md` in the root of your project
+
+This ensures your AI assistant has full context about DocuMCP's capabilities and can provide more accurate recommendations.
+
 ## Quick Start
 
 DocuMCP responds to natural language prompts. Here are the most common patterns:

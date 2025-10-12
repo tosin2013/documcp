@@ -1,0 +1,14 @@
+# DocuMCP Documentation - robots.txt
+# https://tosin2013.github.io/documcp
+
+# Allow all crawlers
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://tosin2013.github.io/documcp/sitemap.xml
+
+# Disallow build artifacts and temporary files
+Disallow: /node_modules/
+Disallow: /.docusaurus/
+Disallow: /build/

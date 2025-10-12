@@ -87,3 +87,6 @@ pids/
 
 # Auto-generated LLM context file
 LLM_CONTEXT.md
+
+# Invalid/test data
+invalid/

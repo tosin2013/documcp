@@ -606,5 +606,5 @@ podman run -it documcp-docs:test npx playwright test
 ## Related Documentation
 
 - [Link Validation Guide](./link-validation.md)
-- [Knowledge Graph Architecture](../adrs/adr-018-knowledge-graph-architecture.md)
-- [Deployment Tracking](../adrs/adr-020-deployment-tracking.md)
+- [Architecture Decision Records](../adrs/)
+- [Phase 2: Intelligence & Learning System](../phase-2-intelligence.md)

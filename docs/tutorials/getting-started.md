@@ -17,6 +17,25 @@ Before you begin, ensure you have:
 - Claude Code or another MCP-compatible client
 - Basic familiarity with documentation workflows
 
+## 🎯 Pro Tip: Reference LLM_CONTEXT.md
+
+When using DocuMCP through an AI assistant, **always reference the LLM_CONTEXT.md file** for comprehensive tool context:
+
+```
+@LLM_CONTEXT.md help me set up documentation for my TypeScript project
+```
+
+The `LLM_CONTEXT.md` file is auto-generated and contains:
+
+- All 45 tool descriptions and parameters
+- Usage examples and workflows
+- Memory system documentation
+- Phase 3 code-to-docs sync features
+
+**Location**: `/LLM_CONTEXT.md` (in project root)
+
+This ensures your AI assistant has complete context and can provide optimal recommendations.
+
 ## Step 1: Initial Repository Analysis
 
 Start by analyzing your repository to understand its characteristics and documentation needs:

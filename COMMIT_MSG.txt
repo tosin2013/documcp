@@ -1,0 +1,15 @@
+docs: comprehensive documentation improvements and pipeline fixes
+
+- Fix all broken links (11 in main docs, 14 in TypeDoc media)
+- Update GitHub Actions from Jekyll to Docusaurus
+- Upgrade to actions/upload-pages-artifact@v3 and deploy-pages@v4
+- Generate complete TypeDoc API reference documentation
+- Create new API Overview page with 45 tool categorization
+- Integrate LLM_CONTEXT.md references in 4 key locations
+- Add robots.txt for SEO optimization
+- Generate and validate sitemap.xml (62 URLs)
+- Update .gitignore to exclude invalid/ directory
+
+BREAKING CHANGE: GitHub Actions workflow now requires Docusaurus instead of Jekyll
+Fixes: Deprecated artifact actions error
+Closes: Documentation completeness gaps

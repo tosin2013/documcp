@@ -5,7 +5,7 @@ Conceptual documentation and background information about DocuMCP's architecture
 ## Architecture Overview
 
 - [DocuMCP Architecture](architecture.md) - Complete system architecture overview
-- [Phase 2: Intelligence & Learning System](phase-2-intelligence.md) - Advanced AI features
+- [Phase 2: Intelligence & Learning System](../phase-2-intelligence.md) - Advanced AI features
 
 ## Design Principles
 

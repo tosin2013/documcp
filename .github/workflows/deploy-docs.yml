@@ -1,8 +1,11 @@
-name: Deploy Jekyll to GitHub Pages
+name: Deploy Docusaurus to GitHub Pages
 
 on:
   push:
     branches: [main]
+    paths:
+      - 'docs/**'
+      - '.github/workflows/deploy-docs.yml'
   workflow_dispatch:
 
 permissions:
@@ -24,22 +27,25 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Ruby
-        uses: ruby/setup-ruby@v1
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          ruby-version: '3.1'
-          bundler-cache: true
-          working-directory: docs
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: docs/package-lock.json
 
-      - name: Build with Jekyll
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Docusaurus site
         run: npm run build
         env:
-          JEKYLL_ENV: production
+          NODE_ENV: production
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v2
+        uses: actions/upload-pages-artifact@v3
         with:
-          path: docs/./_site
+          path: docs/build
 
   deploy:
     environment:
@@ -50,4 +56,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v3
+        uses: actions/deploy-pages@v4

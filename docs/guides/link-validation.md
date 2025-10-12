@@ -310,6 +310,6 @@ await saveKnowledgeGraph();
 
 ## Related Documentation
 
-- [Knowledge Graph Architecture](../adrs/adr-018-knowledge-graph-architecture.md)
-- [Documentation Context Integration](../adrs/adr-019-documentation-context.md)
-- [Memory System](../guides/memory-system.md)
+- [Architecture Decision Records](../adrs/)
+- [Phase 2: Intelligence & Learning System](../phase-2-intelligence.md)
+- [Memory Workflows Tutorial](../tutorials/memory-workflows.md)

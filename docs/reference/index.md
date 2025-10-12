@@ -2,9 +2,19 @@
 
 Complete technical reference for DocuMCP's API, configuration, and tools.
 
+## 🎯 For AI Assistants: LLM_CONTEXT.md
+
+**Essential for AI-powered workflows**: Reference the comprehensive context file:
+
+- **[LLM Context Reference](../../LLM_CONTEXT.md)** - Complete tool reference for AI assistants (45 tools, workflows, examples)
+
+Use in AI assistants: `@LLM_CONTEXT.md [your query]`
+
 ## API Reference
 
-- [MCP Tools API](mcp-tools.md) - Complete API reference for all DocuMCP tools
+- **[API Overview](api-overview.md)** - Complete tool categorization and quick reference (NEW!)
+- **[MCP Tools API](mcp-tools.md)** - Detailed API reference for all DocuMCP tools
+- **[TypeDoc API](../api/)** - Auto-generated API documentation
 - [Configuration Options](configuration.md) - Configuration file reference
 - [CLI Commands](cli.md) - Command-line interface reference
 - [Prompt Templates](prompt-templates.md) - Available prompt templates
@@ -43,7 +53,7 @@ deployment:
 
 ## API Overview
 
-DocuMCP provides 21 tools across 4 main categories:
+DocuMCP provides **45 tools** across 7 main categories. See [API Overview](api-overview.md) for complete details.
 
 ### Analysis Tools
 
