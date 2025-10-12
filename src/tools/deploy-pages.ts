@@ -64,7 +64,7 @@ async function getSSGFromKnowledgeGraph(
     }
 
     // Get deployment recommendations for this project
-    const recommendations = await getDeploymentRecommendations(projectNode.id);
+    const recommendations = await getDeploymentRecommendations(analysisId);
 
     if (recommendations.length > 0) {
       // Return the highest confidence SSG
