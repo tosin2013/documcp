@@ -40,6 +40,9 @@ jobs:
       - name: Run tests
         run: npm test
 
+      - name: Clean up memory files before coverage run
+        run: rm -rf .documcp
+
       - name: Run tests with coverage
         run: npm test -- --coverage
 
