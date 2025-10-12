@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0](https://github.com/tosin2013/documcp/compare/v0.4.1...v0.5.0) (2025-10-12)
+
+### ⚠ BREAKING CHANGES
+
+- GitHub Actions workflow now requires Docusaurus instead of Jekyll
+  Fixes: Deprecated artifact actions error
+  Closes: Documentation completeness gaps
+
+### ♻️ Code Refactoring
+
+- implement MCP best practices and resource pattern redesign ([e3de334](https://github.com/tosin2013/documcp/commit/e3de334336580dc1e2e8f0e2302cc7f903a58b7d))
+
+### 🐛 Bug Fixes
+
+- ensure memory storage directory exists before file operations ([19961a1](https://github.com/tosin2013/documcp/commit/19961a1bb017f90931fff8957fd040723a5d0810))
+- resolve sitemap test failures and type issues ([232ce57](https://github.com/tosin2013/documcp/commit/232ce57ae1d1d0537122db6fa46e2614416ad929))
+
+### 🚀 Features
+
+- add generate_llm_context tool for dynamic LLM reference generation ([c8e3282](https://github.com/tosin2013/documcp/commit/c8e32823e2eb5f048b98b82f2840e1b4dee61094))
+- enhance ListRoots to auto-detect and list documentation directories ([d432c4c](https://github.com/tosin2013/documcp/commit/d432c4c0bf74f1944d142c24c074365c67e3bdd5))
+- implement MCP Phase 1 - progress notifications and logging support ([7d0ceeb](https://github.com/tosin2013/documcp/commit/7d0ceeb5e74611ae0f8276c63fed61e58ad16789))
+- implement MCP Phase 2 - roots permission system ([ba307af](https://github.com/tosin2013/documcp/commit/ba307afc3fb186db699f10d0fccf6d6935ceee4d))
+- implement Phase 3 code-to-docs synchronization and sitemap.xml management ([bbde81b](https://github.com/tosin2013/documcp/commit/bbde81be27938bacd05f1c30765e673e8679e6c7))
+- integrate AST analyzer into kg-code-integration for enhanced code parsing ([ef47894](https://github.com/tosin2013/documcp/commit/ef478940bf50616c672201a9c7720a7054eb0456))
+
+### 📚 Documentation
+
+- comprehensive documentation improvements and pipeline fixes ([be64fd2](https://github.com/tosin2013/documcp/commit/be64fd2ffbe277b87afd9bd214ee1c4d4d54b224))
+
 ### [0.4.1](https://github.com/tosin2013/documcp/compare/v0.4.0...v0.4.1) (2025-10-04)
 
 ### 📚 Documentation
