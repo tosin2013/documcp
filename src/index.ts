@@ -46,6 +46,11 @@ import {
   manageSitemap,
   ManageSitemapInputSchema,
 } from "./tools/manage-sitemap.js";
+import {
+  generateLLMContext,
+  GenerateLLMContextInputSchema,
+  setToolDefinitions,
+} from "./tools/generate-llm-context.js";
 import { formatMCPResponse } from "./types/api.js";
 import {
   isPathAllowed,
@@ -787,6 +792,12 @@ const TOOLS = [
       "Generate, validate, and manage sitemap.xml as the source of truth for documentation links. Sitemap.xml is used for SEO, search engine submission, and deployment tracking.",
     inputSchema: ManageSitemapInputSchema,
   },
+  {
+    name: "generate_llm_context",
+    description:
+      "Generate a comprehensive LLM context reference file documenting all tools, memory system, and workflows for easy @ reference",
+    inputSchema: GenerateLLMContextInputSchema,
+  },
   // Memory system tools
   ...memoryTools.map((tool) => ({
     ...tool,
@@ -818,6 +829,12 @@ const TOOLS = [
     ),
   })),
 ];
+
+// Export TOOLS for use in generate_llm_context tool
+export { TOOLS };
+
+// Set tool definitions for generate_llm_context tool
+setToolDefinitions(TOOLS);
 
 // Native MCP Prompts for technical writing assistance
 const PROMPTS = [
@@ -2186,6 +2203,31 @@ server.setRequestHandler(CallToolRequestSchema, async (request, extra) => {
 
         const result = await manageSitemap(args as any);
         return wrapToolResult(result, "manage_sitemap");
+      }
+
+      case "generate_llm_context": {
+        const projectPath = (args as any)?.projectPath;
+
+        // Check if project path is allowed
+        if (projectPath && !isPathAllowed(projectPath, allowedRoots)) {
+          return formatMCPResponse({
+            success: false,
+            error: {
+              code: "PERMISSION_DENIED",
+              message: getPermissionDeniedMessage(projectPath, allowedRoots),
+              resolution:
+                "Request access to this directory by starting the server with --root argument",
+            },
+            metadata: {
+              toolVersion: packageJson.version,
+              executionTime: 0,
+              timestamp: new Date().toISOString(),
+            },
+          });
+        }
+
+        const result = await generateLLMContext(args as any);
+        return wrapToolResult(result, "generate_llm_context");
       }
 
       case "read_directory": {

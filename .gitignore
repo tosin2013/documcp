@@ -84,3 +84,6 @@ pids/
 
 # Prettier configuration (if local)
 .prettierrc
+
+# Auto-generated LLM context file
+LLM_CONTEXT.md
