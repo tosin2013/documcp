@@ -1,4 +1,11 @@
-const packageJson = require("../package.json");
+// Try to load package.json from parent directory, fallback to local if not found
+let packageJson;
+try {
+  packageJson = require("../package.json");
+} catch (e) {
+  // Fallback for CI environments where parent package.json might not be accessible
+  packageJson = { version: "0.5.0" };
+}
 
 module.exports = {
   title: "DocuMCP",
