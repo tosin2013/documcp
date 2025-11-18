@@ -86,7 +86,6 @@ const sidebars = {
         "adrs/007-mcp-prompts-and-resources-integration",
         "adrs/008-intelligent-content-population-engine",
         "adrs/009-content-accuracy-validation-framework",
-        "adrs/010-mcp-resource-pattern-redesign",
       ],
     },
     {
