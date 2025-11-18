@@ -1,281 +1,182 @@
-# How to Optimize Documentation for SEO
+# How to Manage Documentation SEO
 
-This guide shows you how to optimize your DocuMCP-deployed documentation for search engines and discoverability.
+This guide shows you how to use DocuMCP's sitemap management tools to improve your documentation's search engine visibility.
 
 ## Quick Setup
 
 ```bash
-# Prompt DocuMCP:
-"optimize my documentation for SEO"
+# Generate sitemap for your documentation:
+"generate sitemap for my documentation"
 ```
 
 ## SEO Overview
 
-DocuMCP provides comprehensive SEO optimization for your documentation:
+DocuMCP provides basic SEO support through sitemap management:
 
-### Key Benefits
+### Available SEO Features
 
-- **Search Visibility**: Better rankings in search results
-- **User Discovery**: Easier to find relevant content
-- **Professional Appearance**: Rich snippets and metadata
-- **Analytics Integration**: Track search performance
+- **XML Sitemap Generation**: Automatic sitemap creation for documentation
+- **Sitemap Validation**: Verify sitemap structure and URLs
+- **Link Discovery**: Automatic detection of documentation pages
+- **GitHub Pages Integration**: Optimized for GitHub Pages deployment
 
-### SEO Elements
+### SEO Benefits
 
-- **Meta Tags**: Titles, descriptions, keywords
-- **Structured Data**: Schema.org markup
-- **Sitemap**: Automatic XML sitemap generation
-- **Robots.txt**: Search engine crawling instructions
+- **Search Engine Discovery**: Help search engines find your documentation
+- **Crawling Efficiency**: Provide structured navigation for crawlers
+- **URL Organization**: Maintain clean URL structure
+- **Update Tracking**: Track when pages were last modified
 
 ## Setup Methods
 
-### Method 1: Automated Optimization (Recommended)
+### Method 1: Automatic Sitemap Generation
 
 ```bash
-# Complete SEO setup:
-"analyze and optimize my documentation for SEO"
+# Generate sitemap for your documentation:
+"generate sitemap for my documentation"
 ```
 
 This will:
 
-1. Analyze your current content
-2. Generate optimized meta tags
-3. Create structured data markup
-4. Set up sitemap and robots.txt
-5. Configure analytics tracking
+1. Scan your documentation directory
+2. Discover all markdown and HTML files
+3. Generate XML sitemap with proper URLs
+4. Include last modified dates from git history
+5. Validate sitemap structure
 
-### Method 2: Manual Configuration
+### Method 2: Manual Sitemap Management
 
-#### Step 1: Meta Tags Optimization
-
-```bash
-# Optimize meta tags:
-"generate SEO meta tags for my documentation"
-```
-
-#### Step 2: Structured Data
+#### Step 1: Generate Sitemap
 
 ```bash
-# Add structured data:
-"add schema.org markup to my documentation"
+# Create XML sitemap:
+"create sitemap for my documentation with base URL https://mydocs.com"
 ```
 
-#### Step 3: Sitemap Generation
+#### Step 2: Validate Sitemap
 
 ```bash
-# Generate sitemap:
-"create XML sitemap for my documentation"
+# Validate existing sitemap:
+"validate my documentation sitemap"
 ```
 
-## SEO Configuration
+#### Step 3: Update Sitemap
 
-### Meta Tags Configuration
+```bash
+# Update sitemap with new content:
+"update my documentation sitemap"
+```
+
+## Sitemap Management
+
+### Using MCP Tools
+
+```typescript
+// Generate sitemap using MCP tools
+import { manageSitemap } from "./dist/tools/manage-sitemap.js";
+
+// Generate new sitemap
+const sitemap = await manageSitemap({
+  action: "generate",
+  docsPath: "./docs",
+  baseUrl: "https://mydocs.github.io/repo",
+});
+
+// Validate existing sitemap
+const validation = await manageSitemap({
+  action: "validate",
+  docsPath: "./docs",
+});
+
+// Update sitemap with new content
+const update = await manageSitemap({
+  action: "update",
+  docsPath: "./docs",
+  baseUrl: "https://mydocs.github.io/repo",
+});
+```
+
+### Sitemap Configuration
 
 ```yaml
-# SEO configuration
-seo:
-  site_name: "DocuMCP Documentation"
-  description: "Intelligent documentation deployment with AI-powered analysis"
-  keywords: ["documentation", "deployment", "github pages", "mcp"]
-  author: "DocuMCP Team"
-  twitter:
-    card: "summary_large_image"
-    site: "@documcp"
-  open_graph:
-    type: "website"
-    locale: "en_US"
+# Sitemap generation settings
+sitemap:
+  base_url: "https://mydocs.github.io/repo"
+  include_patterns:
+    - "**/*.md"
+    - "**/*.html"
+  exclude_patterns:
+    - "node_modules/**"
+    - ".git/**"
+  update_frequency: "weekly"
+  use_git_history: true
 ```
 
-### Structured Data
+## Best Practices
 
-```json
-{
-  "@context": "https://schema.org",
-  "@type": "TechArticle",
-  "headline": "DocuMCP Documentation",
-  "description": "Complete guide to intelligent documentation deployment",
-  "author": {
-    "@type": "Organization",
-    "name": "DocuMCP"
-  },
-  "publisher": {
-    "@type": "Organization",
-    "name": "DocuMCP"
-  },
-  "datePublished": "2025-01-02",
-  "dateModified": "2025-01-02"
-}
-```
+### Sitemap Management
 
-## Content Optimization
+1. **Regular Updates**: Regenerate sitemap when adding new content
+2. **Proper URLs**: Ensure all URLs in sitemap are accessible
+3. **Git Integration**: Use git history for accurate last modified dates
+4. **Validation**: Always validate sitemap after generation
+5. **Submit to Search Engines**: Submit sitemap to Google Search Console
 
-### Title Optimization
+### URL Structure
 
-```bash
-# Optimize page titles:
-"optimize titles for SEO across my documentation"
-```
+- Use clean, descriptive URLs
+- Maintain consistent URL patterns
+- Avoid deep nesting when possible
+- Include keywords in URLs naturally
 
-### Heading Structure
+### Content Organization
 
-```bash
-# Check heading structure:
-"analyze heading hierarchy for SEO best practices"
-```
-
-### Content Analysis
-
-```bash
-# Analyze content quality:
-"analyze content for SEO optimization opportunities"
-```
-
-## Technical SEO
-
-### Site Speed Optimization
-
-```bash
-# Optimize site speed:
-"optimize my documentation site for speed"
-```
-
-### Mobile Optimization
-
-```bash
-# Check mobile optimization:
-"verify mobile optimization for my documentation"
-```
-
-### Core Web Vitals
-
-```bash
-# Monitor Core Web Vitals:
-"set up Core Web Vitals monitoring"
-```
-
-## Analytics Integration
-
-### Google Analytics
-
-```bash
-# Set up Google Analytics:
-"configure Google Analytics for my documentation"
-```
-
-### Search Console
-
-```bash
-# Set up Search Console:
-"configure Google Search Console for my site"
-```
-
-## Advanced SEO Features
-
-### Multi-language Support
-
-```bash
-# Set up multi-language SEO:
-"configure SEO for multiple languages"
-```
-
-### Breadcrumb Navigation
-
-```bash
-# Add breadcrumb SEO:
-"implement breadcrumb navigation for SEO"
-```
-
-### FAQ Schema
-
-```bash
-# Add FAQ structured data:
-"add FAQ schema to my documentation"
-```
-
-## SEO Monitoring
-
-### Performance Tracking
-
-```bash
-# Track SEO performance:
-"set up SEO performance monitoring"
-```
-
-### Keyword Monitoring
-
-```bash
-# Monitor keywords:
-"track keyword rankings for my documentation"
-```
+- Structure content logically
+- Use clear headings and navigation
+- Maintain consistent documentation patterns
+- Link related content appropriately
 
 ## Troubleshooting
 
 ### Common Issues
 
-**Problem**: Pages not indexed
-**Solution**: Check robots.txt and submit sitemap
+**Problem**: Sitemap not generating
+**Solution**: Check documentation directory permissions and file patterns
 
-**Problem**: Poor search rankings
-**Solution**: Improve content quality and meta tags
+**Problem**: Invalid URLs in sitemap
+**Solution**: Verify base URL configuration and file paths
 
-**Problem**: Duplicate content warnings
-**Solution**: Use canonical URLs and consolidate content
+**Problem**: Sitemap not updating
+**Solution**: Ensure git history is accessible for last modified dates
 
-**Problem**: Mobile usability issues
-**Solution**: Optimize responsive design
+**Problem**: Search engines not finding pages
+**Solution**: Submit sitemap to Google Search Console and verify accessibility
 
-### SEO Audit
+### Sitemap Debugging
 
 ```bash
-# Run SEO audit:
-"audit my documentation for SEO issues"
+# Debug sitemap issues:
+"validate my sitemap and check for errors"
 ```
 
-## Best Practices
+## Sitemap Tools
 
-### Content Guidelines
+### Built-in DocuMCP Tools
 
-1. **Unique Titles**: Each page should have a unique, descriptive title
-2. **Meta Descriptions**: Write compelling 150-160 character descriptions
-3. **Heading Structure**: Use proper H1-H6 hierarchy
-4. **Internal Linking**: Link related content appropriately
-5. **Alt Text**: Include descriptive alt text for images
+- **Sitemap Generation**: Create XML sitemaps automatically
+- **Sitemap Validation**: Verify sitemap structure and URLs
+- **Link Discovery**: Find all documentation pages
+- **Git Integration**: Use git history for modification dates
 
-### Technical Guidelines
+### MCP Tools Available
 
-1. **Page Speed**: Optimize for fast loading times
-2. **Mobile-First**: Ensure mobile optimization
-3. **HTTPS**: Use secure connections
-4. **Clean URLs**: Use readable, keyword-rich URLs
-5. **XML Sitemap**: Keep sitemap updated
-
-### Monitoring Guidelines
-
-1. **Regular Audits**: Check SEO health monthly
-2. **Analytics Review**: Monitor traffic and rankings
-3. **Content Updates**: Keep content fresh and relevant
-4. **Link Building**: Build quality backlinks
-5. **User Experience**: Focus on user satisfaction
-
-## Tools and Resources
-
-### DocuMCP SEO Tools
-
-- SEO analysis and optimization
-- Meta tag generation
-- Structured data markup
-- Performance monitoring
-
-### External Tools
-
-- Google Search Console
-- Google Analytics
-- PageSpeed Insights
-- Schema.org validator
+- `manage_sitemap`: Generate, validate, and update sitemaps
+- `check_documentation_links`: Verify all links work correctly
+- `validate_content`: Check documentation accuracy
 
 ## Next Steps
 
+- [Deploy Pages](../reference/mcp-tools.md#deploy_pages)
 - [Site Monitoring](site-monitoring.md)
-- [Analytics Setup](analytics-setup.md)
-- [Performance Optimization](performance-optimization.md)
 - [Custom Domains](custom-domains.md)
+- [Troubleshooting](troubleshooting.md)

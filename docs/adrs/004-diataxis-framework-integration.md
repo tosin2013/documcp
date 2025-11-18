@@ -17,10 +17,10 @@ DocuMCP aims to improve the quality and effectiveness of technical documentation
 
 Diataxis Framework Components:
 
-- **Tutorials**: Learning-oriented content for skill acquisition
-- **How-to Guides**: Problem-solving oriented content for specific tasks
-- **Technical Reference**: Information-oriented content for lookup and verification
-- **Explanation**: Understanding-oriented content for context and background
+- **Tutorials**: Learning-oriented content for skill acquisition (study context)
+- **How-to Guides**: Problem-solving oriented content for specific tasks (work context)
+- **Reference**: Information-oriented content for lookup and verification (information context)
+- **Explanation**: Understanding-oriented content for context and background (understanding context)
 
 Current documentation challenges:
 

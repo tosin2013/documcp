@@ -1,119 +1,140 @@
-# How to Monitor Your Documentation Site
+# How to Verify and Monitor Your Documentation Deployment
 
-This guide shows you how to monitor your deployed documentation site for uptime, performance, and content accuracy.
+This guide shows you how to verify your deployed documentation site and monitor deployment health using DocuMCP's built-in tools.
 
 ## Quick Setup
 
 ```bash
-# Prompt DocuMCP:
-"set up monitoring for my documentation site"
+# Verify your deployment:
+"verify my GitHub Pages deployment and check for issues"
 ```
 
-## Monitoring Overview
+## Deployment Verification Overview
 
-DocuMCP provides comprehensive monitoring capabilities for your documentation deployment:
+DocuMCP provides deployment verification and health monitoring capabilities:
 
-### Health Checks
+### Verification Features
 
-- **Uptime Monitoring**: Track site availability
-- **Performance Metrics**: Monitor page load times
-- **Content Validation**: Verify documentation accuracy
-- **Link Checking**: Ensure all links remain functional
+- **Deployment Status**: Check if GitHub Pages deployment succeeded
+- **Site Accessibility**: Verify your site is reachable
+- **Content Validation**: Check documentation accuracy and links
+- **Build Health**: Monitor deployment pipeline health
 
-### Alerting
+### Health Monitoring
 
-- **Email Notifications**: Get alerted to issues
-- **Slack Integration**: Team notifications
-- **GitHub Issues**: Automatic issue creation
+- **Deployment Analytics**: Track success/failure rates over time
+- **Build Time Monitoring**: Monitor deployment performance
+- **Error Detection**: Identify common deployment issues
 
 ## Setup Methods
 
-### Method 1: Automated Setup (Recommended)
+### Method 1: Deployment Verification
 
 ```bash
-# Complete monitoring setup:
-"analyze my site and set up comprehensive monitoring"
+# Verify deployment status:
+"verify my GitHub Pages deployment and check for issues"
 ```
 
 This will:
 
-1. Analyze your current deployment
-2. Set up uptime monitoring
-3. Configure performance tracking
-4. Enable content validation
-5. Set up alerting
+1. Check GitHub Pages deployment status
+2. Verify site accessibility
+3. Validate documentation links
+4. Check content accuracy
+5. Generate health report
 
-### Method 2: Manual Configuration
+### Method 2: Content Validation
 
-#### Step 1: Basic Health Checks
-
-```bash
-# Set up basic monitoring:
-"enable health checks for my documentation site"
-```
-
-#### Step 2: Performance Monitoring
+#### Step 1: Link Checking
 
 ```bash
-# Configure performance tracking:
-"set up performance monitoring for my site"
+# Check documentation links:
+"check all my documentation links for broken references"
 ```
 
-#### Step 3: Content Validation
+#### Step 2: Content Accuracy
 
 ```bash
-# Enable content monitoring:
-"monitor my documentation content for accuracy"
+# Validate content accuracy:
+"validate my documentation content for errors and inconsistencies"
 ```
 
-## Monitoring Dashboard
+#### Step 3: Deployment Health
 
-Access your monitoring dashboard at:
+```bash
+# Check deployment health:
+"analyze my deployment health and provide recommendations"
+```
 
-- **Local**: `http://localhost:3001/monitoring`
-- **Production**: `https://your-site.com/monitoring`
+## Deployment Health Monitoring
 
-### Key Metrics
+### Using MCP Tools
 
-- **Uptime**: Site availability percentage
-- **Response Time**: Average page load time
-- **Error Rate**: Failed requests percentage
-- **Content Score**: Documentation quality metrics
+```typescript
+// Check deployment verification
+import { verifyDeployment } from "./dist/tools/verify-deployment.js";
+
+const verification = await verifyDeployment({
+  repository: "username/repo-name",
+  url: "https://username.github.io/repo-name",
+});
+
+// Check documentation links
+import { checkDocumentationLinks } from "./dist/tools/check-documentation-links.js";
+
+const linkCheck = await checkDocumentationLinks({
+  documentation_path: "./docs",
+  check_external_links: true,
+  check_internal_links: true,
+});
+```
+
+### Key Health Indicators
+
+- **Deployment Success**: GitHub Pages build status
+- **Link Health**: Broken/working link ratio
+- **Content Accuracy**: Documentation validation score
+- **Build Performance**: Deployment time trends
 
 ## Troubleshooting
 
 ### Common Issues
 
-**Problem**: Monitoring shows false positives
-**Solution**: Adjust thresholds and check network connectivity
+**Problem**: Deployment verification fails
+**Solution**: Check GitHub Pages settings and repository permissions
 
-**Problem**: Alerts not working
-**Solution**: Verify notification settings and credentials
+**Problem**: Link checker reports false broken links
+**Solution**: Verify external link accessibility and adjust timeout settings
 
-**Problem**: Performance metrics seem off
-**Solution**: Check monitoring location and timing
+**Problem**: Content validation shows low accuracy
+**Solution**: Review code examples and update outdated documentation
+
+**Problem**: Health score seems low
+**Solution**: Analyze deployment failures and optimize configurations
 
 ## Advanced Configuration
 
-### Custom Metrics
+### Custom Validation
 
 ```yaml
-# monitoring-config.yml
-monitoring:
-  uptime:
-    interval: 300s
+# validation-config.yml
+validation:
+  links:
     timeout: 30s
-  performance:
-    metrics: ["load_time", "first_paint", "interactive"]
+    check_external: true
+    check_internal: true
   content:
-    validation_interval: 3600s
-    link_checking: true
+    accuracy_threshold: 70
+    include_code_validation: true
+  deployment:
+    health_threshold: 80
+    track_build_times: true
 ```
 
 ### Integration Options
 
-- **GitHub Actions**: Automated monitoring in CI/CD
-- **External Services**: UptimeRobot, Pingdom integration
+- **GitHub Actions**: Automated validation in CI/CD workflows
+- **MCP Tools**: Direct integration with documcp verification tools
 - **Custom Scripts**: Tailored monitoring solutions
 
 ## Best Practices

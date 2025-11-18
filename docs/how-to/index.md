@@ -27,4 +27,4 @@ If you can't find what you're looking for:
 1. Check the [Troubleshooting Guide](troubleshooting.md)
 2. Review the [API Reference](../reference/mcp-tools.md)
 3. Explore the [Architecture Documentation](../adrs/)
-4. Ask questions in [GitHub Discussions](https://github.com/tosin2013/documcp/discussions)
+4. Ask questions in [GitHub Issues](https://github.com/tosin2013/documcp/issues) with the `question` label

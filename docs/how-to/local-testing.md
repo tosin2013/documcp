@@ -2,6 +2,30 @@
 
 This guide shows how to test your documentation locally before deploying to GitHub Pages using containerized environments that don't affect your system.
 
+## 🎯 Best Practice: Test Build Before Pushing
+
+**Always test your documentation build locally before pushing to git** to ensure GitHub Actions will build successfully:
+
+### Option 1: Test Node.js Build (Recommended - Matches GitHub Actions)
+
+```bash
+# Test the same build process GitHub Actions uses
+cd docs
+npm ci
+npm run build
+```
+
+This uses the exact same process as GitHub Actions and catches build issues early.
+
+### Option 2: Test Docker Build (Optional - For Container Validation)
+
+```bash
+# Quick Docker validation (if Dockerfile is configured)
+docker build -f Dockerfile.docs -t documcp-docs-test . && echo "✅ Docker build ready"
+```
+
+**Note**: Docker testing validates containerized environments, but GitHub Actions uses Node.js directly, so Option 1 is more reliable for CI validation.
+
 ## Quick Start - Containerized Testing
 
 DocuMCP automatically generates a containerized testing environment that requires only Docker or Podman:
@@ -75,16 +99,59 @@ docker run --rm -p 3001:3001 documcp-docs
 # or: podman run --rm -p 3001:3001 documcp-docs
 ```
 
-### Method 4: Legacy Local Installation (Not Recommended)
+### Method 4: Pre-Push Docker Validation
+
+**Recommended workflow before pushing to git:**
+
+```bash
+# 1. Test Docker build (validates CI will work)
+docker build -f Dockerfile.docs -t documcp-docs-test .
+
+# 2. If successful, test locally
+docker run --rm -p 3001:3001 documcp-docs-test
+
+# 3. Verify at http://localhost:3001, then push to git
+```
+
+This ensures your Docker build matches what GitHub Actions will use.
+
+### Method 5: Legacy Local Installation (Not Recommended)
 
 If you prefer to install dependencies locally (affects your system):
 
 ```bash
-cd docs-site
+cd docs
 npm install
 npm run build
 npm run serve
 ```
+
+## Pre-Push Checklist
+
+Before pushing documentation changes to git, ensure:
+
+- [ ] **Node.js build succeeds**: `cd docs && npm ci && npm run build` (matches GitHub Actions)
+- [ ] **Local preview works**: Documentation serves correctly at http://localhost:3001
+- [ ] **No broken links**: Run link checker (included in test script)
+- [ ] **Build output valid**: Check `docs/build` directory structure
+- [ ] **No console errors**: Check browser console for JavaScript errors
+
+**Quick pre-push validation command (Node.js - Recommended):**
+
+```bash
+cd docs && npm ci && npm run build && echo "✅ Ready to push!"
+```
+
+**Alternative Docker validation (if Dockerfile is configured):**
+
+```bash
+docker build -f Dockerfile.docs -t documcp-docs-test . && \
+docker run --rm -d -p 3001:3001 --name docs-test documcp-docs-test && \
+sleep 5 && curl -f http://localhost:3001 > /dev/null && \
+docker stop docs-test && echo "✅ Ready to push!"
+```
+
+**Note**: GitHub Actions uses Node.js directly (not Docker), so testing with `npm run build` is the most reliable way to validate CI will succeed.
 
 ## Verification Checklist
 

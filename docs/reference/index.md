@@ -14,6 +14,7 @@ Use in AI assistants: `@LLM_CONTEXT.md [your query]`
 
 - **[API Overview](api-overview.md)** - Complete tool categorization and quick reference (NEW!)
 - **[MCP Tools API](mcp-tools.md)** - Detailed API reference for all DocuMCP tools
+- **[Deploy Pages Tool](deploy-pages.md)** - Comprehensive deploy_pages tool documentation
 - **[TypeDoc API](../api/)** - Auto-generated API documentation
 - [Configuration Options](configuration.md) - Configuration file reference
 - [CLI Commands](cli.md) - Command-line interface reference
@@ -107,5 +108,5 @@ DocuMCP includes a sophisticated memory system for learning and optimization:
 
 - **Documentation**: This reference guide
 - **Examples**: See [Tutorials](../tutorials/)
-- **Community**: [GitHub Discussions](https://github.com/tosin2013/documcp/discussions)
+- **Community**: [GitHub Issues](https://github.com/tosin2013/documcp/issues)
 - **Issues**: [GitHub Issues](https://github.com/tosin2013/documcp/issues)

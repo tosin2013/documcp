@@ -187,7 +187,7 @@ jobs:
 
       - name: Setup Pages
         id: pages
-        uses: actions/configure-pages@v3
+        uses: actions/configure-pages@v5
 
       - name: Build with Hugo
         env:
@@ -200,7 +200,7 @@ jobs:
             --baseURL "${{ '{{ steps.pages.outputs.base_url }}' }}/"
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v2
+        uses: actions/upload-pages-artifact@v4
         with:
           path: ./public
 
@@ -210,10 +210,14 @@ jobs:
       url: ${{ '{{ steps.deployment.outputs.page_url }}' }}
     runs-on: ubuntu-latest
     needs: build
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v2
+        uses: actions/deploy-pages@v4
 ```
 
 ### Docusaurus Workflow Template
@@ -243,7 +247,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: "{{ node_version }}"
           cache: { { package_manager } }
@@ -255,10 +259,10 @@ jobs:
         run: { { build_command } }
 
       - name: Setup Pages
-        uses: actions/configure-pages@v3
+        uses: actions/configure-pages@v5
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v2
+        uses: actions/upload-pages-artifact@v4
         with:
           path: { { build_output_directory } }
 
@@ -268,10 +272,14 @@ jobs:
       url: ${{ '{{ steps.deployment.outputs.page_url }}' }}
     runs-on: ubuntu-latest
     needs: build
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v2
+        uses: actions/deploy-pages@v4
 ```
 
 ### Workflow Generation Logic
@@ -337,14 +345,27 @@ class RepositoryConfigurationManager {
     repoPath: string,
     config: RepositoryConfiguration,
   ): Promise<ConfigurationResult> {
-    return {
-      pagesConfiguration: await this.configurePagesSettings(config.pagesSource),
-      branchSetup: await this.setupBranchConfiguration(config.branchProtection),
-      secretsManagement: await this.configureSecrets(config.secrets),
-      environmentSetup: await this.setupEnvironments(
-        config.environmentSettings,
-      ),
-    };
+    try {
+      return {
+        pagesConfiguration: await this.configurePagesSettings(
+          config.pagesSource,
+        ),
+        branchSetup: await this.setupBranchConfiguration(
+          config.branchProtection,
+        ),
+        secretsManagement: await this.configureSecrets(config.secrets),
+        environmentSetup: await this.setupEnvironments(
+          config.environmentSettings,
+        ),
+      };
+    } catch (error) {
+      console.error(`Failed to configure repository at ${repoPath}:`, error);
+      throw new Error(
+        `Repository configuration failed: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`,
+      );
+    }
   }
 
   private async configurePagesSettings(

@@ -69,6 +69,12 @@ backup_*.json
 # DocuMCP storage
 .documcp/
 
+# Temporary files and test data
+.ingestion_progress.json
+fix-validate-test.js
+user/test-repo/
+enhanced-docs/
+
 # Logs
 logs/
 *.log
@@ -85,8 +91,9 @@ pids/
 # Prettier configuration (if local)
 .prettierrc
 
-# Auto-generated LLM context file
+# Auto-generated LLM context files
 LLM_CONTEXT.md
+.mcp-server-context.md
 
 # Invalid/test data
 invalid/

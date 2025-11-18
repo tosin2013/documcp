@@ -7,7 +7,7 @@ This guide provides comprehensive usage examples for DocuMCP functions, organize
 ### Basic Repository Analysis
 
 ```typescript
-import { analyzeRepository } from "documcp";
+import { analyzeRepository } from "./dist/tools/analyze-repository.js";
 
 // Analyze a simple project
 const analysis = await analyzeRepository({
@@ -44,7 +44,7 @@ console.log(`Documentation complexity: ${documentation.estimatedComplexity}`);
 ### Basic SSG Recommendation
 
 ```typescript
-import { recommendSSG } from "documcp";
+import { recommendSSG } from "./dist/tools/recommend-ssg.js";
 
 // Get recommendation based on analysis
 const recommendation = await recommendSSG({
@@ -103,9 +103,9 @@ if (recommendation.data.historicalData) {
 ### Basic Structure Setup
 
 ```typescript
-import { setupStructure } from "documcp";
+import { setupStructure } from "./dist/tools/setup-structure.js";
 
-// Set up Docusaurus structure
+// Set up Docusaurus structure with Diataxis framework
 const structure = await setupStructure({
   path: "./docs",
   ssg: "docusaurus",
@@ -114,6 +114,11 @@ const structure = await setupStructure({
 
 console.log(`Created ${structure.data.directoriesCreated.length} directories`);
 console.log(`Created ${structure.data.filesCreated.length} files`);
+console.log(
+  `Diataxis structure: ${Object.keys(structure.data.diataxisStructure).join(
+    ", ",
+  )}`,
+);
 ```
 
 ### Minimal Structure Setup
@@ -770,6 +775,138 @@ async function retryAnalysis(projectPath: string, maxRetries: number = 3) {
   throw new Error(
     `Analysis failed after ${maxRetries} attempts: ${lastError.message}`,
   );
+}
+```
+
+## 🔌 MCP Integration Examples
+
+### Complete MCP Workflow
+
+```typescript
+// Real-world example: Complete documentation deployment via MCP
+import { analyzeRepository } from "./dist/tools/analyze-repository.js";
+import { recommendSSG } from "./dist/tools/recommend-ssg.js";
+import { generateConfig } from "./dist/tools/generate-config.js";
+import { setupStructure } from "./dist/tools/setup-structure.js";
+import { deployPages } from "./dist/tools/deploy-pages.js";
+
+async function completeMCPWorkflow(projectPath: string, githubRepo: string) {
+  console.log("🔍 Starting DocuMCP workflow...");
+
+  // Step 1: Analyze repository
+  const analysis = await analyzeRepository({
+    path: projectPath,
+    depth: "comprehensive",
+  });
+
+  console.log(
+    `📊 Analysis complete: ${analysis.data.structure.totalFiles} files analyzed`,
+  );
+  console.log(`🏗️ Project type: ${analysis.data.recommendations.projectType}`);
+  console.log(
+    `💻 Primary language: ${analysis.data.recommendations.primaryLanguage}`,
+  );
+
+  // Step 2: Get SSG recommendation
+  const ssgRecommendation = await recommendSSG({
+    analysisId: analysis.id,
+    preferences: {
+      ecosystem: "javascript",
+      priority: "features",
+    },
+  });
+
+  console.log(`🎯 Recommended SSG: ${ssgRecommendation.data.recommended}`);
+  console.log(
+    `✅ Confidence: ${Math.round(ssgRecommendation.data.confidence * 100)}%`,
+  );
+
+  // Step 3: Generate configuration
+  const config = await generateConfig({
+    ssg: ssgRecommendation.data.recommended,
+    projectName: analysis.data.structure.projectName,
+    outputPath: "./docs",
+  });
+
+  console.log(
+    `⚙️ Configuration generated: ${config.data.filesGenerated.length} files`,
+  );
+
+  // Step 4: Setup Diataxis structure
+  const structure = await setupStructure({
+    path: "./docs",
+    ssg: ssgRecommendation.data.recommended,
+    includeExamples: true,
+  });
+
+  console.log(
+    `📁 Structure created: ${structure.data.directoriesCreated.length} directories`,
+  );
+  console.log(`📄 Files created: ${structure.data.filesCreated.length} files`);
+
+  // Step 5: Deploy to GitHub Pages
+  const deployment = await deployPages({
+    repository: githubRepo,
+    ssg: ssgRecommendation.data.recommended,
+    projectPath: projectPath,
+  });
+
+  console.log(`🚀 Deployment initiated: ${deployment.data.workflowUrl}`);
+  console.log(`🌐 Site URL: ${deployment.data.siteUrl}`);
+
+  return {
+    analysis: analysis.data,
+    recommendation: ssgRecommendation.data,
+    deployment: deployment.data,
+  };
+}
+
+// Usage
+completeMCPWorkflow("/path/to/your/project", "username/repository-name")
+  .then((result) => {
+    console.log("🎉 DocuMCP workflow completed successfully!");
+    console.log(`📊 Final result:`, result);
+  })
+  .catch((error) => {
+    console.error("❌ Workflow failed:", error.message);
+  });
+```
+
+### MCP Memory Integration
+
+```typescript
+// Example showing DocuMCP's memory system for learning user preferences
+import { analyzeRepository } from "./dist/tools/analyze-repository.js";
+import { recommendSSG } from "./dist/tools/recommend-ssg.js";
+
+async function intelligentRecommendation(projectPath: string, userId: string) {
+  // DocuMCP automatically learns from previous successful deployments
+  const analysis = await analyzeRepository({
+    path: projectPath,
+    depth: "standard",
+  });
+
+  // Memory system provides personalized recommendations
+  const recommendation = await recommendSSG({
+    analysisId: analysis.id,
+    userId: userId, // Memory system tracks user preferences
+  });
+
+  console.log(
+    `🧠 Memory-enhanced recommendation: ${recommendation.data.recommended}`,
+  );
+  console.log(
+    `📈 Based on ${
+      recommendation.data.memoryInsights?.similarProjects || 0
+    } similar projects`,
+  );
+  console.log(
+    `🎯 Success rate: ${Math.round(
+      (recommendation.data.memoryInsights?.successRate || 0) * 100,
+    )}%`,
+  );
+
+  return recommendation;
 }
 ```
 

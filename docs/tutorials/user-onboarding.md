@@ -27,7 +27,7 @@ npm install documcp --save-dev
 # Check if DocuMCP is installed correctly
 documcp --version
 
-# Should output: DocuMCP v0.3.4
+# Should output: DocuMCP v0.5.0
 ```
 
 ## 📋 Basic Usage Patterns

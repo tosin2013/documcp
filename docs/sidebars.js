@@ -9,7 +9,10 @@ const sidebars = {
       items: [
         "tutorials/getting-started",
         "tutorials/development-setup",
+        "tutorials/environment-setup",
         "tutorials/first-deployment",
+        "tutorials/user-onboarding",
+        "tutorials/memory-workflows",
       ],
     },
     {
@@ -20,6 +23,12 @@ const sidebars = {
         "how-to/github-pages-deployment",
         "how-to/local-testing",
         "how-to/prompting-guide",
+        "how-to/usage-examples",
+        "how-to/analytics-setup",
+        "how-to/custom-domains",
+        "how-to/performance-optimization",
+        "how-to/seo-optimization",
+        "how-to/site-monitoring",
         "how-to/troubleshooting",
       ],
     },
@@ -27,8 +36,10 @@ const sidebars = {
       type: "category",
       label: "📖 Reference",
       items: [
+        "reference/api-overview",
         "reference/cli",
         "reference/mcp-tools",
+        "reference/deploy-pages",
         "reference/configuration",
         "reference/prompt-templates",
       ],
@@ -36,7 +47,11 @@ const sidebars = {
     {
       type: "category",
       label: "💡 Explanation",
-      items: ["explanation/architecture"],
+      items: [
+        "explanation/architecture",
+        "phase-2-intelligence",
+        "knowledge-graph",
+      ],
     },
     {
       type: "category",
@@ -71,6 +86,21 @@ const sidebars = {
         "adrs/007-mcp-prompts-and-resources-integration",
         "adrs/008-intelligent-content-population-engine",
         "adrs/009-content-accuracy-validation-framework",
+        "adrs/010-mcp-resource-pattern-redesign",
+      ],
+    },
+    {
+      type: "category",
+      label: "🛠️ Development",
+      items: ["development/MCP_INSPECTOR_TESTING"],
+    },
+    {
+      type: "category",
+      label: "📘 Guides",
+      items: [
+        "guides/link-validation",
+        "guides/playwright-integration",
+        "guides/playwright-testing-workflow",
       ],
     },
   ],

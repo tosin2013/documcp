@@ -6,6 +6,8 @@ on:
     paths:
       - 'docs/**'
       - '.github/workflows/deploy-docs.yml'
+      - 'Dockerfile.docs'
+      - 'docker-compose.docs.yml'
   workflow_dispatch:
 
 permissions:
@@ -42,8 +44,11 @@ jobs:
         env:
           NODE_ENV: production
 
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           path: docs/build
 

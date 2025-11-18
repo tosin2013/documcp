@@ -370,40 +370,60 @@ const recommendSSGTool: MCPTool = {
 async function handleRecommendSSG(
   params: RecommendSSGParams,
 ): Promise<MCPToolResponse<SSGRecommendation>> {
-  const recommendation = await ssgRecommendationEngine.analyze(params);
+  try {
+    const recommendation = await ssgRecommendationEngine.analyze(params);
 
-  return {
-    success: true,
-    data: recommendation,
-    metadata: {
-      toolVersion: "1.0.0",
-      executionTime: recommendation.analysisTime,
-      confidenceScore: recommendation.confidence,
-      analysisDepth: "comprehensive",
-      timestamp: new Date().toISOString(),
-      correlationId: generateCorrelationId(),
-    },
-    recommendations: [
-      {
-        type: "optimization",
-        priority: "medium",
-        description: "Consider performance optimization strategies",
-        implementation: "Review build caching and incremental build options",
+    return {
+      success: true,
+      data: recommendation,
+      metadata: {
+        toolVersion: "1.0.0",
+        executionTime: recommendation.analysisTime,
+        confidenceScore: recommendation.confidence,
+        analysisDepth: "comprehensive",
+        timestamp: new Date().toISOString(),
+        correlationId: generateCorrelationId(),
       },
-    ],
-    nextSteps: [
-      {
-        action: "Generate Configuration",
-        description: "Create customized configuration for recommended SSG",
-        toolRequired: "generateConfiguration",
-        parameters: {
-          selectedSSG: recommendation.primaryRecommendation.ssg,
-          projectAnalysis: params.projectAnalysis,
+      recommendations: [
+        {
+          type: "optimization",
+          priority: "medium",
+          description: "Consider performance optimization strategies",
+          implementation: "Review build caching and incremental build options",
         },
-        estimated_time: "2-3 minutes",
+      ],
+      nextSteps: [
+        {
+          action: "Generate Configuration",
+          description: "Create customized configuration for recommended SSG",
+          toolRequired: "generateConfiguration",
+          parameters: {
+            selectedSSG: recommendation.primaryRecommendation.ssg,
+            projectAnalysis: params.projectAnalysis,
+          },
+          estimated_time: "2-3 minutes",
+        },
+      ],
+    };
+  } catch (error) {
+    console.error("SSG recommendation analysis failed:", error);
+    return {
+      success: false,
+      error: {
+        code: "SSG_RECOMMENDATION_FAILED",
+        message: `Failed to analyze SSG recommendations: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`,
+        resolution:
+          "Check project analysis data and retry with valid parameters",
       },
-    ],
-  };
+      metadata: {
+        toolVersion: "1.0.0",
+        timestamp: new Date().toISOString(),
+        correlationId: generateCorrelationId(),
+      },
+    };
+  }
 }
 ```
 

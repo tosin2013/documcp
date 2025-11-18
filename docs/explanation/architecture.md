@@ -111,9 +111,17 @@ All operations follow security best practices:
 
 ### MCP Server Core
 
-The main server (`src/index.ts`) implements the MCP protocol specification:
+The main server (`src/index.ts`) implements the MCP protocol specification using the low-level `Server` class from `@modelcontextprotocol/sdk/server/index.js`:
 
 ```typescript
+import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import {
+  CallToolRequestSchema,
+  ListToolsRequestSchema,
+  // ... other schemas
+} from "@modelcontextprotocol/sdk/types.js";
+
 const server = new Server(
   {
     name: "documcp",
@@ -121,27 +129,44 @@ const server = new Server(
   },
   {
     capabilities: {
-      tools: {}, // 25+ documentation tools
+      tools: {}, // 30+ documentation tools
       prompts: {
-        // Guided workflow prompts
-        listChanged: true,
+        listChanged: true, // Guided workflow prompts
       },
       resources: {
-        // Generated content resources
-        subscribe: true,
+        subscribe: true, // Generated content resources
         listChanged: true,
+      },
+      roots: {
+        listChanged: true, // Path permission management
       },
     },
   },
 );
+
+// Tool registration using request handlers
+server.setRequestHandler(ListToolsRequestSchema, async () => {
+  return { tools: TOOLS.map(/* transform to MCP format */) };
+});
+
+server.setRequestHandler(CallToolRequestSchema, async (request) => {
+  // Route to appropriate tool handler based on request.params.name
+});
+
+// Connect via stdio transport for process-based communication
+const transport = new StdioServerTransport();
+await server.connect(transport);
 ```
 
 **Key Features:**
 
-- **Tool Registration:** Dynamic tool discovery and registration
-- **Schema Validation:** Zod-based input/output validation
-- **Resource Management:** Automatic resource creation and storage
-- **Error Handling:** Comprehensive error management and reporting
+- **Low-Level Server Implementation:** Uses the foundational `Server` class for maximum control and flexibility
+- **Stdio Transport:** Communicates via standard input/output streams for process-based integration with MCP clients
+- **Manual Tool Registration:** Tools registered using `setRequestHandler` with `CallToolRequestSchema` and `ListToolsRequestSchema`
+- **Schema Validation:** Zod-based input/output validation with `zodToJsonSchema` conversion for MCP compatibility
+- **Resource Management:** Automatic resource creation and storage with URI-based access patterns
+- **Error Handling:** Comprehensive error management with structured MCP error responses
+- **Path Security:** Root-based permission checking via `--root` arguments to restrict file system access
 
 ### Repository Analysis Engine
 
@@ -254,12 +279,12 @@ Diataxis Framework Implementation:
 └─────────────────┘  └─────────────────┘
 ```
 
-**Content Types Generated:**
+**Content Types Generated (Diataxis Framework):**
 
-- **Tutorials:** Step-by-step learning guides
-- **How-to Guides:** Task-oriented solutions
-- **Reference:** API docs, configuration options
-- **Explanation:** Architecture, design decisions
+- **Tutorials:** Learning-oriented guides for skill acquisition (study context)
+- **How-to Guides:** Problem-solving guides for specific tasks (work context)
+- **Reference:** Information-oriented content for lookup and verification (information context)
+- **Explanation:** Understanding-oriented content for context and background (understanding context)
 
 ### Deployment Automation
 

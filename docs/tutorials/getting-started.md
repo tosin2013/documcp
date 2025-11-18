@@ -12,9 +12,9 @@ This tutorial will guide you through setting up and using DocuMCP's intelligent 
 
 Before you begin, ensure you have:
 
-- Node.js 16+ installed
+- Node.js 20.0.0 or higher installed
 - Access to a GitHub repository
-- Claude Code or another MCP-compatible client
+- Claude Desktop, Cursor, or another MCP-compatible client
 - Basic familiarity with documentation workflows
 
 ## 🎯 Pro Tip: Reference LLM_CONTEXT.md
@@ -147,12 +147,12 @@ Create a professional documentation structure following the Diataxis framework:
 }
 ```
 
-This creates four optimized sections:
+This creates four optimized sections following the Diataxis framework:
 
-- **Tutorials**: Learning-oriented guides
-- **How-to Guides**: Problem-solving instructions
-- **Reference**: Information-oriented technical docs
-- **Explanation**: Understanding-oriented background
+- **Tutorials**: Learning-oriented guides for skill acquisition (study context)
+- **How-to Guides**: Problem-solving guides for specific tasks (work context)
+- **Reference**: Information-oriented content for lookup and verification (information context)
+- **Explanation**: Understanding-oriented content for context and background (understanding context)
 
 ## Step 5: GitHub Pages Deployment
 

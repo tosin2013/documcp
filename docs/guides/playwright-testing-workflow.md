@@ -475,8 +475,11 @@ jobs:
           name: docs-build
           path: .
 
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
       - name: Upload to GitHub Pages
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           path: .
 

@@ -2,6 +2,10 @@
 
 DocuMCP provides a comprehensive set of tools via the Model Context Protocol (MCP). These tools enable intelligent documentation deployment through repository analysis, SSG recommendations, and automated GitHub Pages setup.
 
+## Implementation Details
+
+DocuMCP implements the MCP protocol using the low-level `Server` class from `@modelcontextprotocol/sdk/server/index.js` with `StdioServerTransport` for process-based communication. Tools are registered manually using `setRequestHandler` with `CallToolRequestSchema` and `ListToolsRequestSchema`, providing full control over tool execution and response formatting.
+
 ## Core Documentation Tools
 
 ### analyze_repository
@@ -94,10 +98,10 @@ DocuMCP provides a comprehensive set of tools via the Model Context Protocol (MC
 
 **Returns**: Created directory structure following Diataxis framework:
 
-- **tutorials/**: Learning-oriented guides
-- **how-to/**: Problem-oriented step-by-step guides
-- **reference/**: Information-oriented technical reference
-- **explanation/**: Understanding-oriented background material
+- **tutorials/**: Learning-oriented guides for skill acquisition (study context)
+- **how-to/**: Problem-solving guides for specific tasks (work context)
+- **reference/**: Information-oriented content for lookup and verification (information context)
+- **explanation/**: Understanding-oriented content for context and background (understanding context)
 
 **Example**:
 
@@ -438,6 +442,6 @@ These resources can be accessed later for reference or further processing.
 
 ## Version Information
 
-Current DocuMCP version: **0.3.2**
+Current DocuMCP version: **0.5.0**
 
 For the latest updates and detailed changelog, see the project repository.

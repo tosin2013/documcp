@@ -32,7 +32,7 @@ npm install -g documcp
 
 # Verify installation
 documcp --version
-# Should output: DocuMCP v0.3.4
+# Should output: DocuMCP v0.5.0
 ```
 
 #### Method 2: Local Project Installation
@@ -636,7 +636,7 @@ After completing the environment setup:
 1. **Read the [User Onboarding Guide](./user-onboarding.md)** for usage patterns
 2. **Explore [Usage Examples](../how-to/usage-examples.md)** for practical examples
 3. **Check the [API Reference](/api/)** for complete function documentation
-4. **Join the [GitHub Discussions](https://github.com/tosin2013/documcp/discussions)** for community support
+4. **Join the [GitHub Issues](https://github.com/tosin2013/documcp/issues)** for community support and feature requests
 
 ## 🆘 Getting Help
 

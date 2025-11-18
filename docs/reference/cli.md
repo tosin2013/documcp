@@ -392,7 +392,9 @@ For advanced integration:
 ```javascript
 // integration.js
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-import { analyzeRepository, recommendSSG, deployPages } from "documcp";
+import { analyzeRepository } from "./dist/tools/analyze-repository.js";
+import { recommendSSG } from "./dist/tools/recommend-ssg.js";
+import { deployPages } from "./dist/tools/deploy-pages.js";
 
 class DocuMCPIntegration {
   async deployDocumentation(repoPath) {

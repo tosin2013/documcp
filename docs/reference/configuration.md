@@ -159,17 +159,18 @@ require (
 
 **docusaurus.config.js:**
 
+For GitHub Pages deployment, ensure you configure `organizationName`, `projectName`, and `deploymentBranch`:
+
 ```javascript
 const config = {
   title: "Documentation Site",
   tagline: "Comprehensive project documentation",
-  url: "https://username.github.io",
-  baseUrl: "/repository-name/",
-
-  organizationName: "username",
-  projectName: "repository-name",
-  deploymentBranch: "gh-pages",
-  trailingSlash: false,
+  url: "https://yourusername.github.io", // Your GitHub Pages URL
+  baseUrl: "/repository-name/", // Repository name (or "/" for user/organization pages)
+  organizationName: "yourusername", // GitHub username or organization
+  projectName: "repository-name", // Repository name
+  deploymentBranch: "gh-pages", // Branch for deployment (default: gh-pages)
+  trailingSlash: false, // Set to true if using trailing slashes
 
   onBrokenLinks: "throw",
   onBrokenMarkdownLinks: "warn",

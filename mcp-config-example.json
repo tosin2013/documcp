@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "documcp": {
+      "command": "npx",
+      "args": ["documcp", "--root", "/Users/tosinakinosho/workspaces"],
+      "env": {
+        "NODE_ENV": "production"
+      }
+    },
+    "code-index-semantic-search": {
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-code-index-semantic-search"],
+      "env": {
+        "NODE_ENV": "production"
+      }
+    }
+  }
+}
