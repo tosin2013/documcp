@@ -16,7 +16,7 @@
     "test": "jest",
     "test:coverage": "jest --coverage",
     "test:performance": "jest --testPathPattern=benchmarks",
-    "test:ci": "jest --coverage --ci --watchAll=false",
+    "test:ci": "jest --coverage --ci --watchAll=false --forceExit",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
     "format": "prettier --write \"src/**/*.ts\"",

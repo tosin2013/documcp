@@ -38,13 +38,13 @@ jobs:
         run: npm run lint
 
       - name: Run tests
-        run: npm test
+        run: npm test -- --forceExit
 
       - name: Clean up memory files before coverage run
         run: rm -rf .documcp
 
       - name: Run tests with coverage
-        run: npm test -- --coverage
+        run: npm test -- --coverage --forceExit
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
