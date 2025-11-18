@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+### [0.5.1](https://github.com/tosin2013/documcp/compare/v0.5.0...v0.5.1) (2025-11-18)
+
+### 📚 Documentation
+
+- comprehensive documentation validation and updates ([abc8bc5](https://github.com/tosin2013/documcp/commit/abc8bc5d6ac537f27ed83e690a99a3c668356bcd))
+
+### 🐛 Bug Fixes
+
+- add forceExit to Jest config for CI to prevent worker process hangs ([c5dada6](https://github.com/tosin2013/documcp/commit/c5dada607907adb6a04536accb50704435bb2516)), closes [#216](https://github.com/tosin2013/documcp/issues/216)
+- remove ADR-010 from sidebar to fix Docker build ([1ce448f](https://github.com/tosin2013/documcp/commit/1ce448ff69e9184f3a48ac9f0143aabb134d7205))
+- resolve GitHub Actions build failure ([a1b6b23](https://github.com/tosin2013/documcp/commit/a1b6b23e723f29b829c369feea386ebea601940a))
+- update dependencies and adjust security audit workflow ([033a4f3](https://github.com/tosin2013/documcp/commit/033a4f340af903ceb84610531f3d1817964e91b9))
+
 ## [0.5.0](https://github.com/tosin2013/documcp/compare/v0.4.1...v0.5.0) (2025-10-12)
 
 ### ⚠ BREAKING CHANGES
