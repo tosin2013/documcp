@@ -1145,6 +1145,37 @@ const PROMPTS = [
       },
     ],
   },
+  {
+    name: "maintain-documentation-freshness",
+    description:
+      "Track and maintain documentation freshness with automated staleness detection",
+    arguments: [
+      {
+        name: "project_path",
+        description:
+          "Path to the project directory (used for knowledge graph tracking)",
+        required: true,
+      },
+      {
+        name: "docs_path",
+        description:
+          "Path to documentation directory (default: derived from project). Example: './docs', './documentation'",
+        required: false,
+      },
+      {
+        name: "freshness_preset",
+        description:
+          "Staleness threshold preset (default: 'monthly'). Options: 'realtime' (minutes), 'active' (hours), 'recent' (days), 'weekly' (7 days), 'monthly' (30 days), 'quarterly' (90 days)",
+        required: false,
+      },
+      {
+        name: "action",
+        description:
+          "Action to perform (default: 'track'). Options: 'validate' (initialize metadata), 'track' (scan staleness), 'insights' (view trends)",
+        required: false,
+      },
+    ],
+  },
 ];
 
 // MCP resources should serve APPLICATION needs, not store tool results
@@ -1220,6 +1251,21 @@ const RESOURCES = [
     uri: "documcp://workflows/guidance",
     name: "Workflow Execution Guidance",
     description: "Guidelines for executing documentation workflows",
+    mimeType: "application/json",
+  },
+  // Freshness tracking - for UI selection and configuration
+  {
+    uri: "documcp://freshness/presets",
+    name: "Documentation Freshness Presets",
+    description:
+      "Available staleness threshold presets for UI selection (realtime, active, recent, weekly, monthly, quarterly)",
+    mimeType: "application/json",
+  },
+  {
+    uri: "documcp://freshness/metadata-schema",
+    name: "Freshness Metadata Schema",
+    description:
+      "Schema for documentation frontmatter freshness metadata fields",
     mimeType: "application/json",
   },
 ];
@@ -1791,6 +1837,196 @@ module.exports = function(eleventyConfig) {
         }
         throw new Error(`Unknown workflow: ${workflowType}`);
       }
+    }
+  }
+
+  // Handle freshness tracking resources
+  if (uri.startsWith("documcp://freshness/")) {
+    const freshnessType = uri.split("/").pop();
+
+    switch (freshnessType) {
+      case "presets":
+        return {
+          contents: [
+            {
+              uri,
+              mimeType: "application/json",
+              text: JSON.stringify(
+                {
+                  presets: [
+                    {
+                      id: "realtime",
+                      name: "Realtime",
+                      description:
+                        "For frequently updated documentation (minutes)",
+                      thresholds: {
+                        warning: { value: 5, unit: "minutes" },
+                        stale: { value: 15, unit: "minutes" },
+                        critical: { value: 30, unit: "minutes" },
+                      },
+                      bestFor: ["api-docs", "status-pages", "live-updates"],
+                    },
+                    {
+                      id: "active",
+                      name: "Active",
+                      description:
+                        "For actively maintained documentation (hours)",
+                      thresholds: {
+                        warning: { value: 2, unit: "hours" },
+                        stale: { value: 6, unit: "hours" },
+                        critical: { value: 12, unit: "hours" },
+                      },
+                      bestFor: [
+                        "development-docs",
+                        "feature-guides",
+                        "release-notes",
+                      ],
+                    },
+                    {
+                      id: "recent",
+                      name: "Recent",
+                      description: "For regularly updated documentation (days)",
+                      thresholds: {
+                        warning: { value: 1, unit: "days" },
+                        stale: { value: 3, unit: "days" },
+                        critical: { value: 7, unit: "days" },
+                      },
+                      bestFor: [
+                        "tutorials",
+                        "getting-started",
+                        "project-updates",
+                      ],
+                    },
+                    {
+                      id: "weekly",
+                      name: "Weekly",
+                      description: "For weekly maintenance cycle (7 days)",
+                      thresholds: {
+                        warning: { value: 7, unit: "days" },
+                        stale: { value: 14, unit: "days" },
+                        critical: { value: 30, unit: "days" },
+                      },
+                      bestFor: ["how-to-guides", "examples", "best-practices"],
+                    },
+                    {
+                      id: "monthly",
+                      name: "Monthly",
+                      description:
+                        "For monthly maintenance cycle (30 days) - DEFAULT",
+                      thresholds: {
+                        warning: { value: 30, unit: "days" },
+                        stale: { value: 60, unit: "days" },
+                        critical: { value: 90, unit: "days" },
+                      },
+                      bestFor: [
+                        "reference-docs",
+                        "architecture",
+                        "stable-features",
+                      ],
+                      default: true,
+                    },
+                    {
+                      id: "quarterly",
+                      name: "Quarterly",
+                      description: "For quarterly maintenance cycle (90 days)",
+                      thresholds: {
+                        warning: { value: 90, unit: "days" },
+                        stale: { value: 180, unit: "days" },
+                        critical: { value: 365, unit: "days" },
+                      },
+                      bestFor: [
+                        "explanations",
+                        "background",
+                        "rarely-changing-docs",
+                      ],
+                    },
+                  ],
+                },
+                null,
+                2,
+              ),
+            },
+          ],
+        };
+
+      case "metadata-schema":
+        return {
+          contents: [
+            {
+              uri,
+              mimeType: "application/json",
+              text: JSON.stringify(
+                {
+                  schema: {
+                    documcp: {
+                      description: "DocuMCP metadata block in YAML frontmatter",
+                      type: "object",
+                      properties: {
+                        last_updated: {
+                          type: "string",
+                          format: "date-time",
+                          description:
+                            "ISO 8601 timestamp of last content update",
+                          example: "2025-01-19T10:30:00Z",
+                        },
+                        last_validated: {
+                          type: "string",
+                          format: "date-time",
+                          description:
+                            "ISO 8601 timestamp of last validation check",
+                          example: "2025-01-19T10:30:00Z",
+                        },
+                        update_frequency: {
+                          type: "string",
+                          enum: [
+                            "realtime",
+                            "active",
+                            "recent",
+                            "weekly",
+                            "monthly",
+                            "quarterly",
+                          ],
+                          description: "Expected update frequency preset",
+                          default: "monthly",
+                        },
+                        validated_against_commit: {
+                          type: "string",
+                          description:
+                            "Git commit hash the documentation was validated against",
+                          example: "a1b2c3d",
+                        },
+                        auto_updated: {
+                          type: "boolean",
+                          description:
+                            "Whether timestamps are automatically updated",
+                          default: false,
+                        },
+                      },
+                      required: ["last_updated"],
+                    },
+                  },
+                  example: {
+                    yaml: `---
+title: "API Reference"
+description: "Complete API documentation"
+documcp:
+  last_updated: "2025-01-19T10:30:00Z"
+  last_validated: "2025-01-19T10:30:00Z"
+  update_frequency: "monthly"
+  validated_against_commit: "a1b2c3d"
+  auto_updated: false
+---`,
+                  },
+                },
+                null,
+                2,
+              ),
+            },
+          ],
+        };
+
+      default:
+        throw new Error(`Unknown freshness resource: ${freshnessType}`);
     }
   }
 

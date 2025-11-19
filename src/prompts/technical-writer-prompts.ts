@@ -138,6 +138,8 @@ export async function generateTechnicalWriterPrompts(
       return generateSetupDocumentationPrompt(context, args);
     case "troubleshoot-deployment":
       return generateTroubleshootDeploymentPrompt(context, args);
+    case "maintain-documentation-freshness":
+      return generateMaintainDocumentationFreshnessPrompt(context, args);
     default:
       throw new Error(`Unknown prompt type: ${promptType}`);
   }
@@ -444,6 +446,97 @@ async function fileExists(path: string): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+function generateMaintainDocumentationFreshnessPrompt(
+  context: ProjectContext,
+  args: Record<string, any>,
+): PromptMessage[] {
+  const docsPath = args.docs_path || "docs";
+  const freshnessPreset = args.freshness_preset || "monthly";
+  const action = args.action || "track";
+
+  const actionDescriptions = {
+    validate:
+      "Initialize freshness metadata for documentation files that don't have it yet",
+    track:
+      "Scan all documentation for staleness and generate a freshness report",
+    insights: "Analyze freshness trends over time and get recommendations",
+  };
+
+  return [
+    {
+      role: "user",
+      content: {
+        type: "text",
+        text: `Maintain documentation freshness for a ${
+          context.projectType
+        } project with automated staleness tracking.
+
+**Project Context:**
+- Type: ${context.projectType}
+- Languages: ${context.languages.join(", ")}
+- Documentation Path: ${docsPath}
+- Freshness Preset: ${freshnessPreset}
+- Action: ${action} (${
+          actionDescriptions[action as keyof typeof actionDescriptions] ||
+          "track staleness"
+        })
+
+**Documentation Freshness Tracking:**
+Documentation freshness tracking helps maintain high-quality, up-to-date documentation by:
+1. Adding temporal metadata to markdown frontmatter (last_updated, last_validated)
+2. Scanning documentation for staleness based on configurable thresholds
+3. Providing insights and trends over time using the knowledge graph
+4. Generating recommendations for which files need attention
+
+**Available Actions:**
+
+1. **Validate** (${action === "validate" ? "SELECTED" : "available"}):
+   - Initialize freshness metadata for files without it
+   - Set last_updated and last_validated timestamps
+   - Link validation to git commits for traceability
+   - Recommended as first step for new documentation sets
+
+2. **Track** (${action === "track" ? "SELECTED" : "available"}):
+   - Scan all documentation files for staleness
+   - Categorize as: fresh, warning, stale, or critical
+   - Generate comprehensive freshness report
+   - Store results in knowledge graph for historical tracking
+
+3. **Insights** (${action === "insights" ? "SELECTED" : "available"}):
+   - Analyze freshness trends over time
+   - Compare current vs. historical freshness scores
+   - Identify chronically stale files
+   - Get actionable recommendations
+
+**Freshness Presets:**
+- realtime: Minutes (for API docs, status pages)
+- active: Hours (for development docs, release notes)
+- recent: Days (for tutorials, getting started)
+- weekly: 7 days (for how-to guides, examples)
+- monthly: 30 days (for reference, architecture) - DEFAULT
+- quarterly: 90 days (for explanations, background)
+
+**Integration Tools:**
+- validate_documentation_freshness: Initialize and update metadata
+- track_documentation_freshness: Scan and report staleness
+- update_existing_documentation: Sync docs with code changes
+- sync_code_to_docs: Detect drift between code and docs
+
+**Workflow Example:**
+1. First time: Run validate_documentation_freshness to initialize metadata
+2. Regular checks: Run track_documentation_freshness to monitor staleness
+3. Deep analysis: Query knowledge graph for trends and insights
+4. Maintenance: Update stale files and re-validate
+
+Please ${
+          actionDescriptions[action as keyof typeof actionDescriptions] ||
+          "track documentation freshness"
+        } and provide guidance on maintaining documentation quality:`,
+      },
+    },
+  ];
 }
 
 async function hasTestFiles(projectPath: string): Promise<boolean> {
