@@ -134,6 +134,50 @@ describe("Technical Writer Diataxis Prompts", () => {
       expect(prompts[0].content.text).toContain("Diataxis-aware");
     });
 
+    it("should generate analyze-and-recommend prompts", async () => {
+      const prompts = await generateTechnicalWriterPrompts(
+        "analyze-and-recommend",
+        testProjectPath,
+      );
+
+      expect(prompts.length).toBeGreaterThan(0);
+      expect(prompts[0].content.text).toContain("analyze");
+      expect(prompts[0].content.text).toContain("recommend");
+    });
+
+    it("should generate setup-documentation prompts", async () => {
+      const prompts = await generateTechnicalWriterPrompts(
+        "setup-documentation",
+        testProjectPath,
+      );
+
+      expect(prompts.length).toBeGreaterThan(0);
+      expect(prompts[0].content.text).toContain("documentation");
+    });
+
+    it("should generate troubleshoot-deployment prompts", async () => {
+      const prompts = await generateTechnicalWriterPrompts(
+        "troubleshoot-deployment",
+        testProjectPath,
+      );
+
+      expect(prompts.length).toBeGreaterThan(0);
+      expect(prompts[0].content.text).toContain("troubleshoot");
+      expect(prompts[0].content.text).toContain("deployment");
+    });
+
+    it("should generate maintain-documentation-freshness prompts", async () => {
+      const prompts = await generateTechnicalWriterPrompts(
+        "maintain-documentation-freshness",
+        testProjectPath,
+        { action: "track", preset: "monthly" },
+      );
+
+      expect(prompts.length).toBeGreaterThan(0);
+      expect(prompts[0].content.text).toContain("freshness");
+      expect(prompts[0].content.text).toContain("track");
+    });
+
     it("should throw error for unknown prompt type", async () => {
       await expect(
         generateTechnicalWriterPrompts("unknown-type", testProjectPath),
