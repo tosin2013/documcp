@@ -607,5 +607,106 @@ Content here.`;
       expect(result.urls).toHaveLength(1);
       expect(result.urls[0].loc).not.toContain(".git");
     });
+
+    it("should extract title from HTML title tag", async () => {
+      const htmlContent = `<!DOCTYPE html>
+<html>
+<head>
+  <title>HTML Page Title</title>
+</head>
+<body>
+  <h1>Different Heading</h1>
+</body>
+</html>`;
+
+      await fs.writeFile(path.join(docsDir, "page.html"), htmlContent);
+
+      const result = await generateSitemap({
+        baseUrl: "https://example.com",
+        docsPath: docsDir,
+        includePatterns: ["**/*.html"],
+        useGitHistory: false,
+      });
+
+      expect(result.urls[0].title).toBe("HTML Page Title");
+    });
+
+    it("should handle files with no extractable title", async () => {
+      await fs.writeFile(path.join(docsDir, "notitle.md"), "Just content");
+
+      const result = await generateSitemap({
+        baseUrl: "https://example.com",
+        docsPath: docsDir,
+        useGitHistory: false,
+      });
+
+      expect(result.urls[0].title).toBeUndefined();
+    });
+
+    it("should handle inaccessible files gracefully", async () => {
+      await fs.writeFile(path.join(docsDir, "readable.md"), "# Readable");
+
+      const result = await generateSitemap({
+        baseUrl: "https://example.com",
+        docsPath: docsDir,
+        useGitHistory: false,
+      });
+
+      // Should still process readable files
+      expect(result.urls.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe("validateSitemap - additional validations", () => {
+    it("should detect empty sitemap", async () => {
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+</urlset>`;
+
+      const sitemapPath = path.join(testDir, "sitemap.xml");
+      await fs.writeFile(sitemapPath, xml);
+
+      const result = await validateSitemap(sitemapPath);
+
+      expect(result.valid).toBe(true);
+      expect(result.warnings.some((w) => w.includes("no URLs"))).toBe(true);
+    });
+
+    it("should detect URL exceeding 2048 characters", async () => {
+      const longUrl = `https://example.com/${"a".repeat(2100)}`;
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>${longUrl}</loc>
+  </url>
+</urlset>`;
+
+      const sitemapPath = path.join(testDir, "sitemap.xml");
+      await fs.writeFile(sitemapPath, xml);
+
+      const result = await validateSitemap(sitemapPath);
+
+      expect(result.valid).toBe(false);
+      expect(result.errors.some((e) => e.includes("exceeds 2048"))).toBe(true);
+    });
+
+    it("should warn about invalid lastmod format", async () => {
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://example.com/page.html</loc>
+    <lastmod>invalid-date</lastmod>
+  </url>
+</urlset>`;
+
+      const sitemapPath = path.join(testDir, "sitemap.xml");
+      await fs.writeFile(sitemapPath, xml);
+
+      const result = await validateSitemap(sitemapPath);
+
+      expect(result.warnings.some((w) => w.includes("Invalid lastmod"))).toBe(
+        true,
+      );
+    });
   });
 });

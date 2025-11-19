@@ -469,5 +469,110 @@ documcp:
       expect(result.metadata.timestamp).toBeDefined();
       expect(result.metadata.executionTime).toBeGreaterThanOrEqual(0);
     });
+
+    it("should handle KG storage disabled", async () => {
+      const docsPath = path.join(tempDir, "docs");
+      const projectPath = tempDir;
+      await fs.mkdir(docsPath);
+
+      await fs.writeFile(path.join(docsPath, "test.md"), "# Test");
+
+      const input: TrackDocumentationFreshnessInput = {
+        docsPath,
+        projectPath,
+        preset: "monthly",
+        storeInKG: false,
+      };
+
+      const result = await trackDocumentationFreshness(input);
+
+      expect(result.success).toBe(true);
+      expect(result.data.kgInsights).toBeUndefined();
+    });
+
+    it("should handle projectPath without KG storage", async () => {
+      const docsPath = path.join(tempDir, "docs");
+      await fs.mkdir(docsPath);
+
+      await fs.writeFile(path.join(docsPath, "test.md"), "# Test");
+
+      const input: TrackDocumentationFreshnessInput = {
+        docsPath,
+        // No projectPath provided
+        preset: "monthly",
+        storeInKG: true, // Won't store because projectPath is missing
+      };
+
+      const result = await trackDocumentationFreshness(input);
+
+      expect(result.success).toBe(true);
+    });
+
+    it("should handle error gracefully", async () => {
+      const input: TrackDocumentationFreshnessInput = {
+        docsPath: "/nonexistent/path/that/does/not/exist",
+        preset: "monthly",
+      };
+
+      const result = await trackDocumentationFreshness(input);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBeDefined();
+      expect(result.error?.code).toBe("FRESHNESS_TRACKING_FAILED");
+      expect(result.metadata).toBeDefined();
+    });
+
+    it("should sort files by age", async () => {
+      const docsPath = path.join(tempDir, "docs");
+      await fs.mkdir(docsPath);
+
+      const now = Date.now();
+      await fs.writeFile(
+        path.join(docsPath, "newer.md"),
+        `---
+documcp:
+  last_updated: "${new Date(now - 1 * 24 * 60 * 60 * 1000).toISOString()}"
+---
+# Newer`,
+      );
+
+      await fs.writeFile(
+        path.join(docsPath, "older.md"),
+        `---
+documcp:
+  last_updated: "${new Date(now - 10 * 24 * 60 * 60 * 1000).toISOString()}"
+---
+# Older`,
+      );
+
+      const input: TrackDocumentationFreshnessInput = {
+        docsPath,
+        preset: "monthly",
+        sortBy: "age",
+      };
+
+      const result = await trackDocumentationFreshness(input);
+
+      expect(result.success).toBe(true);
+      expect(result.data.report.files.length).toBe(2);
+    });
+
+    it("should sort files by path", async () => {
+      const docsPath = path.join(tempDir, "docs");
+      await fs.mkdir(docsPath);
+
+      await fs.writeFile(path.join(docsPath, "z.md"), "# Z");
+      await fs.writeFile(path.join(docsPath, "a.md"), "# A");
+
+      const input: TrackDocumentationFreshnessInput = {
+        docsPath,
+        preset: "monthly",
+        sortBy: "path",
+      };
+
+      const result = await trackDocumentationFreshness(input);
+
+      expect(result.success).toBe(true);
+    });
   });
 });
