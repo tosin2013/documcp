@@ -31,7 +31,8 @@ export interface GraphNode {
     | "code_file"
     | "documentation_section"
     | "link_validation"
-    | "sync_event";
+    | "sync_event"
+    | "documentation_freshness_event";
   label: string;
   properties: Record<string, any>;
   weight: number;
@@ -57,6 +58,7 @@ export interface GraphEdge {
     | "outdated_for"
     | "has_link_validation"
     | "requires_fix"
+    | "project_has_freshness_event"
     | (string & NonNullable<unknown>); // Allow any string (for timestamped types like "project_deployed_with:2024-...")
   weight: number;
   properties: Record<string, any>;

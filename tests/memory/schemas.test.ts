@@ -378,7 +378,10 @@ describe("Schema Metadata", () => {
     expect(SCHEMA_METADATA.entityTypes).toContain("user");
     expect(SCHEMA_METADATA.entityTypes).toContain("configuration");
     expect(SCHEMA_METADATA.entityTypes).toContain("code_file");
-    expect(SCHEMA_METADATA.entityTypes).toHaveLength(7);
+    expect(SCHEMA_METADATA.entityTypes).toContain(
+      "documentation_freshness_event",
+    );
+    expect(SCHEMA_METADATA.entityTypes).toHaveLength(8);
   });
 
   it("should list all relationship types", () => {
@@ -386,6 +389,10 @@ describe("Schema Metadata", () => {
       "project_uses_technology",
     );
     expect(SCHEMA_METADATA.relationshipTypes).toContain("outdated_for");
-    expect(SCHEMA_METADATA.relationshipTypes).toHaveLength(11);
+    expect(SCHEMA_METADATA.relationshipTypes).toContain("project_has_sitemap");
+    expect(SCHEMA_METADATA.relationshipTypes).toContain(
+      "project_has_freshness_event",
+    );
+    expect(SCHEMA_METADATA.relationshipTypes).toHaveLength(13);
   });
 });

@@ -16,6 +16,8 @@ import {
 } from "../utils/drift-detector.js";
 import { formatMCPResponse, MCPToolResponse } from "../types/api.js";
 import { getKnowledgeGraph } from "../memory/kg-integration.js";
+import { updateDocFrontmatter } from "../utils/freshness-tracker.js";
+import { simpleGit } from "simple-git";
 
 const inputSchema = z.object({
   projectPath: z.string().describe("Path to the project root"),
@@ -181,7 +183,11 @@ export async function handleSyncCodeToDocs(
 
             if (shouldApply) {
               try {
-                await applyDocumentationChange(suggestion, context);
+                await applyDocumentationChange(
+                  suggestion,
+                  context,
+                  projectPath,
+                );
                 appliedChanges.push({
                   docFile: suggestion.docFile,
                   section: suggestion.section,
@@ -285,6 +291,7 @@ export async function handleSyncCodeToDocs(
 async function applyDocumentationChange(
   suggestion: DriftSuggestion,
   context?: any,
+  projectPath?: string,
 ): Promise<void> {
   const filePath = suggestion.docFile;
 
@@ -318,6 +325,37 @@ async function applyDocumentationChange(
 
   // Write back to file
   await fs.writeFile(filePath, newContent, "utf-8");
+
+  // Update freshness metadata
+  try {
+    let currentCommit: string | undefined;
+    if (projectPath) {
+      try {
+        const git = simpleGit(projectPath);
+        const isRepo = await git.checkIsRepo();
+        if (isRepo) {
+          const log = await git.log({ maxCount: 1 });
+          currentCommit = log.latest?.hash;
+        }
+      } catch {
+        // Git not available, continue without it
+      }
+    }
+
+    await updateDocFrontmatter(filePath, {
+      last_updated: new Date().toISOString(),
+      last_validated: new Date().toISOString(),
+      auto_updated: true,
+      validated_against_commit: currentCommit,
+    });
+
+    await context?.info?.(
+      `🏷️ Updated freshness metadata for ${path.basename(filePath)}`,
+    );
+  } catch (error) {
+    // Non-critical error, just log it
+    await context?.warn?.(`Failed to update freshness metadata: ${error}`);
+  }
 }
 
 /**

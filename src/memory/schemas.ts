@@ -207,6 +207,54 @@ export const SitemapEntitySchema = z.object({
 
 export type SitemapEntity = z.infer<typeof SitemapEntitySchema>;
 
+/**
+ * Documentation Freshness Event Entity Schema
+ * Represents a documentation freshness tracking event with staleness metrics
+ */
+export const DocumentationFreshnessEventEntitySchema = z.object({
+  docsPath: z.string().min(1, "Documentation path is required"),
+  projectPath: z.string().min(1, "Project path is required"),
+  scannedAt: z.string().datetime(),
+  totalFiles: z.number().int().min(0).default(0),
+  freshFiles: z.number().int().min(0).default(0),
+  warningFiles: z.number().int().min(0).default(0),
+  staleFiles: z.number().int().min(0).default(0),
+  criticalFiles: z.number().int().min(0).default(0),
+  filesWithoutMetadata: z.number().int().min(0).default(0),
+  thresholds: z
+    .object({
+      warning: z.object({
+        value: z.number().positive(),
+        unit: z.enum(["minutes", "hours", "days"]),
+      }),
+      stale: z.object({
+        value: z.number().positive(),
+        unit: z.enum(["minutes", "hours", "days"]),
+      }),
+      critical: z.object({
+        value: z.number().positive(),
+        unit: z.enum(["minutes", "hours", "days"]),
+      }),
+    })
+    .optional(),
+  averageAge: z.number().min(0).optional(), // Average age in days
+  oldestFile: z
+    .object({
+      path: z.string(),
+      ageInDays: z.number().min(0),
+    })
+    .optional(),
+  mostStaleFiles: z.array(z.string()).default([]),
+  validatedAgainstCommit: z.string().optional(),
+  eventType: z
+    .enum(["scan", "validation", "initialization", "update"])
+    .default("scan"),
+});
+
+export type DocumentationFreshnessEventEntity = z.infer<
+  typeof DocumentationFreshnessEventEntitySchema
+>;
+
 // ============================================================================
 // Relationship Schemas
 // ============================================================================
@@ -391,6 +439,29 @@ export type ProjectHasSitemapRelationship = z.infer<
   typeof ProjectHasSitemapSchema
 >;
 
+/**
+ * Project Has Freshness Event Relationship
+ * Links a project to a documentation freshness tracking event
+ */
+export const ProjectHasFreshnessEventSchema = BaseRelationshipSchema.extend({
+  type: z.literal("project_has_freshness_event"),
+  eventType: z
+    .enum(["scan", "validation", "initialization", "update"])
+    .default("scan"),
+  filesScanned: z.number().int().min(0).default(0),
+  freshFiles: z.number().int().min(0).default(0),
+  staleFiles: z.number().int().min(0).default(0),
+  criticalFiles: z.number().int().min(0).default(0),
+  filesInitialized: z.number().int().min(0).default(0),
+  filesUpdated: z.number().int().min(0).default(0),
+  averageStaleness: z.number().min(0).optional(), // in days
+  improvementScore: z.number().min(0).max(1).optional(), // 0-1, higher is better
+});
+
+export type ProjectHasFreshnessEventRelationship = z.infer<
+  typeof ProjectHasFreshnessEventSchema
+>;
+
 // ============================================================================
 // Union Types and Type Guards
 // ============================================================================
@@ -424,6 +495,10 @@ const LinkValidationEntityWithType = LinkValidationEntitySchema.extend({
 const SitemapEntityWithType = SitemapEntitySchema.extend({
   type: z.literal("sitemap"),
 });
+const DocumentationFreshnessEventEntityWithType =
+  DocumentationFreshnessEventEntitySchema.extend({
+    type: z.literal("documentation_freshness_event"),
+  });
 
 export const EntitySchema = z.union([
   ProjectEntityWithType,
@@ -435,6 +510,7 @@ export const EntitySchema = z.union([
   TechnologyEntityWithType,
   LinkValidationEntityWithType,
   SitemapEntityWithType,
+  DocumentationFreshnessEventEntityWithType,
 ]);
 
 export type Entity = z.infer<typeof EntitySchema>;
@@ -455,6 +531,7 @@ export const RelationshipSchema = z.union([
   ResultsInSchema,
   CreatedBySchema,
   ProjectHasSitemapSchema,
+  ProjectHasFreshnessEventSchema,
 ]);
 
 export type Relationship =
@@ -469,7 +546,8 @@ export type Relationship =
   | RecommendsRelationship
   | ResultsInRelationship
   | CreatedByRelationship
-  | ProjectHasSitemapRelationship;
+  | ProjectHasSitemapRelationship
+  | ProjectHasFreshnessEventRelationship;
 
 // ============================================================================
 // Validation Helpers
@@ -544,6 +622,7 @@ export const SCHEMA_METADATA = {
     "code_file",
     "documentation_section",
     "technology",
+    "documentation_freshness_event",
   ] as const,
   relationshipTypes: [
     "project_uses_technology",
@@ -557,6 +636,8 @@ export const SCHEMA_METADATA = {
     "recommends",
     "results_in",
     "created_by",
+    "project_has_sitemap",
+    "project_has_freshness_event",
   ] as const,
   lastUpdated: "2025-10-01",
 } as const;

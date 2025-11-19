@@ -1,13 +1,8 @@
-name: Deploy Docusaurus to GitHub Pages
+name: Deploy Jekyll to GitHub Pages
 
 on:
   push:
     branches: [main]
-    paths:
-      - 'docs/**'
-      - '.github/workflows/deploy-docs.yml'
-      - 'Dockerfile.docs'
-      - 'docker-compose.docs.yml'
   workflow_dispatch:
 
 permissions:
@@ -29,33 +24,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Copy root package.json for config reference
-        run: cp package.json docs/package.json.root || echo "Root package.json not found, continuing..."
-        working-directory: .
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
         with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: docs/package-lock.json
+          ruby-version: '3.1'
+          bundler-cache: true
+          working-directory: docs
 
-      - name: Install dependencies
-        run: npm ci
-        working-directory: docs
-
-      - name: Build Docusaurus site
+      - name: Build with Jekyll
         run: npm run build
         env:
-          NODE_ENV: production
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
+          JEKYLL_ENV: production
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v2
         with:
-          path: docs/build
+          path: docs/./_site
 
   deploy:
     environment:
@@ -66,4 +50,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v3

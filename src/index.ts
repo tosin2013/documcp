@@ -42,6 +42,8 @@ import { managePreferences } from "./tools/manage-preferences.js";
 import { analyzeDeployments } from "./tools/analyze-deployments.js";
 import { handleSyncCodeToDocs } from "./tools/sync-code-to-docs.js";
 import { handleGenerateContextualContent } from "./tools/generate-contextual-content.js";
+import { trackDocumentationFreshness } from "./tools/track-documentation-freshness.js";
+import { validateDocumentationFreshness } from "./tools/validate-documentation-freshness.js";
 import {
   manageSitemap,
   ManageSitemapInputSchema,
@@ -784,6 +786,95 @@ const TOOLS = [
         .enum(["markdown", "mdx", "html"])
         .default("markdown")
         .describe("Output format for generated content"),
+    }),
+  },
+  // Documentation Freshness Tracking
+  {
+    name: "track_documentation_freshness",
+    description:
+      "Scan documentation directory for staleness markers and identify files needing updates based on configurable time thresholds (minutes, hours, days)",
+    inputSchema: z.object({
+      docsPath: z.string().describe("Path to documentation directory"),
+      warningThreshold: z
+        .object({
+          value: z.number().positive(),
+          unit: z.enum(["minutes", "hours", "days"]),
+        })
+        .optional()
+        .describe("Warning threshold (yellow flag)"),
+      staleThreshold: z
+        .object({
+          value: z.number().positive(),
+          unit: z.enum(["minutes", "hours", "days"]),
+        })
+        .optional()
+        .describe("Stale threshold (orange flag)"),
+      criticalThreshold: z
+        .object({
+          value: z.number().positive(),
+          unit: z.enum(["minutes", "hours", "days"]),
+        })
+        .optional()
+        .describe("Critical threshold (red flag)"),
+      preset: z
+        .enum([
+          "realtime",
+          "active",
+          "recent",
+          "weekly",
+          "monthly",
+          "quarterly",
+        ])
+        .optional()
+        .describe("Use predefined threshold preset"),
+      includeFileList: z
+        .boolean()
+        .optional()
+        .default(true)
+        .describe("Include detailed file list in response"),
+      sortBy: z
+        .enum(["age", "path", "staleness"])
+        .optional()
+        .default("staleness")
+        .describe("Sort order for file list"),
+    }),
+  },
+  {
+    name: "validate_documentation_freshness",
+    description:
+      "Validate documentation freshness, initialize metadata for files without it, and update timestamps based on code changes",
+    inputSchema: z.object({
+      docsPath: z.string().describe("Path to documentation directory"),
+      projectPath: z
+        .string()
+        .describe("Path to project root (for git integration)"),
+      initializeMissing: z
+        .boolean()
+        .optional()
+        .default(true)
+        .describe("Initialize metadata for files without it"),
+      updateExisting: z
+        .boolean()
+        .optional()
+        .default(false)
+        .describe("Update last_validated timestamp for all files"),
+      updateFrequency: z
+        .enum([
+          "realtime",
+          "active",
+          "recent",
+          "weekly",
+          "monthly",
+          "quarterly",
+        ])
+        .optional()
+        .default("monthly")
+        .describe("Default update frequency for new metadata"),
+      validateAgainstGit: z
+        .boolean()
+        .optional()
+        .default(true)
+        .describe("Validate against current git commit"),
     }),
   },
   {
@@ -2178,6 +2269,75 @@ server.setRequestHandler(CallToolRequestSchema, async (request, extra) => {
 
         const result = await handleGenerateContextualContent(args, extra);
         return wrapToolResult(result, "generate_contextual_content");
+      }
+
+      // Documentation Freshness Tracking
+      case "track_documentation_freshness": {
+        const docsPath = (args as any)?.docsPath;
+
+        // Check if docs path is allowed
+        if (docsPath && !isPathAllowed(docsPath, allowedRoots)) {
+          return formatMCPResponse({
+            success: false,
+            error: {
+              code: "PERMISSION_DENIED",
+              message: getPermissionDeniedMessage(docsPath, allowedRoots),
+              resolution:
+                "Request access to this directory by starting the server with --root argument",
+            },
+            metadata: {
+              toolVersion: packageJson.version,
+              executionTime: 0,
+              timestamp: new Date().toISOString(),
+            },
+          });
+        }
+
+        const result = await trackDocumentationFreshness(args as any);
+        return wrapToolResult(result, "track_documentation_freshness");
+      }
+
+      case "validate_documentation_freshness": {
+        const docsPath = (args as any)?.docsPath;
+        const projectPath = (args as any)?.projectPath;
+
+        // Check if paths are allowed
+        if (docsPath && !isPathAllowed(docsPath, allowedRoots)) {
+          return formatMCPResponse({
+            success: false,
+            error: {
+              code: "PERMISSION_DENIED",
+              message: getPermissionDeniedMessage(docsPath, allowedRoots),
+              resolution:
+                "Request access to this directory by starting the server with --root argument",
+            },
+            metadata: {
+              toolVersion: packageJson.version,
+              executionTime: 0,
+              timestamp: new Date().toISOString(),
+            },
+          });
+        }
+
+        if (projectPath && !isPathAllowed(projectPath, allowedRoots)) {
+          return formatMCPResponse({
+            success: false,
+            error: {
+              code: "PERMISSION_DENIED",
+              message: getPermissionDeniedMessage(projectPath, allowedRoots),
+              resolution:
+                "Request access to this directory by starting the server with --root argument",
+            },
+            metadata: {
+              toolVersion: packageJson.version,
+              executionTime: 0,
+              timestamp: new Date().toISOString(),
+            },
+          });
+        }
+
+        const result = await validateDocumentationFreshness(args as any);
+        return wrapToolResult(result, "validate_documentation_freshness");
       }
 
       case "manage_sitemap": {

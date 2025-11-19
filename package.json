@@ -71,7 +71,9 @@
     "@modelcontextprotocol/sdk": "^0.6.0",
     "@typescript-eslint/typescript-estree": "^8.44.0",
     "globby": "^14.1.0",
+    "gray-matter": "^4.0.3",
     "linkinator": "^6.1.4",
+    "simple-git": "^3.30.0",
     "tmp": "^0.2.5",
     "tree-sitter-bash": "^0.25.0",
     "tree-sitter-go": "^0.25.0",
@@ -107,5 +109,10 @@
   },
   "engines": {
     "node": ">=20.0.0"
+  },
+  "overrides": {
+    "markdown-link-check": {
+      "xmlbuilder2": "^4.0.0"
+    }
   }
 }
