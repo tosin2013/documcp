@@ -473,7 +473,7 @@ describe("Freshness Knowledge Graph Integration", () => {
       expect(history[0].event.mostStaleFiles.length).toBeLessThanOrEqual(10);
     });
 
-    it.skip("should recommend action for 30%+ stale files", async () => {
+    it("should recommend action for 30%+ stale files", async () => {
       const projectPath = path.join(testDir, "test-project");
       const docsPath = path.join(projectPath, "docs");
 
@@ -549,7 +549,7 @@ describe("Freshness Knowledge Graph Integration", () => {
       expect(insights.trend).toMatch(/declining|stable/);
     });
 
-    it.skip("should identify chronically stale files", async () => {
+    it("should identify chronically stale files", async () => {
       const projectPath = path.join(testDir, "test-project");
       const docsPath = path.join(projectPath, "docs");
 
@@ -626,7 +626,7 @@ describe("Freshness Knowledge Graph Integration", () => {
       expect(hasChronicallyStale).toBe(true);
     });
 
-    it.skip("should handle files without age information", async () => {
+    it("should handle files without age information", async () => {
       const projectPath = path.join(testDir, "test-project");
       const docsPath = path.join(projectPath, "docs");
 

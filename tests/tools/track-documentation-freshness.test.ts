@@ -11,6 +11,9 @@ import {
   type TrackDocumentationFreshnessInput,
 } from "../../src/tools/track-documentation-freshness.js";
 
+// Example git SHA for testing
+const SHA_EXAMPLE = "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0";
+
 describe("track_documentation_freshness Tool", () => {
   let tempDir: string;
 
@@ -582,9 +585,10 @@ documcp:
 
       // Create file with validated_against_commit metadata
       const fileContent = `---
-last_updated: ${new Date().toISOString()}
-last_validated: ${new Date().toISOString()}
-validated_against_commit: ${SHA_EXAMPLE}
+documcp:
+  last_updated: ${new Date().toISOString()}
+  last_validated: ${new Date().toISOString()}
+  validated_against_commit: ${SHA_EXAMPLE}
 ---
 # Test Document
 Content`;
@@ -600,7 +604,9 @@ Content`;
 
       const result = await trackDocumentationFreshness(input);
       expect(result.success).toBe(true);
-      expect(result.content).toContain(SHA_EXAMPLE.substring(0, 7));
+      expect(result.data.formattedReport).toContain(
+        SHA_EXAMPLE.substring(0, 7),
+      );
     });
 
     it("should format warning recommendations correctly", async () => {
@@ -610,11 +616,12 @@ Content`;
 
       // Create a file with warning-level staleness
       const warnDate = new Date();
-      warnDate.setDate(warnDate.getDate() - 15); // 15 days ago (warning threshold for monthly is ~7-30 days)
+      warnDate.setDate(warnDate.getDate() - 45); // 45 days ago (monthly preset: warning=30d, stale=60d, critical=90d)
 
       const fileContent = `---
-last_updated: ${warnDate.toISOString()}
-last_validated: ${warnDate.toISOString()}
+documcp:
+  last_updated: ${warnDate.toISOString()}
+  last_validated: ${warnDate.toISOString()}
 ---
 # Test Document`;
 
@@ -642,8 +649,9 @@ last_validated: ${warnDate.toISOString()}
       criticalDate.setDate(criticalDate.getDate() - 100); // 100 days ago (critical for monthly preset)
 
       const fileContent = `---
-last_updated: ${criticalDate.toISOString()}
-last_validated: ${criticalDate.toISOString()}
+documcp:
+  last_updated: ${criticalDate.toISOString()}
+  last_validated: ${criticalDate.toISOString()}
 ---
 # Old Document`;
 

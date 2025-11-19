@@ -195,11 +195,9 @@ export async function updateFreshnessEvent(
   const kg = await getKnowledgeGraph();
   const storage = await getKGStorage();
 
-  // Find event node using async API
-  const eventNode = await kg.findNode({
-    type: "documentation_freshness_event",
-  });
-  if (!eventNode || eventNode.id !== eventId) {
+  // Find event node by ID
+  const eventNode = await kg.getNodeById(eventId);
+  if (!eventNode) {
     throw new Error(`Freshness event not found: ${eventId}`);
   }
 
@@ -259,10 +257,8 @@ export async function getFreshnessHistory(
   // Sort by timestamp (most recent first)
   const sorted = await Promise.all(
     edges.map(async (edge) => {
-      const eventNode = await kg.findNode({
-        type: "documentation_freshness_event",
-      });
-      if (!eventNode || eventNode.id !== edge.target) {
+      const eventNode = await kg.getNodeById(edge.target);
+      if (!eventNode || eventNode.type !== "documentation_freshness_event") {
         return null;
       }
 

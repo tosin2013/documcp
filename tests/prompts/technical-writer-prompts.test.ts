@@ -141,8 +141,8 @@ describe("Technical Writer Diataxis Prompts", () => {
       );
 
       expect(prompts.length).toBeGreaterThan(0);
-      expect(prompts[0].content.text).toContain("analyze");
-      expect(prompts[0].content.text).toContain("recommend");
+      expect(prompts[0].content.text.toLowerCase()).toContain("analyz");
+      expect(prompts[0].content.text.toLowerCase()).toContain("recommend");
     });
 
     it("should generate setup-documentation prompts", async () => {

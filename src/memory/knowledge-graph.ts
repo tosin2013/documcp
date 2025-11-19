@@ -927,6 +927,13 @@ export class KnowledgeGraph {
   }
 
   /**
+   * Get a node by its ID
+   */
+  async getNodeById(nodeId: string): Promise<GraphNode | null> {
+    return this.nodes.get(nodeId) || null;
+  }
+
+  /**
    * Remove a node from the knowledge graph
    */
   async removeNode(nodeId: string): Promise<boolean> {
