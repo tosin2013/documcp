@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+### [0.5.2](https://github.com/tosin2013/documcp/compare/v0.5.1...v0.5.2) (2025-11-19)
+
+### 🚀 Features
+
+- add GitHub Copilot instructions and specialized agents ([3ba709f](https://github.com/tosin2013/documcp/commit/3ba709f2e209ae603f0142fa7f55a1d486f67829))
+- add MCP prompts and resources for documentation freshness tracking ([2820c0e](https://github.com/tosin2013/documcp/commit/2820c0ed8fe35627e2434f78d2c172a7cdfa7370))
+- implement documentation freshness tracking with KG integration and fix js-yaml vulnerability ([978aa5a](https://github.com/tosin2013/documcp/commit/978aa5a7f84049d2a1d8b2da8a30e53a7d3fbf99))
+- improve branch coverage to 81.41%, add KG efficiency improvements ([e0f9641](https://github.com/tosin2013/documcp/commit/e0f96419a3b9566677e5defa54df24f0607371ae))
+
+### 🐛 Bug Fixes
+
+- correct sidebar reference for mcp-resource-pattern-redesign ([1168821](https://github.com/tosin2013/documcp/commit/1168821ab933ab84c4d66dcfce1caa7c15e16765)), closes [#19519888749](https://github.com/tosin2013/documcp/issues/19519888749)
+- resolve KG storage issues and test failures, improve branch coverage to 81.32% ([9fd72d5](https://github.com/tosin2013/documcp/commit/9fd72d57e67faf370ac9ab13a9aa3bef0e81be49))
+- update deploy-docs workflow from Jekyll to Docusaurus ([fdc363a](https://github.com/tosin2013/documcp/commit/fdc363a2af6e4f1bf4155210d4e3e2fe62304236)), closes [#19519733512](https://github.com/tosin2013/documcp/issues/19519733512)
+- upgrade GitHub Actions to resolve deprecation warnings ([67fea5d](https://github.com/tosin2013/documcp/commit/67fea5ddf6e1a09907019a3c54edaca39f882936))
+
 ### [0.5.1](https://github.com/tosin2013/documcp/compare/v0.5.0...v0.5.1) (2025-11-18)
 
 ### 📚 Documentation
