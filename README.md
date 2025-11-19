@@ -4,6 +4,7 @@
 [![CodeQL](https://github.com/tosin2013/documcp/actions/workflows/codeql.yml/badge.svg)](https://github.com/tosin2013/documcp/actions/workflows/codeql.yml)
 [![Coverage](https://codecov.io/gh/tosin2013/documcp/branch/main/graph/badge.svg)](https://codecov.io/gh/tosin2013/documcp)
 [![npm version](https://badge.fury.io/js/documcp.svg)](https://badge.fury.io/js/documcp)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/tosin2013/documcp)
 
 DocuMCP is an intelligent Model Context Protocol (MCP) server that revolutionizes documentation deployment for open-source projects. It provides deep repository analysis, intelligent static site generator recommendations, and automated GitHub Pages deployment workflows.
 
