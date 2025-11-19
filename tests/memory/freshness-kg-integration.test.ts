@@ -375,6 +375,51 @@ describe("Freshness Knowledge Graph Integration", () => {
 
       expect(comparison.ranking).toBeGreaterThan(0);
     });
+
+    it("should compare with similar projects", async () => {
+      const projectPath1 = path.join(testDir, "project1");
+      const docsPath1 = path.join(projectPath1, "docs");
+      const projectPath2 = path.join(testDir, "project2");
+      const docsPath2 = path.join(projectPath2, "docs");
+
+      // Store events for both projects
+      const report1: FreshnessScanReport = {
+        docsPath: docsPath1,
+        scannedAt: new Date().toISOString(),
+        totalFiles: 10,
+        filesWithMetadata: 10,
+        filesWithoutMetadata: 0,
+        freshFiles: 9,
+        warningFiles: 1,
+        staleFiles: 0,
+        criticalFiles: 0,
+        files: [],
+        thresholds: {
+          warning: { value: 7, unit: "days" },
+          stale: { value: 30, unit: "days" },
+          critical: { value: 90, unit: "days" },
+        },
+      };
+
+      const report2: FreshnessScanReport = {
+        ...report1,
+        docsPath: docsPath2,
+        freshFiles: 7,
+        warningFiles: 2,
+        staleFiles: 1,
+      };
+
+      await storeFreshnessEvent(projectPath1, docsPath1, report1, "scan");
+      await storeFreshnessEvent(projectPath2, docsPath2, report2, "scan");
+
+      // The function should work even if there are no similar_to edges
+      // (it will just return empty similarProjects array)
+      const comparison = await compareFreshnessAcrossProjects(projectPath1);
+
+      expect(comparison.currentProject.path).toBe(projectPath1);
+      expect(comparison.similarProjects).toBeDefined();
+      expect(Array.isArray(comparison.similarProjects)).toBe(true);
+    });
   });
 
   describe("updateFreshnessEvent", () => {

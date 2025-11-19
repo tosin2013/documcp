@@ -447,8 +447,8 @@ export async function compareFreshnessAcrossProjects(
   });
 
   const similarProjectsPromises = similarEdges.map(async (edge) => {
-    const similarProjectNode = await kg.findNode({ type: "project" });
-    if (!similarProjectNode || similarProjectNode.id !== edge.target) {
+    const similarProjectNode = await kg.getNodeById(edge.target);
+    if (!similarProjectNode || similarProjectNode.type !== "project") {
       return null;
     }
 
