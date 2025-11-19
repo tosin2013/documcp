@@ -574,5 +574,91 @@ documcp:
 
       expect(result.success).toBe(true);
     });
+
+    it("should display commit hash for files validated against commits", async () => {
+      const docsPath = path.join(tempDir, "docs");
+      const projectPath = tempDir;
+      await fs.mkdir(docsPath);
+
+      // Create file with validated_against_commit metadata
+      const fileContent = `---
+last_updated: ${new Date().toISOString()}
+last_validated: ${new Date().toISOString()}
+validated_against_commit: ${SHA_EXAMPLE}
+---
+# Test Document
+Content`;
+
+      await fs.writeFile(path.join(docsPath, "test.md"), fileContent);
+
+      const input: TrackDocumentationFreshnessInput = {
+        docsPath,
+        projectPath,
+        preset: "monthly",
+        includeFileList: true,
+      };
+
+      const result = await trackDocumentationFreshness(input);
+      expect(result.success).toBe(true);
+      expect(result.content).toContain(SHA_EXAMPLE.substring(0, 7));
+    });
+
+    it("should format warning recommendations correctly", async () => {
+      const docsPath = path.join(tempDir, "docs");
+      const projectPath = tempDir;
+      await fs.mkdir(docsPath);
+
+      // Create a file with warning-level staleness
+      const warnDate = new Date();
+      warnDate.setDate(warnDate.getDate() - 15); // 15 days ago (warning threshold for monthly is ~7-30 days)
+
+      const fileContent = `---
+last_updated: ${warnDate.toISOString()}
+last_validated: ${warnDate.toISOString()}
+---
+# Test Document`;
+
+      await fs.writeFile(path.join(docsPath, "warn.md"), fileContent);
+
+      const input: TrackDocumentationFreshnessInput = {
+        docsPath,
+        projectPath,
+        preset: "monthly",
+        storeInKG: true,
+      };
+
+      const result = await trackDocumentationFreshness(input);
+      expect(result.success).toBe(true);
+      expect(result.data.report.warningFiles).toBeGreaterThan(0);
+    });
+
+    it("should format critical recommendations correctly", async () => {
+      const docsPath = path.join(tempDir, "docs");
+      const projectPath = tempDir;
+      await fs.mkdir(docsPath);
+
+      // Create a file with critical-level staleness
+      const criticalDate = new Date();
+      criticalDate.setDate(criticalDate.getDate() - 100); // 100 days ago (critical for monthly preset)
+
+      const fileContent = `---
+last_updated: ${criticalDate.toISOString()}
+last_validated: ${criticalDate.toISOString()}
+---
+# Old Document`;
+
+      await fs.writeFile(path.join(docsPath, "critical.md"), fileContent);
+
+      const input: TrackDocumentationFreshnessInput = {
+        docsPath,
+        projectPath,
+        preset: "monthly",
+        storeInKG: true,
+      };
+
+      const result = await trackDocumentationFreshness(input);
+      expect(result.success).toBe(true);
+      expect(result.data.report.criticalFiles).toBeGreaterThan(0);
+    });
   });
 });
