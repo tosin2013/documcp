@@ -1,3 +1,11 @@
+---
+documcp:
+  last_updated: "2025-11-20T00:46:21.968Z"
+  last_validated: "2025-11-20T00:46:21.968Z"
+  auto_updated: false
+  update_frequency: monthly
+---
+
 # Research Integration Summary
 
 **Date**: 2025-01-14  

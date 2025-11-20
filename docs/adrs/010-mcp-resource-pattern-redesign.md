@@ -1,3 +1,11 @@
+---
+documcp:
+  last_updated: "2025-11-20T00:46:21.944Z"
+  last_validated: "2025-11-20T00:46:21.944Z"
+  auto_updated: false
+  update_frequency: monthly
+---
+
 # ADR-010: MCP Resource Pattern Redesign
 
 **Status:** Accepted

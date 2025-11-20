@@ -1,3 +1,11 @@
+---
+documcp:
+  last_updated: "2025-11-20T00:46:21.951Z"
+  last_validated: "2025-11-20T00:46:21.951Z"
+  auto_updated: false
+  update_frequency: monthly
+---
+
 # How-To Guides
 
 Practical guides for specific documentation tasks with DocuMCP.
@@ -14,6 +22,7 @@ Choose the guide that matches your task:
 
 ## Advanced Topics
 
+- [Documentation Freshness Tracking](documentation-freshness-tracking.md) - Track and maintain documentation freshness
 - [Site Monitoring](site-monitoring.md) - Monitor your deployed site
 - [Custom Domains](custom-domains.md) - Set up custom domains
 - [SEO Optimization](seo-optimization.md) - Optimize for search engines

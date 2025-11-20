@@ -1,3 +1,11 @@
+---
+documcp:
+  last_updated: "2025-11-20T00:46:21.962Z"
+  last_validated: "2025-11-20T00:46:21.962Z"
+  auto_updated: false
+  update_frequency: monthly
+---
+
 # Reference Documentation
 
 Complete technical reference for DocuMCP's API, configuration, and tools.

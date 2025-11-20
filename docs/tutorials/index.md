@@ -1,3 +1,11 @@
+---
+documcp:
+  last_updated: "2025-11-20T00:46:21.972Z"
+  last_validated: "2025-11-20T00:46:21.972Z"
+  auto_updated: false
+  update_frequency: monthly
+---
+
 # Tutorials
 
 Step-by-step tutorials to get you started with DocuMCP and master advanced features.

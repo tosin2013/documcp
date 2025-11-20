@@ -1,3 +1,11 @@
+---
+documcp:
+  last_updated: "2025-11-20T00:46:21.973Z"
+  last_validated: "2025-11-20T00:46:21.973Z"
+  auto_updated: false
+  update_frequency: monthly
+---
+
 # DocuMCP User Onboarding Guide
 
 Welcome to DocuMCP! This comprehensive guide will help you get started with DocuMCP in your own environment, from initial setup to advanced usage patterns.

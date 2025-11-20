@@ -1,3 +1,11 @@
+---
+documcp:
+  last_updated: "2025-11-20T00:46:21.971Z"
+  last_validated: "2025-11-20T00:46:21.971Z"
+  auto_updated: false
+  update_frequency: monthly
+---
+
 # DocuMCP Environment Setup Guide
 
 This guide will help you set up DocuMCP in your own environment, from basic installation to advanced configuration for team collaboration.

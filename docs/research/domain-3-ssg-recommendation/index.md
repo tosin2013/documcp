@@ -1,3 +1,11 @@
+---
+documcp:
+  last_updated: "2025-11-20T00:46:21.966Z"
+  last_validated: "2025-11-20T00:46:21.966Z"
+  auto_updated: false
+  update_frequency: monthly
+---
+
 # Domain 3: SSG Recommendation Research
 
 This directory contains research and analysis related to DocuMCP's static site generator recommendation engine.

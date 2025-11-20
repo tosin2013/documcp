@@ -1,3 +1,11 @@
+---
+documcp:
+  last_updated: "2025-11-20T00:46:21.952Z"
+  last_validated: "2025-11-20T00:46:21.952Z"
+  auto_updated: false
+  update_frequency: monthly
+---
+
 # Local Documentation Testing
 
 This guide shows how to test your documentation locally before deploying to GitHub Pages using containerized environments that don't affect your system.

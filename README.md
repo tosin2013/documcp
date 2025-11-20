@@ -30,6 +30,13 @@ DocuMCP analyzes your repository, recommends the perfect static site generator (
 - 🎯 **Smart Scoring**: Intelligent SSG scoring based on success rates from similar projects
 - 📈 **Trend Analysis**: Identifies deployment trends and provides health scores
 
+### Documentation Maintenance (v0.5.2+)
+
+- 📅 **Freshness Tracking**: Monitor documentation staleness with configurable thresholds
+- ✅ **Freshness Validation**: Initialize and update freshness metadata automatically
+- 🗺️ **Sitemap Management**: Generate, validate, and manage sitemap.xml for SEO
+- 🔗 **Knowledge Graph Integration**: Track freshness history for intelligent recommendations
+
 ## Requirements
 
 - **Node.js**: 20.0.0 or higher

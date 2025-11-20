@@ -1,3 +1,11 @@
+---
+documcp:
+  last_updated: "2025-11-20T00:46:21.960Z"
+  last_validated: "2025-11-20T00:46:21.960Z"
+  auto_updated: false
+  update_frequency: monthly
+---
+
 # Command Line Interface
 
 DocuMCP primarily operates as an MCP server integrated with AI assistants, but it also provides command-line utilities for direct usage and debugging.

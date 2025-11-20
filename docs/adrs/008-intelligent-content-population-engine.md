@@ -3,6 +3,11 @@ id: 008-intelligent-content-population-engine
 title: "ADR-008: Intelligent Content Population Engine"
 sidebar_label: "ADR-8: Intelligent Content Population Engine"
 sidebar_position: 8
+documcp:
+  last_updated: "2025-11-20T00:46:21.942Z"
+  last_validated: "2025-11-20T00:46:21.942Z"
+  auto_updated: false
+  update_frequency: monthly
 ---
 
 # ADR-008: Intelligent Content Population Engine for Diataxis Documentation

@@ -1,3 +1,11 @@
+---
+documcp:
+  last_updated: "2025-11-20T00:46:21.968Z"
+  last_validated: "2025-11-20T00:46:21.968Z"
+  auto_updated: false
+  update_frequency: monthly
+---
+
 # Domain 6: API Design Research
 
 This directory contains research and analysis related to DocuMCP's MCP (Model Context Protocol) API design and implementation.

@@ -1,3 +1,11 @@
+---
+documcp:
+  last_updated: "2025-11-20T00:46:21.954Z"
+  last_validated: "2025-11-20T00:46:21.954Z"
+  auto_updated: false
+  update_frequency: monthly
+---
+
 # How to Analyze Your Repository with DocuMCP
 
 This guide walks you through using DocuMCP's repository analysis capabilities to understand your project's documentation needs.

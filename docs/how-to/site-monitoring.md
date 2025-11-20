@@ -1,3 +1,11 @@
+---
+documcp:
+  last_updated: "2025-11-20T00:46:21.955Z"
+  last_validated: "2025-11-20T00:46:21.955Z"
+  auto_updated: false
+  update_frequency: monthly
+---
+
 # How to Verify and Monitor Your Documentation Deployment
 
 This guide shows you how to verify your deployed documentation site and monitor deployment health using DocuMCP's built-in tools.

@@ -1,3 +1,11 @@
+---
+documcp:
+  last_updated: "2025-11-20T00:46:21.969Z"
+  last_validated: "2025-11-20T00:46:21.969Z"
+  auto_updated: false
+  update_frequency: monthly
+---
+
 # DocuMCP Implementation Research Questions
 
 **Generated**: January 14, 2025  

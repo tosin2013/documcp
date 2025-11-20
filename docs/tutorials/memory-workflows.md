@@ -1,3 +1,11 @@
+---
+documcp:
+  last_updated: "2025-11-20T00:46:21.973Z"
+  last_validated: "2025-11-20T00:46:21.973Z"
+  auto_updated: false
+  update_frequency: monthly
+---
+
 # Memory Workflows and Advanced Features
 
 This tutorial covers DocuMCP's memory system and advanced workflow features for intelligent documentation management.

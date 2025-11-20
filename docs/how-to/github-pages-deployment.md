@@ -1,3 +1,11 @@
+---
+documcp:
+  last_updated: "2025-11-20T00:46:21.951Z"
+  last_validated: "2025-11-20T00:46:21.951Z"
+  auto_updated: false
+  update_frequency: monthly
+---
+
 # How to Deploy to GitHub Pages
 
 This guide shows you how to deploy your documentation to GitHub Pages using DocuMCP's automated workflows. DocuMCP uses a dual-static-site-generator approach for optimal deployment.

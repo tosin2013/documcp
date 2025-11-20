@@ -1,3 +1,11 @@
+---
+documcp:
+  last_updated: "2025-11-20T00:46:21.955Z"
+  last_validated: "2025-11-20T00:46:21.955Z"
+  auto_updated: false
+  update_frequency: monthly
+---
+
 # How to Manage Documentation SEO
 
 This guide shows you how to use DocuMCP's sitemap management tools to improve your documentation's search engine visibility.

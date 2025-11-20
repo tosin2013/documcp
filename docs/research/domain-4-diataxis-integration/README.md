@@ -1,3 +1,11 @@
+---
+documcp:
+  last_updated: "2025-11-20T00:46:21.967Z"
+  last_validated: "2025-11-20T00:46:21.967Z"
+  auto_updated: false
+  update_frequency: monthly
+---
+
 # Domain 4: Diataxis Framework Integration Research
 
 This directory contains research and analysis related to DocuMCP's integration with the Diataxis documentation framework.

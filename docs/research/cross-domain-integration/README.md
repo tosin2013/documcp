@@ -1,3 +1,11 @@
+---
+documcp:
+  last_updated: "2025-11-20T00:46:21.964Z"
+  last_validated: "2025-11-20T00:46:21.964Z"
+  auto_updated: false
+  update_frequency: monthly
+---
+
 # Cross-Domain Integration Research
 
 This directory contains research and analysis related to the integration between different DocuMCP domains and their collaborative functionality.

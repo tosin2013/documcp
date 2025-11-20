@@ -1,3 +1,11 @@
+---
+documcp:
+  last_updated: "2025-11-20T00:46:21.970Z"
+  last_validated: "2025-11-20T00:46:21.970Z"
+  auto_updated: false
+  update_frequency: monthly
+---
+
 # Setting Up Your Development Environment
 
 This tutorial covers setting up a development environment for ongoing documentation work with DocuMCP, including local testing, content workflows, and maintenance automation.

@@ -1,3 +1,11 @@
+---
+documcp:
+  last_updated: "2025-11-20T00:46:21.945Z"
+  last_validated: "2025-11-20T00:46:21.945Z"
+  auto_updated: false
+  update_frequency: monthly
+---
+
 # MCP Inspector Testing Guide
 
 The MCP Inspector is an in-browser debugging tool for testing MCP servers without connecting to actual applications. This guide explains how to use it for DocuMCP development.

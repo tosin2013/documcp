@@ -1,3 +1,11 @@
+---
+documcp:
+  last_updated: "2025-11-20T00:46:21.947Z"
+  last_validated: "2025-11-20T00:46:21.947Z"
+  auto_updated: false
+  update_frequency: monthly
+---
+
 # Link Validation in Knowledge Graph
 
 ## Overview

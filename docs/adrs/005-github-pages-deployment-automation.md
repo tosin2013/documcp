@@ -3,6 +3,11 @@ id: 005-github-pages-deployment-automation
 title: "ADR-005: GitHub Pages Deployment Automation"
 sidebar_label: "ADR-5: GitHub Pages Deployment Automation"
 sidebar_position: 5
+documcp:
+  last_updated: "2025-11-20T00:46:21.939Z"
+  last_validated: "2025-11-20T00:46:21.939Z"
+  auto_updated: false
+  update_frequency: monthly
 ---
 
 # ADR-005: GitHub Pages Deployment Automation Architecture

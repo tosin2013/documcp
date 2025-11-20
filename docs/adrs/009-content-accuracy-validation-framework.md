@@ -3,6 +3,11 @@ id: 009-content-accuracy-validation-framework
 title: "ADR-009: Content Accuracy Validation Framework"
 sidebar_label: "ADR-9: Content Accuracy Validation Framework"
 sidebar_position: 9
+documcp:
+  last_updated: "2025-11-20T00:46:21.943Z"
+  last_validated: "2025-11-20T00:46:21.943Z"
+  auto_updated: false
+  update_frequency: monthly
 ---
 
 # ADR-009: Content Accuracy and Validation Framework for Generated Documentation

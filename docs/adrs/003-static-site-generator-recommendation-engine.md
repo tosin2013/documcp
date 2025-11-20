@@ -3,6 +3,11 @@ id: 003-static-site-generator-recommendation-engine
 title: "ADR-003: SSG Recommendation Engine Design"
 sidebar_label: "ADR-3: SSG Recommendation Engine Design"
 sidebar_position: 3
+documcp:
+  last_updated: "2025-11-20T00:46:21.937Z"
+  last_validated: "2025-11-20T00:46:21.937Z"
+  auto_updated: false
+  update_frequency: monthly
 ---
 
 # ADR-003: Static Site Generator Recommendation Engine Design

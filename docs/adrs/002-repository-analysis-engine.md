@@ -3,6 +3,11 @@ id: 002-repository-analysis-engine
 title: "ADR-002: Repository Analysis Engine Design"
 sidebar_label: "ADR-2: Repository Analysis Engine Design"
 sidebar_position: 2
+documcp:
+  last_updated: "2025-11-20T00:46:21.936Z"
+  last_validated: "2025-11-20T00:46:21.936Z"
+  auto_updated: false
+  update_frequency: monthly
 ---
 
 # ADR-002: Multi-Layered Repository Analysis Engine Design

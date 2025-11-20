@@ -1,3 +1,11 @@
+---
+documcp:
+  last_updated: "2025-11-20T00:46:21.957Z"
+  last_validated: "2025-11-20T00:46:21.957Z"
+  auto_updated: false
+  update_frequency: monthly
+---
+
 # DocuMCP Usage Examples
 
 This guide provides comprehensive usage examples for DocuMCP functions, organized by common use cases and scenarios.

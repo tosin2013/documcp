@@ -3,6 +3,11 @@ id: 004-diataxis-framework-integration
 title: "ADR-004: Diataxis Framework Integration"
 sidebar_label: "ADR-4: Diataxis Framework Integration"
 sidebar_position: 4
+documcp:
+  last_updated: "2025-11-20T00:46:21.938Z"
+  last_validated: "2025-11-20T00:46:21.938Z"
+  auto_updated: false
+  update_frequency: monthly
 ---
 
 # ADR-004: Diataxis Framework Integration for Documentation Structure

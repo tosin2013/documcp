@@ -1,3 +1,11 @@
+---
+documcp:
+  last_updated: "2025-11-20T00:46:21.957Z"
+  last_validated: "2025-11-20T00:46:21.957Z"
+  auto_updated: false
+  update_frequency: monthly
+---
+
 # DocuMCP Documentation
 
 Welcome to DocuMCP - an intelligent Model Context Protocol (MCP) server for GitHub Pages documentation deployment. This comprehensive guide is organized following the Diataxis framework.
@@ -17,6 +25,7 @@ Practical guides for specific tasks:
 - [How to Prompt DocuMCP Effectively](how-to/prompting-guide.md)
 - [How to Analyze Your Repository](how-to/repository-analysis.md)
 - [How to Deploy to GitHub Pages](how-to/github-pages-deployment.md)
+- [How to Track Documentation Freshness](how-to/documentation-freshness-tracking.md) ⭐ New
 - [How to Troubleshoot Common Issues](how-to/troubleshooting.md)
 
 ## 📖 Information-Oriented: Reference

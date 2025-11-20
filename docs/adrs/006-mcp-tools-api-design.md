@@ -3,6 +3,11 @@ id: 006-mcp-tools-api-design
 title: "ADR-006: MCP Tools API Design and Interface Specification"
 sidebar_label: "ADR-006: MCP Tools API Design"
 sidebar_position: 6
+documcp:
+  last_updated: "2025-11-20T00:46:21.940Z"
+  last_validated: "2025-11-20T00:46:21.940Z"
+  auto_updated: false
+  update_frequency: monthly
 ---
 
 # ADR-006: MCP Tools API Design and Interface Specification

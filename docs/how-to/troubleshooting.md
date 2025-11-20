@@ -1,3 +1,11 @@
+---
+documcp:
+  last_updated: "2025-11-20T00:46:21.956Z"
+  last_validated: "2025-11-20T00:46:21.956Z"
+  auto_updated: false
+  update_frequency: monthly
+---
+
 # Troubleshooting Common Issues
 
 This guide helps you diagnose and fix common problems when using DocuMCP for documentation deployment.

@@ -1,3 +1,11 @@
+---
+documcp:
+  last_updated: "2025-11-20T00:46:21.963Z"
+  last_validated: "2025-11-20T00:46:21.963Z"
+  auto_updated: false
+  update_frequency: monthly
+---
+
 # Prompt Templates
 
 DocuMCP provides a comprehensive set of prompt templates to help you interact effectively with the system. These templates are designed to get optimal results from DocuMCP's AI-powered documentation tools.

@@ -3,6 +3,11 @@ id: README
 title: Architectural Decision Records
 sidebar_label: ADR Overview
 sidebar_position: 1
+documcp:
+  last_updated: "2025-11-20T00:46:21.945Z"
+  last_validated: "2025-11-20T00:46:21.945Z"
+  auto_updated: false
+  update_frequency: monthly
 ---
 
 # Architectural Decision Records (ADRs)

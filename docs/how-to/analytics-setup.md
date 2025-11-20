@@ -1,3 +1,11 @@
+---
+documcp:
+  last_updated: "2025-11-20T00:46:21.949Z"
+  last_validated: "2025-11-20T00:46:21.949Z"
+  auto_updated: false
+  update_frequency: monthly
+---
+
 # How to Use DocuMCP Deployment Analytics
 
 This guide shows you how to access and use DocuMCP's built-in deployment analytics to track your documentation deployment success and patterns.

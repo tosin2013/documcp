@@ -1,3 +1,11 @@
+---
+documcp:
+  last_updated: "2025-11-20T00:46:21.946Z"
+  last_validated: "2025-11-20T00:46:21.946Z"
+  auto_updated: false
+  update_frequency: monthly
+---
+
 # DocuMCP Architecture Overview
 
 This document explains the architectural design of DocuMCP, providing insight into how the system works and why key design decisions were made.

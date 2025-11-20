@@ -1,3 +1,11 @@
+---
+documcp:
+  last_updated: "2025-11-20T00:46:21.965Z"
+  last_validated: "2025-11-20T00:46:21.965Z"
+  auto_updated: false
+  update_frequency: monthly
+---
+
 # Domain 1: MCP Architecture Research
 
 This directory contains research and analysis related to DocuMCP's Model Context Protocol (MCP) architecture and implementation.

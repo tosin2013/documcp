@@ -1,3 +1,11 @@
+---
+documcp:
+  last_updated: "2025-11-20T00:46:21.953Z"
+  last_validated: "2025-11-20T00:46:21.953Z"
+  auto_updated: false
+  update_frequency: monthly
+---
+
 # How to Prompt DocuMCP Effectively
 
 This guide shows you how to interact with DocuMCP using effective prompts to get the best results from the system.

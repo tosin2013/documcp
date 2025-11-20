@@ -1,3 +1,11 @@
+---
+documcp:
+  last_updated: "2025-11-20T00:46:21.950Z"
+  last_validated: "2025-11-20T00:46:21.950Z"
+  auto_updated: false
+  update_frequency: monthly
+---
+
 # How to Set Up Custom Domains
 
 This guide shows you how to configure custom domains for your DocuMCP-deployed documentation site.
@@ -54,8 +62,10 @@ Add the following DNS records to your domain:
 ```
 Type: CNAME
 Name: docs
-Value: tosin2013.github.io
+Value: yourusername.github.io
 ```
+
+> **Note**: Replace `yourusername` with your GitHub username or organization name.
 
 **For Root Domain (example.com):**
 

@@ -1,3 +1,11 @@
+---
+documcp:
+  last_updated: "2025-11-20T00:46:21.967Z"
+  last_validated: "2025-11-20T00:46:21.967Z"
+  auto_updated: false
+  update_frequency: monthly
+---
+
 # GitHub Pages Deployment Security and Limitations Analysis
 
 **Research Date**: 2025-01-14  

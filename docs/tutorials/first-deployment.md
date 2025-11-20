@@ -1,3 +1,11 @@
+---
+documcp:
+  last_updated: "2025-11-20T00:46:21.971Z"
+  last_validated: "2025-11-20T00:46:21.971Z"
+  auto_updated: false
+  update_frequency: monthly
+---
+
 # Your First Documentation Deployment
 
 This tutorial walks you through deploying your first documentation site using DocuMCP, from analysis to live GitHub Pages deployment.

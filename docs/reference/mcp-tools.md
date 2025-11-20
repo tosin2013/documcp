@@ -1,3 +1,11 @@
+---
+documcp:
+  last_updated: "2025-11-20T00:46:21.963Z"
+  last_validated: "2025-11-20T00:46:21.963Z"
+  auto_updated: false
+  update_frequency: monthly
+---
+
 # MCP Tools API Reference
 
 DocuMCP provides a comprehensive set of tools via the Model Context Protocol (MCP). These tools enable intelligent documentation deployment through repository analysis, SSG recommendations, and automated GitHub Pages setup.
@@ -343,6 +351,142 @@ DocuMCP implements the MCP protocol using the low-level `Server` class from `@mo
 
 **Returns**: Optimized README content and extracted documentation
 
+## Documentation Freshness Tracking Tools
+
+DocuMCP includes comprehensive tools for tracking and managing documentation freshness, ensuring your documentation stays up-to-date and identifying files that need attention.
+
+### track_documentation_freshness
+
+**Description**: Scan documentation directory for staleness markers and identify files needing updates based on configurable time thresholds (minutes, hours, days)
+
+**Parameters**:
+
+- `docsPath` (string, required): Path to documentation directory
+- `projectPath` (string, optional): Path to project root (for knowledge graph tracking)
+- `warningThreshold` (object, optional): Warning threshold (yellow flag)
+  - `value` (number, positive): Threshold value
+  - `unit` (enum): `"minutes"`, `"hours"`, or `"days"`
+- `staleThreshold` (object, optional): Stale threshold (orange flag)
+  - `value` (number, positive): Threshold value
+  - `unit` (enum): `"minutes"`, `"hours"`, or `"days"`
+- `criticalThreshold` (object, optional): Critical threshold (red flag)
+  - `value` (number, positive): Threshold value
+  - `unit` (enum): `"minutes"`, `"hours"`, or `"days"`
+- `preset` (enum, optional): Use predefined threshold preset
+  - Options: `"realtime"`, `"active"`, `"recent"`, `"weekly"`, `"monthly"`, `"quarterly"`
+- `includeFileList` (boolean, optional, default: true): Include detailed file list in response
+- `sortBy` (enum, optional, default: "staleness"): Sort order for file list
+  - Options: `"age"`, `"path"`, `"staleness"`
+- `storeInKG` (boolean, optional, default: true): Store tracking event in knowledge graph for historical analysis
+
+**Returns**: Freshness report with:
+
+- Summary statistics (total files, fresh, warning, stale, critical)
+- Detailed file list with staleness levels
+- Age information for each file
+- Recommendations for action
+
+**Example**:
+
+```json
+{
+  "docsPath": "/path/to/docs",
+  "preset": "monthly",
+  "includeFileList": true
+}
+```
+
+**Default Thresholds**:
+
+- Warning: 7 days
+- Stale: 30 days
+- Critical: 90 days
+
+### validate_documentation_freshness
+
+**Description**: Validate documentation freshness, initialize metadata for files without it, and update timestamps based on code changes
+
+**Parameters**:
+
+- `docsPath` (string, required): Path to documentation directory
+- `projectPath` (string, required): Path to project root (for git integration)
+- `initializeMissing` (boolean, optional, default: true): Initialize metadata for files without it
+- `updateExisting` (boolean, optional, default: false): Update last_validated timestamp for all files
+- `updateFrequency` (enum, optional, default: "monthly"): Default update frequency for new metadata
+  - Options: `"realtime"`, `"active"`, `"recent"`, `"weekly"`, `"monthly"`, `"quarterly"`
+- `validateAgainstGit` (boolean, optional, default: true): Validate against current git commit
+
+**Returns**: Validation report with:
+
+- Files initialized (new metadata created)
+- Files updated (existing metadata refreshed)
+- Metadata structure for each file
+- Recommendations for next steps
+
+**Example**:
+
+```json
+{
+  "docsPath": "/path/to/docs",
+  "projectPath": "/path/to/project",
+  "initializeMissing": true,
+  "validateAgainstGit": true
+}
+```
+
+**Use Cases**:
+
+- First-time setup: Initialize freshness metadata for all documentation files
+- Regular maintenance: Update validation timestamps
+- After code changes: Sync documentation freshness with git history
+
+## Sitemap Management Tools
+
+### manage_sitemap
+
+**Description**: Generate, validate, and manage sitemap.xml as the source of truth for documentation links. Sitemap.xml is used for SEO, search engine submission, and deployment tracking.
+
+**Parameters**:
+
+- `action` (enum, required): Action to perform
+  - `"generate"`: Create new sitemap.xml
+  - `"validate"`: Check sitemap structure
+  - `"update"`: Sync sitemap with documentation
+  - `"list"`: Show all URLs in sitemap
+- `docsPath` (string, required): Path to documentation root directory
+- `baseUrl` (string, required for generate/update): Base URL for the site (e.g., `https://user.github.io/repo`)
+- `includePatterns` (array, optional): File patterns to include
+  - Default: `["**/*.md", "**/*.html", "**/*.mdx"]`
+- `excludePatterns` (array, optional): File patterns to exclude
+  - Default: `["node_modules", ".git", "dist", "build", ".documcp"]`
+- `updateFrequency` (enum, optional): Default change frequency for pages
+  - Options: `"always"`, `"hourly"`, `"daily"`, `"weekly"`, `"monthly"`, `"yearly"`, `"never"`
+- `useGitHistory` (boolean, optional, default: true): Use git history for last modified dates
+- `sitemapPath` (string, optional): Custom path for sitemap.xml (default: `docsPath/sitemap.xml`)
+
+**Returns**: Sitemap operation result with:
+
+- Generated/validated sitemap structure
+- URL count and statistics
+- Validation errors (if any)
+- Recommendations for SEO optimization
+
+**Example**:
+
+```json
+{
+  "action": "generate",
+  "docsPath": "/path/to/docs",
+  "baseUrl": "https://example.com/docs"
+}
+```
+
+**Use Cases**:
+
+- SEO optimization: Generate sitemap for search engines
+- Link validation: Ensure all documentation pages are discoverable
+- Deployment tracking: Monitor documentation changes over time
+
 ## Memory System Tools
 
 The memory system provides intelligent learning and pattern recognition across documentation projects.
@@ -410,8 +554,20 @@ DocuMCP tools are designed to work together in workflows:
    ```
 
 3. **Documentation Maintenance**:
+
    ```
    detect_documentation_gaps → update_existing_documentation → validate_content
+   ```
+
+4. **Freshness Tracking**:
+
+   ```
+   validate_documentation_freshness → track_documentation_freshness → (update files as needed)
+   ```
+
+5. **SEO and Sitemap Management**:
+   ```
+   manage_sitemap (generate) → deploy_pages → manage_sitemap (validate)
    ```
 
 ## Error Handling
@@ -442,6 +598,19 @@ These resources can be accessed later for reference or further processing.
 
 ## Version Information
 
-Current DocuMCP version: **0.5.0**
+Current DocuMCP version: **0.5.2**
 
 For the latest updates and detailed changelog, see the project repository.
+
+## Recent Additions (v0.5.2)
+
+### Documentation Freshness Tracking
+
+- `track_documentation_freshness`: Monitor documentation staleness with configurable thresholds
+- `validate_documentation_freshness`: Initialize and update freshness metadata
+
+### Sitemap Management
+
+- `manage_sitemap`: Generate, validate, and manage sitemap.xml for SEO and deployment tracking
+
+These tools integrate with the knowledge graph system to provide historical analysis and intelligent recommendations.

@@ -1,3 +1,11 @@
+---
+documcp:
+  last_updated: "2025-11-20T00:46:21.960Z"
+  last_validated: "2025-11-20T00:46:21.960Z"
+  auto_updated: false
+  update_frequency: monthly
+---
+
 # Configuration Options
 
 This reference guide covers all configuration options available in DocuMCP and the static site generators it supports.

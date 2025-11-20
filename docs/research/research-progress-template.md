@@ -1,3 +1,11 @@
+---
+documcp:
+  last_updated: "2025-11-20T00:46:21.969Z"
+  last_validated: "2025-11-20T00:46:21.969Z"
+  auto_updated: false
+  update_frequency: monthly
+---
+
 # Research Progress Template
 
 **Domain**: [Domain Name]  

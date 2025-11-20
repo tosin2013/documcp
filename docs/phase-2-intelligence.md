@@ -1,3 +1,11 @@
+---
+documcp:
+  last_updated: "2025-11-20T00:46:21.959Z"
+  last_validated: "2025-11-20T00:46:21.959Z"
+  auto_updated: false
+  update_frequency: monthly
+---
+
 # Phase 2: Intelligence & Learning System
 
 DocuMCP Phase 2 introduces a comprehensive intelligence and learning system that makes the MCP server continuously smarter with each deployment. The system learns from historical data, user preferences, and deployment outcomes to provide increasingly accurate recommendations and insights.

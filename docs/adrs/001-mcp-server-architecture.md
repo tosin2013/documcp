@@ -3,6 +3,11 @@ id: 001-mcp-server-architecture
 title: "ADR-001: MCP Server Architecture using TypeScript SDK"
 sidebar_label: "ADR-001: MCP Server Architecture"
 sidebar_position: 1
+documcp:
+  last_updated: "2025-11-20T00:46:21.934Z"
+  last_validated: "2025-11-20T00:46:21.934Z"
+  auto_updated: false
+  update_frequency: monthly
 ---
 
 # ADR-001: MCP Server Architecture using TypeScript SDK

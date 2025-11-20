@@ -795,6 +795,10 @@ const TOOLS = [
       "Scan documentation directory for staleness markers and identify files needing updates based on configurable time thresholds (minutes, hours, days)",
     inputSchema: z.object({
       docsPath: z.string().describe("Path to documentation directory"),
+      projectPath: z
+        .string()
+        .optional()
+        .describe("Path to project root (for knowledge graph tracking)"),
       warningThreshold: z
         .object({
           value: z.number().positive(),
@@ -837,6 +841,13 @@ const TOOLS = [
         .optional()
         .default("staleness")
         .describe("Sort order for file list"),
+      storeInKG: z
+        .boolean()
+        .optional()
+        .default(true)
+        .describe(
+          "Store tracking event in knowledge graph for historical analysis",
+        ),
     }),
   },
   {

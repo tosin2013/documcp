@@ -1,5 +1,10 @@
 ---
 sidebar_position: 1
+documcp:
+  last_updated: "2025-11-20T00:46:21.959Z"
+  last_validated: "2025-11-20T00:46:21.959Z"
+  auto_updated: false
+  update_frequency: monthly
 ---
 
 # API Overview

@@ -1,3 +1,11 @@
+---
+documcp:
+  last_updated: "2025-11-20T00:46:21.966Z"
+  last_validated: "2025-11-20T00:46:21.966Z"
+  auto_updated: false
+  update_frequency: monthly
+---
+
 # Static Site Generator Performance Analysis
 
 **Research Date**: 2025-01-14  
