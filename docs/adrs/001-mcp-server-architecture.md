@@ -5,10 +5,10 @@ sidebar_label: "ADR-001: MCP Server Architecture"
 sidebar_position: 1
 documcp:
   last_updated: "2025-11-20T00:46:21.934Z"
-  last_validated: "2025-12-09T19:18:14.155Z"
+  last_validated: "2025-12-09T19:41:38.566Z"
   auto_updated: false
   update_frequency: monthly
-  validated_against_commit: 49831ed0b8915c53bc03eff44e7cb8b82dfac6a3
+  validated_against_commit: 306567b32114502c606244ad6c2930360bcd4201
 ---
 
 # ADR-001: MCP Server Architecture using TypeScript SDK
