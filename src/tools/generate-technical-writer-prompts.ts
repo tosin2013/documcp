@@ -232,14 +232,18 @@ async function buildProjectContext(
 
     // Analyze package.json if it exists
     try {
-      const packageJson = JSON.parse(
-        await fs.readFile(packageJsonPath, "utf-8"),
-      );
+      // Ensure file exists before reading
+      if (!(await fileExists(packageJsonPath))) {
+        throw new Error("package.json not found");
+      }
+
+      const packageJsonContent = await fs.readFile(packageJsonPath, "utf-8");
+      const packageJson = JSON.parse(packageJsonContent);
 
       // Determine project type from dependencies
       const deps = {
-        ...packageJson.dependencies,
-        ...packageJson.devDependencies,
+        ...(packageJson.dependencies || {}),
+        ...(packageJson.devDependencies || {}),
       };
 
       if (deps["react"]) frameworks.push("React");
@@ -258,21 +262,25 @@ async function buildProjectContext(
       else if (await fileExists(join(projectPath, "pnpm-lock.yaml")))
         packageManager = "pnpm";
       else packageManager = "npm";
-    } catch {
+    } catch (error) {
       // Fallback analysis for non-Node.js projects
-      const files = await fs.readdir(projectPath);
+      try {
+        const files = await fs.readdir(projectPath);
 
-      if (files.some((f) => f.endsWith(".py"))) {
-        languages.push("Python");
-        projectType = "python_application";
-      }
-      if (files.some((f) => f.endsWith(".rs"))) {
-        languages.push("Rust");
-        projectType = "rust_application";
-      }
-      if (files.some((f) => f.endsWith(".go"))) {
-        languages.push("Go");
-        projectType = "go_application";
+        if (files.some((f) => f.endsWith(".py"))) {
+          languages.push("Python");
+          projectType = "python_application";
+        }
+        if (files.some((f) => f.endsWith(".rs"))) {
+          languages.push("Rust");
+          projectType = "rust_application";
+        }
+        if (files.some((f) => f.endsWith(".go"))) {
+          languages.push("Go");
+          projectType = "go_application";
+        }
+      } catch {
+        // If directory read also fails, keep default "unknown"
       }
     }
 
