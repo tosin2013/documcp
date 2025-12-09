@@ -1,9 +1,10 @@
 ---
 documcp:
   last_updated: "2025-11-20T00:46:21.950Z"
-  last_validated: "2025-11-20T00:46:21.950Z"
+  last_validated: "2025-12-09T19:18:14.170Z"
   auto_updated: false
   update_frequency: monthly
+  validated_against_commit: 49831ed0b8915c53bc03eff44e7cb8b82dfac6a3
 ---
 
 # How to Track Documentation Freshness
@@ -314,4 +315,4 @@ Use knowledge graph insights to identify patterns:
 - [Site Monitoring](site-monitoring.md) - Monitor your documentation site health
 - [SEO Optimization](seo-optimization.md) - Improve search engine visibility
 - [Performance Optimization](performance-optimization.md) - Optimize documentation performance
-- [MCP Tools Reference](../reference/mcp-tools.md#documentation-freshness-tracking-tools) - Complete API reference
+- [MCP Tools Reference](../reference/mcp-tools.md#documentation-freshness-tracking-tools) - Complete API reference for freshness tracking tools

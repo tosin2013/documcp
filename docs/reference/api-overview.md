@@ -2,9 +2,10 @@
 sidebar_position: 1
 documcp:
   last_updated: "2025-11-20T00:46:21.959Z"
-  last_validated: "2025-11-20T00:46:21.959Z"
+  last_validated: "2025-12-09T19:18:14.178Z"
   auto_updated: false
   update_frequency: monthly
+  validated_against_commit: 49831ed0b8915c53bc03eff44e7cb8b82dfac6a3
 ---
 
 # API Overview
@@ -202,7 +203,7 @@ DocuMCP includes a persistent memory system that learns from every analysis:
 1. **Start with tutorials**: [Getting Started Guide](../tutorials/getting-started.md)
 2. **Learn effective prompting**: [Prompting Guide](../how-to/prompting-guide.md)
 3. **Reference LLM_CONTEXT.md**: Use `@LLM_CONTEXT.md` in AI assistants
-4. **Explore workflows**: [Common Workflows](#-common-workflows)
+4. **Explore workflows**: [Common Workflows](#common-workflows)
 
 ## 📊 Tool Statistics
 

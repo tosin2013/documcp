@@ -1,9 +1,10 @@
 ---
 documcp:
   last_updated: "2025-11-20T00:46:21.957Z"
-  last_validated: "2025-11-20T00:46:21.957Z"
+  last_validated: "2025-12-09T19:18:14.175Z"
   auto_updated: false
   update_frequency: monthly
+  validated_against_commit: 49831ed0b8915c53bc03eff44e7cb8b82dfac6a3
 ---
 
 # DocuMCP Usage Examples
@@ -817,7 +818,7 @@ async function completeMCPWorkflow(projectPath: string, githubRepo: string) {
 
   // Step 2: Get SSG recommendation
   const ssgRecommendation = await recommendSSG({
-    analysisId: analysis.id,
+    analysisId: analysis.data.id,
     preferences: {
       ecosystem: "javascript",
       priority: "features",
@@ -832,7 +833,7 @@ async function completeMCPWorkflow(projectPath: string, githubRepo: string) {
   // Step 3: Generate configuration
   const config = await generateConfig({
     ssg: ssgRecommendation.data.recommended,
-    projectName: analysis.data.structure.projectName,
+    projectName: "My Project", // Use actual project name
     outputPath: "./docs",
   });
 
@@ -896,7 +897,7 @@ async function intelligentRecommendation(projectPath: string, userId: string) {
 
   // Memory system provides personalized recommendations
   const recommendation = await recommendSSG({
-    analysisId: analysis.id,
+    analysisId: analysis.data.id,
     userId: userId, // Memory system tracks user preferences
   });
 

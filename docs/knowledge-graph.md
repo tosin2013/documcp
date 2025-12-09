@@ -1,9 +1,10 @@
 ---
 documcp:
   last_updated: "2025-11-20T00:46:21.958Z"
-  last_validated: "2025-11-20T00:46:21.958Z"
+  last_validated: "2025-12-09T19:18:14.177Z"
   auto_updated: false
   update_frequency: monthly
+  validated_against_commit: 49831ed0b8915c53bc03eff44e7cb8b82dfac6a3
 ---
 
 # Knowledge Graph Documentation
@@ -654,5 +655,5 @@ console.log(`Optimization suggestions: ${profiler.suggestions}`);
 
 - [Memory System](./tutorials/memory-workflows.md) - Overall memory architecture and patterns
 - [User Preferences](./reference/mcp-tools.md#manage_preferences) - Preference learning and management
-- [Deployment Tracking](./explanation/architecture.md#deployment-tracking) - Deployment outcome analysis
+- [Deployment Automation](./explanation/architecture.md#deployment-automation) - Deployment automation and tracking
 - [Repository Analysis](./how-to/repository-analysis.md) - Project analysis and indexing

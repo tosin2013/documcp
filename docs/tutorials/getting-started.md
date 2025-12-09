@@ -4,9 +4,10 @@ title: Getting Started with DocuMCP
 sidebar_label: Getting Started
 documcp:
   last_updated: "2025-11-20T00:46:21.972Z"
-  last_validated: "2025-11-20T00:46:21.972Z"
+  last_validated: "2025-12-09T19:18:14.189Z"
   auto_updated: false
   update_frequency: monthly
+  validated_against_commit: 49831ed0b8915c53bc03eff44e7cb8b82dfac6a3
 ---
 
 # Getting Started with DocuMCP

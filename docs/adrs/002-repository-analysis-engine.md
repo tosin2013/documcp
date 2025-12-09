@@ -5,9 +5,10 @@ sidebar_label: "ADR-2: Repository Analysis Engine Design"
 sidebar_position: 2
 documcp:
   last_updated: "2025-11-20T00:46:21.936Z"
-  last_validated: "2025-11-20T00:46:21.936Z"
+  last_validated: "2025-12-09T19:18:14.155Z"
   auto_updated: false
   update_frequency: monthly
+  validated_against_commit: 49831ed0b8915c53bc03eff44e7cb8b82dfac6a3
 ---
 
 # ADR-002: Multi-Layered Repository Analysis Engine Design

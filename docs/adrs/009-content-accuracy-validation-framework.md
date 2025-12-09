@@ -5,9 +5,10 @@ sidebar_label: "ADR-9: Content Accuracy Validation Framework"
 sidebar_position: 9
 documcp:
   last_updated: "2025-11-20T00:46:21.943Z"
-  last_validated: "2025-11-20T00:46:21.943Z"
+  last_validated: "2025-12-09T19:18:14.162Z"
   auto_updated: false
   update_frequency: monthly
+  validated_against_commit: 49831ed0b8915c53bc03eff44e7cb8b82dfac6a3
 ---
 
 # ADR-009: Content Accuracy and Validation Framework for Generated Documentation

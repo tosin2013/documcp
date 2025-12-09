@@ -5,9 +5,10 @@ sidebar_label: "ADR-5: GitHub Pages Deployment Automation"
 sidebar_position: 5
 documcp:
   last_updated: "2025-11-20T00:46:21.939Z"
-  last_validated: "2025-11-20T00:46:21.939Z"
+  last_validated: "2025-12-09T19:18:14.158Z"
   auto_updated: false
   update_frequency: monthly
+  validated_against_commit: 49831ed0b8915c53bc03eff44e7cb8b82dfac6a3
 ---
 
 # ADR-005: GitHub Pages Deployment Automation Architecture

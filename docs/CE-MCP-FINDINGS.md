@@ -1,3 +1,12 @@
+---
+documcp:
+  last_updated: "2025-12-09T19:18:14.152Z"
+  last_validated: "2025-12-09T19:18:14.152Z"
+  auto_updated: false
+  update_frequency: monthly
+  validated_against_commit: 49831ed0b8915c53bc03eff44e7cb8b82dfac6a3
+---
+
 # Code Execution with MCP (CE-MCP) Research Findings
 
 **Date**: 2025-12-09

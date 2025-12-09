@@ -5,9 +5,10 @@ sidebar_label: ADR Overview
 sidebar_position: 1
 documcp:
   last_updated: "2025-11-20T00:46:21.945Z"
-  last_validated: "2025-11-20T00:46:21.945Z"
+  last_validated: "2025-12-09T19:18:14.164Z"
   auto_updated: false
   update_frequency: monthly
+  validated_against_commit: 49831ed0b8915c53bc03eff44e7cb8b82dfac6a3
 ---
 
 # Architectural Decision Records (ADRs)

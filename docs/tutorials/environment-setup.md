@@ -1,9 +1,10 @@
 ---
 documcp:
   last_updated: "2025-11-20T00:46:21.971Z"
-  last_validated: "2025-11-20T00:46:21.971Z"
+  last_validated: "2025-12-09T19:18:14.188Z"
   auto_updated: false
   update_frequency: monthly
+  validated_against_commit: 49831ed0b8915c53bc03eff44e7cb8b82dfac6a3
 ---
 
 # DocuMCP Environment Setup Guide
@@ -643,7 +644,7 @@ After completing the environment setup:
 
 1. **Read the [User Onboarding Guide](./user-onboarding.md)** for usage patterns
 2. **Explore [Usage Examples](../how-to/usage-examples.md)** for practical examples
-3. **Check the [API Reference](/api/)** for complete function documentation
+3. **Check the [API Reference](../api/)** for complete function documentation
 4. **Join the [GitHub Issues](https://github.com/tosin2013/documcp/issues)** for community support and feature requests
 
 ## 🆘 Getting Help

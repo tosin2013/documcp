@@ -1,9 +1,10 @@
 ---
 documcp:
   last_updated: "2025-11-20T00:46:21.963Z"
-  last_validated: "2025-11-20T00:46:21.963Z"
+  last_validated: "2025-12-09T19:18:14.180Z"
   auto_updated: false
   update_frequency: monthly
+  validated_against_commit: 49831ed0b8915c53bc03eff44e7cb8b82dfac6a3
 ---
 
 # MCP Tools API Reference
@@ -486,6 +487,68 @@ DocuMCP includes comprehensive tools for tracking and managing documentation fre
 - SEO optimization: Generate sitemap for search engines
 - Link validation: Ensure all documentation pages are discoverable
 - Deployment tracking: Monitor documentation changes over time
+
+## User Preferences & Analytics Tools
+
+### manage_preferences
+
+**Description**: Manage user preferences for personalized recommendations
+
+**Parameters**:
+
+- `action` (enum, required): Action to perform
+  - `"get"`: Retrieve current preferences
+  - `"update"`: Update preferences
+  - `"reset"`: Reset to defaults
+  - `"export"`: Export preferences as JSON
+  - `"import"`: Import preferences from JSON
+  - `"recommendations"`: Get SSG recommendations based on preferences
+- `userId` (string, optional, default: "default"): User ID for multi-user setups
+- `preferences` (object, optional): Preference updates (for update action)
+  - `preferredSSGs` (array, optional): List of preferred static site generators
+  - `documentationStyle` (enum, optional): `"minimal"`, `"comprehensive"`, or `"tutorial-heavy"`
+  - `expertiseLevel` (enum, optional): `"beginner"`, `"intermediate"`, or `"advanced"`
+  - `preferredTechnologies` (array, optional): Preferred technologies and frameworks
+  - `preferredDiataxisCategories` (array, optional): Preferred documentation categories
+  - `autoApplyPreferences` (boolean, optional): Automatically apply preferences to recommendations
+- `json` (string, optional): JSON string for import action
+
+**Returns**: Preference data or operation result
+
+**Example**:
+
+```json
+{
+  "action": "get",
+  "userId": "user123"
+}
+```
+
+### analyze_deployments
+
+**Description**: Analyze deployment patterns and generate insights
+
+**Parameters**:
+
+- `analysisType` (enum, optional, default: "full_report"): Type of analysis
+  - `"full_report"`: Comprehensive analysis
+  - `"ssg_stats"`: Per-SSG statistics
+  - `"compare"`: Compare multiple SSGs
+  - `"health"`: Deployment health score
+  - `"trends"`: Temporal analysis
+- `ssg` (string, optional): SSG name for ssg_stats analysis
+- `ssgs` (array, optional): Array of SSG names for comparison
+- `periodDays` (number, optional, default: 30): Period in days for trend analysis
+
+**Returns**: Analytics report with deployment insights
+
+**Example**:
+
+```json
+{
+  "analysisType": "full_report"
+}
+```
 
 ## Memory System Tools
 
