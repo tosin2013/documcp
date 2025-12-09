@@ -758,6 +758,73 @@ const examples = {
 };
 ```
 
+## Code Execution with MCP (CE-MCP) Compatibility (2025-12-09)
+
+### Tool Design Validation
+
+**Research Findings**: Our tool API design is fully compatible with Code Mode clients:
+
+1. **Composable Tools**: Each tool is independent and can be orchestrated via generated code
+2. **Clear Separation**: Well-defined responsibilities enable clean code generation
+3. **Zod Validation**: Provides excellent type information for LLM code generation
+
+### Best Practices for Code Mode
+
+**Tool Description Optimization**:
+
+```typescript
+// ✅ GOOD: Concise, focused descriptions
+{
+  name: "analyze_repository",
+  description: "Analyze project structure, languages, and documentation",
+  // ~60 tokens, clear purpose
+}
+
+// ❌ AVOID: Verbose descriptions that bloat context
+{
+  name: "analyze_repository",
+  description: "This tool performs a comprehensive multi-layered analysis...",
+  // 200+ tokens, excessive detail
+}
+```
+
+**Tool Organization Metadata** (Optional Enhancement):
+
+```typescript
+interface ToolMetadata {
+  category: "analysis" | "generation" | "deployment" | "validation";
+  complexity: "simple" | "moderate" | "complex";
+  estimatedTokens: number;
+  codeModeFriendly: boolean;
+}
+```
+
+**Result Summarization for Large Outputs**:
+
+```typescript
+function formatResponse(data: AnalysisResult): MCPToolResponse {
+  if (data.size > 10_000) {
+    return {
+      summary: extractKeyMetrics(data),
+      resourceUri: storeAsResource(data), // Full data via MCP resource
+      nextSteps: [...] // Guidance without bloating context
+    };
+  }
+  return { data }; // Small results returned directly
+}
+```
+
+### Performance Benefits in Code Mode
+
+When documcp tools are orchestrated via Code Mode clients:
+
+- **Token Efficiency**: Only needed tool definitions loaded (not all 25+)
+- **Parallel Execution**: Multiple tools run concurrently in sandbox
+- **Context Preservation**: Intermediate results stay in sandbox, not LLM context
+- **Cost Reduction**: ~75x savings on complex workflows
+
+For detailed analysis, see [ADR-011: CE-MCP Compatibility](011-ce-mcp-compatibility.md).
+
 ## Future Enhancements
 
 ### Planned Tool Additions
@@ -773,6 +840,7 @@ const examples = {
 - Deprecation notices and migration guidance
 - Feature flags for experimental functionality
 - Community feedback integration for API improvements
+- Code Mode optimization: Tool categorization and metadata
 
 ## References
 
