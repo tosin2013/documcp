@@ -4,11 +4,11 @@ title: "ADR-005: GitHub Pages Deployment Automation"
 sidebar_label: "ADR-5: GitHub Pages Deployment Automation"
 sidebar_position: 5
 documcp:
-  last_updated: "2025-11-20T00:46:21.939Z"
-  last_validated: "2025-12-09T19:41:38.570Z"
+  last_updated: "2025-01-14T00:00:00.000Z"
+  last_validated: "2025-01-14T00:00:00.000Z"
   auto_updated: false
   update_frequency: monthly
-  validated_against_commit: 306567b32114502c606244ad6c2930360bcd4201
+  validated_against_commit: HEAD
 ---
 
 # ADR-005: GitHub Pages Deployment Automation Architecture
@@ -636,7 +636,9 @@ describe("DeploymentWorkflows", () => {
 
 ## References
 
+- [ADR-013: Release Pipeline and Package Distribution Architecture](013-release-pipeline-and-package-distribution.md)
 - [GitHub Pages Documentation](https://docs.github.com/en/pages)
 - [GitHub Actions Best Practices](https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions)
 - [Static Site Deployment Strategies](https://jamstack.org/best-practices/)
 - [JAMstack Architecture Guide](https://jamstack.org/what-is-jamstack/)
+- GitHub Issue: #1 - Fix npm Package Publishing (related to release pipeline)

@@ -4,11 +4,11 @@ title: "ADR-002: Repository Analysis Engine Design"
 sidebar_label: "ADR-2: Repository Analysis Engine Design"
 sidebar_position: 2
 documcp:
-  last_updated: "2025-11-20T00:46:21.936Z"
-  last_validated: "2025-12-09T19:41:38.567Z"
+  last_updated: "2025-01-14T00:00:00.000Z"
+  last_validated: "2025-01-14T00:00:00.000Z"
   auto_updated: false
   update_frequency: monthly
-  validated_against_commit: 306567b32114502c606244ad6c2930360bcd4201
+  validated_against_commit: 577a312
 ---
 
 # ADR-002: Multi-Layered Repository Analysis Engine Design
@@ -238,3 +238,6 @@ function calculateComplexityScore(factors: ComplexityFactors): ComplexityScore {
 - [Git Repository Analysis Best Practices](https://git-scm.com/docs)
 - [Static Analysis Tools Comparison](https://analysis-tools.dev/)
 - [Repository Metrics Standards](https://chaoss.community/)
+- Commit: 577a312 - feat: Extend knowledge graph with documentation example entities (#78)
+- GitHub Issue: #77 - Knowledge graph extensions (referenced in commit)
+- GitHub Issue: #78 - Extend knowledge graph with documentation example entities

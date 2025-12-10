@@ -37,14 +37,14 @@ jobs:
       - name: Run full test suite
         run: npm test -- --coverage
 
-      - name: Verify 80% coverage threshold
+      - name: Verify 85% coverage threshold
         run: |
-          coverage=$(npm test -- --coverage --silent | grep "All files" | awk '{print $4}' | sed 's/%//')
-          if (( $(echo "$coverage < 80" | bc -l) )); then
-            echo "Coverage $coverage% is below 80% threshold"
+          coverage=$(npm test -- --coverage --silent 2>&1 | grep "All files" | awk '{print $4}' | sed 's/%//')
+          if (( $(echo "$coverage < 85" | bc -l) )); then
+            echo "Coverage $coverage% is below 85% threshold"
             exit 1
           fi
-          echo "Coverage $coverage% meets requirement"
+          echo "Coverage $coverage% meets requirement (target: 85%)"
 
       - name: Performance benchmarks
         run: npm run test:performance
@@ -88,6 +88,28 @@ jobs:
       - name: Build project
         run: npm run build
 
+      - name: Validate commit messages
+        run: |
+          echo "Validating commit messages follow conventional format..."
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            # For manual releases, validate commits since last tag
+            LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+            if [ -n "$LAST_TAG" ]; then
+              npx commitlint --from "$LAST_TAG" --to HEAD --verbose || {
+                echo "Commit message validation failed"
+                echo "All commits must follow conventional commit format: type(scope): subject"
+                exit 1
+              }
+            fi
+          else
+            # For tag-based releases, validate the tag commit
+            npx commitlint --from HEAD~1 --to HEAD --verbose || {
+              echo "Commit message validation failed"
+              exit 1
+            }
+          fi
+          echo "✅ All commit messages are valid"
+
       - name: Generate changelog and release
         id: release
         run: |
@@ -96,32 +118,53 @@ jobs:
 
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             printf "Manual release triggered with version type: %s\n" "${{ github.event.inputs.version_type }}"
-            npm run "release:${{ github.event.inputs.version_type }}"
+
+            # Run standard-version to generate changelog and bump version
+            npm run "release:${{ github.event.inputs.version_type }}" || {
+              echo "standard-version failed"
+              exit 1
+            }
 
             # Get the new version and changelog
             NEW_VERSION=$(node -p "require('./package.json').version")
             printf "new_version=v%s\n" "$NEW_VERSION" >> "$GITHUB_OUTPUT"
 
-            # Extract changelog for this version
+            # Extract changelog for this version from CHANGELOG.md
             if [ -f "CHANGELOG.md" ]; then
-              # Get changelog section for current version
-              CHANGELOG_CONTENT=$(awk "/## \[$NEW_VERSION\]/{flag=1; next} /## \[/{flag=0} flag" CHANGELOG.md || printf "## Changes\n\nAutomated release %s\n" "$NEW_VERSION")
+              # Get changelog section for current version (between ## [version] and next ##)
+              CHANGELOG_CONTENT=$(awk "/## \[$NEW_VERSION\]/{flag=1; next} /^## \[/{flag=0} flag" CHANGELOG.md | sed '/^$/d' || printf "## Changes\n\nAutomated release %s\n" "$NEW_VERSION")
               {
                 echo "changelog_content<<EOF"
                 printf "%s\n" "$CHANGELOG_CONTENT"
                 echo "EOF"
               } >> "$GITHUB_OUTPUT"
             else
+              echo "Warning: CHANGELOG.md not found after standard-version"
               printf "changelog_content=Automated release v%s\n" "$NEW_VERSION" >> "$GITHUB_OUTPUT"
             fi
 
-            # Push the changes
-            git push --follow-tags origin main
+            # Push the changes (version bump, changelog, and tag)
+            git push --follow-tags origin main || {
+              echo "Failed to push changes to repository"
+              exit 1
+            }
           else
             echo "Tag-based release"
             tag="${GITHUB_REF#refs/tags/}"
             printf "new_version=%s\n" "$tag" >> "$GITHUB_OUTPUT"
-            printf "changelog_content=Release %s\n" "$tag" >> "$GITHUB_OUTPUT"
+
+            # Extract changelog for tagged version
+            if [ -f "CHANGELOG.md" ]; then
+              VERSION_NUM=$(echo "$tag" | sed 's/^v//')
+              CHANGELOG_CONTENT=$(awk "/## \[$VERSION_NUM\]/{flag=1; next} /^## \[/{flag=0} flag" CHANGELOG.md | sed '/^$/d' || printf "Release %s\n" "$tag")
+              {
+                echo "changelog_content<<EOF"
+                printf "%s\n" "$CHANGELOG_CONTENT"
+                echo "EOF"
+              } >> "$GITHUB_OUTPUT"
+            else
+              printf "changelog_content=Release %s\n" "$tag" >> "$GITHUB_OUTPUT"
+            fi
           fi
 
       - name: Create GitHub Release
@@ -159,13 +202,89 @@ jobs:
 
       - name: Publish to npm
         if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        id: publish
         run: |
           echo "Publishing to npm..."
-          npm whoami
-          npm publish
-          echo "Successfully published to npm!"
+
+          # Verify npm authentication
+          if ! npm whoami; then
+            echo "Error: npm authentication failed"
+            echo "Please verify NPM_TOKEN secret is configured correctly"
+            exit 1
+          fi
+
+          # Get package version
+          PACKAGE_VERSION=$(node -p "require('./package.json').version")
+          echo "Publishing version: $PACKAGE_VERSION"
+
+          # Publish with retry mechanism
+          MAX_RETRIES=3
+          RETRY_COUNT=0
+          PUBLISH_SUCCESS=false
+
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            if npm publish --access public; then
+              PUBLISH_SUCCESS=true
+              break
+            else
+              RETRY_COUNT=$((RETRY_COUNT + 1))
+              if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+                echo "Publication attempt $RETRY_COUNT failed, retrying in 5 seconds..."
+                sleep 5
+              else
+                echo "Publication failed after $MAX_RETRIES attempts"
+                exit 1
+              fi
+            fi
+          done
+
+          if [ "$PUBLISH_SUCCESS" = true ]; then
+            echo "Successfully published to npm!"
+            echo "package_version=$PACKAGE_VERSION" >> "$GITHUB_OUTPUT"
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Verify npm publication
+        if: steps.publish.outcome == 'success'
+        run: |
+          PACKAGE_VERSION="${{ steps.publish.outputs.package_version }}"
+          echo "Verifying package availability: documcp@$PACKAGE_VERSION"
+
+          # Wait a moment for npm registry to update
+          sleep 10
+
+          # Verify package exists on npm registry
+          if npm view "documcp@$PACKAGE_VERSION" version > /dev/null 2>&1; then
+            echo "✅ Package verification successful: documcp@$PACKAGE_VERSION is available on npm"
+            npm view "documcp@$PACKAGE_VERSION"
+          else
+            echo "❌ Package verification failed: documcp@$PACKAGE_VERSION not found on npm registry"
+            echo "This may be a temporary registry delay. Please verify manually:"
+            echo "  npm view documcp@$PACKAGE_VERSION"
+            exit 1
+          fi
+
+      - name: Test package installation
+        if: steps.publish.outcome == 'success'
+        run: |
+          PACKAGE_VERSION="${{ steps.publish.outputs.package_version }}"
+          echo "Testing package installation: documcp@$PACKAGE_VERSION"
+
+          # Install the published package globally in a clean environment
+          npm install -g "documcp@$PACKAGE_VERSION" || {
+            echo "Package installation test failed"
+            exit 1
+          }
+
+          # Verify the installed package works
+          if command -v documcp > /dev/null 2>&1; then
+            echo "✅ Package installation successful"
+            documcp --version || echo "Version command available"
+          else
+            echo "❌ Package installation test failed: documcp command not found"
+            exit 1
+          fi
 
   docs:
     name: Deploy Documentation

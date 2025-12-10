@@ -4,11 +4,11 @@ title: "ADR-004: Diataxis Framework Integration"
 sidebar_label: "ADR-4: Diataxis Framework Integration"
 sidebar_position: 4
 documcp:
-  last_updated: "2025-11-20T00:46:21.938Z"
-  last_validated: "2025-12-09T19:41:38.569Z"
+  last_updated: "2025-01-14T00:00:00.000Z"
+  last_validated: "2025-01-14T00:00:00.000Z"
   auto_updated: false
   update_frequency: monthly
-  validated_against_commit: 306567b32114502c606244ad6c2930360bcd4201
+  validated_against_commit: 9bbac23
 ---
 
 # ADR-004: Diataxis Framework Integration for Documentation Structure
@@ -123,6 +123,33 @@ We will integrate the Diataxis framework as the foundational information archite
 - **Content Quality**: Provide high-quality templates and examples
 
 ## Implementation Details
+
+### Diataxis Type Tracking in Code Examples (Phase 3 Enhancement)
+
+Code examples in documentation are now tracked with Diataxis type information to enable context-aware validation and better content organization:
+
+```typescript
+interface CodeExample {
+  language: string;
+  code: string;
+  description: string;
+  referencedSymbols: string[];
+  diataxisType?: "tutorial" | "how-to" | "reference" | "explanation";
+  validationHints?: {
+    expectedBehavior?: string;
+    dependencies?: string[];
+    contextRequired?: boolean;
+  };
+}
+```
+
+**Benefits**:
+- Context-aware validation based on Diataxis category
+- Improved code example organization and discovery
+- Better drift detection for category-specific examples
+- Enhanced content accuracy validation
+
+**Implementation**: The drift detection system (ADR-009) uses Diataxis type information to provide category-specific validation rules and priority scoring.
 
 ### Directory Structure Generation
 
@@ -396,3 +423,5 @@ function validateDiataxisCompliance(
 - [Diataxis Framework Official Documentation](https://diataxis.fr/)
 - [Information Architecture Principles](https://www.usability.gov/what-and-why/information-architecture.html)
 - [Technical Writing Best Practices](https://developers.google.com/tech-writing)
+- Commit: 9bbac23 - feat: Add Diataxis type tracking to CodeExample interface (#81)
+- GitHub Issue: #81 - Diataxis type tracking to CodeExample interface

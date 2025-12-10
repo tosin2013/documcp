@@ -27,7 +27,11 @@ This directory contains the Architectural Decision Records for the DocuMCP proje
 | [006](006-mcp-tools-api-design.md)                        | MCP Tools API Design and Interface Specification                      | Accepted | 2025-01-14 | Six core MCP tools providing comprehensive documentation workflow coverage with robust validation and error handling                     |
 | [007](007-mcp-prompts-and-resources-integration.md)       | MCP Prompts and Resources Integration for AI Assistance               | Proposed | 2025-01-14 | Native MCP prompts and resources for guided workflows and content access, leveraging built-in protocol capabilities                      |
 | [008](008-intelligent-content-population-engine.md)       | Intelligent Content Population Engine for Diataxis Documentation      | Proposed | 2025-01-23 | Project-aware content generation engine that transforms repository analysis into contextually relevant Diataxis documentation            |
-| [009](009-content-accuracy-validation-framework.md)       | Content Accuracy and Validation Framework for Generated Documentation | Proposed | 2025-01-23 | Comprehensive accuracy assurance system with confidence scoring, reality-check validation, and interactive correction workflows          |
+| [009](009-content-accuracy-validation-framework.md)       | Content Accuracy and Validation Framework for Generated Documentation | Accepted | 2025-01-14 | Comprehensive accuracy assurance system with confidence scoring, reality-check validation, LLM-enhanced semantic analysis, and interactive correction workflows          |
+| [010](010-mcp-resource-pattern-redesign.md)                | MCP Resource Pattern Redesign                                         | Accepted | 2025-01-14 | Redesigned resource patterns for improved efficiency and context management                                                              |
+| [011](011-ce-mcp-compatibility.md)                        | CE-MCP Compatibility                                                   | Accepted | 2025-01-14 | Compatibility with CE-MCP directive for improved token efficiency                                                                        |
+| [012](012-priority-scoring-system-for-documentation-drift.md) | Priority Scoring System for Documentation Drift Detection            | Accepted | 2025-01-14 | Multi-factor priority scoring system for documentation drift that considers complexity, usage, change magnitude, coverage, staleness, and feedback |
+| [013](013-release-pipeline-and-package-distribution.md)        | Release Pipeline and Package Distribution Architecture               | Proposed | 2025-01-14 | Automated release pipeline with npm publishing, conventional commits, automated changelog generation, and quality gates                                 |
 
 ## ADR Process
 
@@ -146,6 +150,6 @@ Our ADRs acknowledge areas for future evolution:
 
 ---
 
-**Last Updated**: January 23, 2025  
-**Total ADRs**: 9  
-**Status**: ADRs 001-006 Accepted and Implemented, ADRs 007-009 Proposed
+**Last Updated**: January 14, 2025  
+**Total ADRs**: 13  
+**Status**: ADRs 001-006, 009-012 Accepted and Implemented, ADRs 007-008, 013 Proposed

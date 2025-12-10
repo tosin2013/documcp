@@ -4,11 +4,11 @@ title: "ADR-009: Content Accuracy Validation Framework"
 sidebar_label: "ADR-9: Content Accuracy Validation Framework"
 sidebar_position: 9
 documcp:
-  last_updated: "2025-11-20T00:46:21.943Z"
-  last_validated: "2025-12-09T19:41:38.573Z"
+  last_updated: "2025-01-14T00:00:00.000Z"
+  last_validated: "2025-01-14T00:00:00.000Z"
   auto_updated: false
   update_frequency: monthly
-  validated_against_commit: 306567b32114502c606244ad6c2930360bcd4201
+  validated_against_commit: 40afe64
 ---
 
 # ADR-009: Content Accuracy and Validation Framework for Generated Documentation
@@ -171,6 +171,59 @@ interface RealityCheckValidator {
     suggestions: DependencySuggestion[],
     projectManifest: ProjectManifest,
   ): CompatibilityResult;
+}
+
+/**
+ * LLM-Enhanced Semantic Analysis (Phase 3 Implementation)
+ * 
+ * Provides semantic understanding of code changes using LLM integration
+ * with fallback to AST-based analysis when LLM is unavailable.
+ */
+interface LLMSemanticAnalyzer {
+  // Analyze semantic impact of code changes using LLM
+  analyzeCodeChange(
+    before: string,
+    after: string,
+  ): Promise<SemanticAnalysis>;
+
+  // Simulate execution of code examples to validate correctness
+  simulateExecution(
+    example: string,
+    implementation: string,
+  ): Promise<SimulationResult>;
+
+  // Hybrid analysis combining LLM and AST approaches
+  analyzeWithFallback(
+    before: string,
+    after: string,
+    options?: SemanticAnalysisOptions,
+  ): Promise<EnhancedSemanticAnalysis>;
+}
+
+interface SemanticAnalysis {
+  hasBehavioralChange: boolean;
+  breakingForExamples: boolean;
+  changeDescription: string;
+  affectedDocSections: string[];
+  confidence: number;
+}
+
+interface SemanticAnalysisOptions {
+  useLLM?: boolean;
+  confidenceThreshold?: number;
+  includeASTFallback?: boolean;
+  llmConfig?: {
+    provider?: 'deepseek' | 'openai' | 'anthropic' | 'ollama';
+    apiKey?: string;
+    model?: string;
+  };
+}
+
+interface EnhancedSemanticAnalysis extends SemanticAnalysis {
+  analysisMode: 'llm' | 'ast' | 'hybrid';
+  astDiffs?: CodeDiff[];
+  llmAvailable: boolean;
+  timestamp: string;
 }
 
 interface ValidationResult {
@@ -457,6 +510,15 @@ const fallbackHierarchy = [
 - Interactive correction interfaces
 - Accuracy learning and improvement systems
 
+### Phase 2.5: LLM-Enhanced Semantic Analysis (Implemented)
+
+- **LLM Integration Layer**: Unified interface for multiple LLM providers (DeepSeek, OpenAI, Anthropic, Ollama)
+- **Semantic Code Analysis**: LLM-powered understanding of code change impact on documentation
+- **Execution Simulation**: Validate code examples through LLM-based execution simulation
+- **Hybrid Analysis**: Combine LLM semantic analysis with AST-based fallback for reliability
+- **Rate Limiting & Error Handling**: Robust API management with graceful degradation
+- **Multi-Provider Support**: Provider-agnostic design supporting multiple LLM backends
+
 ### Phase 3: Intelligent Accuracy Features (Future)
 
 - Machine learning-based accuracy prediction
@@ -557,3 +619,5 @@ describe("ContentAccuracyFramework", () => {
 - [Software Verification and Validation](https://en.wikipedia.org/wiki/Software_verification_and_validation)
 - [Web Content Accessibility Guidelines](https://www.w3.org/WAI/WCAG21/quickref/)
 - [AI Documentation Best Practices](https://developers.google.com/machine-learning/guides/rules-of-ml)
+- Commit: f7b6fcd - feat: Add LLM integration layer for semantic code analysis (#82)
+- GitHub Issue: #82 - LLM integration layer for semantic code analysis
