@@ -96,6 +96,17 @@ export async function getMemoryManager(): Promise<MemoryManager> {
 }
 
 /**
+ * Reset the global Knowledge Graph instance
+ * Useful for testing to ensure clean state between tests
+ */
+export function resetKnowledgeGraph(): void {
+  globalKnowledgeGraph = null;
+  globalKGStorage = null;
+  globalMemoryManager = null;
+  currentStorageDir = null;
+}
+
+/**
  * Convert file extension to language name
  */
 function convertExtToLanguage(ext: string): string | null {
