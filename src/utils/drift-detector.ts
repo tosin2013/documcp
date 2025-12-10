@@ -1450,14 +1450,12 @@ export class DriftDetector {
 
     // Weighted score for different change types
     // Breaking changes are critical - even 1 breaking change should score high
-    const breakingScore = breakingChanges > 0 ? 100 : 0;
-    const majorScore = majorChanges * 20; // Multiple major changes add up
-    const minorScore = minorChanges * 8; // Minor changes have some impact
-
-    // Breaking changes dominate; otherwise use weighted sum
     if (breakingChanges > 0) {
       return 100;
     }
+
+    const majorScore = majorChanges * 20; // Multiple major changes add up
+    const minorScore = minorChanges * 8; // Minor changes have some impact
 
     const totalScore = majorScore + minorScore;
     return Math.min(totalScore, 100);

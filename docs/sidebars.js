@@ -20,6 +20,7 @@ const sidebars = {
       label: "🔧 How-To Guides",
       items: [
         "how-to/repository-analysis",
+        "how-to/drift-priority-scoring",
         "how-to/github-pages-deployment",
         "how-to/local-testing",
         "how-to/prompting-guide",
