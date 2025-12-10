@@ -1285,6 +1285,7 @@ export class DriftDetector {
 
   /**
    * Set custom weights for priority scoring
+   * Note: Weights don't need to sum to 1.0 - they are applied as-is in the weighted sum
    */
   setCustomWeights(weights: Partial<PriorityWeights>): void {
     this.customWeights = {
@@ -1396,10 +1397,18 @@ export class DriftDetector {
     snapshot: DriftSnapshot,
     usageMetadata?: UsageMetadata,
   ): number {
+    // Scoring constants for usage estimation
+    const DEFAULT_SCORE = 60; // Moderate usage assumption
+    const EXPORT_WEIGHT = 15; // Points per export (max ~60 for 4 exports)
+    const EXPORT_MAX = 60; // Cap on export-based score
+    const DOC_REF_WEIGHT = 25; // Points per doc reference (max ~40 for 2 refs)
+    const DOC_REF_MAX = 40; // Cap on documentation reference score
+    const PUBLIC_API_BONUS = 30; // Bonus for being exported (public API)
+
     if (!usageMetadata) {
       // Estimate based on exports and documentation references
       const fileAnalysis = snapshot.files.get(result.filePath);
-      if (!fileAnalysis) return 60; // Assume moderate usage by default
+      if (!fileAnalysis) return DEFAULT_SCORE;
 
       const exportCount = fileAnalysis.exports.length;
       const isPublicAPI = exportCount > 0;
@@ -1412,12 +1421,18 @@ export class DriftDetector {
         }
       }
 
-      // Score based on heuristics - more generous scoring
-      const exportScore = Math.min(exportCount * 15, 60);
-      const referenceScore = Math.min(docReferences * 25, 40);
-      const publicAPIBonus = isPublicAPI ? 30 : 0;
+      // Score based on heuristics
+      const exportScore = Math.min(exportCount * EXPORT_WEIGHT, EXPORT_MAX);
+      const referenceScore = Math.min(
+        docReferences * DOC_REF_WEIGHT,
+        DOC_REF_MAX,
+      );
+      const publicAPIBonus = isPublicAPI ? PUBLIC_API_BONUS : 0;
 
-      return Math.min(exportScore + referenceScore + publicAPIBonus, 100);
+      return Math.min(
+        exportScore + referenceScore + publicAPIBonus,
+        100,
+      );
     }
 
     // Use actual usage data if available

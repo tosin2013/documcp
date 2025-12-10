@@ -142,7 +142,7 @@ detector.setCustomWeights({
 });
 ```
 
-**Note**: Weights must sum to 1.0. Partial updates merge with defaults.
+**Note**: Weights are applied as-is in the weighted sum calculation. The default weights sum to 1.0, but custom weights don't need to. Partial updates merge with defaults.
 
 ### Usage Metadata
 
