@@ -5,7 +5,6 @@
 import {
   DriftDetector,
   DriftDetectionResult,
-  DriftPriorityScore,
   PriorityWeights,
   PrioritizedDriftResult,
   UsageMetadata,
