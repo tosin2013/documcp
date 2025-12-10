@@ -7,6 +7,8 @@ export default {
     "<rootDir>/tests/memory/enhanced-manager.test.ts",
     "<rootDir>/tests/performance/memory-stress-testing.test.ts",
     "<rootDir>/tests/performance/memory-load-testing.test.ts",
+    "<rootDir>/tests/utils/artifact-detector.test.ts",
+    "<rootDir>/tests/tools/cleanup-agent-artifacts.test.ts",
   ],
   transform: {
     "^.+\\.ts$": [
