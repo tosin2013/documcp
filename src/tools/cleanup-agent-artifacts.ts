@@ -8,7 +8,7 @@
 import { promises as fs } from "fs";
 import path from "path";
 import { z } from "zod";
-import { MCPToolResponse, formatMCPResponse } from "../types/api.js";
+import { formatMCPResponse } from "../types/api.js";
 import {
   ArtifactDetector,
   ArtifactScanResult,
@@ -71,7 +71,7 @@ export interface CleanupAgentArtifactsOutput {
  */
 export async function cleanupAgentArtifacts(
   args: unknown,
-): Promise<MCPToolResponse<CleanupAgentArtifactsOutput>> {
+): Promise<{ content: any[]; isError?: boolean }> {
   const startTime = Date.now();
 
   try {
