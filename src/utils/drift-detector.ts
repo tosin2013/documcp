@@ -86,6 +86,52 @@ export interface CodeExample {
 }
 
 /**
+ * Priority scoring for documentation drift
+ */
+export interface DriftPriorityScore {
+  overall: number; // 0-100
+  factors: {
+    codeComplexity: number; // 0-100
+    usageFrequency: number; // 0-100
+    changeMagnitude: number; // 0-100
+    documentationCoverage: number; // 0-100
+    staleness: number; // 0-100
+    userFeedback: number; // 0-100
+  };
+  recommendation: "critical" | "high" | "medium" | "low";
+  suggestedAction: string;
+}
+
+/**
+ * Configuration for priority scoring weights
+ */
+export interface PriorityWeights {
+  codeComplexity: number; // default: 0.20
+  usageFrequency: number; // default: 0.25
+  changeMagnitude: number; // default: 0.25
+  documentationCoverage: number; // default: 0.15
+  staleness: number; // default: 0.10
+  userFeedback: number; // default: 0.05
+}
+
+/**
+ * Extended drift detection result with priority scoring
+ */
+export interface PrioritizedDriftResult extends DriftDetectionResult {
+  priorityScore?: DriftPriorityScore;
+}
+
+/**
+ * Usage metadata for calculating usage frequency
+ */
+export interface UsageMetadata {
+  filePath: string;
+  functionCalls: Map<string, number>; // function name -> call count
+  classInstantiations: Map<string, number>; // class name -> instantiation count
+  imports: Map<string, number>; // symbol -> import count
+}
+
+/**
  * Main Drift Detector class
  */
 export class DriftDetector {
@@ -95,10 +141,21 @@ export class DriftDetector {
     /import\s+.*?\s+from\s+["']([^"']+)["']/g;
   private static readonly REQUIRE_REGEX = /require\(["']([^"']+)["']\)/g;
 
+  // Default priority weights
+  private static readonly DEFAULT_WEIGHTS: PriorityWeights = {
+    codeComplexity: 0.2,
+    usageFrequency: 0.25,
+    changeMagnitude: 0.25,
+    documentationCoverage: 0.15,
+    staleness: 0.1,
+    userFeedback: 0.05,
+  };
+
   private analyzer: ASTAnalyzer;
   private snapshotDir: string;
   private currentSnapshot: DriftSnapshot | null = null;
   private previousSnapshot: DriftSnapshot | null = null;
+  private customWeights?: PriorityWeights;
 
   constructor(projectPath: string, snapshotDir?: string) {
     this.analyzer = new ASTAnalyzer();
@@ -1222,5 +1279,374 @@ export class DriftDetector {
     if (hasMedium) return "medium";
 
     return "low";
+  }
+
+  // Priority Scoring Methods
+
+  /**
+   * Set custom weights for priority scoring
+   * Note: Weights don't need to sum to 1.0 - they are applied as-is in the weighted sum
+   */
+  setCustomWeights(weights: Partial<PriorityWeights>): void {
+    this.customWeights = {
+      ...DriftDetector.DEFAULT_WEIGHTS,
+      ...weights,
+    };
+  }
+
+  /**
+   * Get current weights (custom or default)
+   */
+  getWeights(): PriorityWeights {
+    return this.customWeights || DriftDetector.DEFAULT_WEIGHTS;
+  }
+
+  /**
+   * Calculate priority score for a drift detection result
+   */
+  calculatePriorityScore(
+    result: DriftDetectionResult,
+    snapshot: DriftSnapshot,
+    usageMetadata?: UsageMetadata,
+  ): DriftPriorityScore {
+    const weights = this.getWeights();
+
+    // Calculate individual factors
+    const codeComplexity = this.calculateCodeComplexityScore(
+      result,
+      snapshot,
+    );
+    const usageFrequency = this.calculateUsageFrequencyScore(
+      result,
+      snapshot,
+      usageMetadata,
+    );
+    const changeMagnitude = this.calculateChangeMagnitudeScore(result);
+    const documentationCoverage =
+      this.calculateDocumentationCoverageScore(result, snapshot);
+    const staleness = this.calculateStalenessScore(result, snapshot);
+    const userFeedback = this.calculateUserFeedbackScore(result);
+
+    // Calculate weighted overall score
+    const overall =
+      codeComplexity * weights.codeComplexity +
+      usageFrequency * weights.usageFrequency +
+      changeMagnitude * weights.changeMagnitude +
+      documentationCoverage * weights.documentationCoverage +
+      staleness * weights.staleness +
+      userFeedback * weights.userFeedback;
+
+    const recommendation = this.determineRecommendation(overall);
+    const suggestedAction = this.generateSuggestedAction(
+      recommendation,
+      result,
+    );
+
+    return {
+      overall: Math.round(overall),
+      factors: {
+        codeComplexity: Math.round(codeComplexity),
+        usageFrequency: Math.round(usageFrequency),
+        changeMagnitude: Math.round(changeMagnitude),
+        documentationCoverage: Math.round(documentationCoverage),
+        staleness: Math.round(staleness),
+        userFeedback: Math.round(userFeedback),
+      },
+      recommendation,
+      suggestedAction,
+    };
+  }
+
+  /**
+   * Calculate code complexity score (0-100)
+   * Higher complexity = higher priority
+   */
+  private calculateCodeComplexityScore(
+    result: DriftDetectionResult,
+    snapshot: DriftSnapshot,
+  ): number {
+    const fileAnalysis = snapshot.files.get(result.filePath);
+    if (!fileAnalysis) return 50; // Default moderate score
+
+    // Use existing complexity metric from AST analysis
+    const complexity = fileAnalysis.complexity || 0;
+
+    // Normalize complexity to 0-100 scale
+    // Assume complexity ranges from 0 (simple) to 50+ (very complex)
+    const normalizedComplexity = Math.min(complexity * 2, 100);
+
+    // Adjust based on drift severity
+    const severityMultiplier =
+      result.severity === "critical"
+        ? 1.2
+        : result.severity === "high"
+          ? 1.1
+          : result.severity === "medium"
+            ? 1.0
+            : 0.9;
+
+    return Math.min(normalizedComplexity * severityMultiplier, 100);
+  }
+
+  /**
+   * Calculate usage frequency score (0-100)
+   * More used APIs = higher priority
+   */
+  private calculateUsageFrequencyScore(
+    result: DriftDetectionResult,
+    snapshot: DriftSnapshot,
+    usageMetadata?: UsageMetadata,
+  ): number {
+    // Scoring constants for usage estimation
+    const DEFAULT_SCORE = 60; // Moderate usage assumption
+    const EXPORT_WEIGHT = 15; // Points per export (max ~60 for 4 exports)
+    const EXPORT_MAX = 60; // Cap on export-based score
+    const DOC_REF_WEIGHT = 25; // Points per doc reference (max ~40 for 2 refs)
+    const DOC_REF_MAX = 40; // Cap on documentation reference score
+    const PUBLIC_API_BONUS = 30; // Bonus for being exported (public API)
+
+    if (!usageMetadata) {
+      // Estimate based on exports and documentation references
+      const fileAnalysis = snapshot.files.get(result.filePath);
+      if (!fileAnalysis) return DEFAULT_SCORE;
+
+      const exportCount = fileAnalysis.exports.length;
+      const isPublicAPI = exportCount > 0;
+
+      // Count documentation references
+      let docReferences = 0;
+      for (const docSnapshot of snapshot.documentation.values()) {
+        if (docSnapshot.referencedCode.includes(result.filePath)) {
+          docReferences++;
+        }
+      }
+
+      // Score based on heuristics
+      const exportScore = Math.min(exportCount * EXPORT_WEIGHT, EXPORT_MAX);
+      const referenceScore = Math.min(
+        docReferences * DOC_REF_WEIGHT,
+        DOC_REF_MAX,
+      );
+      const publicAPIBonus = isPublicAPI ? PUBLIC_API_BONUS : 0;
+
+      return Math.min(
+        exportScore + referenceScore + publicAPIBonus,
+        100,
+      );
+    }
+
+    // Use actual usage data if available
+    let totalUsage = 0;
+    for (const drift of result.drifts) {
+      for (const diff of drift.codeChanges) {
+        if (diff.category === "function") {
+          totalUsage += usageMetadata.functionCalls.get(diff.name) || 0;
+        } else if (diff.category === "class") {
+          totalUsage +=
+            usageMetadata.classInstantiations.get(diff.name) || 0;
+        }
+        totalUsage += usageMetadata.imports.get(diff.name) || 0;
+      }
+    }
+
+    // Normalize to 0-100 (assume 100+ usages is very high)
+    return Math.min(totalUsage, 100);
+  }
+
+  /**
+   * Calculate change magnitude score (0-100)
+   * Larger changes = higher priority
+   */
+  private calculateChangeMagnitudeScore(
+    result: DriftDetectionResult,
+  ): number {
+    const { breakingChanges, majorChanges, minorChanges } =
+      result.impactAnalysis;
+
+    // Weighted score for different change types
+    // Breaking changes are critical - even 1 breaking change should score high
+    if (breakingChanges > 0) {
+      return 100;
+    }
+
+    const majorScore = majorChanges * 20; // Multiple major changes add up
+    const minorScore = minorChanges * 8; // Minor changes have some impact
+
+    const totalScore = majorScore + minorScore;
+    return Math.min(totalScore, 100);
+  }
+
+  /**
+   * Calculate documentation coverage score (0-100)
+   * Lower coverage = higher priority (inverted score)
+   */
+  private calculateDocumentationCoverageScore(
+    result: DriftDetectionResult,
+    snapshot: DriftSnapshot,
+  ): number {
+    const { affectedDocFiles } = result.impactAnalysis;
+
+    // If there are affected docs, give a reasonable base score
+    // Documentation exists but may need updates
+    if (affectedDocFiles.length > 0) {
+      // Calculate how well the changed code is documented
+      let totalSymbols = 0;
+      let documentedSymbols = 0;
+
+      for (const drift of result.drifts) {
+        for (const diff of drift.codeChanges) {
+          totalSymbols++;
+
+          // Check if this symbol is documented
+          for (const docPath of affectedDocFiles) {
+            const docSnapshot = snapshot.documentation.get(docPath);
+            if (docSnapshot) {
+              for (const section of docSnapshot.sections) {
+                const isDocumented =
+                  section.referencedFunctions.includes(diff.name) ||
+                  section.referencedClasses.includes(diff.name) ||
+                  section.referencedTypes.includes(diff.name);
+
+                if (isDocumented) {
+                  documentedSymbols++;
+                  break;
+                }
+              }
+            }
+          }
+        }
+      }
+
+      if (totalSymbols === 0) return 40; // Docs exist, moderate priority
+
+      // Invert coverage ratio: low coverage = high priority
+      // But cap at 80 since docs do exist
+      const coverageRatio = documentedSymbols / totalSymbols;
+      return Math.round((1 - coverageRatio) * 80);
+    }
+
+    // Missing documentation is high priority
+    return 90;
+  }
+
+  /**
+   * Calculate staleness score (0-100)
+   * Older docs = higher priority
+   */
+  private calculateStalenessScore(
+    result: DriftDetectionResult,
+    snapshot: DriftSnapshot,
+  ): number {
+    const { affectedDocFiles } = result.impactAnalysis;
+
+    if (affectedDocFiles.length === 0) return 50;
+
+    let oldestDocAge = 0;
+
+    for (const docPath of affectedDocFiles) {
+      const docSnapshot = snapshot.documentation.get(docPath);
+      if (docSnapshot) {
+        const lastUpdated = new Date(docSnapshot.lastUpdated);
+        const ageInDays =
+          (Date.now() - lastUpdated.getTime()) / (1000 * 60 * 60 * 24);
+        oldestDocAge = Math.max(oldestDocAge, ageInDays);
+      }
+    }
+
+    // Score based on age: 0-7 days = low, 7-30 days = medium, 30+ days = high
+    if (oldestDocAge > 90) return 100;
+    if (oldestDocAge > 30) return 80;
+    if (oldestDocAge > 14) return 60;
+    if (oldestDocAge > 7) return 40;
+    return 20;
+  }
+
+  /**
+   * Calculate user feedback score (0-100)
+   * More reported issues = higher priority
+   * Note: This is a placeholder - actual implementation would integrate with issue tracking
+   */
+  private calculateUserFeedbackScore(
+    _result: DriftDetectionResult,
+  ): number {
+    // Placeholder implementation
+    // In a real system, this would query issue tracking systems
+    // for documentation-related issues on the affected files
+    return 0;
+  }
+
+  /**
+   * Determine priority recommendation based on overall score
+   */
+  private determineRecommendation(
+    score: number,
+  ): "critical" | "high" | "medium" | "low" {
+    if (score >= 80) return "critical";
+    if (score >= 60) return "high";
+    if (score >= 40) return "medium";
+    return "low";
+  }
+
+  /**
+   * Generate suggested action based on priority level
+   */
+  private generateSuggestedAction(
+    recommendation: "critical" | "high" | "medium" | "low",
+    result: DriftDetectionResult,
+  ): string {
+    const affectedCount = result.impactAnalysis.affectedDocFiles.length;
+
+    switch (recommendation) {
+      case "critical":
+        return `Update immediately: ${result.impactAnalysis.breakingChanges} breaking change(s) affecting ${affectedCount} documentation file(s). Review and update within hours.`;
+      case "high":
+        return `Update within 1 day: ${result.drifts.length} drift(s) detected in ${affectedCount} file(s). Schedule update soon.`;
+      case "medium":
+        return `Update within 1 week: ${result.drifts.length} drift(s) affecting ${affectedCount} file(s). Plan update in next sprint.`;
+      case "low":
+        return `Update when convenient: Minor drift detected. Consider batching with other low-priority updates.`;
+    }
+  }
+
+  /**
+   * Detect drift with priority scoring
+   */
+  async detectDriftWithPriority(
+    oldSnapshot: DriftSnapshot,
+    newSnapshot: DriftSnapshot,
+    usageMetadata?: UsageMetadata,
+  ): Promise<PrioritizedDriftResult[]> {
+    const results = await this.detectDrift(oldSnapshot, newSnapshot);
+
+    return results.map((result) => ({
+      ...result,
+      priorityScore: this.calculatePriorityScore(
+        result,
+        newSnapshot,
+        usageMetadata,
+      ),
+    }));
+  }
+
+  /**
+   * Get prioritized drift results sorted by priority score
+   */
+  async getPrioritizedDriftResults(
+    oldSnapshot: DriftSnapshot,
+    newSnapshot: DriftSnapshot,
+    usageMetadata?: UsageMetadata,
+  ): Promise<PrioritizedDriftResult[]> {
+    const results = await this.detectDriftWithPriority(
+      oldSnapshot,
+      newSnapshot,
+      usageMetadata,
+    );
+
+    // Sort by overall score (descending - highest priority first)
+    return results.sort((a, b) => {
+      const scoreA = a.priorityScore?.overall ?? 0;
+      const scoreB = b.priorityScore?.overall ?? 0;
+      return scoreB - scoreA;
+    });
   }
 }
