@@ -77,6 +77,12 @@ export interface CodeExample {
   code: string;
   description: string;
   referencedSymbols: string[];
+  diataxisType?: "tutorial" | "how-to" | "reference" | "explanation";
+  validationHints?: {
+    expectedBehavior?: string;
+    dependencies?: string[];
+    contextRequired?: boolean;
+  };
 }
 
 /**
@@ -482,7 +488,7 @@ export class DriftDetector {
         .digest("hex");
       const stats = await fs.stat(docPath);
 
-      const sections = this.extractDocSections(content);
+      const sections = this.extractDocSections(content, docPath);
       const referencedCode = this.extractCodeReferences(content);
 
       return {
@@ -499,13 +505,317 @@ export class DriftDetector {
   }
 
   /**
+   * Generate validation hints based on Diataxis type
+   */
+  private generateValidationHints(
+    diataxisType: "tutorial" | "how-to" | "reference" | "explanation",
+    code: string,
+    language: string,
+  ): {
+    expectedBehavior?: string;
+    dependencies?: string[];
+    contextRequired?: boolean;
+  } {
+    const hints: {
+      expectedBehavior?: string;
+      dependencies?: string[];
+      contextRequired?: boolean;
+    } = {};
+
+    switch (diataxisType) {
+      case "tutorial":
+        // Tutorials should have complete, executable examples
+        hints.expectedBehavior = "Complete step-by-step execution flow";
+        hints.contextRequired = false; // Should be self-contained
+        hints.dependencies = this.extractDependencies(code, language);
+        break;
+
+      case "how-to":
+        // How-to guides focus on solving specific problems
+        hints.expectedBehavior = "Practical outcome achievable";
+        hints.contextRequired = true; // May require setup
+        hints.dependencies = this.extractDependencies(code, language);
+        break;
+
+      case "reference":
+        // Reference documentation shows API usage
+        hints.expectedBehavior = "API signatures match implementation";
+        hints.contextRequired = false;
+        hints.dependencies = [];
+        break;
+
+      case "explanation":
+        // Explanation examples illustrate concepts
+        hints.expectedBehavior = "Concepts align with code behavior";
+        hints.contextRequired = true;
+        hints.dependencies = [];
+        break;
+    }
+
+    return hints;
+  }
+
+  /**
+   * Extract dependencies from code
+   */
+  private extractDependencies(code: string, language: string): string[] {
+    const dependencies: string[] = [];
+
+    switch (language.toLowerCase()) {
+      case "typescript":
+      case "javascript":
+      case "tsx":
+      case "jsx": {
+        // Extract import statements
+        const importMatches = code.matchAll(
+          /import\s+.*?\s+from\s+["']([^"']+)["']/g,
+        );
+        for (const match of importMatches) {
+          dependencies.push(match[1]);
+        }
+        // Extract require statements
+        const requireMatches = code.matchAll(/require\(["']([^"']+)["']\)/g);
+        for (const match of requireMatches) {
+          dependencies.push(match[1]);
+        }
+        break;
+      }
+
+      case "python": {
+        // Extract "from X import Y" statements
+        const pyFromImportMatches = code.matchAll(/^from\s+(\S+)\s+import/gm);
+        for (const match of pyFromImportMatches) {
+          dependencies.push(match[1]);
+        }
+        // Extract simple "import X" statements
+        const pySimpleImportMatches = code.matchAll(/^import\s+(\S+)/gm);
+        for (const match of pySimpleImportMatches) {
+          dependencies.push(match[1]);
+        }
+        break;
+      }
+
+      case "go": {
+        // Extract import statements
+        const goImportMatches = code.matchAll(/import\s+["']([^"']+)["']/g);
+        for (const match of goImportMatches) {
+          dependencies.push(match[1]);
+        }
+        break;
+      }
+
+      case "rust": {
+        // Extract use statements
+        const useMatches = code.matchAll(/use\s+([^;]+);/g);
+        for (const match of useMatches) {
+          dependencies.push(match[1].split("::")[0]);
+        }
+        break;
+      }
+
+      case "java": {
+        // Extract import statements
+        const javaImportMatches = code.matchAll(/import\s+([^;]+);/g);
+        for (const match of javaImportMatches) {
+          dependencies.push(match[1]);
+        }
+        break;
+      }
+    }
+
+    return [...new Set(dependencies)];
+  }
+
+  /**
+   * Detect Diataxis type from file path
+   */
+  private detectDiataxisTypeFromPath(
+    filePath: string,
+  ): "tutorial" | "how-to" | "reference" | "explanation" | undefined {
+    const lowerPath = filePath.toLowerCase();
+
+    if (
+      lowerPath.includes("/tutorial") ||
+      lowerPath.includes("/tutorials") ||
+      lowerPath.includes("getting-started") ||
+      lowerPath.includes("getting_started")
+    ) {
+      return "tutorial";
+    }
+
+    if (
+      lowerPath.includes("/how-to") ||
+      lowerPath.includes("/howto") ||
+      lowerPath.includes("/guides") ||
+      lowerPath.includes("/guide")
+    ) {
+      return "how-to";
+    }
+
+    if (
+      lowerPath.includes("/reference") ||
+      lowerPath.includes("/api") ||
+      lowerPath.includes("/api-reference")
+    ) {
+      return "reference";
+    }
+
+    if (
+      lowerPath.includes("/explanation") ||
+      lowerPath.includes("/concept") ||
+      lowerPath.includes("/architecture") ||
+      lowerPath.includes("/background")
+    ) {
+      return "explanation";
+    }
+
+    return undefined;
+  }
+
+  /**
+   * Detect Diataxis type from frontmatter
+   */
+  private detectDiataxisTypeFromFrontmatter(
+    content: string,
+  ): "tutorial" | "how-to" | "reference" | "explanation" | undefined {
+    // Look for YAML frontmatter
+    const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+    if (!frontmatterMatch) {
+      return undefined;
+    }
+
+    const frontmatter = frontmatterMatch[1];
+
+    // Check for explicit diataxis type
+    const diataxisMatch = frontmatter.match(
+      /diataxis[_-]?type:\s*["']?(tutorial|how-to|reference|explanation)["']?/i,
+    );
+    if (diataxisMatch) {
+      return diataxisMatch[1] as
+        | "tutorial"
+        | "how-to"
+        | "reference"
+        | "explanation";
+    }
+
+    // Check for category field
+    const categoryMatch = frontmatter.match(
+      /category:\s*["']?(tutorial|how-to|reference|explanation)["']?/i,
+    );
+    if (categoryMatch) {
+      return categoryMatch[1] as
+        | "tutorial"
+        | "how-to"
+        | "reference"
+        | "explanation";
+    }
+
+    return undefined;
+  }
+
+  /**
+   * Infer Diataxis type from section content and context
+   */
+  private inferDiataxisTypeFromContext(
+    sectionTitle: string,
+    sectionContent: string,
+  ): "tutorial" | "how-to" | "reference" | "explanation" | undefined {
+    const title = sectionTitle.toLowerCase();
+    const content = sectionContent.toLowerCase();
+
+    // Tutorial indicators
+    const tutorialIndicators = [
+      "getting started",
+      "introduction",
+      "step-by-step",
+      "learning",
+      "beginner",
+      "first steps",
+      "walkthrough",
+    ];
+    if (
+      tutorialIndicators.some(
+        (indicator) => title.includes(indicator) || content.includes(indicator),
+      )
+    ) {
+      return "tutorial";
+    }
+
+    // How-to indicators
+    const howToIndicators = [
+      "how to",
+      "how do i",
+      "recipe",
+      "problem",
+      "solution",
+      "task",
+      "accomplish",
+    ];
+    if (
+      howToIndicators.some(
+        (indicator) => title.includes(indicator) || content.includes(indicator),
+      )
+    ) {
+      return "how-to";
+    }
+
+    // Reference indicators
+    const referenceIndicators = [
+      "api",
+      "reference",
+      "parameters",
+      "returns",
+      "arguments",
+      "signature",
+      "type",
+      "interface",
+    ];
+    if (
+      referenceIndicators.some(
+        (indicator) => title.includes(indicator) || content.includes(indicator),
+      )
+    ) {
+      return "reference";
+    }
+
+    // Explanation indicators
+    const explanationIndicators = [
+      "architecture",
+      "concept",
+      "background",
+      "why",
+      "understand",
+      "theory",
+      "design",
+      "overview",
+    ];
+    if (
+      explanationIndicators.some(
+        (indicator) => title.includes(indicator) || content.includes(indicator),
+      )
+    ) {
+      return "explanation";
+    }
+
+    return undefined;
+  }
+
+  /**
    * Extract sections from documentation
    */
-  private extractDocSections(content: string): DocumentationSection[] {
+  private extractDocSections(
+    content: string,
+    filePath: string,
+  ): DocumentationSection[] {
     const sections: DocumentationSection[] = [];
     const lines = content.split("\n");
     let currentSection: Partial<DocumentationSection> | null = null;
     let currentContent: string[] = [];
+
+    // Detect Diataxis type from path and frontmatter
+    const pathType = this.detectDiataxisTypeFromPath(filePath);
+    const frontmatterType = this.detectDiataxisTypeFromFrontmatter(content);
+    const documentType = frontmatterType || pathType;
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
@@ -555,21 +865,52 @@ export class DriftDetector {
           const langMatch = line.match(/```(\w+)/);
           const language = langMatch ? langMatch[1] : "text";
           const codeLines: string[] = [];
+          const codeStartLine = i;
           i++;
 
+          // Collect code lines
           while (i < lines.length && !lines[i].startsWith("```")) {
             codeLines.push(lines[i]);
             i++;
           }
 
+          const codeContent = codeLines.join("\n");
+
+          // Look for description before the code block (look back up to 3 lines)
+          let description = "";
+          for (let j = Math.max(0, codeStartLine - 3); j < codeStartLine; j++) {
+            const descLine = lines[j].trim();
+            if (descLine && !descLine.startsWith("#")) {
+              description = descLine;
+            }
+          }
+
+          // Determine Diataxis type for this code example
+          let codeExampleType = documentType;
+          if (!codeExampleType && currentSection.title) {
+            // Infer from section context if not determined from document
+            codeExampleType = this.inferDiataxisTypeFromContext(
+              currentSection.title,
+              currentContent.join("\n"),
+            );
+          }
+
           const codeExample: CodeExample = {
             language,
-            code: codeLines.join("\n"),
-            description: "",
-            referencedSymbols: this.extractSymbolsFromCode(
-              codeLines.join("\n"),
-            ),
+            code: codeContent,
+            description,
+            referencedSymbols: this.extractSymbolsFromCode(codeContent),
+            diataxisType: codeExampleType,
           };
+
+          // Add validation hints based on Diataxis type
+          if (codeExampleType) {
+            codeExample.validationHints = this.generateValidationHints(
+              codeExampleType,
+              codeContent,
+              language,
+            );
+          }
 
           currentSection.codeExamples!.push(codeExample);
         }
