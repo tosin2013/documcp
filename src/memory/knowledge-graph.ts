@@ -32,7 +32,10 @@ export interface GraphNode {
     | "documentation_section"
     | "link_validation"
     | "sync_event"
-    | "documentation_freshness_event";
+    | "documentation_freshness_event"
+    | "documentation_example"
+    | "example_validation"
+    | "call_graph";
   label: string;
   properties: Record<string, any>;
   weight: number;
@@ -59,6 +62,9 @@ export interface GraphEdge {
     | "has_link_validation"
     | "requires_fix"
     | "project_has_freshness_event"
+    | "has_example"
+    | "validates"
+    | "has_call_graph"
     | (string & NonNullable<unknown>); // Allow any string (for timestamped types like "project_deployed_with:2024-...")
   weight: number;
   properties: Record<string, any>;
