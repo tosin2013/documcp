@@ -513,11 +513,16 @@ describe("KGStorage - Validation and Error Handling", () => {
 
       await storage.saveEntities(entities);
 
+      // Verify initial save worked
+      const initial = await storage.loadEntities();
+      expect(initial).toHaveLength(1);
+      expect(initial[0].id).toBe("project:debug");
+
       // Set DEBUG env var
       const originalDebug = process.env.DEBUG;
       process.env.DEBUG = "true";
 
-      // Modify
+      // Modify - this will create a backup of the original entities
       const modifiedEntities: GraphNode[] = [
         {
           id: "project:modified",
@@ -529,6 +534,12 @@ describe("KGStorage - Validation and Error Handling", () => {
         },
       ];
       await storage.saveEntities(modifiedEntities);
+
+      // Verify backup was created by checking backups directory
+      const backupDir = join(testDir, "backups");
+      const backupFiles = await fs.readdir(backupDir);
+      const entityBackups = backupFiles.filter((f) => f.startsWith("entities"));
+      expect(entityBackups.length).toBeGreaterThan(0);
 
       // Restore (should log in debug mode)
       await storage.restoreFromBackup("entities");
@@ -542,6 +553,7 @@ describe("KGStorage - Validation and Error Handling", () => {
 
       // Verify restoration worked
       const restored = await storage.loadEntities();
+      expect(restored).toHaveLength(1);
       expect(restored[0].id).toBe("project:debug");
     });
   });

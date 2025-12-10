@@ -334,7 +334,7 @@ describe("KGStorage", () => {
 
       expect(stats.entityCount).toBe(2);
       expect(stats.relationshipCount).toBe(1);
-      expect(stats.schemaVersion).toBe("1.0.0");
+      expect(stats.schemaVersion).toBe("1.1.0");
       expect(stats.fileSize.entities).toBeGreaterThan(0);
     });
   });
@@ -420,7 +420,7 @@ describe("KGStorage", () => {
       const parsed = JSON.parse(json);
 
       expect(parsed.metadata).toBeDefined();
-      expect(parsed.metadata.version).toBe("1.0.0");
+      expect(parsed.metadata.version).toBe("1.1.0");
       expect(parsed.entities).toHaveLength(1);
       expect(parsed.relationships).toHaveLength(0);
     });

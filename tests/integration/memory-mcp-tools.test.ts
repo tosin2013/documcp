@@ -17,12 +17,15 @@ import {
   getProjectInsights,
   getSimilarProjects,
   getMemoryStatistics,
+  resetMemoryManager,
 } from "../../src/memory/integration.js";
+import { resetKnowledgeGraph } from "../../src/memory/kg-integration.js";
 import { analyzeRepository } from "../../src/tools/analyze-repository.js";
 import { recommendSSG } from "../../src/tools/recommend-ssg.js";
 
 describe("Memory MCP Tools Integration", () => {
   let tempDir: string;
+  let originalStorageDir: string | undefined;
   let testProjectDir: string;
 
   beforeEach(async () => {
@@ -31,9 +34,18 @@ describe("Memory MCP Tools Integration", () => {
       os.tmpdir(),
       `memory-mcp-integration-${Date.now()}-${Math.random()
         .toString(36)
-        .substr(2, 9)}`,
+        .substring(2, 11)}`,
     );
     await fs.mkdir(tempDir, { recursive: true });
+
+    // Set storage directory to temp for test isolation
+    originalStorageDir = process.env.DOCUMCP_STORAGE_DIR;
+    process.env.DOCUMCP_STORAGE_DIR = path.join(tempDir, "memory");
+    await fs.mkdir(path.join(tempDir, "memory"), { recursive: true });
+
+    // Reset global singletons to use new storage directory
+    resetKnowledgeGraph();
+    await resetMemoryManager(path.join(tempDir, "memory"));
 
     // Create a mock project structure for testing
     testProjectDir = path.join(tempDir, "test-project");
@@ -41,6 +53,16 @@ describe("Memory MCP Tools Integration", () => {
   });
 
   afterEach(async () => {
+    // Reset global singletons
+    resetKnowledgeGraph();
+
+    // Restore original storage directory
+    if (originalStorageDir !== undefined) {
+      process.env.DOCUMCP_STORAGE_DIR = originalStorageDir;
+    } else {
+      delete process.env.DOCUMCP_STORAGE_DIR;
+    }
+
     // Cleanup temp directory
     try {
       await fs.rm(tempDir, { recursive: true, force: true });

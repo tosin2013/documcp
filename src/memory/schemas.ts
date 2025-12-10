@@ -255,6 +255,82 @@ export type DocumentationFreshnessEventEntity = z.infer<
   typeof DocumentationFreshnessEventEntitySchema
 >;
 
+/**
+ * Documentation Example Entity Schema
+ * Represents a code example in documentation with tracking and validation
+ */
+export const DocumentationExampleEntitySchema = z.object({
+  sourceFile: z.string().min(1, "Source file path is required"),
+  language: z.string().min(1, "Programming language is required"),
+  code: z.string().min(1, "Code content is required"),
+  diataxisType: z.enum(["tutorial", "how-to", "reference", "explanation"]),
+  referencedSymbols: z.array(z.string()).default([]),
+  lastValidated: z.string().datetime().optional(),
+  validationStatus: z.enum(["valid", "invalid", "unknown"]).default("unknown"),
+  exampleId: z.string().min(1, "Example ID is required"),
+  contentHash: z.string().optional(),
+  lineStart: z.number().int().min(1).optional(),
+  lineEnd: z.number().int().min(1).optional(),
+});
+
+export type DocumentationExampleEntity = z.infer<
+  typeof DocumentationExampleEntitySchema
+>;
+
+/**
+ * Example Validation Entity Schema
+ * Represents validation results for a documentation example
+ */
+export const ExampleValidationEntitySchema = z.object({
+  exampleId: z.string().min(1, "Example ID is required"),
+  validatedAt: z.string().datetime(),
+  result: z.enum(["pass", "fail", "warning"]),
+  issues: z.array(z.string()).default([]),
+  confidenceScore: z.number().min(0).max(1),
+  validationMethod: z.enum(["ast", "llm", "execution"]),
+  errorDetails: z.record(z.string(), z.unknown()).optional(),
+  suggestions: z.array(z.string()).default([]),
+});
+
+export type ExampleValidationEntity = z.infer<
+  typeof ExampleValidationEntitySchema
+>;
+
+/**
+ * Call Graph Entity Schema
+ * Represents a call graph for code execution analysis
+ */
+export const CallGraphNodeSchema = z.object({
+  functionName: z.string().min(1),
+  filePath: z.string().min(1),
+  lineNumber: z.number().int().min(1).optional(),
+  callCount: z.number().int().min(0).default(1),
+});
+
+export const CallGraphEdgeSchema = z.object({
+  from: z.string().min(1),
+  to: z.string().min(1),
+  callType: z
+    .enum(["direct", "indirect", "async", "callback"])
+    .default("direct"),
+  weight: z.number().min(0).default(1.0),
+});
+
+export const CallGraphEntitySchema = z.object({
+  rootFunction: z.string().min(1, "Root function is required"),
+  nodes: z.array(CallGraphNodeSchema).default([]),
+  edges: z.array(CallGraphEdgeSchema).default([]),
+  depth: z.number().int().min(0),
+  generatedAt: z.string().datetime(),
+  analysisMethod: z.enum(["static", "dynamic", "hybrid"]).default("static"),
+  totalFunctions: z.number().int().min(0).default(0),
+  entryPoint: z.string().optional(),
+});
+
+export type CallGraphNode = z.infer<typeof CallGraphNodeSchema>;
+export type CallGraphEdge = z.infer<typeof CallGraphEdgeSchema>;
+export type CallGraphEntity = z.infer<typeof CallGraphEntitySchema>;
+
 // ============================================================================
 // Relationship Schemas
 // ============================================================================
@@ -462,6 +538,48 @@ export type ProjectHasFreshnessEventRelationship = z.infer<
   typeof ProjectHasFreshnessEventSchema
 >;
 
+/**
+ * Has Example Relationship (Document -> Documentation Example)
+ * Links a documentation file/section to a code example it contains
+ */
+export const HasExampleSchema = BaseRelationshipSchema.extend({
+  type: z.literal("has_example"),
+  exampleCount: z.number().int().min(0).default(1),
+  primaryLanguage: z.string().optional(),
+  exampleType: z
+    .enum(["inline", "reference", "embedded", "external"])
+    .default("inline"),
+});
+
+export type HasExampleRelationship = z.infer<typeof HasExampleSchema>;
+
+/**
+ * Validates Relationship (Example Validation -> Documentation Example)
+ * Links a validation result to the example it validates
+ */
+export const ValidatesSchema = BaseRelationshipSchema.extend({
+  type: z.literal("validates"),
+  validationRun: z.string().datetime(),
+  previousResult: z.enum(["pass", "fail", "warning", "none"]).optional(),
+  resultChanged: z.boolean().default(false),
+});
+
+export type ValidatesRelationship = z.infer<typeof ValidatesSchema>;
+
+/**
+ * Has Call Graph Relationship (Documentation Example -> Call Graph)
+ * Links an example to its execution call graph
+ */
+export const HasCallGraphSchema = BaseRelationshipSchema.extend({
+  type: z.literal("has_call_graph"),
+  graphDepth: z.number().int().min(0),
+  totalNodes: z.number().int().min(0),
+  totalEdges: z.number().int().min(0),
+  complexity: z.enum(["low", "medium", "high"]).optional(),
+});
+
+export type HasCallGraphRelationship = z.infer<typeof HasCallGraphSchema>;
+
 // ============================================================================
 // Union Types and Type Guards
 // ============================================================================
@@ -499,6 +617,16 @@ const DocumentationFreshnessEventEntityWithType =
   DocumentationFreshnessEventEntitySchema.extend({
     type: z.literal("documentation_freshness_event"),
   });
+const DocumentationExampleEntityWithType =
+  DocumentationExampleEntitySchema.extend({
+    type: z.literal("documentation_example"),
+  });
+const ExampleValidationEntityWithType = ExampleValidationEntitySchema.extend({
+  type: z.literal("example_validation"),
+});
+const CallGraphEntityWithType = CallGraphEntitySchema.extend({
+  type: z.literal("call_graph"),
+});
 
 export const EntitySchema = z.union([
   ProjectEntityWithType,
@@ -511,6 +639,9 @@ export const EntitySchema = z.union([
   LinkValidationEntityWithType,
   SitemapEntityWithType,
   DocumentationFreshnessEventEntityWithType,
+  DocumentationExampleEntityWithType,
+  ExampleValidationEntityWithType,
+  CallGraphEntityWithType,
 ]);
 
 export type Entity = z.infer<typeof EntitySchema>;
@@ -532,6 +663,9 @@ export const RelationshipSchema = z.union([
   CreatedBySchema,
   ProjectHasSitemapSchema,
   ProjectHasFreshnessEventSchema,
+  HasExampleSchema,
+  ValidatesSchema,
+  HasCallGraphSchema,
 ]);
 
 export type Relationship =
@@ -547,7 +681,10 @@ export type Relationship =
   | ResultsInRelationship
   | CreatedByRelationship
   | ProjectHasSitemapRelationship
-  | ProjectHasFreshnessEventRelationship;
+  | ProjectHasFreshnessEventRelationship
+  | HasExampleRelationship
+  | ValidatesRelationship
+  | HasCallGraphRelationship;
 
 // ============================================================================
 // Validation Helpers
@@ -600,6 +737,24 @@ export function isDocumentationSectionEntity(
   return entity.type === "documentation_section";
 }
 
+export function isDocumentationExampleEntity(
+  entity: Entity,
+): entity is DocumentationExampleEntity & { type: "documentation_example" } {
+  return entity.type === "documentation_example";
+}
+
+export function isExampleValidationEntity(
+  entity: Entity,
+): entity is ExampleValidationEntity & { type: "example_validation" } {
+  return entity.type === "example_validation";
+}
+
+export function isCallGraphEntity(
+  entity: Entity,
+): entity is CallGraphEntity & { type: "call_graph" } {
+  return entity.type === "call_graph";
+}
+
 // ============================================================================
 // Schema Metadata
 // ============================================================================
@@ -607,7 +762,7 @@ export function isDocumentationSectionEntity(
 /**
  * Schema version for migration support
  */
-export const SCHEMA_VERSION = "1.0.0";
+export const SCHEMA_VERSION = "1.1.0";
 
 /**
  * Schema metadata for documentation and validation
@@ -623,6 +778,9 @@ export const SCHEMA_METADATA = {
     "documentation_section",
     "technology",
     "documentation_freshness_event",
+    "documentation_example",
+    "example_validation",
+    "call_graph",
   ] as const,
   relationshipTypes: [
     "project_uses_technology",
@@ -638,6 +796,9 @@ export const SCHEMA_METADATA = {
     "created_by",
     "project_has_sitemap",
     "project_has_freshness_event",
+    "has_example",
+    "validates",
+    "has_call_graph",
   ] as const,
-  lastUpdated: "2025-10-01",
+  lastUpdated: "2025-12-10",
 } as const;

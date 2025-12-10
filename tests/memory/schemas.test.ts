@@ -370,7 +370,7 @@ describe("Type Guards", () => {
 
 describe("Schema Metadata", () => {
   it("should have correct version", () => {
-    expect(SCHEMA_METADATA.version).toBe("1.0.0");
+    expect(SCHEMA_METADATA.version).toBe("1.1.0");
   });
 
   it("should list all entity types", () => {
@@ -381,7 +381,11 @@ describe("Schema Metadata", () => {
     expect(SCHEMA_METADATA.entityTypes).toContain(
       "documentation_freshness_event",
     );
-    expect(SCHEMA_METADATA.entityTypes).toHaveLength(8);
+    // New entity types added in v1.1.0 for documentation example tracking
+    expect(SCHEMA_METADATA.entityTypes).toContain("documentation_example");
+    expect(SCHEMA_METADATA.entityTypes).toContain("example_validation");
+    expect(SCHEMA_METADATA.entityTypes).toContain("call_graph");
+    expect(SCHEMA_METADATA.entityTypes).toHaveLength(11);
   });
 
   it("should list all relationship types", () => {
@@ -393,6 +397,10 @@ describe("Schema Metadata", () => {
     expect(SCHEMA_METADATA.relationshipTypes).toContain(
       "project_has_freshness_event",
     );
-    expect(SCHEMA_METADATA.relationshipTypes).toHaveLength(13);
+    // New relationship types added in v1.1.0 for documentation example tracking
+    expect(SCHEMA_METADATA.relationshipTypes).toContain("has_example");
+    expect(SCHEMA_METADATA.relationshipTypes).toContain("validates");
+    expect(SCHEMA_METADATA.relationshipTypes).toContain("has_call_graph");
+    expect(SCHEMA_METADATA.relationshipTypes).toHaveLength(16);
   });
 });
