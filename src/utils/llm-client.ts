@@ -203,7 +203,7 @@ Focus on:
         breakingForExamples: Boolean(analysis.breakingForExamples),
         changeDescription: analysis.changeDescription || 'Code change detected',
         affectedDocSections: Array.isArray(analysis.affectedDocSections) ? analysis.affectedDocSections : [],
-        confidence: typeof analysis.confidence === 'number' ? Math.max(0, Math.min(1, analysis.confidence)) : 0.5,
+        confidence: this.normalizeConfidence(analysis.confidence),
       };
     } catch (error) {
       // Return low-confidence fallback result on error
@@ -270,7 +270,7 @@ Consider:
         actualOutput: result.actualOutput || '',
         matches: Boolean(result.matches),
         differences: Array.isArray(result.differences) ? result.differences : [],
-        confidence: typeof result.confidence === 'number' ? Math.max(0, Math.min(1, result.confidence)) : 0.5,
+        confidence: this.normalizeConfidence(result.confidence),
       };
     } catch (error) {
       // Return low-confidence failure result on error
@@ -283,6 +283,16 @@ Consider:
         confidence: 0,
       };
     }
+  }
+
+  /**
+   * Normalize confidence score to 0-1 range
+   */
+  private normalizeConfidence(confidence: unknown): number {
+    if (typeof confidence === 'number') {
+      return Math.max(0, Math.min(1, confidence));
+    }
+    return 0.5; // Default confidence for invalid values
   }
 }
 
@@ -325,6 +335,7 @@ export function createLLMClient(config?: Partial<LLMConfig>): LLMClient | null {
 
 /**
  * Check if LLM is available based on environment configuration
+ * Note: OPENAI_API_KEY is checked as fallback for backward compatibility
  */
 export function isLLMAvailable(): boolean {
   return !!(process.env.DOCUMCP_LLM_API_KEY || process.env.OPENAI_API_KEY);

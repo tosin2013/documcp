@@ -41,6 +41,16 @@ export interface ExampleValidation {
   issues: string[];
 }
 
+// Type alias for AST analysis result to improve readability
+type ASTAnalysisOutput = {
+  hasSignificantChanges: boolean;
+  hasBreakingChanges: boolean;
+  description: string;
+  affectedSections: string[];
+  confidence: number;
+  diffs: CodeDiff[];
+};
+
 /**
  * Semantic Analyzer with LLM integration and AST fallback
  */
@@ -48,6 +58,7 @@ export class SemanticAnalyzer {
   private astAnalyzer: ASTAnalyzer;
   private llmClient: LLMClient | null;
   private confidenceThreshold: number;
+  private initialized: boolean = false;
 
   constructor(options: SemanticAnalysisOptions = {}) {
     this.astAnalyzer = new ASTAnalyzer();
@@ -63,6 +74,7 @@ export class SemanticAnalyzer {
    */
   async initialize(): Promise<void> {
     await this.astAnalyzer.initialize();
+    this.initialized = true;
   }
 
   /**
@@ -80,6 +92,11 @@ export class SemanticAnalyzer {
     codeAfter: string,
     functionName?: string,
   ): Promise<EnhancedSemanticAnalysis> {
+    // Ensure analyzer is initialized before use
+    if (!this.initialized) {
+      await this.initialize();
+    }
+
     const timestamp = new Date().toISOString();
 
     // Try LLM-based analysis first
@@ -123,21 +140,16 @@ export class SemanticAnalyzer {
 
   /**
    * Perform AST-based analysis (fallback mode)
+   * Note: This is a simplified heuristic analysis for quick fallback.
+   * For full AST parsing, use the astAnalyzer.compareASTs() method directly.
    */
   private async performASTAnalysis(
     codeBefore: string,
     codeAfter: string,
     functionName?: string,
-  ): Promise<{
-    hasSignificantChanges: boolean;
-    hasBreakingChanges: boolean;
-    description: string;
-    affectedSections: string[];
-    confidence: number;
-    diffs: CodeDiff[];
-  }> {
-    // For AST analysis, we compare function signatures and structure
-    // This is a simplified version - full implementation would parse both versions
+  ): Promise<ASTAnalysisOutput> {
+    // Simplified heuristic analysis for quick fallback
+    // Full AST analysis would use this.astAnalyzer.analyzeFile() and compareASTs()
     
     const diffs: CodeDiff[] = [];
     let hasBreakingChanges = false;
@@ -280,7 +292,7 @@ export class SemanticAnalyzer {
    */
   private combineAnalyses(
     llmAnalysis: SemanticAnalysis,
-    astAnalysis: ReturnType<SemanticAnalyzer['performASTAnalysis']> extends Promise<infer T> ? T : never,
+    astAnalysis: ASTAnalysisOutput,
     timestamp: string,
   ): EnhancedSemanticAnalysis {
     // Merge affected sections
