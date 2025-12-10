@@ -89,6 +89,12 @@ export interface CodeExample {
  * Main Drift Detector class
  */
 export class DriftDetector {
+  // Constants for code analysis
+  private static readonly DESCRIPTION_LOOKBACK_LINES = 3;
+  private static readonly IMPORT_REGEX =
+    /import\s+.*?\s+from\s+["']([^"']+)["']/g;
+  private static readonly REQUIRE_REGEX = /require\(["']([^"']+)["']\)/g;
+
   private analyzer: ASTAnalyzer;
   private snapshotDir: string;
   private currentSnapshot: DriftSnapshot | null = null;
@@ -522,33 +528,41 @@ export class DriftDetector {
       contextRequired?: boolean;
     } = {};
 
+    // Default: no dependencies for reference and explanation types
+    let dependencies: string[] = [];
+
+    // Extract dependencies for executable types (tutorial, how-to)
+    if (diataxisType === "tutorial" || diataxisType === "how-to") {
+      dependencies = this.extractDependencies(code, language);
+    }
+
     switch (diataxisType) {
       case "tutorial":
         // Tutorials should have complete, executable examples
         hints.expectedBehavior = "Complete step-by-step execution flow";
         hints.contextRequired = false; // Should be self-contained
-        hints.dependencies = this.extractDependencies(code, language);
+        hints.dependencies = dependencies;
         break;
 
       case "how-to":
         // How-to guides focus on solving specific problems
         hints.expectedBehavior = "Practical outcome achievable";
         hints.contextRequired = true; // May require setup
-        hints.dependencies = this.extractDependencies(code, language);
+        hints.dependencies = dependencies;
         break;
 
       case "reference":
         // Reference documentation shows API usage
         hints.expectedBehavior = "API signatures match implementation";
         hints.contextRequired = false;
-        hints.dependencies = [];
+        hints.dependencies = dependencies;
         break;
 
       case "explanation":
         // Explanation examples illustrate concepts
         hints.expectedBehavior = "Concepts align with code behavior";
         hints.contextRequired = true;
-        hints.dependencies = [];
+        hints.dependencies = dependencies;
         break;
     }
 
@@ -567,14 +581,12 @@ export class DriftDetector {
       case "tsx":
       case "jsx": {
         // Extract import statements
-        const importMatches = code.matchAll(
-          /import\s+.*?\s+from\s+["']([^"']+)["']/g,
-        );
+        const importMatches = code.matchAll(DriftDetector.IMPORT_REGEX);
         for (const match of importMatches) {
           dependencies.push(match[1]);
         }
         // Extract require statements
-        const requireMatches = code.matchAll(/require\(["']([^"']+)["']\)/g);
+        const requireMatches = code.matchAll(DriftDetector.REQUIRE_REGEX);
         for (const match of requireMatches) {
           dependencies.push(match[1]);
         }
@@ -802,6 +814,8 @@ export class DriftDetector {
 
   /**
    * Extract sections from documentation
+   * @param content - The markdown content to parse
+   * @param filePath - The file path used for Diataxis type detection
    */
   private extractDocSections(
     content: string,
@@ -876,9 +890,16 @@ export class DriftDetector {
 
           const codeContent = codeLines.join("\n");
 
-          // Look for description before the code block (look back up to 3 lines)
+          // Look for description before the code block
           let description = "";
-          for (let j = Math.max(0, codeStartLine - 3); j < codeStartLine; j++) {
+          for (
+            let j = Math.max(
+              0,
+              codeStartLine - DriftDetector.DESCRIPTION_LOOKBACK_LINES,
+            );
+            j < codeStartLine;
+            j++
+          ) {
             const descLine = lines[j].trim();
             if (descLine && !descLine.startsWith("#")) {
               description = descLine;
