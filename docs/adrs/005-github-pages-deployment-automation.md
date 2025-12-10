@@ -597,6 +597,25 @@ class PerformanceMonitor {
 }
 ```
 
+## Implementation Notes
+
+### Workflow Consistency (2025-01-14)
+
+**Issue**: Multiple GitHub Actions workflows must use consistent SSG configuration to prevent deployment conflicts.
+
+**Solution**: All workflows (`deploy-docs.yml`, `release.yml`) now use Docusaurus configuration:
+
+- Node.js 20.x setup (not Ruby/Jekyll)
+- Docusaurus build process
+- Consistent artifact paths (`./docs/build`)
+- Unified deployment steps
+
+**Lessons Learned**:
+
+- Workflow templates must be synchronized across all deployment workflows
+- SSG changes require updates to all workflow files
+- Regular workflow audits prevent configuration drift
+
 ## Future Enhancements
 
 ### Advanced Deployment Features
@@ -642,3 +661,4 @@ describe("DeploymentWorkflows", () => {
 - [Static Site Deployment Strategies](https://jamstack.org/best-practices/)
 - [JAMstack Architecture Guide](https://jamstack.org/what-is-jamstack/)
 - GitHub Issue: #1 - Fix npm Package Publishing (related to release pipeline)
+- Commit: 8b44235 - fix(ci): migrate deploy-docs workflow from Jekyll to Docusaurus
