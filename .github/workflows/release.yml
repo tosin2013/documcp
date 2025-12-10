@@ -316,11 +316,6 @@ jobs:
       - name: Install Docusaurus dependencies
         run: cd docs && npm ci
 
-      - name: Copy API documentation to build directory
-        run: |
-          mkdir -p docs/build/api
-          cp -r docs/api/* docs/build/api/
-
       - name: Build Docusaurus site
         run: cd docs && npm run build
         env:
