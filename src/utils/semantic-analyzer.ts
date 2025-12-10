@@ -5,7 +5,7 @@
  * with fallback to AST-based analysis when LLM is unavailable.
  */
 
-import { ASTAnalyzer, CodeDiff, ASTAnalysisResult } from './ast-analyzer.js';
+import { ASTAnalyzer, CodeDiff } from './ast-analyzer.js';
 import { createLLMClient, LLMClient, SemanticAnalysis, SimulationResult } from './llm-client.js';
 
 export interface SemanticAnalysisOptions {

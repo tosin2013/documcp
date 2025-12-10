@@ -37,6 +37,14 @@ DocuMCP analyzes your repository, recommends the perfect static site generator (
 - 🗺️ **Sitemap Management**: Generate, validate, and manage sitemap.xml for SEO
 - 🔗 **Knowledge Graph Integration**: Track freshness history for intelligent recommendations
 
+### AI-Powered Semantic Analysis (v0.6.0+)
+
+- 🤖 **LLM Integration**: Optional integration with DeepSeek, OpenAI, Anthropic, or Ollama
+- 🔍 **Semantic Code Analysis**: Detect behavioral changes beyond syntax using AI
+- 🧪 **Example Validation**: Simulate code execution to verify documentation examples
+- 🎯 **Intelligent Fallback**: Graceful degradation to AST-only analysis when LLM unavailable
+- 🔒 **Privacy First**: Works fully offline with AST analysis, LLM completely optional
+
 ## Requirements
 
 - **Node.js**: 20.0.0 or higher
