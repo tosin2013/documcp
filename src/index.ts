@@ -59,6 +59,10 @@ import {
   setToolDefinitions,
 } from "./tools/generate-llm-context.js";
 import { cleanupAgentArtifacts } from "./tools/cleanup-agent-artifacts.js";
+import {
+  handleSimulateExecution,
+  handleBatchSimulateExecution,
+} from "./tools/simulate-execution.js";
 import { formatMCPResponse } from "./types/api.js";
 import {
   isPathAllowed,
@@ -1031,6 +1035,118 @@ const TOOLS = [
         .enum(["markdown", "mdx", "html"])
         .default("markdown")
         .describe("Output format for generated content"),
+    }),
+  },
+  // Execution Simulation (Issue #73)
+  {
+    name: "simulate_execution",
+    description:
+      "Simulate code execution using LLM to trace execution paths without running the code. " +
+      "Validates documentation examples by predicting behavior, detecting potential issues " +
+      "(null references, type mismatches, unreachable code), and comparing against expected results. " +
+      "Supports building call graphs for complex execution path analysis.",
+    inputSchema: z.object({
+      exampleCode: z
+        .string()
+        .describe("The code example to simulate (from documentation)"),
+      implementationCode: z
+        .string()
+        .optional()
+        .describe(
+          "The actual implementation code to trace against (if not using implementationPath)",
+        ),
+      implementationPath: z
+        .string()
+        .optional()
+        .describe(
+          "Path to the implementation file (alternative to implementationCode)",
+        ),
+      entryPoint: z
+        .string()
+        .optional()
+        .describe(
+          "Function name to start tracing from (auto-detected if not provided)",
+        ),
+      expectedBehavior: z
+        .string()
+        .optional()
+        .describe("Description of expected behavior for validation"),
+      options: z
+        .object({
+          maxDepth: z
+            .number()
+            .optional()
+            .describe("Maximum call depth to trace (default: 10)"),
+          maxSteps: z
+            .number()
+            .optional()
+            .describe("Maximum execution steps to simulate (default: 100)"),
+          timeoutMs: z
+            .number()
+            .optional()
+            .describe(
+              "Timeout for simulation in milliseconds (default: 30000)",
+            ),
+          includeCallGraph: z
+            .boolean()
+            .optional()
+            .describe("Include call graph in results (default: true)"),
+          detectNullRefs: z
+            .boolean()
+            .optional()
+            .describe(
+              "Detect potential null/undefined references (default: true)",
+            ),
+          detectTypeMismatches: z
+            .boolean()
+            .optional()
+            .describe("Detect type mismatches (default: true)"),
+          detectUnreachableCode: z
+            .boolean()
+            .optional()
+            .describe("Detect unreachable code (default: true)"),
+          confidenceThreshold: z
+            .number()
+            .optional()
+            .describe("Minimum confidence threshold (0-1, default: 0.7)"),
+        })
+        .optional(),
+    }),
+  },
+  {
+    name: "batch_simulate_execution",
+    description:
+      "Simulate execution of multiple code examples in batch. " +
+      "Useful for validating all examples in a documentation file at once.",
+    inputSchema: z.object({
+      examples: z
+        .array(
+          z.object({
+            code: z.string().describe("The code example"),
+            implementationPath: z
+              .string()
+              .optional()
+              .describe("Path to implementation file"),
+            expectedBehavior: z
+              .string()
+              .optional()
+              .describe("Expected behavior description"),
+          }),
+        )
+        .describe("Array of examples to simulate"),
+      globalOptions: z
+        .object({
+          maxDepth: z.number().optional(),
+          maxSteps: z.number().optional(),
+          timeoutMs: z.number().optional(),
+          includeCallGraph: z.boolean().optional(),
+          detectNullRefs: z.boolean().optional(),
+          detectTypeMismatches: z.boolean().optional(),
+          detectUnreachableCode: z.boolean().optional(),
+          confidenceThreshold: z.number().optional(),
+        })
+        .optional()
+        .describe("Options applied to all simulations"),
     }),
   },
   // Documentation Freshness Tracking
@@ -2949,6 +3065,73 @@ server.setRequestHandler(CallToolRequestSchema, async (request, extra) => {
 
         const result = await handleGenerateContextualContent(args, extra);
         return wrapToolResult(result, "generate_contextual_content");
+      }
+
+      // Execution Simulation (Issue #73)
+      case "simulate_execution": {
+        const implementationPath = (args as any)?.implementationPath;
+
+        // Check if implementation path is allowed (if provided)
+        if (
+          implementationPath &&
+          !isPathAllowed(implementationPath, allowedRoots)
+        ) {
+          return formatMCPResponse({
+            success: false,
+            error: {
+              code: "PERMISSION_DENIED",
+              message: getPermissionDeniedMessage(
+                implementationPath,
+                allowedRoots,
+              ),
+              resolution:
+                "Request access to this file by starting the server with --root argument",
+            },
+            metadata: {
+              toolVersion: packageJson.version,
+              executionTime: 0,
+              timestamp: new Date().toISOString(),
+            },
+          });
+        }
+
+        const simResult = await handleSimulateExecution(args as any, extra);
+        return wrapToolResult(simResult, "simulate_execution");
+      }
+
+      case "batch_simulate_execution": {
+        // Check all implementation paths if provided
+        const batchExamples = (args as any)?.examples || [];
+        for (const example of batchExamples) {
+          if (
+            example.implementationPath &&
+            !isPathAllowed(example.implementationPath, allowedRoots)
+          ) {
+            return formatMCPResponse({
+              success: false,
+              error: {
+                code: "PERMISSION_DENIED",
+                message: getPermissionDeniedMessage(
+                  example.implementationPath,
+                  allowedRoots,
+                ),
+                resolution:
+                  "Request access to this file by starting the server with --root argument",
+              },
+              metadata: {
+                toolVersion: packageJson.version,
+                executionTime: 0,
+                timestamp: new Date().toISOString(),
+              },
+            });
+          }
+        }
+
+        const batchResult = await handleBatchSimulateExecution(
+          args as any,
+          extra,
+        );
+        return wrapToolResult(batchResult, "batch_simulate_execution");
       }
 
       // Documentation Freshness Tracking

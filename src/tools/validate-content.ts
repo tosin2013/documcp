@@ -4,6 +4,10 @@ import * as path from "path";
 import { exec } from "child_process";
 import { promisify } from "util";
 import { handleMemoryRecall } from "../memory/index.js";
+import {
+  createExecutionSimulator,
+  ExecutionSimulator,
+} from "../utils/execution-simulator.js";
 // ESM-compatible dirname replacement - fallback for test environments
 function getDirname(): string {
   // Use process.cwd() as fallback for all environments to avoid import.meta issues
@@ -92,9 +96,25 @@ export interface ValidationResult {
 class ContentAccuracyValidator {
   private projectContext: any;
   private tempDir: string;
+  private executionSimulator: ExecutionSimulator | null = null;
+  private useExecutionSimulation: boolean;
 
-  constructor() {
+  constructor(useExecutionSimulation: boolean = true) {
     this.tempDir = path.join(currentDir, ".tmp");
+    this.useExecutionSimulation = useExecutionSimulation;
+
+    // Initialize execution simulator if enabled
+    if (useExecutionSimulation) {
+      this.executionSimulator = createExecutionSimulator({
+        maxDepth: 5,
+        maxSteps: 50,
+        timeoutMs: 15000,
+        detectNullRefs: true,
+        detectTypeMismatches: true,
+        detectUnreachableCode: true,
+        confidenceThreshold: 0.6,
+      });
+    }
   }
 
   async validateContent(
@@ -870,8 +890,34 @@ class ContentAccuracyValidator {
     try {
       if (block.language === "typescript" || block.language === "ts") {
         await this.validateTypeScriptCode(block.code, validation);
+
+        // Use execution simulation for additional validation if available
+        if (
+          this.useExecutionSimulation &&
+          this.executionSimulator &&
+          validation.compilationSuccess
+        ) {
+          await this.enhanceWithExecutionSimulation(
+            block.code,
+            validation,
+            filePath,
+          );
+        }
       } else if (block.language === "javascript" || block.language === "js") {
         await this.validateJavaScriptCode(block.code, validation);
+
+        // Use execution simulation for additional validation if available
+        if (
+          this.useExecutionSimulation &&
+          this.executionSimulator &&
+          validation.compilationSuccess
+        ) {
+          await this.enhanceWithExecutionSimulation(
+            block.code,
+            validation,
+            filePath,
+          );
+        }
       } else if (block.language === "json") {
         await this.validateJSONCode(block.code, validation);
       } else if (block.language === "bash" || block.language === "sh") {
@@ -890,6 +936,53 @@ class ContentAccuracyValidator {
     }
 
     return validation;
+  }
+
+  /**
+   * Enhance validation with execution simulation results
+   */
+  private async enhanceWithExecutionSimulation(
+    code: string,
+    validation: ExampleValidation,
+    filePath: string,
+  ): Promise<void> {
+    if (!this.executionSimulator) return;
+
+    try {
+      const simResult = await this.executionSimulator.validateExample(
+        code,
+        code,
+      );
+
+      // Add simulation-detected issues to validation
+      for (const issue of simResult.issues) {
+        validation.issues.push({
+          type: issue.severity === "error" ? "error" : "warning",
+          category: "accuracy",
+          location: {
+            file: path.basename(filePath),
+            line: issue.location.line,
+          },
+          description: `[Simulation] ${issue.description}`,
+          evidence: [issue.codeSnippet || ""],
+          suggestedFix: issue.suggestion,
+          confidence: Math.round(simResult.trace.confidenceScore * 100),
+        });
+      }
+
+      // Update execution success based on simulation
+      validation.executionSuccess = simResult.isValid;
+
+      // Adjust confidence based on simulation confidence
+      if (simResult.trace.confidenceScore > 0) {
+        validation.confidence = Math.round(
+          (validation.confidence + simResult.trace.confidenceScore * 100) / 2,
+        );
+      }
+    } catch (error) {
+      // Simulation is best-effort, don't fail validation on simulation errors
+      console.warn("Execution simulation failed:", error);
+    }
   }
 
   private async validateTypeScriptCode(
