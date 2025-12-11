@@ -1312,18 +1312,17 @@ export class DriftDetector {
     const weights = this.getWeights();
 
     // Calculate individual factors
-    const codeComplexity = this.calculateCodeComplexityScore(
-      result,
-      snapshot,
-    );
+    const codeComplexity = this.calculateCodeComplexityScore(result, snapshot);
     const usageFrequency = this.calculateUsageFrequencyScore(
       result,
       snapshot,
       usageMetadata,
     );
     const changeMagnitude = this.calculateChangeMagnitudeScore(result);
-    const documentationCoverage =
-      this.calculateDocumentationCoverageScore(result, snapshot);
+    const documentationCoverage = this.calculateDocumentationCoverageScore(
+      result,
+      snapshot,
+    );
     const staleness = this.calculateStalenessScore(result, snapshot);
     const userFeedback = this.calculateUserFeedbackScore(result);
 
@@ -1429,10 +1428,7 @@ export class DriftDetector {
       );
       const publicAPIBonus = isPublicAPI ? PUBLIC_API_BONUS : 0;
 
-      return Math.min(
-        exportScore + referenceScore + publicAPIBonus,
-        100,
-      );
+      return Math.min(exportScore + referenceScore + publicAPIBonus, 100);
     }
 
     // Use actual usage data if available
@@ -1442,8 +1438,7 @@ export class DriftDetector {
         if (diff.category === "function") {
           totalUsage += usageMetadata.functionCalls.get(diff.name) || 0;
         } else if (diff.category === "class") {
-          totalUsage +=
-            usageMetadata.classInstantiations.get(diff.name) || 0;
+          totalUsage += usageMetadata.classInstantiations.get(diff.name) || 0;
         }
         totalUsage += usageMetadata.imports.get(diff.name) || 0;
       }
@@ -1457,9 +1452,7 @@ export class DriftDetector {
    * Calculate change magnitude score (0-100)
    * Larger changes = higher priority
    */
-  private calculateChangeMagnitudeScore(
-    result: DriftDetectionResult,
-  ): number {
+  private calculateChangeMagnitudeScore(result: DriftDetectionResult): number {
     const { breakingChanges, majorChanges, minorChanges } =
       result.impactAnalysis;
 
@@ -1566,9 +1559,7 @@ export class DriftDetector {
    * More reported issues = higher priority
    * Note: This is a placeholder - actual implementation would integrate with issue tracking
    */
-  private calculateUserFeedbackScore(
-    _result: DriftDetectionResult,
-  ): number {
+  private calculateUserFeedbackScore(_result: DriftDetectionResult): number {
     // Placeholder implementation
     // In a real system, this would query issue tracking systems
     // for documentation-related issues on the affected files

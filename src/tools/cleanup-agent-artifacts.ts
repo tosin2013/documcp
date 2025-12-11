@@ -21,7 +21,9 @@ const inputSchema = z.object({
   path: z.string().describe("Path to the project directory to scan"),
   operation: z
     .enum(["scan", "clean", "archive"])
-    .describe("Operation to perform: scan (detect only), clean (remove), or archive (move to .agent-archive/)"),
+    .describe(
+      "Operation to perform: scan (detect only), clean (remove), or archive (move to .agent-archive/)",
+    ),
   dryRun: z
     .boolean()
     .optional()
@@ -31,7 +33,9 @@ const inputSchema = z.object({
     .boolean()
     .optional()
     .default(false)
-    .describe("Prompt for confirmation before each action (not supported in MCP, treated as dryRun)"),
+    .describe(
+      "Prompt for confirmation before each action (not supported in MCP, treated as dryRun)",
+    ),
   autoDeleteThreshold: z
     .number()
     .min(0)
@@ -253,7 +257,8 @@ export async function cleanupAgentArtifacts(
           executionTime: Date.now() - startTime,
           timestamp: new Date().toISOString(),
         },
-        recommendations: recommendations.length > 0 ? recommendations : undefined,
+        recommendations:
+          recommendations.length > 0 ? recommendations : undefined,
         nextSteps: nextSteps.length > 0 ? nextSteps : undefined,
       },
       { fullResponse: true },

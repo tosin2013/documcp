@@ -1,26 +1,31 @@
 /**
  * Semantic Code Analyzer (Phase 3)
- * 
+ *
  * Provides semantic analysis of code changes using LLM integration,
  * with fallback to AST-based analysis when LLM is unavailable.
  */
 
-import { ASTAnalyzer, CodeDiff } from './ast-analyzer.js';
-import { createLLMClient, LLMClient, SemanticAnalysis, SimulationResult } from './llm-client.js';
+import { ASTAnalyzer, CodeDiff } from "./ast-analyzer.js";
+import {
+  createLLMClient,
+  LLMClient,
+  SemanticAnalysis,
+  SimulationResult,
+} from "./llm-client.js";
 
 export interface SemanticAnalysisOptions {
   useLLM?: boolean;
   confidenceThreshold?: number;
   includeASTFallback?: boolean;
   llmConfig?: {
-    provider?: 'deepseek' | 'openai' | 'anthropic' | 'ollama';
+    provider?: "deepseek" | "openai" | "anthropic" | "ollama";
     apiKey?: string;
     model?: string;
   };
 }
 
 export interface EnhancedSemanticAnalysis extends SemanticAnalysis {
-  analysisMode: 'llm' | 'ast' | 'hybrid';
+  analysisMode: "llm" | "ast" | "hybrid";
   astDiffs?: CodeDiff[];
   llmAvailable: boolean;
   timestamp: string;
@@ -63,7 +68,7 @@ export class SemanticAnalyzer {
   constructor(options: SemanticAnalysisOptions = {}) {
     this.astAnalyzer = new ASTAnalyzer();
     this.confidenceThreshold = options.confidenceThreshold || 0.7;
-    
+
     // Try to create LLM client if enabled (default: true)
     const useLLM = options.useLLM !== false;
     this.llmClient = useLLM ? createLLMClient(options.llmConfig) : null;
@@ -102,36 +107,47 @@ export class SemanticAnalyzer {
     // Try LLM-based analysis first
     if (this.llmClient) {
       try {
-        const llmAnalysis = await this.llmClient.analyzeCodeChange(codeBefore, codeAfter);
-        
+        const llmAnalysis = await this.llmClient.analyzeCodeChange(
+          codeBefore,
+          codeAfter,
+        );
+
         // If confidence is high enough, return LLM result
         if (llmAnalysis.confidence >= this.confidenceThreshold) {
           return {
             ...llmAnalysis,
-            analysisMode: 'llm',
+            analysisMode: "llm",
             llmAvailable: true,
             timestamp,
           };
         }
 
         // Low confidence: combine with AST analysis
-        const astAnalysis = await this.performASTAnalysis(codeBefore, codeAfter, functionName);
+        const astAnalysis = await this.performASTAnalysis(
+          codeBefore,
+          codeAfter,
+          functionName,
+        );
         return this.combineAnalyses(llmAnalysis, astAnalysis, timestamp);
       } catch (error) {
         // LLM failed, fall back to AST
-        console.warn('LLM analysis failed, falling back to AST:', error);
+        console.warn("LLM analysis failed, falling back to AST:", error);
       }
     }
 
     // Fallback to AST-only analysis
-    const astAnalysis = await this.performASTAnalysis(codeBefore, codeAfter, functionName);
+    const astAnalysis = await this.performASTAnalysis(
+      codeBefore,
+      codeAfter,
+      functionName,
+    );
     return {
       hasBehavioralChange: astAnalysis.hasSignificantChanges,
       breakingForExamples: astAnalysis.hasBreakingChanges,
       changeDescription: astAnalysis.description,
       affectedDocSections: astAnalysis.affectedSections,
       confidence: astAnalysis.confidence,
-      analysisMode: 'ast',
+      analysisMode: "ast",
       astDiffs: astAnalysis.diffs,
       llmAvailable: false,
       timestamp,
@@ -150,21 +166,21 @@ export class SemanticAnalyzer {
   ): Promise<ASTAnalysisOutput> {
     // Simplified heuristic analysis for quick fallback
     // Full AST analysis would use this.astAnalyzer.analyzeFile() and compareASTs()
-    
+
     const diffs: CodeDiff[] = [];
     let hasBreakingChanges = false;
     let hasSignificantChanges = false;
 
     // Detect function signature changes
-    const beforeHasAsync = codeBefore.includes('async');
-    const afterHasAsync = codeAfter.includes('async');
+    const beforeHasAsync = codeBefore.includes("async");
+    const afterHasAsync = codeAfter.includes("async");
     if (beforeHasAsync !== afterHasAsync) {
       diffs.push({
-        type: 'modified',
-        category: 'function',
-        name: functionName || 'unknown',
-        details: 'Async modifier changed',
-        impactLevel: 'major',
+        type: "modified",
+        category: "function",
+        name: functionName || "unknown",
+        details: "Async modifier changed",
+        impactLevel: "major",
       });
       hasSignificantChanges = true;
     }
@@ -174,13 +190,13 @@ export class SemanticAnalyzer {
     const afterParams = this.extractParameters(codeAfter);
     if (beforeParams !== afterParams) {
       diffs.push({
-        type: 'modified',
-        category: 'function',
-        name: functionName || 'unknown',
-        details: 'Function parameters changed',
+        type: "modified",
+        category: "function",
+        name: functionName || "unknown",
+        details: "Function parameters changed",
         oldSignature: beforeParams,
         newSignature: afterParams,
-        impactLevel: 'breaking',
+        impactLevel: "breaking",
       });
       hasBreakingChanges = true;
       hasSignificantChanges = true;
@@ -191,11 +207,11 @@ export class SemanticAnalyzer {
     const afterReturn = this.extractReturnType(codeAfter);
     if (beforeReturn !== afterReturn) {
       diffs.push({
-        type: 'modified',
-        category: 'function',
-        name: functionName || 'unknown',
-        details: 'Return type changed',
-        impactLevel: 'breaking',
+        type: "modified",
+        category: "function",
+        name: functionName || "unknown",
+        details: "Return type changed",
+        impactLevel: "breaking",
       });
       hasBreakingChanges = true;
       hasSignificantChanges = true;
@@ -204,11 +220,11 @@ export class SemanticAnalyzer {
     // Detect implementation changes
     if (codeBefore !== codeAfter && diffs.length === 0) {
       diffs.push({
-        type: 'modified',
-        category: 'function',
-        name: functionName || 'unknown',
-        details: 'Implementation changed',
-        impactLevel: 'minor',
+        type: "modified",
+        category: "function",
+        name: functionName || "unknown",
+        details: "Implementation changed",
+        impactLevel: "minor",
       });
       hasSignificantChanges = true;
     }
@@ -231,7 +247,7 @@ export class SemanticAnalyzer {
    */
   private extractParameters(code: string): string {
     const match = code.match(/\(([^)]*)\)/);
-    return match ? match[1].trim() : '';
+    return match ? match[1].trim() : "";
   }
 
   /**
@@ -239,7 +255,7 @@ export class SemanticAnalyzer {
    */
   private extractReturnType(code: string): string {
     const match = code.match(/:\s*([^{=>\s]+)/);
-    return match ? match[1].trim() : 'void';
+    return match ? match[1].trim() : "void";
   }
 
   /**
@@ -247,20 +263,24 @@ export class SemanticAnalyzer {
    */
   private generateChangeDescription(diffs: CodeDiff[]): string {
     if (diffs.length === 0) {
-      return 'No significant changes detected';
+      return "No significant changes detected";
     }
 
-    const breakingChanges = diffs.filter(d => d.impactLevel === 'breaking');
+    const breakingChanges = diffs.filter((d) => d.impactLevel === "breaking");
     if (breakingChanges.length > 0) {
-      return `Breaking changes detected: ${breakingChanges.map(d => d.details).join(', ')}`;
+      return `Breaking changes detected: ${breakingChanges
+        .map((d) => d.details)
+        .join(", ")}`;
     }
 
-    const majorChanges = diffs.filter(d => d.impactLevel === 'major');
+    const majorChanges = diffs.filter((d) => d.impactLevel === "major");
     if (majorChanges.length > 0) {
-      return `Major changes detected: ${majorChanges.map(d => d.details).join(', ')}`;
+      return `Major changes detected: ${majorChanges
+        .map((d) => d.details)
+        .join(", ")}`;
     }
 
-    return `Minor changes detected: ${diffs.map(d => d.details).join(', ')}`;
+    return `Minor changes detected: ${diffs.map((d) => d.details).join(", ")}`;
   }
 
   /**
@@ -270,17 +290,17 @@ export class SemanticAnalyzer {
     const sections = new Set<string>();
 
     for (const diff of diffs) {
-      if (diff.impactLevel === 'breaking') {
-        sections.add('API Reference');
-        sections.add('Migration Guide');
+      if (diff.impactLevel === "breaking") {
+        sections.add("API Reference");
+        sections.add("Migration Guide");
       }
-      if (diff.category === 'function') {
-        sections.add('API Reference');
-        sections.add('Code Examples');
+      if (diff.category === "function") {
+        sections.add("API Reference");
+        sections.add("Code Examples");
       }
-      if (diff.category === 'interface' || diff.category === 'type') {
-        sections.add('Type Definitions');
-        sections.add('API Reference');
+      if (diff.category === "interface" || diff.category === "type") {
+        sections.add("Type Definitions");
+        sections.add("API Reference");
       }
     }
 
@@ -302,14 +322,17 @@ export class SemanticAnalyzer {
     ]);
 
     // Take the more conservative assessment
-    const hasBehavioralChange = llmAnalysis.hasBehavioralChange || astAnalysis.hasSignificantChanges;
-    const breakingForExamples = llmAnalysis.breakingForExamples || astAnalysis.hasBreakingChanges;
+    const hasBehavioralChange =
+      llmAnalysis.hasBehavioralChange || astAnalysis.hasSignificantChanges;
+    const breakingForExamples =
+      llmAnalysis.breakingForExamples || astAnalysis.hasBreakingChanges;
 
     // Combine descriptions
     const description = `${llmAnalysis.changeDescription}. AST analysis: ${astAnalysis.description}`;
 
     // Average confidence, weighted toward AST for reliability
-    const confidence = (llmAnalysis.confidence * 0.6 + astAnalysis.confidence * 0.4);
+    const confidence =
+      llmAnalysis.confidence * 0.6 + astAnalysis.confidence * 0.4;
 
     return {
       hasBehavioralChange,
@@ -317,7 +340,7 @@ export class SemanticAnalyzer {
       changeDescription: description,
       affectedDocSections: Array.from(allSections),
       confidence,
-      analysisMode: 'hybrid',
+      analysisMode: "hybrid",
       astDiffs: astAnalysis.diffs,
       llmAvailable: true,
       timestamp,
@@ -337,7 +360,7 @@ export class SemanticAnalyzer {
         examples: [],
         overallConfidence: 0,
         requiresManualReview: true,
-        suggestions: ['LLM not available - manual validation required'],
+        suggestions: ["LLM not available - manual validation required"],
       };
     }
 
@@ -345,7 +368,10 @@ export class SemanticAnalyzer {
 
     for (const example of examples) {
       try {
-        const simulation = await this.llmClient.simulateExecution(example, implementation);
+        const simulation = await this.llmClient.simulateExecution(
+          example,
+          implementation,
+        );
         validations.push({
           exampleCode: example,
           simulationResult: simulation,
@@ -357,29 +383,37 @@ export class SemanticAnalyzer {
           exampleCode: example,
           simulationResult: {
             success: false,
-            expectedOutput: '',
-            actualOutput: '',
+            expectedOutput: "",
+            actualOutput: "",
             matches: false,
-            differences: [`Validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`],
+            differences: [
+              `Validation failed: ${
+                error instanceof Error ? error.message : "Unknown error"
+              }`,
+            ],
             confidence: 0,
           },
           isValid: false,
-          issues: ['Validation failed'],
+          issues: ["Validation failed"],
         });
       }
     }
 
-    const validExamples = validations.filter(v => v.isValid).length;
-    const overallConfidence = validations.reduce((sum, v) => sum + v.simulationResult.confidence, 0) / validations.length;
+    const validExamples = validations.filter((v) => v.isValid).length;
+    const overallConfidence =
+      validations.reduce((sum, v) => sum + v.simulationResult.confidence, 0) /
+      validations.length;
     const isValid = validExamples === examples.length;
     const requiresManualReview = overallConfidence < this.confidenceThreshold;
 
     const suggestions: string[] = [];
     if (!isValid) {
-      suggestions.push(`${examples.length - validExamples} example(s) may be invalid`);
+      suggestions.push(
+        `${examples.length - validExamples} example(s) may be invalid`,
+      );
     }
     if (requiresManualReview) {
-      suggestions.push('Low confidence - manual review recommended');
+      suggestions.push("Low confidence - manual review recommended");
     }
 
     return {
@@ -415,6 +449,8 @@ export class SemanticAnalyzer {
 /**
  * Utility function to create a semantic analyzer with default configuration
  */
-export function createSemanticAnalyzer(options?: SemanticAnalysisOptions): SemanticAnalyzer {
+export function createSemanticAnalyzer(
+  options?: SemanticAnalysisOptions,
+): SemanticAnalyzer {
   return new SemanticAnalyzer(options);
 }

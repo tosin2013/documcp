@@ -1,12 +1,12 @@
 /**
  * LLM Client for Semantic Code Analysis
- * 
+ *
  * Provides a unified interface for multiple LLM providers (DeepSeek, OpenAI, Anthropic, Ollama)
  * with rate limiting, error handling, and fallback mechanisms.
  */
 
 export interface LLMConfig {
-  provider: 'deepseek' | 'openai' | 'anthropic' | 'ollama';
+  provider: "deepseek" | "openai" | "anthropic" | "ollama";
   apiKey?: string;
   baseUrl?: string;
   model: string;
@@ -43,7 +43,10 @@ export interface LLMResponse {
 export interface LLMClient {
   complete(prompt: string): Promise<string>;
   analyzeCodeChange(before: string, after: string): Promise<SemanticAnalysis>;
-  simulateExecution(example: string, implementation: string): Promise<SimulationResult>;
+  simulateExecution(
+    example: string,
+    implementation: string,
+  ): Promise<SimulationResult>;
 }
 
 /**
@@ -61,12 +64,12 @@ class RateLimiter {
 
   async acquire(): Promise<void> {
     const now = Date.now();
-    this.requests = this.requests.filter(time => now - time < this.windowMs);
+    this.requests = this.requests.filter((time) => now - time < this.windowMs);
 
     if (this.requests.length >= this.maxRequests) {
       const oldestRequest = this.requests[0];
       const waitTime = this.windowMs - (now - oldestRequest);
-      await new Promise(resolve => setTimeout(resolve, waitTime));
+      await new Promise((resolve) => setTimeout(resolve, waitTime));
       return this.acquire();
     }
 
@@ -84,7 +87,7 @@ export class DeepSeekClient implements LLMClient {
 
   constructor(config: LLMConfig) {
     this.config = {
-      baseUrl: config.baseUrl || 'https://api.deepseek.com/v1',
+      baseUrl: config.baseUrl || "https://api.deepseek.com/v1",
       maxTokens: config.maxTokens || 4000,
       timeout: config.timeout || 30000,
       ...config,
@@ -104,7 +107,9 @@ export class DeepSeekClient implements LLMClient {
    */
   async complete(prompt: string): Promise<string> {
     if (!this.isAvailable()) {
-      throw new Error('LLM client is not available. Check API key configuration.');
+      throw new Error(
+        "LLM client is not available. Check API key configuration.",
+      );
     }
 
     await this.rateLimiter.acquire();
@@ -113,7 +118,7 @@ export class DeepSeekClient implements LLMClient {
       model: this.config.model,
       messages: [
         {
-          role: 'user',
+          role: "user",
           content: prompt,
         },
       ],
@@ -123,13 +128,16 @@ export class DeepSeekClient implements LLMClient {
 
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), this.config.timeout);
+      const timeoutId = setTimeout(
+        () => controller.abort(),
+        this.config.timeout,
+      );
 
       const response = await fetch(`${this.config.baseUrl}/chat/completions`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.config.apiKey}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${this.config.apiKey}`,
         },
         body: JSON.stringify(requestBody),
         signal: controller.signal,
@@ -142,11 +150,11 @@ export class DeepSeekClient implements LLMClient {
         throw new Error(`LLM API error: ${response.status} - ${errorText}`);
       }
 
-      const data = await response.json() as any;
-      return data.choices[0]?.message?.content || '';
+      const data = (await response.json()) as any;
+      return data.choices[0]?.message?.content || "";
     } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') {
-        throw new Error('LLM request timed out');
+      if (error instanceof Error && error.name === "AbortError") {
+        throw new Error("LLM request timed out");
       }
       throw error;
     }
@@ -155,7 +163,10 @@ export class DeepSeekClient implements LLMClient {
   /**
    * Analyze semantic impact of code changes
    */
-  async analyzeCodeChange(before: string, after: string): Promise<SemanticAnalysis> {
+  async analyzeCodeChange(
+    before: string,
+    after: string,
+  ): Promise<SemanticAnalysis> {
     const prompt = `You are a code analysis expert. Compare these two code versions and analyze the semantic differences.
 
 **Before:**
@@ -186,23 +197,25 @@ Focus on:
 
     try {
       const response = await this.complete(prompt);
-      
+
       // Extract JSON from response (handle markdown code blocks)
       let jsonStr = response.trim();
-      if (jsonStr.startsWith('```json')) {
-        jsonStr = jsonStr.replace(/```json\n?/g, '').replace(/```\n?$/g, '');
-      } else if (jsonStr.startsWith('```')) {
-        jsonStr = jsonStr.replace(/```\n?/g, '');
+      if (jsonStr.startsWith("```json")) {
+        jsonStr = jsonStr.replace(/```json\n?/g, "").replace(/```\n?$/g, "");
+      } else if (jsonStr.startsWith("```")) {
+        jsonStr = jsonStr.replace(/```\n?/g, "");
       }
 
       const analysis = JSON.parse(jsonStr) as SemanticAnalysis;
-      
+
       // Validate and normalize the response
       return {
         hasBehavioralChange: Boolean(analysis.hasBehavioralChange),
         breakingForExamples: Boolean(analysis.breakingForExamples),
-        changeDescription: analysis.changeDescription || 'Code change detected',
-        affectedDocSections: Array.isArray(analysis.affectedDocSections) ? analysis.affectedDocSections : [],
+        changeDescription: analysis.changeDescription || "Code change detected",
+        affectedDocSections: Array.isArray(analysis.affectedDocSections)
+          ? analysis.affectedDocSections
+          : [],
         confidence: this.normalizeConfidence(analysis.confidence),
       };
     } catch (error) {
@@ -210,7 +223,9 @@ Focus on:
       return {
         hasBehavioralChange: false,
         breakingForExamples: false,
-        changeDescription: `Analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        changeDescription: `Analysis failed: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`,
         affectedDocSections: [],
         confidence: 0,
       };
@@ -220,7 +235,10 @@ Focus on:
   /**
    * Simulate execution of code to validate examples
    */
-  async simulateExecution(example: string, implementation: string): Promise<SimulationResult> {
+  async simulateExecution(
+    example: string,
+    implementation: string,
+  ): Promise<SimulationResult> {
     const prompt = `You are a code execution simulator. Given a code example and its implementation, predict the execution result.
 
 **Example Usage:**
@@ -252,34 +270,40 @@ Consider:
 
     try {
       const response = await this.complete(prompt);
-      
+
       // Extract JSON from response
       let jsonStr = response.trim();
-      if (jsonStr.startsWith('```json')) {
-        jsonStr = jsonStr.replace(/```json\n?/g, '').replace(/```\n?$/g, '');
-      } else if (jsonStr.startsWith('```')) {
-        jsonStr = jsonStr.replace(/```\n?/g, '');
+      if (jsonStr.startsWith("```json")) {
+        jsonStr = jsonStr.replace(/```json\n?/g, "").replace(/```\n?$/g, "");
+      } else if (jsonStr.startsWith("```")) {
+        jsonStr = jsonStr.replace(/```\n?/g, "");
       }
 
       const result = JSON.parse(jsonStr) as SimulationResult;
-      
+
       // Validate and normalize
       return {
         success: Boolean(result.success),
-        expectedOutput: result.expectedOutput || '',
-        actualOutput: result.actualOutput || '',
+        expectedOutput: result.expectedOutput || "",
+        actualOutput: result.actualOutput || "",
         matches: Boolean(result.matches),
-        differences: Array.isArray(result.differences) ? result.differences : [],
+        differences: Array.isArray(result.differences)
+          ? result.differences
+          : [],
         confidence: this.normalizeConfidence(result.confidence),
       };
     } catch (error) {
       // Return low-confidence failure result on error
       return {
         success: false,
-        expectedOutput: 'Unable to determine',
-        actualOutput: 'Unable to determine',
+        expectedOutput: "Unable to determine",
+        actualOutput: "Unable to determine",
         matches: false,
-        differences: [`Simulation failed: ${error instanceof Error ? error.message : 'Unknown error'}`],
+        differences: [
+          `Simulation failed: ${
+            error instanceof Error ? error.message : "Unknown error"
+          }`,
+        ],
         confidence: 0,
       };
     }
@@ -289,7 +313,7 @@ Consider:
    * Normalize confidence score to 0-1 range
    */
   private normalizeConfidence(confidence: unknown): number {
-    if (typeof confidence === 'number') {
+    if (typeof confidence === "number") {
       return Math.max(0, Math.min(1, confidence));
     }
     return 0.5; // Default confidence for invalid values
@@ -301,10 +325,13 @@ Consider:
  */
 export function createLLMClient(config?: Partial<LLMConfig>): LLMClient | null {
   // Check environment variables for configuration
-  const provider = (config?.provider || process.env.DOCUMCP_LLM_PROVIDER || 'deepseek') as LLMConfig['provider'];
+  const provider = (config?.provider ||
+    process.env.DOCUMCP_LLM_PROVIDER ||
+    "deepseek") as LLMConfig["provider"];
   const apiKey = config?.apiKey || process.env.DOCUMCP_LLM_API_KEY;
   const baseUrl = config?.baseUrl || process.env.DOCUMCP_LLM_BASE_URL;
-  const model = config?.model || process.env.DOCUMCP_LLM_MODEL || 'deepseek-chat';
+  const model =
+    config?.model || process.env.DOCUMCP_LLM_MODEL || "deepseek-chat";
 
   // If no API key, return null to indicate LLM is unavailable
   if (!apiKey) {
@@ -321,10 +348,10 @@ export function createLLMClient(config?: Partial<LLMConfig>): LLMClient | null {
   };
 
   switch (provider) {
-    case 'deepseek':
-    case 'openai':
-    case 'anthropic':
-    case 'ollama':
+    case "deepseek":
+    case "openai":
+    case "anthropic":
+    case "ollama":
       // For now, all use OpenAI-compatible API (DeepSeekClient)
       // Future: implement provider-specific clients
       return new DeepSeekClient(fullConfig);

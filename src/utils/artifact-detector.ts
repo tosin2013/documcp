@@ -11,7 +11,12 @@ import { globby } from "globby";
 
 export interface AgentArtifact {
   path: string;
-  type: "file" | "directory" | "inline-comment" | "block-comment" | "code-block";
+  type:
+    | "file"
+    | "directory"
+    | "inline-comment"
+    | "block-comment"
+    | "code-block";
   category: "planning" | "debug" | "temporary" | "state" | "documentation";
   confidence: number; // 0-1 how sure we are this is agent-generated
   recommendation: "delete" | "review" | "keep" | "archive";
@@ -261,10 +266,7 @@ export class ArtifactDetector {
         const relativePath = path.relative(this.projectPath, filePath);
 
         // Check for inline markers
-        const inlineArtifacts = this.detectInlineMarkers(
-          content,
-          relativePath,
-        );
+        const inlineArtifacts = this.detectInlineMarkers(content, relativePath);
         artifacts.push(...inlineArtifacts);
 
         // Check for block patterns
@@ -387,9 +389,7 @@ export class ArtifactDetector {
   /**
    * Categorize a marker
    */
-  private categorizeMarker(
-    marker: string,
-  ): AgentArtifact["category"] {
+  private categorizeMarker(marker: string): AgentArtifact["category"] {
     if (marker.includes("TODO") || marker.includes("FIXME")) {
       return "planning";
     }
