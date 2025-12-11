@@ -45,6 +45,11 @@ import { handleGenerateContextualContent } from "./tools/generate-contextual-con
 import { trackDocumentationFreshness } from "./tools/track-documentation-freshness.js";
 import { validateDocumentationFreshness } from "./tools/validate-documentation-freshness.js";
 import {
+  changeWatcherTool,
+  changeWatcherSchema,
+  handleChangeWatcher,
+} from "./tools/change-watcher.js";
+import {
   manageSitemap,
   ManageSitemapInputSchema,
 } from "./tools/manage-sitemap.js";
@@ -998,6 +1003,11 @@ const TOOLS = [
         .default(true)
         .describe("Create a snapshot before making changes (recommended)"),
     }),
+  },
+  {
+    name: changeWatcherTool.name,
+    description: changeWatcherTool.description,
+    inputSchema: changeWatcherSchema,
   },
   {
     name: "generate_contextual_content",
@@ -2837,6 +2847,83 @@ server.setRequestHandler(CallToolRequestSchema, async (request, extra) => {
 
         const result = await handleSyncCodeToDocs(args, extra);
         return wrapToolResult(result, "sync_code_to_docs");
+      }
+
+      case "change_watcher": {
+        const projectPath = (args as any)?.projectPath;
+        const docsPath = (args as any)?.docsPath;
+        const watchPaths = (args as any)?.watchPaths as string[] | undefined;
+
+        const checkPath = (p?: string) => {
+          if (p && !isPathAllowed(p, allowedRoots)) {
+            return getPermissionDeniedMessage(p, allowedRoots);
+          }
+          return null;
+        };
+
+        const projectError = checkPath(projectPath);
+        if (projectError) {
+          return formatMCPResponse({
+            success: false,
+            error: {
+              code: "PERMISSION_DENIED",
+              message: projectError,
+              resolution:
+                "Request access to this directory by starting the server with --root argument.",
+            },
+            metadata: {
+              toolVersion: packageJson.version,
+              executionTime: 0,
+              timestamp: new Date().toISOString(),
+            },
+          });
+        }
+
+        const docsError = checkPath(docsPath);
+        if (docsError) {
+          return formatMCPResponse({
+            success: false,
+            error: {
+              code: "PERMISSION_DENIED",
+              message: docsError,
+              resolution:
+                "Request access to this directory by starting the server with --root argument.",
+            },
+            metadata: {
+              toolVersion: packageJson.version,
+              executionTime: 0,
+              timestamp: new Date().toISOString(),
+            },
+          });
+        }
+
+        if (watchPaths && watchPaths.length > 0) {
+          for (const wp of watchPaths) {
+            const candidate =
+              projectPath && !path.isAbsolute(wp)
+                ? path.join(projectPath, wp)
+                : wp;
+            if (!isPathAllowed(candidate, allowedRoots)) {
+              return formatMCPResponse({
+                success: false,
+                error: {
+                  code: "PERMISSION_DENIED",
+                  message: getPermissionDeniedMessage(candidate, allowedRoots),
+                  resolution:
+                    "Request access to these paths by starting the server with --root argument.",
+                },
+                metadata: {
+                  toolVersion: packageJson.version,
+                  executionTime: 0,
+                  timestamp: new Date().toISOString(),
+                },
+              });
+            }
+          }
+        }
+
+        const result = await handleChangeWatcher(args, extra);
+        return wrapToolResult(result, "change_watcher");
       }
 
       case "generate_contextual_content": {
