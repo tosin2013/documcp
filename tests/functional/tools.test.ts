@@ -8,6 +8,8 @@ import { generateConfig } from "../../src/tools/generate-config";
 import { setupStructure } from "../../src/tools/setup-structure";
 import { deployPages } from "../../src/tools/deploy-pages";
 import { verifyDeployment } from "../../src/tools/verify-deployment";
+import { resetKnowledgeGraph } from "../../src/memory/kg-integration";
+import { clearPreferenceManagerCache } from "../../src/memory/user-preferences";
 
 describe("Functional Testing - MCP Tools", () => {
   let tempDir: string;
@@ -20,10 +22,20 @@ describe("Functional Testing - MCP Tools", () => {
     large: string;
     empty: string;
   };
+  let originalStorageDir: string | undefined;
 
   beforeAll(async () => {
+    // Reset knowledge graph state to ensure clean test environment
+    resetKnowledgeGraph();
+    clearPreferenceManagerCache();
+
     tempDir = path.join(os.tmpdir(), "documcp-functional-tests");
     await fs.mkdir(tempDir, { recursive: true });
+
+    // Use isolated storage directory for tests to avoid conflicts
+    originalStorageDir = process.env.DOCUMCP_STORAGE_DIR;
+    process.env.DOCUMCP_STORAGE_DIR = path.join(tempDir, ".documcp", "memory");
+    await fs.mkdir(process.env.DOCUMCP_STORAGE_DIR, { recursive: true });
 
     testRepos = {
       javascript: await createJavaScriptRepo(),
@@ -37,6 +49,17 @@ describe("Functional Testing - MCP Tools", () => {
   });
 
   afterAll(async () => {
+    // Reset knowledge graph and preference managers to avoid state leakage
+    resetKnowledgeGraph();
+    clearPreferenceManagerCache();
+
+    // Restore original storage directory
+    if (originalStorageDir !== undefined) {
+      process.env.DOCUMCP_STORAGE_DIR = originalStorageDir;
+    } else {
+      delete process.env.DOCUMCP_STORAGE_DIR;
+    }
+
     try {
       await fs.rm(tempDir, { recursive: true, force: true });
     } catch (error) {

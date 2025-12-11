@@ -139,18 +139,28 @@ export class KGStorage {
       // Write to temporary file first (atomic write)
       const tempFile = `${this.entityFilePath}.tmp`;
 
-      // Write marker
-      await fs.writeFile(tempFile, ENTITY_FILE_MARKER + "\n", "utf-8");
-
-      // Append entities as JSONL
+      // Build content in memory first to minimize time between write and rename
+      const lines = [ENTITY_FILE_MARKER];
       for (const entity of entities) {
-        const line = JSON.stringify(entity) + "\n";
-        await fs.appendFile(tempFile, line, "utf-8");
+        lines.push(JSON.stringify(entity));
       }
+      const content = lines.join("\n") + "\n";
+
+      // Write all content at once
+      await fs.writeFile(tempFile, content, "utf-8");
+
+      // Ensure directory still exists before rename (handles race conditions)
+      await fs.mkdir(dirname(this.entityFilePath), { recursive: true });
 
       // Atomic rename
       await fs.rename(tempFile, this.entityFilePath);
     } catch (error) {
+      // Clean up temp file on error
+      try {
+        await fs.unlink(`${this.entityFilePath}.tmp`).catch(() => {});
+      } catch {
+        // Ignore cleanup errors
+      }
       throw new Error(
         `Failed to save entities: ${
           error instanceof Error ? error.message : String(error)
@@ -218,18 +228,28 @@ export class KGStorage {
       // Write to temporary file first (atomic write)
       const tempFile = `${this.relationshipFilePath}.tmp`;
 
-      // Write marker
-      await fs.writeFile(tempFile, RELATIONSHIP_FILE_MARKER + "\n", "utf-8");
-
-      // Append relationships as JSONL
+      // Build content in memory first to minimize time between write and rename
+      const lines = [RELATIONSHIP_FILE_MARKER];
       for (const relationship of relationships) {
-        const line = JSON.stringify(relationship) + "\n";
-        await fs.appendFile(tempFile, line, "utf-8");
+        lines.push(JSON.stringify(relationship));
       }
+      const content = lines.join("\n") + "\n";
+
+      // Write all content at once
+      await fs.writeFile(tempFile, content, "utf-8");
+
+      // Ensure directory still exists before rename (handles race conditions)
+      await fs.mkdir(dirname(this.relationshipFilePath), { recursive: true });
 
       // Atomic rename
       await fs.rename(tempFile, this.relationshipFilePath);
     } catch (error) {
+      // Clean up temp file on error
+      try {
+        await fs.unlink(`${this.relationshipFilePath}.tmp`).catch(() => {});
+      } catch {
+        // Ignore cleanup errors
+      }
       throw new Error(
         `Failed to save relationships: ${
           error instanceof Error ? error.message : String(error)
