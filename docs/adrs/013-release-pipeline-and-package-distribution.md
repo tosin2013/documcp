@@ -342,8 +342,8 @@ describe("Release Pipeline", () => {
 
 ### Developer Experience
 
-- **Release Time**: <10 minutes from tag to publication
-- **Error Rate**: <1% release failures
+- **Release Time**: Under 10 minutes from tag to publication
+- **Error Rate**: Under 1% release failures
 - **Documentation Quality**: Comprehensive release notes for all releases
 
 ## Future Enhancements

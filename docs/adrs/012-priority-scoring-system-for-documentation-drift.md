@@ -32,12 +32,14 @@ As documentation drift detection scales to larger codebases, we need a systemati
 - **Low-Impact Issues**: Rarely-used code paths with minor changes or comprehensive existing documentation
 
 **Current State**: The drift detection system (ADR-009) identifies drift issues but lacks prioritization, leading to:
+
 - Developer fatigue from too many notifications
 - Critical issues being missed among low-priority noise
 - Inefficient documentation maintenance workflows
 - Difficulty focusing on high-value documentation updates
 
 **Strategic Importance**: Effective prioritization directly impacts:
+
 - Developer productivity and focus
 - Documentation quality and completeness
 - User experience with up-to-date documentation
@@ -149,10 +151,7 @@ class PriorityScorer {
     };
   }
 
-  private weightedSum(
-    factors: FactorScores,
-    weights: PriorityWeights,
-  ): number {
+  private weightedSum(factors: FactorScores, weights: PriorityWeights): number {
     return (
       factors.codeComplexity * weights.codeComplexity +
       factors.usageFrequency * weights.usageFrequency +
@@ -304,8 +303,8 @@ describe("PriorityScorer", () => {
 
 ### System Performance
 
-- **Scoring Performance**: <100ms per drift issue scored
-- **Metadata Collection**: <5% overhead on analysis performance
+- **Scoring Performance**: Under 100ms per drift issue scored
+- **Metadata Collection**: Under 5% overhead on analysis performance
 - **Accuracy**: Priority scores correlate with developer-assigned priorities
 
 ## Future Enhancements
