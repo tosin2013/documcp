@@ -1,4 +1,4 @@
-name: Deploy Docusaurus to GitHub Pages
+name: Deploy Jekyll to GitHub Pages
 
 on:
   push:
@@ -17,40 +17,29 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: docs
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
         with:
-          node-version: "20.x"
-          cache: "npm"
+          ruby-version: '3.1'
+          bundler-cache: true
+          working-directory: docs
 
-      - name: Install root dependencies
-        run: npm ci
-
-      - name: Generate API documentation
-        run: npm run docs:generate
-
-      - name: Remove problematic media directory
-        run: rm -rf docs/api/media
-
-      - name: Install Docusaurus dependencies
-        run: cd docs && npm ci
-
-      - name: Build Docusaurus site
-        run: cd docs && npm run build
+      - name: Build with Jekyll
+        run: npm run build
         env:
-          NODE_ENV: production
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
+          JEKYLL_ENV: production
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v2
         with:
-          path: ./docs/build
+          path: docs/./_site
 
   deploy:
     environment:
@@ -61,4 +50,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v3
