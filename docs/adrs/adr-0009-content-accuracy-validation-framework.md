@@ -1,7 +1,7 @@
 ---
 id: 009-content-accuracy-validation-framework
 title: "ADR-009: Content Accuracy Validation Framework"
-sidebar_label: "ADR-9: Content Accuracy Validation Framework"
+sidebar_label: "ADR-009: Content Accuracy Validation Framework"
 sidebar_position: 9
 documcp:
   last_updated: "2025-01-14T00:00:00.000Z"
@@ -175,16 +175,13 @@ interface RealityCheckValidator {
 
 /**
  * LLM-Enhanced Semantic Analysis (Phase 3 Implementation)
- * 
+ *
  * Provides semantic understanding of code changes using LLM integration
  * with fallback to AST-based analysis when LLM is unavailable.
  */
 interface LLMSemanticAnalyzer {
   // Analyze semantic impact of code changes using LLM
-  analyzeCodeChange(
-    before: string,
-    after: string,
-  ): Promise<SemanticAnalysis>;
+  analyzeCodeChange(before: string, after: string): Promise<SemanticAnalysis>;
 
   // Simulate execution of code examples to validate correctness
   simulateExecution(
@@ -213,14 +210,14 @@ interface SemanticAnalysisOptions {
   confidenceThreshold?: number;
   includeASTFallback?: boolean;
   llmConfig?: {
-    provider?: 'deepseek' | 'openai' | 'anthropic' | 'ollama';
+    provider?: "deepseek" | "openai" | "anthropic" | "ollama";
     apiKey?: string;
     model?: string;
   };
 }
 
 interface EnhancedSemanticAnalysis extends SemanticAnalysis {
-  analysisMode: 'llm' | 'ast' | 'hybrid';
+  analysisMode: "llm" | "ast" | "hybrid";
   astDiffs?: CodeDiff[];
   llmAvailable: boolean;
   timestamp: string;
@@ -614,8 +611,8 @@ describe("ContentAccuracyFramework", () => {
 
 ## References
 
-- [ADR-002: Multi-Layered Repository Analysis Engine Design](002-repository-analysis-engine.md)
-- [ADR-008: Intelligent Content Population Engine](008-intelligent-content-population-engine.md)
+- [ADR-002: Multi-Layered Repository Analysis Engine Design](adr-0002-repository-analysis-engine.md)
+- [ADR-008: Intelligent Content Population Engine](adr-0008-intelligent-content-population-engine.md)
 - [Software Verification and Validation](https://en.wikipedia.org/wiki/Software_verification_and_validation)
 - [Web Content Accessibility Guidelines](https://www.w3.org/WAI/WCAG21/quickref/)
 - [AI Documentation Best Practices](https://developers.google.com/machine-learning/guides/rules-of-ml)

@@ -195,9 +195,11 @@ export async function createDocumentationEntities(
 
   // Process ADRs
   for (const adr of extractedContent.adrs) {
+    // Format ADR filename: adr-0001-title.md (4-digit zero-padded number)
+    const adrNumber = adr.number.padStart(4, "0");
     const docNode = createDocSectionEntity(
       projectId,
-      `docs/adrs/${adr.number}-${adr.title}.md`,
+      `docs/adrs/adr-${adrNumber}-${adr.title}.md`,
       adr.title,
       adr.content,
       "explanation",

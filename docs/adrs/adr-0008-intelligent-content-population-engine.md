@@ -1,7 +1,7 @@
 ---
 id: 008-intelligent-content-population-engine
 title: "ADR-008: Intelligent Content Population Engine"
-sidebar_label: "ADR-8: Intelligent Content Population Engine"
+sidebar_label: "ADR-008: Intelligent Content Population Engine"
 sidebar_position: 8
 documcp:
   last_updated: "2025-11-20T00:46:21.942Z"
@@ -1576,9 +1576,9 @@ describe("ContentPopulationEngine", () => {
 
 ## References
 
-- [ADR-002: Multi-Layered Repository Analysis Engine Design](002-repository-analysis-engine.md)
-- [ADR-004: Diataxis Framework Integration](004-diataxis-framework-integration.md)
-- [ADR-006: MCP Tools API Design](006-mcp-tools-api-design.md)
+- [ADR-002: Multi-Layered Repository Analysis Engine Design](adr-0002-repository-analysis-engine.md)
+- [ADR-004: Diataxis Framework Integration](adr-0004-diataxis-framework-integration.md)
+- [ADR-006: MCP Tools API Design](adr-0006-mcp-tools-api-design.md)
 - [Diataxis Framework Documentation](https://diataxis.fr/)
 - [Technical Writing Best Practices](https://developers.google.com/tech-writing)
 - [Documentation as Code Principles](https://www.writethedocs.org/guide/docs-as-code/)

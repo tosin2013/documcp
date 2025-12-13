@@ -251,7 +251,7 @@ When used with Code Mode clients, documcp workflows achieve:
 - All tests passing (91.67% coverage)
 - No architectural changes required
 
-For detailed analysis, see [ADR-011: CE-MCP Compatibility](011-ce-mcp-compatibility.md).
+For detailed analysis, see [ADR-011: CE-MCP Compatibility](adr-0011-ce-mcp-compatibility.md).
 
 ## Future Considerations
 

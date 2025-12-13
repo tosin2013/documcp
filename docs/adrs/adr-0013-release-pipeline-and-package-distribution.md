@@ -1,14 +1,16 @@
 ---
 id: 013-release-pipeline-and-package-distribution
 title: "ADR-013: Release Pipeline and Package Distribution Architecture"
-sidebar_label: "ADR-13: Release Pipeline Architecture"
+sidebar_label: "ADR-013: Release Pipeline Architecture"
 sidebar_position: 13
 documcp:
   last_updated: "2025-01-14T00:00:00.000Z"
-  last_validated: "2025-01-14T00:00:00.000Z"
+  last_validated: "2025-12-12T00:00:00.000Z"
   auto_updated: false
   update_frequency: monthly
   validated_against_commit: dbef13f
+status: accepted
+date: "2025-01-14"
 ---
 
 # ADR-013: Release Pipeline and Package Distribution Architecture
@@ -397,7 +399,7 @@ describe("Release Pipeline", () => {
 
 ### Implementation Files
 
-- `.github/workflows/release.yml` - Enhanced release workflow
+- `.github/workflows/release.yml` - Source of implementation; it wires the `test` job (coverage gate, commitlint validation, performance and build checks) with the `release` job (conventional commits validation, npm publication + retry, publication verification, GitHub Release + changelog, and package installation smoke tests).
 - `commitlint.config.js` - Already configured (no changes needed)
 - `.versionrc.json` - Already configured (no changes needed)
 - `.husky/commit-msg` - Already configured (no changes needed)
@@ -411,8 +413,8 @@ describe("Release Pipeline", () => {
 
 ## References
 
-- [ADR-001: MCP Server Architecture](001-mcp-server-architecture.md)
-- [ADR-005: GitHub Pages Deployment Automation](005-github-pages-deployment-automation.md)
+- [ADR-001: MCP Server Architecture](adr-0001-mcp-server-architecture.md)
+- [ADR-005: GitHub Pages Deployment Automation](adr-0005-github-pages-deployment-automation.md)
 - GitHub Issue: #1 - Fix npm Package Publishing (✅ Fixed)
 - GitHub Issue: #2 - Implement Automated Changelog Generation (✅ Implemented)
 - GitHub Issue: #3 - Improve Test Coverage to 85% (✅ Exceeded - 91.65%)

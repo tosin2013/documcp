@@ -1,7 +1,7 @@
 ---
 id: 004-diataxis-framework-integration
 title: "ADR-004: Diataxis Framework Integration"
-sidebar_label: "ADR-4: Diataxis Framework Integration"
+sidebar_label: "ADR-004: Diataxis Framework Integration"
 sidebar_position: 4
 documcp:
   last_updated: "2025-01-14T00:00:00.000Z"
@@ -144,6 +144,7 @@ interface CodeExample {
 ```
 
 **Benefits**:
+
 - Context-aware validation based on Diataxis category
 - Improved code example organization and discovery
 - Better drift detection for category-specific examples
@@ -417,6 +418,28 @@ function validateDiataxisCompliance(
 - **Content Management**: Tools for maintaining Diataxis compliance over time
 - **Translation Support**: Multi-language implementations of Diataxis structure
 - **Accessibility Features**: Ensure Diataxis implementation supports accessibility standards
+
+## Implementation Status
+
+**Status**: ✅ Implemented (2025-12-12)
+
+**Implementation Files**:
+
+- `src/tools/populate-content.ts` - Diataxis content population engine
+- `src/prompts/technical-writer-prompts.ts` - Diataxis-aware prompt generation
+- `src/utils/drift-detector.ts` - Diataxis type tracking in code examples
+- `docs/tutorials/`, `docs/how-to/`, `docs/reference/`, `docs/explanation/` - Diataxis structure in use
+
+**Key Features Implemented**:
+
+- ✅ Automated Diataxis structure generation
+- ✅ Content type templates (tutorials, how-to guides, reference, explanation)
+- ✅ Content planning intelligence based on project analysis
+- ✅ SSG-specific Diataxis adaptations
+- ✅ Diataxis type tracking in code examples (Phase 3 enhancement)
+- ✅ Navigation generation aligned with Diataxis principles
+
+**Validation**: The framework is actively used in the documentation structure and content generation tools. Code examples include Diataxis type information for context-aware validation.
 
 ## References
 

@@ -1,7 +1,7 @@
 ---
 id: 002-repository-analysis-engine
 title: "ADR-002: Repository Analysis Engine Design"
-sidebar_label: "ADR-2: Repository Analysis Engine Design"
+sidebar_label: "ADR-002: Repository Analysis Engine Design"
 sidebar_position: 2
 documcp:
   last_updated: "2025-01-14T00:00:00.000Z"
@@ -232,6 +232,27 @@ function calculateComplexityScore(factors: ComplexityFactors): ComplexityScore {
 - **Content Scanning**: No sensitive data extraction or storage
 - **Resource Limits**: Prevent resource exhaustion attacks
 - **Input Validation**: Sanitize all repository paths and content
+
+## Implementation Status
+
+**Status**: ✅ Implemented (2025-12-12)
+
+**Implementation Files**:
+
+- `src/tools/analyze-repository.ts` - Main repository analysis tool
+- `src/utils/code-scanner.ts` - Code scanning and analysis utilities
+- `src/memory/knowledge-graph.ts` - Knowledge graph integration for storing analysis results
+
+**Key Features Implemented**:
+
+- ✅ Multi-layered analysis (file system, language ecosystem, content, metadata, complexity)
+- ✅ Dependency detection and analysis
+- ✅ Documentation quality assessment
+- ✅ Project complexity evaluation
+- ✅ Knowledge graph integration for historical tracking
+- ✅ Progress reporting and context-aware analysis
+
+**Validation**: The implementation has been validated against the architectural design and is actively used by other tools (SSG recommendation, content population, drift detection).
 
 ## References
 

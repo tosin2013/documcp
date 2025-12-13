@@ -825,7 +825,7 @@ When documcp tools are orchestrated via Code Mode clients:
 - **Context Preservation**: Intermediate results stay in sandbox, not LLM context
 - **Cost Reduction**: ~75x savings on complex workflows
 
-For detailed analysis, see [ADR-011: CE-MCP Compatibility](011-ce-mcp-compatibility.md).
+For detailed analysis, see [ADR-011: CE-MCP Compatibility](adr-0011-ce-mcp-compatibility.md).
 
 ## Future Enhancements
 

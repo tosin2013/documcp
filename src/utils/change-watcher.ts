@@ -7,7 +7,9 @@ import {
   DriftDetector,
   DriftSnapshot,
   PrioritizedDriftResult,
+  UsageMetadata,
 } from "./drift-detector.js";
+import { UsageMetadataCollector } from "./usage-metadata.js";
 
 export type ChangeTrigger =
   | "filesystem"
@@ -60,6 +62,7 @@ interface DriftDetectorLike {
   getPrioritizedDriftResults(
     oldSnapshot: DriftSnapshot,
     newSnapshot: DriftSnapshot,
+    usageMetadata?: UsageMetadata,
   ): Promise<PrioritizedDriftResult[]>;
 }
 
@@ -94,6 +97,7 @@ export class ChangeWatcher {
   private readonly options: NormalizedChangeWatcherOptions;
   private readonly deps: ChangeWatcherDeps;
   private detector: DriftDetectorLike | null = null;
+  private usageCollector: UsageMetadataCollector;
   private latestSnapshot: DriftSnapshot | null = null;
   private isRunningDetection = false;
   private stopped = false;
@@ -118,6 +122,7 @@ export class ChangeWatcher {
     };
     this.options = normalized;
     this.deps = deps;
+    this.usageCollector = new UsageMetadataCollector();
   }
 
   async start(): Promise<void> {
@@ -416,9 +421,15 @@ fi
         this.options.projectPath,
         this.options.docsPath,
       );
+      // Use async collection with call graph analysis when available
+      // Falls back to sync collection if analyzer not initialized
+      const usageMetadata = await this.usageCollector
+        .collect(currentSnapshot)
+        .catch(() => this.usageCollector.collectSync(currentSnapshot));
       const driftResults = await this.detector.getPrioritizedDriftResults(
         this.latestSnapshot,
         currentSnapshot,
+        usageMetadata,
       );
       this.latestSnapshot = currentSnapshot;
 

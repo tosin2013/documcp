@@ -1,7 +1,7 @@
 ---
 id: 005-github-pages-deployment-automation
 title: "ADR-005: GitHub Pages Deployment Automation"
-sidebar_label: "ADR-5: GitHub Pages Deployment Automation"
+sidebar_label: "ADR-005: GitHub Pages Deployment Automation"
 sidebar_position: 5
 documcp:
   last_updated: "2025-01-14T00:00:00.000Z"
@@ -655,7 +655,7 @@ describe("DeploymentWorkflows", () => {
 
 ## References
 
-- [ADR-013: Release Pipeline and Package Distribution Architecture](013-release-pipeline-and-package-distribution.md)
+- [ADR-013: Release Pipeline and Package Distribution Architecture](adr-0013-release-pipeline-and-package-distribution.md)
 - [GitHub Pages Documentation](https://docs.github.com/en/pages)
 - [GitHub Actions Best Practices](https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions)
 - [Static Site Deployment Strategies](https://jamstack.org/best-practices/)

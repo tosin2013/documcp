@@ -139,7 +139,7 @@
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://tosin2013.github.io/documcp/adrs/006-mcp-tools-api-design.html</loc>
+    <loc>https://tosin2013.github.io/documcp/adrs/adr-0006-mcp-tools-api-design.html</loc>
     <lastmod>2025-10-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -223,55 +223,73 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://tosin2013.github.io/documcp/adrs/001-mcp-server-architecture.html</loc>
+    <loc>https://tosin2013.github.io/documcp/adrs/adr-0001-mcp-server-architecture.html</loc>
     <lastmod>2025-10-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://tosin2013.github.io/documcp/adrs/002-repository-analysis-engine.html</loc>
+    <loc>https://tosin2013.github.io/documcp/adrs/adr-0002-repository-analysis-engine.html</loc>
     <lastmod>2025-10-02</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://tosin2013.github.io/documcp/adrs/003-static-site-generator-recommendation-engine.html</loc>
+    <loc>https://tosin2013.github.io/documcp/adrs/adr-0003-static-site-generator-recommendation-engine.html</loc>
     <lastmod>2025-10-02</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://tosin2013.github.io/documcp/adrs/004-diataxis-framework-integration.html</loc>
+    <loc>https://tosin2013.github.io/documcp/adrs/adr-0004-diataxis-framework-integration.html</loc>
     <lastmod>2025-10-02</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://tosin2013.github.io/documcp/adrs/005-github-pages-deployment-automation.html</loc>
+    <loc>https://tosin2013.github.io/documcp/adrs/adr-0005-github-pages-deployment-automation.html</loc>
     <lastmod>2025-10-02</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://tosin2013.github.io/documcp/adrs/007-mcp-prompts-and-resources-integration.html</loc>
+    <loc>https://tosin2013.github.io/documcp/adrs/adr-0007-mcp-prompts-and-resources-integration.html</loc>
     <lastmod>2025-10-02</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://tosin2013.github.io/documcp/adrs/008-intelligent-content-population-engine.html</loc>
+    <loc>https://tosin2013.github.io/documcp/adrs/adr-0008-intelligent-content-population-engine.html</loc>
     <lastmod>2025-10-02</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://tosin2013.github.io/documcp/adrs/009-content-accuracy-validation-framework.html</loc>
+    <loc>https://tosin2013.github.io/documcp/adrs/adr-0009-content-accuracy-validation-framework.html</loc>
     <lastmod>2025-10-02</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://tosin2013.github.io/documcp/adrs/010-mcp-resource-pattern-redesign.html</loc>
+    <loc>https://tosin2013.github.io/documcp/adrs/adr-0010-mcp-resource-pattern-redesign.html</loc>
+    <lastmod>2025-10-09</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://tosin2013.github.io/documcp/adrs/adr-0011-ce-mcp-compatibility.html</loc>
+    <lastmod>2025-10-09</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://tosin2013.github.io/documcp/adrs/adr-0012-priority-scoring-system-for-documentation-drift.html</loc>
+    <lastmod>2025-10-09</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://tosin2013.github.io/documcp/adrs/adr-0013-release-pipeline-and-package-distribution.html</loc>
     <lastmod>2025-10-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>

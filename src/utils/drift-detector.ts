@@ -156,6 +156,9 @@ export class DriftDetector {
   private currentSnapshot: DriftSnapshot | null = null;
   private previousSnapshot: DriftSnapshot | null = null;
   private customWeights?: PriorityWeights;
+  private userFeedbackIntegration?: (
+    result: DriftDetectionResult,
+  ) => Promise<number> | number;
 
   constructor(projectPath: string, snapshotDir?: string) {
     this.analyzer = new ASTAnalyzer();
@@ -1557,13 +1560,92 @@ export class DriftDetector {
   /**
    * Calculate user feedback score (0-100)
    * More reported issues = higher priority
-   * Note: This is a placeholder - actual implementation would integrate with issue tracking
+   * Integrates with issue tracking systems when configured
    */
-  private calculateUserFeedbackScore(_result: DriftDetectionResult): number {
-    // Placeholder implementation
-    // In a real system, this would query issue tracking systems
-    // for documentation-related issues on the affected files
-    return 0;
+  private calculateUserFeedbackScore(result: DriftDetectionResult): number {
+    // If user feedback integration is configured, use it
+    if (this.userFeedbackIntegration) {
+      const score = this.userFeedbackIntegration(result);
+      // Handle both sync and async returns
+      if (score instanceof Promise) {
+        // For async, return 0 immediately (caller should use async version)
+        return 0;
+      }
+      return score;
+    }
+    return 0; // Default: no feedback integration
+  }
+
+  /**
+   * Set user feedback integration for calculating feedback scores
+   * This allows external configuration of issue tracker integration
+   */
+  setUserFeedbackIntegration(
+    integration: (result: DriftDetectionResult) => Promise<number> | number,
+  ): void {
+    this.userFeedbackIntegration = integration;
+  }
+
+  /**
+   * Calculate priority score with async user feedback support
+   */
+  async calculatePriorityScoreAsync(
+    result: DriftDetectionResult,
+    snapshot: DriftSnapshot,
+    usageMetadata?: UsageMetadata,
+  ): Promise<DriftPriorityScore> {
+    const weights = this.getWeights();
+
+    // Calculate individual factors
+    const codeComplexity = this.calculateCodeComplexityScore(result, snapshot);
+    const usageFrequency = this.calculateUsageFrequencyScore(
+      result,
+      snapshot,
+      usageMetadata,
+    );
+    const changeMagnitude = this.calculateChangeMagnitudeScore(result);
+    const documentationCoverage = this.calculateDocumentationCoverageScore(
+      result,
+      snapshot,
+    );
+    const staleness = this.calculateStalenessScore(result, snapshot);
+
+    // Get user feedback asynchronously if integration is configured
+    let userFeedback = 0;
+    if (this.userFeedbackIntegration) {
+      const feedbackScore = this.userFeedbackIntegration(result);
+      userFeedback =
+        feedbackScore instanceof Promise ? await feedbackScore : feedbackScore;
+    }
+
+    // Calculate weighted overall score
+    const overall =
+      codeComplexity * weights.codeComplexity +
+      usageFrequency * weights.usageFrequency +
+      changeMagnitude * weights.changeMagnitude +
+      documentationCoverage * weights.documentationCoverage +
+      staleness * weights.staleness +
+      userFeedback * weights.userFeedback;
+
+    const recommendation = this.determineRecommendation(overall);
+    const suggestedAction = this.generateSuggestedAction(
+      recommendation,
+      result,
+    );
+
+    return {
+      overall: Math.round(overall),
+      factors: {
+        codeComplexity: Math.round(codeComplexity),
+        usageFrequency: Math.round(usageFrequency),
+        changeMagnitude: Math.round(changeMagnitude),
+        documentationCoverage: Math.round(documentationCoverage),
+        staleness: Math.round(staleness),
+        userFeedback: Math.round(userFeedback),
+      },
+      recommendation,
+      suggestedAction,
+    };
   }
 
   /**
@@ -1600,7 +1682,7 @@ export class DriftDetector {
   }
 
   /**
-   * Detect drift with priority scoring
+   * Detect drift with priority scoring (synchronous user feedback)
    */
   async detectDriftWithPriority(
     oldSnapshot: DriftSnapshot,
@@ -1620,6 +1702,31 @@ export class DriftDetector {
   }
 
   /**
+   * Detect drift with priority scoring (async user feedback support)
+   */
+  async detectDriftWithPriorityAsync(
+    oldSnapshot: DriftSnapshot,
+    newSnapshot: DriftSnapshot,
+    usageMetadata?: UsageMetadata,
+  ): Promise<PrioritizedDriftResult[]> {
+    const results = await this.detectDrift(oldSnapshot, newSnapshot);
+
+    // Calculate priority scores with async user feedback
+    const prioritizedResults = await Promise.all(
+      results.map(async (result) => ({
+        ...result,
+        priorityScore: await this.calculatePriorityScoreAsync(
+          result,
+          newSnapshot,
+          usageMetadata,
+        ),
+      })),
+    );
+
+    return prioritizedResults;
+  }
+
+  /**
    * Get prioritized drift results sorted by priority score
    */
   async getPrioritizedDriftResults(
@@ -1627,11 +1734,20 @@ export class DriftDetector {
     newSnapshot: DriftSnapshot,
     usageMetadata?: UsageMetadata,
   ): Promise<PrioritizedDriftResult[]> {
-    const results = await this.detectDriftWithPriority(
-      oldSnapshot,
-      newSnapshot,
-      usageMetadata,
-    );
+    // Use async version if user feedback integration is configured
+    const useAsyncFeedback = this.userFeedbackIntegration !== undefined;
+
+    const results = useAsyncFeedback
+      ? await this.detectDriftWithPriorityAsync(
+          oldSnapshot,
+          newSnapshot,
+          usageMetadata,
+        )
+      : await this.detectDriftWithPriority(
+          oldSnapshot,
+          newSnapshot,
+          usageMetadata,
+        );
 
     // Sort by overall score (descending - highest priority first)
     return results.sort((a, b) => {
