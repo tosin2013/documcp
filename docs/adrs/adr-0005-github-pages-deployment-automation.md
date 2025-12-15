@@ -1,5 +1,5 @@
 ---
-id: 005-github-pages-deployment-automation
+id: adr-5-github-pages-deployment-automation
 title: "ADR-005: GitHub Pages Deployment Automation"
 sidebar_label: "ADR-005: GitHub Pages Deployment Automation"
 sidebar_position: 5

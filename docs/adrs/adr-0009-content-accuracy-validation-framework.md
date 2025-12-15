@@ -1,5 +1,5 @@
 ---
-id: 009-content-accuracy-validation-framework
+id: adr-9-content-accuracy-validation-framework
 title: "ADR-009: Content Accuracy Validation Framework"
 sidebar_label: "ADR-009: Content Accuracy Validation Framework"
 sidebar_position: 9

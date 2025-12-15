@@ -1,5 +1,5 @@
 ---
-id: 007-mcp-prompts-and-resources-integration
+id: adr-7-mcp-prompts-and-resources-integration
 title: "ADR-007: MCP Prompts and Resources Integration"
 sidebar_label: "ADR-007: MCP Prompts and Resources Integration"
 sidebar_position: 7

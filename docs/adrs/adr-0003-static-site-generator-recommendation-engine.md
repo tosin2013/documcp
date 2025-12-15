@@ -1,5 +1,5 @@
 ---
-id: 003-static-site-generator-recommendation-engine
+id: adr-3-static-site-generator-recommendation-engine
 title: "ADR-003: SSG Recommendation Engine Design"
 sidebar_label: "ADR-003: SSG Recommendation Engine Design"
 sidebar_position: 3

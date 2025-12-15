@@ -1,5 +1,5 @@
 ---
-id: 008-intelligent-content-population-engine
+id: adr-8-intelligent-content-population-engine
 title: "ADR-008: Intelligent Content Population Engine"
 sidebar_label: "ADR-008: Intelligent Content Population Engine"
 sidebar_position: 8

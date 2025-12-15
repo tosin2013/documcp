@@ -1,5 +1,5 @@
 ---
-id: 004-diataxis-framework-integration
+id: adr-4-diataxis-framework-integration
 title: "ADR-004: Diataxis Framework Integration"
 sidebar_label: "ADR-004: Diataxis Framework Integration"
 sidebar_position: 4

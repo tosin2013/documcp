@@ -1,5 +1,5 @@
 ---
-id: 002-repository-analysis-engine
+id: adr-2-repository-analysis-engine
 title: "ADR-002: Repository Analysis Engine Design"
 sidebar_label: "ADR-002: Repository Analysis Engine Design"
 sidebar_position: 2
