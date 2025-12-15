@@ -23,5 +23,8 @@ export default {
     "subject-full-stop": [2, "never", "."],
     "type-case": [2, "always", "lower-case"],
     "type-empty": [2, "never"],
+    // Relax body line length to allow detailed commit messages (default is 100)
+    "body-max-line-length": [1, "always", 200], // Warning instead of error, 200 char limit
+    "footer-leading-blank": [1, "always"], // Warning instead of error for footer formatting
   },
 };
