@@ -119,11 +119,22 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             printf "Manual release triggered with version type: %s\n" "${{ github.event.inputs.version_type }}"
 
+            # Disable husky hooks for automated standard-version commits
+            # These commits are already validated by CI pipeline
+            export HUSKY=0
+            export CI=true
+            export GITHUB_ACTIONS=true
+            # Also disable git hooks entirely for standard-version commits
+            git config core.hooksPath /dev/null || true
+
             # Run standard-version to generate changelog and bump version
             npm run "release:${{ github.event.inputs.version_type }}" || {
               echo "standard-version failed"
               exit 1
             }
+
+            # Restore git hooks path after standard-version
+            git config --unset core.hooksPath || true
 
             # Get the new version and changelog
             NEW_VERSION=$(node -p "require('./package.json').version")
