@@ -1,4 +1,5 @@
 ---
+id: adr-10-mcp-resource-pattern-redesign
 documcp:
   last_updated: "2025-11-20T00:46:21.944Z"
   last_validated: "2025-12-09T19:41:38.574Z"
