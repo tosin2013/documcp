@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+### [0.5.10](https://github.com/tosin2013/documcp/compare/v0.5.8...v0.5.10) (2025-12-15)
+
+
+### 🚀 Features
+
+* **ci:** migrate to npm trusted publishing (OIDC) ([9118f54](https://github.com/tosin2013/documcp/commit/9118f549e8194f6f56027218c35aff1f43636a48))
+
 ### [0.5.9](https://github.com/tosin2013/documcp/compare/v0.5.8...v0.5.9) (2025-12-15)
 
 
