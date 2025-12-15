@@ -59,6 +59,7 @@ jobs:
     permissions:
       contents: write
       packages: write
+      id-token: write # Required for OIDC trusted publishing
 
     steps:
       - name: Checkout code
@@ -73,14 +74,9 @@ jobs:
           cache: "npm"
           registry-url: "https://registry.npmjs.org"
 
-      - name: Verify NPM Token
-        run: |
-          if [ -z "$NODE_AUTH_TOKEN" ]; then
-            echo "Error: NODE_AUTH_TOKEN is not set"
-            echo "Please configure NPM_TOKEN in repository secrets"
-            exit 1
-          fi
-          echo "NPM token is configured"
+      - name: Update npm to latest version
+        run: npm install -g npm@latest
+        # npm 11.5.1+ required for trusted publishing (OIDC)
 
       - name: Install dependencies
         run: npm ci
@@ -233,13 +229,21 @@ jobs:
         if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         id: publish
         run: |
-          echo "Publishing to npm..."
+          echo "Publishing to npm using trusted publishing (OIDC)..."
 
-          # Verify npm authentication
-          if ! npm whoami; then
-            echo "Error: npm authentication failed"
-            echo "Please verify NPM_TOKEN secret is configured correctly"
-            exit 1
+          # Verify npm version supports trusted publishing (11.5.1+ required)
+          NPM_VERSION=$(npm --version)
+          echo "npm version: $NPM_VERSION"
+          # Simple version check: compare major.minor.patch
+          NPM_MAJOR=$(echo "$NPM_VERSION" | cut -d. -f1)
+          NPM_MINOR=$(echo "$NPM_VERSION" | cut -d. -f2)
+          NPM_PATCH=$(echo "$NPM_VERSION" | cut -d. -f3)
+
+          if [ "$NPM_MAJOR" -lt 11 ] || ([ "$NPM_MAJOR" -eq 11 ] && [ "$NPM_MINOR" -lt 5 ]) || ([ "$NPM_MAJOR" -eq 11 ] && [ "$NPM_MINOR" -eq 5 ] && [ "$NPM_PATCH" -lt 1 ]); then
+            echo "Warning: npm version $NPM_VERSION may not support trusted publishing"
+            echo "npm 11.5.1+ is required for trusted publishing (OIDC)"
+          else
+            echo "✅ npm version $NPM_VERSION supports trusted publishing"
           fi
 
           # Get package version
@@ -247,6 +251,7 @@ jobs:
           echo "Publishing version: $PACKAGE_VERSION"
 
           # Publish with retry mechanism
+          # Trusted publishing uses OIDC - no NODE_AUTH_TOKEN needed
           MAX_RETRIES=3
           RETRY_COUNT=0
           PUBLISH_SUCCESS=false
@@ -262,17 +267,21 @@ jobs:
                 sleep 5
               else
                 echo "Publication failed after $MAX_RETRIES attempts"
+                echo ""
+                echo "Troubleshooting tips:"
+                echo "1. Verify trusted publisher is configured on npmjs.com"
+                echo "2. Check that workflow filename matches exactly: release.yml"
+                echo "3. Ensure repository and organization match npmjs.com configuration"
+                echo "4. Verify id-token: write permission is set in workflow"
                 exit 1
               fi
             fi
           done
 
           if [ "$PUBLISH_SUCCESS" = true ]; then
-            echo "Successfully published to npm!"
+            echo "✅ Successfully published to npm using trusted publishing!"
             echo "package_version=$PACKAGE_VERSION" >> "$GITHUB_OUTPUT"
           fi
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Verify npm publication
         if: steps.publish.outcome == 'success'
