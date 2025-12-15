@@ -1,6 +1,3 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
 # Skip pre-commit hooks in CI environments or when HUSKY is disabled
 if [ "$CI" = "true" ] || [ "$HUSKY" = "0" ] || [ -n "$GITHUB_ACTIONS" ]; then
   exit 0
