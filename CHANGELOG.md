@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+### [0.5.6](https://github.com/tosin2013/documcp/compare/v0.5.4...v0.5.6) (2025-12-15)
+
+
+### 🐛 Bug Fixes
+
+* **ci:** fetch latest changes before release to prevent push conflicts ([d91d611](https://github.com/tosin2013/documcp/commit/d91d6118613d08b93b8a8bb920f9184d6b61747e))
+
 ### [0.5.5](https://github.com/tosin2013/documcp/compare/v0.5.4...v0.5.5) (2025-12-15)
 
 

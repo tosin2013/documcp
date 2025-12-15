@@ -1,6 +1,6 @@
 {
   "name": "documcp",
-  "version": "0.5.5",
+  "version": "0.5.6",
   "description": "Intelligent MCP server for GitHub Pages documentation deployment",
   "main": "dist/index.js",
   "type": "module",
