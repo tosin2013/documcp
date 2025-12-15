@@ -5,6 +5,61 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+### [0.5.4](https://github.com/tosin2013/documcp/compare/v0.5.3...v0.5.4) (2025-12-15)
+
+### [0.5.3](https://github.com/tosin2013/documcp/compare/v0.5.2...v0.5.3) (2025-12-15)
+
+
+### ⚠ BREAKING CHANGES
+
+* **adr:** ADR filenames changed from XXX- to adr-XXXX- format.
+All references updated, but external tools may need updates.
+
+### 📚 Documentation
+
+* add architectural changes summary ([81a5680](https://github.com/tosin2013/documcp/commit/81a5680bf411fc47b1b38e0fe915e569f869a1b2)), closes [#74](https://github.com/tosin2013/documcp/issues/74)
+* add CE-MCP compatibility analysis and update ADRs ([149c058](https://github.com/tosin2013/documcp/commit/149c05812bf947cc61909ff263060098c2b8e7e1)), closes [#69](https://github.com/tosin2013/documcp/issues/69)
+* add documentation for freshness tracking and sitemap management features ([050216a](https://github.com/tosin2013/documcp/commit/050216adf8c074d5cf30294bcf87772164788e0c))
+* **adrs:** add workflow consistency note to ADR-005 ([1d25bd0](https://github.com/tosin2013/documcp/commit/1d25bd0fe8c0877b9c139ac89d5ba91003eb22c5))
+* **adrs:** update ADR-013 status to Accepted with implementation details ([ef03918](https://github.com/tosin2013/documcp/commit/ef039181ad9e0ce8d6b3809b8cc235f31a392d68))
+* update documentation freshness metadata ([4a70e6d](https://github.com/tosin2013/documcp/commit/4a70e6d687f8910b7baba86bdf6726317664d95f))
+* update documentation freshness validation timestamps ([12e1c68](https://github.com/tosin2013/documcp/commit/12e1c68bc0c7722a0baab73c6f2f572645f168d0))
+
+
+### 🚀 Features
+
+* Add agent artifact detection and cleanup tool ([#80](https://github.com/tosin2013/documcp/issues/80)) ([210a274](https://github.com/tosin2013/documcp/commit/210a274095060e98b97209603a6e04375aa7da7c))
+* add change watcher for drift detection ([362fbca](https://github.com/tosin2013/documcp/commit/362fbca24e0e15149a6c69394c0d83be7fdfe523))
+* add Code Mode prompts and server optimization hints ([91800a9](https://github.com/tosin2013/documcp/commit/91800a9bba6754df7812aaeeceddc15a55d72e68))
+* Add Diataxis type tracking to CodeExample interface ([#81](https://github.com/tosin2013/documcp/issues/81)) ([9bbac23](https://github.com/tosin2013/documcp/commit/9bbac2319fde065e4b9004787f53c0631b993eb8))
+* Add LLM integration layer for semantic code analysis ([#82](https://github.com/tosin2013/documcp/issues/82)) ([f7b6fcd](https://github.com/tosin2013/documcp/commit/f7b6fcda63f9cf61f2f33696bd5c983dd64dd07e))
+* Add priority scoring system for documentation drift ([#83](https://github.com/tosin2013/documcp/issues/83)) ([40afe64](https://github.com/tosin2013/documcp/commit/40afe64f4b39da5c3743d3be5b026f5a46ac499d))
+* **adr:** standardize ADR naming and complete ADR-012 implementation ([b144770](https://github.com/tosin2013/documcp/commit/b144770cdf09b1873354f688a70576cf08955c13))
+* **ast-analyzer:** add call graph builder for execution path tracing ([#72](https://github.com/tosin2013/documcp/issues/72)) ([8adb6ad](https://github.com/tosin2013/documcp/commit/8adb6ad0e74433510da91fac73f816cd3aa9a3da))
+* **execution-simulator:** implement LLM-based code tracing ([#73](https://github.com/tosin2013/documcp/issues/73)) ([9809784](https://github.com/tosin2013/documcp/commit/980978405c4f6c2deccf5068a9860cba058c1c79))
+* Extend knowledge graph with documentation example entities ([#78](https://github.com/tosin2013/documcp/issues/78)) ([577a312](https://github.com/tosin2013/documcp/commit/577a312c7a8308f4aa3d5e9b44d2c538e61303d7)), closes [#77](https://github.com/tosin2013/documcp/issues/77) [tosin2013/documcp#77](https://github.com/tosin2013/documcp/issues/77)
+* **release:** implement npm publishing verification and automated changelog ([#1](https://github.com/tosin2013/documcp/issues/1), [#2](https://github.com/tosin2013/documcp/issues/2)) ([dbef13f](https://github.com/tosin2013/documcp/commit/dbef13f141970e60b1de6782812eaed5b97d9af6)), closes [#77](https://github.com/tosin2013/documcp/issues/77) [#78](https://github.com/tosin2013/documcp/issues/78) [#80](https://github.com/tosin2013/documcp/issues/80) [#81](https://github.com/tosin2013/documcp/issues/81) [#82](https://github.com/tosin2013/documcp/issues/82) [#83](https://github.com/tosin2013/documcp/issues/83) [#3](https://github.com/tosin2013/documcp/issues/3)
+
+
+### 🐛 Bug Fixes
+
+* **ci:** correct deploy-docs workflow for Docusaurus build ([66f7b94](https://github.com/tosin2013/documcp/commit/66f7b94451191a67b02fe708864ea7b30dd87763))
+* **ci:** improve husky hook bypass for release workflow ([17dd37d](https://github.com/tosin2013/documcp/commit/17dd37d9105594dd7c701cb6dab1bfe134e09a46))
+* **ci:** migrate deploy-docs workflow from Jekyll to Docusaurus ([8b44235](https://github.com/tosin2013/documcp/commit/8b442353be803428d4a53f90ddf93ee528a7142f))
+* **ci:** optimize API docs workflow steps ([e0be347](https://github.com/tosin2013/documcp/commit/e0be34716435e5e52af29f4c1c1babcf1d79811e))
+* **ci:** relax commitlint rules for release workflow ([f5a6fdf](https://github.com/tosin2013/documcp/commit/f5a6fdf10fad5a02d527da36b84fc16b821a2c9e))
+* **ci:** remove deprecated husky.sh pattern from pre-commit hook ([25358e1](https://github.com/tosin2013/documcp/commit/25358e13f5403f3cc8a62a26250229597897c500))
+* **ci:** resolve coverage threshold failure and add user-feedback-integration tests ([b4f6cc6](https://github.com/tosin2013/documcp/commit/b4f6cc6d2e35ae78f68ab86a1c7230e6e310b904))
+* **ci:** resolve race condition in KG storage and add test isolation ([9d91aa8](https://github.com/tosin2013/documcp/commit/9d91aa845b1ffd8bc87812225a1d10ddaea58c66))
+* **ci:** update deploy-docs workflow to use latest GitHub Actions versions ([2240f73](https://github.com/tosin2013/documcp/commit/2240f736c6c1fceeb6f8d5b431eab50a6299d8f7))
+* **ci:** update deprecated GitHub Actions to v4 ([e8fd907](https://github.com/tosin2013/documcp/commit/e8fd907650b7766d5f7b0933505b013ece2deeae))
+* **docs:** add missing id field to ADR-0010 frontmatter ([7afd3fc](https://github.com/tosin2013/documcp/commit/7afd3fc1d36c23eadd61f8563f68f48f15540232))
+* **docs:** align sidebars.js with updated ADR frontmatter IDs ([dfd3163](https://github.com/tosin2013/documcp/commit/dfd3163d34988f9253056061a72986b5584fa137))
+* **docs:** resolve MDX compilation errors in ADR and how-to files ([106b9fa](https://github.com/tosin2013/documcp/commit/106b9faf2f5a0df03ddb336084044aea8eff4750))
+* **docs:** update ADR frontmatter IDs to match new naming convention ([b64e305](https://github.com/tosin2013/documcp/commit/b64e3053ec3317097b2714562af7056630b0303c))
+* handle missing dependencies in generate-technical-writer-prompts ([306567b](https://github.com/tosin2013/documcp/commit/306567b32114502c606244ad6c2930360bcd4201))
+
 ### [0.5.2](https://github.com/tosin2013/documcp/compare/v0.5.1...v0.5.2) (2025-11-19)
 
 ### 🚀 Features
