@@ -1,5 +1,5 @@
 ---
-id: 013-release-pipeline-and-package-distribution
+id: adr-13-release-pipeline-and-package-distribution
 title: "ADR-013: Release Pipeline and Package Distribution Architecture"
 sidebar_label: "ADR-013: Release Pipeline Architecture"
 sidebar_position: 13

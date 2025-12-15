@@ -1,5 +1,5 @@
 ---
-id: 012-priority-scoring-system-for-documentation-drift
+id: adr-12-priority-scoring-system-for-documentation-drift
 title: "ADR-012: Priority Scoring System for Documentation Drift Detection"
 sidebar_label: "ADR-012: Priority Scoring System for Drift Detection"
 sidebar_position: 12

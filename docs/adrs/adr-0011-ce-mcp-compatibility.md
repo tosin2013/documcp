@@ -1,5 +1,5 @@
 ---
-id: 011-ce-mcp-compatibility
+id: adr-11-ce-mcp-compatibility
 title: "ADR-011: Code Execution with MCP (CE-MCP) Compatibility"
 sidebar_label: "ADR-011: CE-MCP Compatibility"
 sidebar_position: 11
