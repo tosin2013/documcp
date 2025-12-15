@@ -119,6 +119,24 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             printf "Manual release triggered with version type: %s\n" "${{ github.event.inputs.version_type }}"
 
+            # Fetch latest changes and ensure we're up to date before creating release
+            echo "Fetching latest changes from remote..."
+            git fetch origin main || {
+              echo "Failed to fetch from remote"
+              exit 1
+            }
+
+            # Pull latest changes to ensure we're on the latest commit
+            # Use rebase to avoid merge commits in release workflow
+            git pull --rebase origin main || {
+              echo "Failed to pull latest changes. Remote may have diverged."
+              echo "Attempting to merge instead..."
+              git pull origin main || {
+                echo "Failed to sync with remote repository"
+                exit 1
+              }
+            }
+
             # Disable husky hooks for automated standard-version commits
             # These commits are already validated by CI pipeline
             export HUSKY=0
