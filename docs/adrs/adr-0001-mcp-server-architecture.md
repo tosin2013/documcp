@@ -135,7 +135,6 @@ src/
 **Research Findings Incorporated**: Comprehensive analysis validates our architectural decisions:
 
 1. **TypeScript MCP SDK Performance**:
-
    - ✅ JSON-RPC 2.0 protocol provides minimal communication overhead
    - ✅ Native WebSocket/stdio transport layers optimize performance
    - ✅ Type safety adds compile-time benefits without runtime performance cost
@@ -251,7 +250,7 @@ When used with Code Mode clients, documcp workflows achieve:
 - All tests passing (91.67% coverage)
 - No architectural changes required
 
-For detailed analysis, see [ADR-011: CE-MCP Compatibility](adr-0011-ce-mcp-compatibility.md).
+For detailed analysis, see [ADR-011: CE-MCP Compatibility](./adr-0011-ce-mcp-compatibility.md).
 
 ## Future Considerations
 

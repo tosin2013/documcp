@@ -280,25 +280,21 @@ server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
 ### Positive Consequences ✅
 
 1. **Architectural Alignment**
-
    - Resources now properly serve applications
    - Clear separation between tools and resources
    - Follows MCP control pattern philosophy
 
 2. **Improved Developer Experience**
-
    - Resource purpose is obvious
    - MCP Inspector testing is clear
    - No confusion about resource lifecycle
 
 3. **Better Testability**
-
    - Resources return predictable content
    - Can test resources independently
    - MCP Inspector works correctly
 
 4. **Simplified Implementation**
-
    - Removed `resourceStore` Map
    - Removed `storeResourceFromToolResult()` function
    - Removed 50+ lines of resource storage code
@@ -312,13 +308,11 @@ server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
 ### Negative Consequences ⚠️
 
 1. **Breaking Change for Resource URIs**
-
    - Old dynamic URIs (`documcp://analysis/{timestamp}`) no longer work
    - Applications relying on these URIs need updates
    - **Mitigation:** Tools return data directly; URIs were internal implementation detail
 
 2. **No Tool Result Persistence**
-
    - Tool results are not stored between executions
    - Applications must handle result storage if needed
    - **Mitigation:** MCP servers should be stateless; persistence is app responsibility
@@ -449,8 +443,7 @@ return wrapToolResult(result, "analyze_repository"); // Standardized wrapper
 ## References
 
 - **MCP Specification:** https://modelcontextprotocol.io/docs
-- **MCP Best Practices Review:** `MCP_BEST_PRACTICES_REVIEW.md`
-- **MCP Inspector Guide:** `docs/development/MCP_INSPECTOR_TESTING.md`
+- **MCP Inspector Guide:** `/docs/development/MCP_INSPECTOR_TESTING.md`
 - **Related ADRs:**
   - ADR-006: MCP Tools API Design
   - ADR-007: MCP Prompts and Resources Integration

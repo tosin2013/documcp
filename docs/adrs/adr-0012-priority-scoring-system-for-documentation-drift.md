@@ -250,7 +250,7 @@ class PriorityScorer {
 ### Phase 1: Core Scoring System (Completed)
 
 - Scoring logic lives in `src/utils/drift-detector.ts` and is exercised whenever `ChangeWatcher` builds a snapshot; it computes weighted scores for complexity, change magnitude, coverage, staleness, and the other factors listed above.
-- Priority results are exposed via `src/utils/change-watcher.ts` and surfaced through the `change_watcher` tool (`src/tools/change-watcher.ts`), so drift runs produce prioritized summaries today.
+- Priority results are exposed via `/src/utils/change-watcher.ts` and surfaced through the `change_watcher` tool (`/src/tools/change-watcher.ts`), so drift runs produce prioritized summaries today.
 - Recommendations and suggested actions derive directly from the `determineRecommendation`/`generateSuggestedAction` helpers in the same module, matching the ADR narrative.
 
 ### Phase 2: Usage Metadata Collection (In Progress)
@@ -332,7 +332,7 @@ describe("PriorityScorer", () => {
 ### Phase 1: Core Scoring System ✅ Completed
 
 - `src/utils/drift-detector.ts` contains the complete scoring interfaces, factor calculation helpers, recommendation generator, and the `getPrioritizedDriftResults` pipeline that attaches priority scores to every detected drift.
-- `src/utils/change-watcher.ts` binds the scoring pipeline to filesystem/git triggers, ensuring every run of the `ChangeWatcher` produces prioritized drift summaries; the `change_watcher` tool exposes those results today (`src/tools/change-watcher.ts`).
+- `/src/utils/change-watcher.ts` binds the scoring pipeline to filesystem/git triggers, ensuring every run of the `ChangeWatcher` produces prioritized drift summaries; the `change_watcher` tool exposes those results today (`/src/tools/change-watcher.ts`).
 - All six scoring factors implemented:
   - ✅ Code Complexity (weight: 0.20) - Uses AST complexity metrics
   - ✅ Usage Frequency (weight: 0.25) - Enhanced with call graph analysis
@@ -355,7 +355,7 @@ describe("PriorityScorer", () => {
 
 - Call graphs built with `maxDepth: 2` for performance
 - Graceful fallback to sync collection if analyzer unavailable
-- Integration with `change-watcher.ts` updated to use async collection
+- Integration with `/src/utils/change-watcher.ts` updated to use async collection
 
 ### Phase 3: User Feedback Integration ✅ Completed
 
@@ -381,7 +381,6 @@ describe("PriorityScorer", () => {
 ### Testing ✅ Completed
 
 - `tests/utils/drift-detector-priority.test.ts` - Comprehensive test suite:
-
   - ✅ Custom weights configuration
   - ✅ Priority score calculation with all factors
   - ✅ Recommendation thresholds (critical/high/medium/low)
@@ -425,7 +424,7 @@ describe("PriorityScorer", () => {
 
 ## References
 
-- [ADR-002: Multi-Layered Repository Analysis Engine Design](adr-0002-repository-analysis-engine.md)
-- [ADR-009: Content Accuracy and Validation Framework](adr-0009-content-accuracy-validation-framework.md)
+- [ADR-002: Multi-Layered Repository Analysis Engine Design](./adr-0002-repository-analysis-engine.md)
+- [ADR-009: Content Accuracy and Validation Framework](./adr-0009-content-accuracy-validation-framework.md)
 - Commit: 40afe64 - feat: Add priority scoring system for documentation drift (#83)
 - GitHub Issue: #83 - Priority scoring system for documentation drift

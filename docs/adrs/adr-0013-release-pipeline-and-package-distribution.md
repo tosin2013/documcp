@@ -373,21 +373,18 @@ describe("Release Pipeline", () => {
 ### Completed Features
 
 1. **npm Publishing Verification** ✅
-
    - Authentication verification before publishing
    - Retry mechanism (3 attempts with 5-second delays)
    - Publication verification step (checks package exists on npm registry)
    - Package installation test after publication
 
 2. **Automated Changelog Generation** ✅
-
    - standard-version integration verified and working
    - Enhanced changelog extraction in release workflow
    - Improved error handling for changelog generation
    - Proper integration with GitHub Releases
 
 3. **Commit Message Validation** ✅
-
    - Pre-release commit message validation added
    - Validates commits follow conventional format
    - Clear error messages for invalid commits
@@ -413,8 +410,8 @@ describe("Release Pipeline", () => {
 
 ## References
 
-- [ADR-001: MCP Server Architecture](adr-0001-mcp-server-architecture.md)
-- [ADR-005: GitHub Pages Deployment Automation](adr-0005-github-pages-deployment-automation.md)
+- [ADR-001: MCP Server Architecture](./adr-0001-mcp-server-architecture.md)
+- [ADR-005: GitHub Pages Deployment Automation](./adr-0005-github-pages-deployment-automation.md)
 - GitHub Issue: #1 - Fix npm Package Publishing (✅ Fixed)
 - GitHub Issue: #2 - Implement Automated Changelog Generation (✅ Implemented)
 - GitHub Issue: #3 - Improve Test Coverage to 85% (✅ Exceeded - 91.65%)

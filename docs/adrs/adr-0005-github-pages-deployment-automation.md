@@ -603,7 +603,7 @@ class PerformanceMonitor {
 
 **Issue**: Multiple GitHub Actions workflows must use consistent SSG configuration to prevent deployment conflicts.
 
-**Solution**: All workflows (`deploy-docs.yml`, `release.yml`) now use Docusaurus configuration:
+**Solution**: All workflows (`.github/workflows/deploy-docs.yml`, `.github/workflows/release.yml`) now use Docusaurus configuration:
 
 - Node.js 20.x setup (not Ruby/Jekyll)
 - Docusaurus build process
@@ -655,7 +655,7 @@ describe("DeploymentWorkflows", () => {
 
 ## References
 
-- [ADR-013: Release Pipeline and Package Distribution Architecture](adr-0013-release-pipeline-and-package-distribution.md)
+- [ADR-013: Release Pipeline and Package Distribution Architecture](./adr-0013-release-pipeline-and-package-distribution.md)
 - [GitHub Pages Documentation](https://docs.github.com/en/pages)
 - [GitHub Actions Best Practices](https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions)
 - [Static Site Deployment Strategies](https://jamstack.org/best-practices/)

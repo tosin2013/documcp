@@ -1587,27 +1587,22 @@ describe("ContentPopulationEngine", () => {
 **All 6 ADR-Specified DevOps Tools Implemented:**
 
 1. **Docker** (lines 2704-2716) ✅
-
    - Detects: `Dockerfile`, `docker-compose.yml`, `docker-compose.yaml`
    - Content: Containerization tutorials, Dockerfile generation, best practices
 
 2. **Podman** (lines 2718-2728) ✅
-
    - Detects: `Containerfile`, `podman-compose.yml`
    - Content: Podman-specific containerization guides
 
 3. **Kubernetes** (lines 2737-2749) ✅
-
    - Detects: `k8s/`, `kubernetes/` directories
    - Content: Deployment manifests, service configs, kubectl commands
 
 4. **OpenShift** (lines 2751-2759) ✅
-
    - Detects: `.s2i/` directory, `DeploymentConfig` resources
    - Content: OpenShift-specific deployment patterns
 
 5. **Tekton** (lines 2775-2783) ✅
-
    - Detects: `.tekton/` directory, `apiVersion: tekton.dev`
    - Content: CI/CD pipeline configuration
 

@@ -320,7 +320,7 @@ async function codeModWorkflow(repoPath: string) {
 - Complex workflow: $2.50 → $0.03 (75x reduction)
 - Achieved through resource-based intermediate storage
 
-For detailed analysis, see [ADR-011: CE-MCP Compatibility](adr-0011-ce-mcp-compatibility.md).
+For detailed analysis, see [ADR-011: CE-MCP Compatibility](./adr-0011-ce-mcp-compatibility.md).
 
 ## Implementation Status Review (2025-12-12)
 

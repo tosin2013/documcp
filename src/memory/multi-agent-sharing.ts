@@ -654,11 +654,10 @@ export class MultiAgentMemorySharing extends EventEmitter {
       }
 
       if (syncRequest.criteria.tags) {
-        filteredMemories = filteredMemories.filter(
-          (m) =>
-            m.metadata.tags?.some((tag) =>
-              syncRequest.criteria!.tags!.includes(tag),
-            ),
+        filteredMemories = filteredMemories.filter((m) =>
+          m.metadata.tags?.some((tag) =>
+            syncRequest.criteria!.tags!.includes(tag),
+          ),
         );
       }
 

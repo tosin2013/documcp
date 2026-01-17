@@ -157,8 +157,8 @@ export class UsageMetadataCollector {
       for (const section of sections) {
         const refs =
           target === "fn"
-            ? section.referencedFunctions ?? []
-            : section.referencedClasses ?? [];
+            ? (section.referencedFunctions ?? [])
+            : (section.referencedClasses ?? []);
         for (const ref of refs) {
           if (target === "fn") {
             functionCalls.set(ref, (functionCalls.get(ref) ?? 0) + 1);
@@ -243,8 +243,8 @@ export class UsageMetadataCollector {
       for (const section of sections) {
         const refs =
           target === "fn"
-            ? section.referencedFunctions ?? []
-            : section.referencedClasses ?? [];
+            ? (section.referencedFunctions ?? [])
+            : (section.referencedClasses ?? []);
         for (const ref of refs) {
           if (target === "fn") {
             functionCalls.set(ref, (functionCalls.get(ref) ?? 0) + 1);

@@ -611,11 +611,11 @@ export class MemoryVisualizationSystem extends EventEmitter {
       const row: number[] = [];
       for (const framework of frameworks) {
         // Calculate correlation/co-occurrence
-        const langPatterns = patterns.filter(
-          (p) => p.metadata.technologies?.includes(language),
+        const langPatterns = patterns.filter((p) =>
+          p.metadata.technologies?.includes(language),
         );
-        const frameworkPatterns = patterns.filter(
-          (p) => p.metadata.technologies?.includes(framework),
+        const frameworkPatterns = patterns.filter((p) =>
+          p.metadata.technologies?.includes(framework),
         );
         const bothPatterns = patterns.filter(
           (p) =>

@@ -847,9 +847,8 @@ class DocumentationUpdateEngine {
   private findMemoryEvidenceForGap(codeFeature: any): any[] {
     return (
       this.memoryInsights?.similarProjects
-        .filter(
-          (p: any) =>
-            p.content?.gaps?.some((gap: any) => gap.type === codeFeature.type),
+        .filter((p: any) =>
+          p.content?.gaps?.some((gap: any) => gap.type === codeFeature.type),
         )
         .slice(0, 3) || []
     );
@@ -858,11 +857,10 @@ class DocumentationUpdateEngine {
   private findMemoryEvidenceForOutdated(docFeature: any): any[] {
     return (
       this.memoryInsights?.similarProjects
-        .filter(
-          (p: any) =>
-            p.content?.outdatedSections?.some(
-              (section: any) => section.feature === docFeature.name,
-            ),
+        .filter((p: any) =>
+          p.content?.outdatedSections?.some(
+            (section: any) => section.feature === docFeature.name,
+          ),
         )
         .slice(0, 3) || []
     );

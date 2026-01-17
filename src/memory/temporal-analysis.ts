@@ -553,9 +553,8 @@ export class TemporalMemoryAnalysis extends EventEmitter {
       }
 
       if (query.filters.tags) {
-        entries = entries.filter(
-          (entry) =>
-            entry.tags?.some((tag) => query.filters!.tags!.includes(tag)),
+        entries = entries.filter((entry) =>
+          entry.tags?.some((tag) => query.filters!.tags!.includes(tag)),
         );
       }
     }

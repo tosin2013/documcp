@@ -674,8 +674,8 @@ export class MemoryExportImportSystem extends EventEmitter {
 
     // Apply tags filter
     if (filters.tags && filters.tags.length > 0) {
-      entries = entries.filter(
-        (entry) => entry.tags?.some((tag) => filters.tags!.includes(tag)),
+      entries = entries.filter((entry) =>
+        entry.tags?.some((tag) => filters.tags!.includes(tag)),
       );
     }
 
