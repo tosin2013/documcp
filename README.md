@@ -8,6 +8,10 @@
 
 DocuMCP is an intelligent Model Context Protocol (MCP) server that revolutionizes documentation deployment for open-source projects. It provides deep repository analysis, intelligent static site generator recommendations, and automated GitHub Pages deployment workflows.
 
+<a href="https://glama.ai/mcp/servers/@tosin2013/documcp">
+  <img width="380" height="200" src="https://glama.ai/mcp/servers/@tosin2013/documcp/badge" alt="documcp MCP server" />
+</a>
+
 ## TL;DR
 
 DocuMCP analyzes your repository, recommends the perfect static site generator (Jekyll, Hugo, Docusaurus, MkDocs, or Eleventy), creates professional documentation structure following Diataxis principles, and deploys it automatically to GitHub Pages. Just say "analyze my repository and deploy documentation" to get started.
