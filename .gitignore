@@ -41,7 +41,9 @@ ehthumbs.db
 Thumbs.db
 
 # Project management and documentation files
-TODO.md
+# TODO.md is now generated from ADRs by `generate_adr_todo` (see ADR-013) and
+# cross-referenced to GitHub issues by scripts/link-todo-to-issues.cjs.
+# It is part of the repository roadmap; do not ignore.
 PRD.md
 CLAUDE.md
 DEVELOPMENT_RULES.md

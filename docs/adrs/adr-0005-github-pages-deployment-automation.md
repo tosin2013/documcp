@@ -89,6 +89,7 @@ We will implement a comprehensive GitHub Pages deployment orchestration system t
 - **Pros**: Advanced features, excellent performance, minimal configuration
 - **Cons**: Cost for advanced features, vendor lock-in, less GitHub integration
 - **Decision**: Rejected to maintain GitHub-native workflow and free hosting
+- **Revisited (2026-04-30)**: This rejection is revisited by [ADR-018: Deploy Target Adapter Pattern](./adr-0018-deploy-target-adapter-pattern-for-github-pages-vercel-netlify-and-cloudflare-pages.md), which adds Vercel/Netlify/Cloudflare Pages as pluggable deploy targets via a medium-depth adapter pattern (config generation + optional CLI invocation, no API tokens). GitHub Pages remains the default and continues to be fully supported.
 
 ### Universal Deployment Workflow
 

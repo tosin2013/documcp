@@ -35,18 +35,21 @@ The Content Accuracy and Validation Framework has been fully implemented across 
 **Validation Capabilities**:
 
 1. **Multi-Layer Validation**:
+
    - Pre-generation: Analysis accuracy verification
    - Generation-time: Real-time content checks
    - Post-generation: Comprehensive validation against project reality
    - User-guided: Interactive correction workflows
 
 2. **Confidence-Aware Generation**:
+
    - Granular confidence metrics in all analysis tools
    - Uncertainty flagging in recommendations
    - Alternative suggestions for low-confidence scenarios
    - Confidence calibration through historical data
 
 3. **Reality-Check Validation**:
+
    - Code syntax validation for all code blocks
    - Link existence and accessibility checking
    - Framework version compatibility validation
@@ -576,7 +579,11 @@ const fallbackHierarchy = [
 - Interactive correction interfaces
 - Accuracy learning and improvement systems
 
-### Phase 2.5: LLM-Enhanced Semantic Analysis (Implemented)
+### Phase 2.5: LLM-Enhanced Semantic Analysis (Superseded by [ADR-014](./adr-0014-removal-of-server-side-llm-dependency-in-favor-of-mcp-sampling.md))
+
+> **Status (2026-04-30): Superseded.** This phase shipped in v0.5.3 and is being removed in v0.6.0 per [ADR-014](./adr-0014-removal-of-server-side-llm-dependency-in-favor-of-mcp-sampling.md). The bundled multi-provider LLM client is incompatible with MCP best practice (LLM execution belongs in the host, not the server). Future LLM-driven semantic features will use MCP Sampling instead. The rest of this ADR (the broader content-accuracy framework) remains Accepted.
+
+The following capabilities will be removed in v0.6.0:
 
 - **LLM Integration Layer**: Unified interface for multiple LLM providers (DeepSeek, OpenAI, Anthropic, Ollama)
 - **Semantic Code Analysis**: LLM-powered understanding of code change impact on documentation
