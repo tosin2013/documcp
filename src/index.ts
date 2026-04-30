@@ -123,7 +123,8 @@ for (const envVar of LLM_DEPRECATED_VARS) {
   if (process.env[envVar]) {
     process.stderr.write(
       `[documcp] DEPRECATION WARNING: ${envVar} is no longer recognized and will be removed in v0.7.0. ` +
-        `Server-side LLM support has been removed. See the v0.6.0 migration guide.\n`,
+        `Server-side LLM support has been removed. ` +
+        `Migration guide: https://github.com/tosin2013/documcp/blob/main/docs/development/v0.6.0-release-preview.md\n`,
     );
   }
 }

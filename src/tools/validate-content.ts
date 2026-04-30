@@ -93,7 +93,7 @@ class ContentAccuracyValidator {
   private projectContext: any;
   private tempDir: string;
 
-  constructor(_useExecutionSimulation: boolean = true) {
+  constructor() {
     this.tempDir = path.join(currentDir, ".tmp");
   }
 
