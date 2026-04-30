@@ -134,9 +134,15 @@ const server = new Server(
         subscribe: true,
         listChanged: true,
       },
-      roots: {
-        listChanged: true,
-      },
+      // NOTE: `roots` is NOT a server capability per the MCP spec — it is a
+      // client capability declaring that the client (host) can answer
+      // roots/list requests from the server. SDK 1.24 accepted this object
+      // here because its ServerCapabilitiesSchema was z.core.$loose; SDK 1.26
+      // tightened the schema and rejects unknown keys. The handler at
+      // `server.setRequestHandler(ListRootsRequestSchema, …)` further down is
+      // an intentional non-spec extension (DocuMCP exposes its configured
+      // project roots to introspecting clients) and stays untouched.
+      // Tracked by issue #136.
     },
   },
 );
