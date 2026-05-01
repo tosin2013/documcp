@@ -324,49 +324,10 @@ jobs:
             exit 1
           fi
 
-  docs:
-    name: Deploy Documentation
-    runs-on: ubuntu-latest
-    needs: [test, release]
-    permissions:
-      pages: write
-      id-token: write
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20.x"
-          cache: "npm"
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Generate API documentation
-        run: npm run docs:generate
-
-      - name: Remove problematic media directory
-        run: rm -rf docs/api/media
-
-      - name: Install Docusaurus dependencies
-        run: cd docs && npm ci
-
-      - name: Build Docusaurus site
-        run: cd docs && npm run build
-        env:
-          NODE_ENV: production
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
-
-      - name: Upload to GitHub Pages
-        uses: actions/upload-pages-artifact@v4
-        with:
-          path: ./docs/build
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+  # NOTE: Documentation deployment was previously a third `docs:` job in this
+  # workflow, but it duplicated .github/workflows/deploy-docs.yml (which fires
+  # on every push to main). Keeping both caused a concurrency conflict on the
+  # `github-pages` environment and produced confusing dual deployments on tag
+  # pushes. As of 2026-05-01 the canonical Pages deployer is deploy-docs.yml;
+  # tagged-release docs are covered automatically because the tagged commit has
+  # already landed on main and been deployed. See deploy-docs.yml header.
