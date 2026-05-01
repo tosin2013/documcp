@@ -34,17 +34,27 @@ categories:
       - "security"
 change-template: "- $TITLE @$AUTHOR (#$NUMBER)"
 change-title-escapes: '\<*_&' # You can add # and @ to disable mentions, and add ` to disable code blocks.
+# Pre-1.0 SemVer convention: while we are in the 0.x.y era, breaking
+# changes are MINOR bumps (0.5.10 -> 0.6.0), not major bumps. SemVer
+# section 4 explicitly carves out 0.x.y as "anything MAY change", so
+# breaking changes do not require a major bump until we hit 1.0.0.
+# This convention is documented in
+# docs/development/v0.6.0-release-preview.md (Suggested version bump
+# section). When we cut 1.0.0, MOVE "breaking-change" / "breaking" /
+# "major" labels back to the `major:` resolver below.
 version-resolver:
   major:
     labels:
       - "major"
-      - "breaking"
-      - "breaking-change"
+      # Keep "breaking" / "breaking-change" out of major until post-1.0.
+      # Currently routed to `minor` below per the pre-1.0 convention.
   minor:
     labels:
       - "minor"
       - "feature"
       - "enhancement"
+      - "breaking"
+      - "breaking-change"
   patch:
     labels:
       - "patch"
