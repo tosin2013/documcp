@@ -7,7 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-> Draft section for the upcoming **v0.6.0 — LLM Removal** release. See [docs/development/v0.6.0-release-preview.md](docs/development/v0.6.0-release-preview.md) for the full release ceremony and migration guide. Driven by [ADR-014](docs/adrs/adr-0014-removal-of-server-side-llm-dependency-in-favor-of-mcp-sampling.md). This section will be replaced with `### [0.6.0]` on tag.
+> Draft section for the next release. PRs land here as `[Unreleased]` entries and get promoted to a versioned section on tag.
+
+## [0.6.0] - 2026-05-01
+
+> **LLM Removal release.** The bundled multi-provider LLM client and the `simulate_execution` MCP tools are removed; future LLM-driven features will use **MCP Sampling**. Driven by [ADR-014](docs/adrs/adr-0014-removal-of-server-side-llm-dependency-in-favor-of-mcp-sampling.md). See [docs/development/v0.6.0-release-preview.md](docs/development/v0.6.0-release-preview.md) for the full migration guide. Merged to `main` as commit [`3f1d691b`](https://github.com/tosin2013/documcp/commit/3f1d691b) on 2026-05-01.
 
 ### ⚠ BREAKING CHANGES
 

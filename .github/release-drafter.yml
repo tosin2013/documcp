@@ -1,6 +1,11 @@
 name-template: "v$RESOLVED_VERSION"
 tag-template: "v$RESOLVED_VERSION"
 categories:
+  - title: "🚨 Breaking Changes"
+    labels:
+      - "breaking-change"
+      - "breaking"
+      - "major"
   - title: "🚀 Features"
     labels:
       - "feature"
@@ -34,15 +39,19 @@ version-resolver:
     labels:
       - "major"
       - "breaking"
+      - "breaking-change"
   minor:
     labels:
       - "minor"
       - "feature"
+      - "enhancement"
   patch:
     labels:
       - "patch"
       - "fix"
       - "bugfix"
+      - "bug"
+      - "dependencies"
   default: patch
 template: |
   ## DocuMCP Release $RESOLVED_VERSION
