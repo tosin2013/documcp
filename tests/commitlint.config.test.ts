@@ -54,4 +54,3 @@ describe("commitlint.config – copilot bootstrap ignores predicate", () => {
     expect(copilotBootstrapIgnore("chore: update Initial plan document")).toBe(false);
   });
 });
-
