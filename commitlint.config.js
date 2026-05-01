@@ -1,5 +1,10 @@
 export default {
   extends: ["@commitlint/config-conventional"],
+  // Ignore the Copilot Coding Agent bootstrap commit whose subject is literally
+  // "Initial plan" (no conventional-commit type prefix).  The pattern is narrow
+  // enough that real human commits starting with "Initial" still fail because
+  // our type-empty rule would catch them before this predicate fires.
+  ignores: [(msg) => /^Initial plan(\n|$)/.test(msg)],
   rules: {
     "type-enum": [
       2,
