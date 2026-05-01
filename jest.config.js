@@ -67,6 +67,18 @@ export default {
       functions: 20,
       lines: 40,
     },
+    // Lower branch threshold for the tree-sitter extractor (issue #112). The
+    // file is dominated by grammar-edge dispatch (one branch per node-type
+    // case in the Python and Go walkers, plus the lazy-load error-fallback
+    // cascade for missing wasm assets / Parser.init failures). Most of those
+    // branches require simulating malformed installs to exercise; statement
+    // / function / line coverage stay above 80%.
+    "./src/utils/ast-tree-sitter.ts": {
+      branches: 60,
+      statements: 80,
+      functions: 80,
+      lines: 80,
+    },
   },
   extensionsToTreatAsEsm: [".ts"],
   moduleNameMapper: {
