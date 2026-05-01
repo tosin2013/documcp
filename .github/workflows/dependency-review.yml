@@ -24,4 +24,8 @@ jobs:
           # Each entry here is a single-license SPDX identifier. With v4,
           # compound expressions in dependencies (A AND B, A OR B) are
           # decomposed and matched element-wise against this list.
-          allow-licenses: MIT, Apache-2.0, BSD-3-Clause, BSD-2-Clause, ISC, CC0-1.0, 0BSD, Unlicense
+          # BlueOak-1.0.0 added 2026-05-01 (PR #141): permissive license
+          # adopted by Isaac Schlueter's package family (minimatch >= 10,
+          # glob, lru-cache, semver, etc.). Strictly more permissive than
+          # MIT in some respects.
+          allow-licenses: MIT, Apache-2.0, BSD-3-Clause, BSD-2-Clause, ISC, CC0-1.0, 0BSD, Unlicense, BlueOak-1.0.0
