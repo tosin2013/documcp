@@ -483,7 +483,14 @@ export async function trackDeployment(
 }
 
 /**
- * Get deployment recommendations based on historical data
+ * Get deployment recommendations based on historical data.
+ *
+ * Issue #114: when the project has recorded drift outcomes, each
+ * recommendation also carries a `driftFeedback` summary so callers can show
+ * "this SSG was recommended for a project where 3/4 recent drifts were
+ * actionable" alongside the raw SSG confidence. The summary is denormalized
+ * across array entries (it's project-level, not SSG-level) — the small
+ * payload makes that simpler than splitting the return shape.
  */
 export async function getDeploymentRecommendations(projectId: string): Promise<
   Array<{
@@ -491,6 +498,7 @@ export async function getDeploymentRecommendations(projectId: string): Promise<
     confidence: number;
     reasoning: string[];
     successRate: number;
+    driftFeedback?: import("./kg-drift-feedback.js").DriftFeedbackSummary;
   }>
 > {
   const kg = await getKnowledgeGraph();
@@ -503,6 +511,30 @@ export async function getDeploymentRecommendations(projectId: string): Promise<
 
   if (!projectNode) {
     return [];
+  }
+
+  // Resolve drift feedback summary lazily; only worth fetching once per call
+  // since it's project-scoped, not per-rec.
+  let driftFeedback:
+    | import("./kg-drift-feedback.js").DriftFeedbackSummary
+    | undefined;
+  const projectPath = projectNode.properties?.path as string | undefined;
+  if (projectPath) {
+    try {
+      const { getDriftFeedbackSummary } = await import(
+        "./kg-drift-feedback.js"
+      );
+      const summary = await getDriftFeedbackSummary(projectPath);
+      // Only attach when there's actually history — empty summaries would
+      // just be noise on every recommendation.
+      if (summary.totalOutcomes > 0) {
+        driftFeedback = summary;
+      }
+    } catch {
+      // Drift feedback is auxiliary — never let a KG read failure break
+      // the SSG recommendation flow.
+      driftFeedback = undefined;
+    }
   }
 
   // Find similar projects
@@ -566,6 +598,7 @@ export async function getDeploymentRecommendations(projectId: string): Promise<
       confidence: (rec.totalWeight / rec.count) * rec.successRate,
       reasoning: rec.reasoning.slice(0, 3), // Top 3 reasons
       successRate: rec.successRate,
+      ...(driftFeedback ? { driftFeedback } : {}),
     }))
     .sort((a, b) => b.confidence - a.confidence);
 }

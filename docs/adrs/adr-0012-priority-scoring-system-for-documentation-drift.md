@@ -422,9 +422,120 @@ describe("PriorityScorer", () => {
 4. **Historical Trend Analysis**: Track priority evolution in knowledge graph for pattern recognition
 5. **Performance Optimization**: Further optimize call graph building for very large codebases
 
+## Phase 4: Feedback Ingestion Loop (Issue #114, v0.7.0)
+
+### Problem
+
+Phase 1–3 produced a competent priority score, but the weights were static —
+the model couldn't tell whether the factors it relied on actually predicted
+"this drift was worth surfacing" for a given project. A noise-heavy SSG
+project got the same weight vector as a high-stakes production library, and
+the host LLM had no channel to feed observed outcomes back into the scoring
+model.
+
+### Decision
+
+Add a minimal feedback ingestion loop:
+
+1. The `record_drift_outcome` MCP tool accepts
+   `{ projectPath, driftId, outcome: 'actionable' | 'noise' | 'deferred', notes? }`
+   and stores the outcome as a knowledge-graph edge.
+2. Each detected drift carries a deterministic `driftId`
+   (`sha256(filePath | sortedSymbols | snapshotTimestamp)`) so the host can
+   recover the same anchor across detection runs.
+3. `DriftDetector.getCalibratedWeights(projectPath)` reads the project's
+   recorded outcome history and emits a project-specific weight vector that
+   replaces the defaults for the next priority-scoring call.
+
+### Storage Layout
+
+```
+project:<hash>
+  ──has_drift_event──>    drift_event:<projectHash>:<driftId>
+                            └ properties: filePath, severity, factors, detectedAt
+  ──has_drift_outcome──>  drift_outcome:<projectHash>:<driftId>:<recordedAt>
+                            └ properties: outcome, recordedAt, notes?, driftId
+
+drift_event:<…> ──results_in──> drift_outcome:<…>
+```
+
+Drift events are written every time `detectDriftWithPriority*` runs with a
+`projectPath` option (idempotent on `driftId`). Outcomes accumulate one per
+`record_drift_outcome` call; multiple outcomes for the same `driftId` are
+permitted (the host may revise its judgment) and the most recent one wins
+when the calibrator computes weights.
+
+### Calibration Formula
+
+```
+For each (event, outcome) entry where outcome ∈ {actionable, noise}:
+  delta = +1 if 'actionable', -1 if 'noise'
+  for each factor i:
+    normalized   = (event.factors[i] - 50) / 50   // ∈ [-1, +1]
+    credit[i]   += delta * normalized
+
+evidence = count of {actionable | noise} entries
+if evidence < MIN_EVIDENCE_FOR_CALIBRATION (3):
+  return DEFAULT_WEIGHTS  // not enough signal — avoid overfitting
+
+for each factor i:
+  avg_credit = credit[i] / evidence              // ∈ [-1, +1]
+  boost      = avg_credit * MAX_ADJUSTMENT (0.5) // ∈ [-0.5, +0.5]
+  raw[i]     = DEFAULT[i] * (1 + boost)
+  raw[i]     = max(raw[i], DEFAULT[i] * MIN_FACTOR_FLOOR_RATIO)  // 25% floor (defence-in-depth)
+
+calibrated[i] = raw[i] / sum(raw)  // renormalize to ∑w = 1
+```
+
+**Properties:**
+
+- Factors that scored high (>50) on drifts marked `actionable` get boosted;
+  factors that scored high on drifts marked `noise` get suppressed.
+- `deferred` outcomes contribute zero signal — the host hasn't decided yet,
+  so calibration treats them as "neutral, ignore for training".
+- The ±50% cap keeps any single streak of one-sided outcomes from collapsing
+  the weight vector around a single factor; the 25% floor is defence in
+  depth for future formula changes (current cap dominates the floor).
+- Renormalization keeps the weight vector summing to 1.0, matching the
+  invariant `DEFAULT_WEIGHTS` already satisfies.
+
+### Surface Area
+
+- New tool: `record_drift_outcome` (input schema in `src/tools/record-drift-outcome.ts`).
+- Extended `DriftDetector` API: `detectDriftWithPriority*` accepts an
+  optional `{ projectPath, useCalibration }` bag; new public method
+  `getCalibratedWeights(projectPath)`.
+- Extended `getDeploymentRecommendations()` output: each rec entry carries
+  `driftFeedback?: DriftFeedbackSummary` when the project has recorded
+  outcomes, surfacing the loop's progress to downstream callers.
+
+### Testing ✅ Completed
+
+- `tests/utils/drift-feedback-calibration.test.ts` — 10 unit tests for the
+  calibration formula (default fallback, evidence threshold, signal
+  asymmetry, renormalization, cap-bounded reduction, symmetry).
+- `tests/integration/drift-feedback-loop.test.ts` — 5 end-to-end tests
+  covering detect → persist → record → calibrate, deployment-recommendation
+  surfacing, error paths (`DRIFT_NOT_FOUND`, `INVALID_INPUT`), and
+  most-recent-outcome-wins semantics.
+
+### Confidence
+
+**93%** — Formula is bounded, reversible (defaults are reachable when host
+clears outcomes), and consistent with the existing weight invariants. The
+remaining 7%:
+
+- The +1/-1 delta treats all actionable outcomes as equally informative.
+  A future enhancement could weight outcomes by recency or by host
+  confidence (e.g. `notes` carrying a self-reported confidence score).
+- The formula doesn't yet decay old outcomes — a project that flipped from
+  noise-heavy to clean still carries the historical weight. Recency-decay
+  is queued as a Phase 5 item.
+
 ## References
 
 - [ADR-002: Multi-Layered Repository Analysis Engine Design](./adr-0002-repository-analysis-engine.md)
 - [ADR-009: Content Accuracy and Validation Framework](./adr-0009-content-accuracy-validation-framework.md)
 - Commit: 40afe64 - feat: Add priority scoring system for documentation drift (#83)
+- Issue #114 - Drift priority scoring feedback ingestion loop (v0.7.0, Phase 4)
 - GitHub Issue: #83 - Priority scoring system for documentation drift
