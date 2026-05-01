@@ -1,33 +1,40 @@
 /**
  * Semantic Code Analyzer (Phase 3)
  *
- * Provides semantic analysis of code changes using LLM integration,
- * with fallback to AST-based analysis when LLM is unavailable.
+ * Provides AST-based semantic analysis of code changes.
+ * LLM-based analysis was removed in v0.6.0 (ADR-014).
  */
 
 import { ASTAnalyzer, CodeDiff } from "./ast-analyzer.js";
-import {
-  createLLMClient,
-  LLMClient,
-  SemanticAnalysis,
-  SimulationResult,
-} from "./llm-client.js";
 
 export interface SemanticAnalysisOptions {
-  useLLM?: boolean;
   confidenceThreshold?: number;
-  includeASTFallback?: boolean;
+  /** @deprecated useLLM is ignored since v0.6.0 — analysis is always AST-only */
+  useLLM?: boolean;
+  /** @deprecated llmConfig is ignored since v0.6.0 */
   llmConfig?: {
-    provider?: "deepseek" | "openai" | "anthropic" | "ollama";
+    provider?: string;
     apiKey?: string;
     model?: string;
   };
+  /** @deprecated includeASTFallback is ignored since v0.6.0 — analysis is always AST-only */
+  includeASTFallback?: boolean;
+}
+
+export interface SemanticAnalysis {
+  hasBehavioralChange: boolean;
+  breakingForExamples: boolean;
+  changeDescription: string;
+  affectedDocSections: string[];
+  confidence: number;
 }
 
 export interface EnhancedSemanticAnalysis extends SemanticAnalysis {
-  analysisMode: "llm" | "ast" | "hybrid";
+  /** Always 'ast' since v0.6.0 */
+  analysisMode: "ast";
   astDiffs?: CodeDiff[];
-  llmAvailable: boolean;
+  /** Always false since v0.6.0 */
+  llmAvailable: false;
   timestamp: string;
 }
 
@@ -41,7 +48,14 @@ export interface CodeValidationResult {
 
 export interface ExampleValidation {
   exampleCode: string;
-  simulationResult: SimulationResult;
+  simulationResult: {
+    success: boolean;
+    expectedOutput: string;
+    actualOutput: string;
+    matches: boolean;
+    differences: string[];
+    confidence: number;
+  };
   isValid: boolean;
   issues: string[];
 }
@@ -57,21 +71,19 @@ type ASTAnalysisOutput = {
 };
 
 /**
- * Semantic Analyzer with LLM integration and AST fallback
+ * Semantic Analyzer — AST-only mode (v0.6.0+)
+ *
+ * The LLM-based analysis path was removed in v0.6.0. All analysis is
+ * performed using AST heuristics. See ADR-014 and the v0.6.0 migration guide.
  */
 export class SemanticAnalyzer {
   private astAnalyzer: ASTAnalyzer;
-  private llmClient: LLMClient | null;
   private confidenceThreshold: number;
   private initialized: boolean = false;
 
   constructor(options: SemanticAnalysisOptions = {}) {
     this.astAnalyzer = new ASTAnalyzer();
     this.confidenceThreshold = options.confidenceThreshold || 0.7;
-
-    // Try to create LLM client if enabled (default: true)
-    const useLLM = options.useLLM !== false;
-    this.llmClient = useLLM ? createLLMClient(options.llmConfig) : null;
   }
 
   /**
@@ -83,64 +95,32 @@ export class SemanticAnalyzer {
   }
 
   /**
-   * Check if LLM is available for semantic analysis
+   * Always returns false — LLM support was removed in v0.6.0.
+   * @deprecated Check removed in favour of always returning false.
    */
-  isLLMAvailable(): boolean {
-    return this.llmClient !== null;
+  isLLMAvailable(): false {
+    return false;
   }
 
   /**
-   * Analyze semantic impact of code changes
+   * Analyze semantic impact of code changes using AST heuristics
    */
   async analyzeSemanticImpact(
     codeBefore: string,
     codeAfter: string,
     functionName?: string,
   ): Promise<EnhancedSemanticAnalysis> {
-    // Ensure analyzer is initialized before use
     if (!this.initialized) {
       await this.initialize();
     }
 
     const timestamp = new Date().toISOString();
-
-    // Try LLM-based analysis first
-    if (this.llmClient) {
-      try {
-        const llmAnalysis = await this.llmClient.analyzeCodeChange(
-          codeBefore,
-          codeAfter,
-        );
-
-        // If confidence is high enough, return LLM result
-        if (llmAnalysis.confidence >= this.confidenceThreshold) {
-          return {
-            ...llmAnalysis,
-            analysisMode: "llm",
-            llmAvailable: true,
-            timestamp,
-          };
-        }
-
-        // Low confidence: combine with AST analysis
-        const astAnalysis = await this.performASTAnalysis(
-          codeBefore,
-          codeAfter,
-          functionName,
-        );
-        return this.combineAnalyses(llmAnalysis, astAnalysis, timestamp);
-      } catch (error) {
-        // LLM failed, fall back to AST
-        console.warn("LLM analysis failed, falling back to AST:", error);
-      }
-    }
-
-    // Fallback to AST-only analysis
     const astAnalysis = await this.performASTAnalysis(
       codeBefore,
       codeAfter,
       functionName,
     );
+
     return {
       hasBehavioralChange: astAnalysis.hasSignificantChanges,
       breakingForExamples: astAnalysis.hasBreakingChanges,
@@ -155,7 +135,7 @@ export class SemanticAnalyzer {
   }
 
   /**
-   * Perform AST-based analysis (fallback mode)
+   * Perform AST-based analysis.
    * Note: This is a simplified heuristic analysis for quick fallback.
    * For full AST parsing, use the astAnalyzer.compareASTs() method directly.
    */
@@ -164,9 +144,6 @@ export class SemanticAnalyzer {
     codeAfter: string,
     functionName?: string,
   ): Promise<ASTAnalysisOutput> {
-    // Simplified heuristic analysis for quick fallback
-    // Full AST analysis would use this.astAnalyzer.analyzeFile() and compareASTs()
-
     const diffs: CodeDiff[] = [];
     let hasBreakingChanges = false;
     let hasSignificantChanges = false;
@@ -308,120 +285,21 @@ export class SemanticAnalyzer {
   }
 
   /**
-   * Combine LLM and AST analyses for hybrid approach
-   */
-  private combineAnalyses(
-    llmAnalysis: SemanticAnalysis,
-    astAnalysis: ASTAnalysisOutput,
-    timestamp: string,
-  ): EnhancedSemanticAnalysis {
-    // Merge affected sections
-    const allSections = new Set([
-      ...llmAnalysis.affectedDocSections,
-      ...astAnalysis.affectedSections,
-    ]);
-
-    // Take the more conservative assessment
-    const hasBehavioralChange =
-      llmAnalysis.hasBehavioralChange || astAnalysis.hasSignificantChanges;
-    const breakingForExamples =
-      llmAnalysis.breakingForExamples || astAnalysis.hasBreakingChanges;
-
-    // Combine descriptions
-    const description = `${llmAnalysis.changeDescription}. AST analysis: ${astAnalysis.description}`;
-
-    // Average confidence, weighted toward AST for reliability
-    const confidence =
-      llmAnalysis.confidence * 0.6 + astAnalysis.confidence * 0.4;
-
-    return {
-      hasBehavioralChange,
-      breakingForExamples,
-      changeDescription: description,
-      affectedDocSections: Array.from(allSections),
-      confidence,
-      analysisMode: "hybrid",
-      astDiffs: astAnalysis.diffs,
-      llmAvailable: true,
-      timestamp,
-    };
-  }
-
-  /**
-   * Validate code examples against implementation
+   * Validate code examples — always requires manual review in v0.6.0+.
+   *
+   * LLM-based simulation was removed. This method now immediately signals
+   * that manual review is required.
    */
   async validateExamples(
-    examples: string[],
-    implementation: string,
+    _examples: string[],
+    _implementation: string,
   ): Promise<CodeValidationResult> {
-    if (!this.llmClient) {
-      return {
-        isValid: true,
-        examples: [],
-        overallConfidence: 0,
-        requiresManualReview: true,
-        suggestions: ["LLM not available - manual validation required"],
-      };
-    }
-
-    const validations: ExampleValidation[] = [];
-
-    for (const example of examples) {
-      try {
-        const simulation = await this.llmClient.simulateExecution(
-          example,
-          implementation,
-        );
-        validations.push({
-          exampleCode: example,
-          simulationResult: simulation,
-          isValid: simulation.matches,
-          issues: simulation.matches ? [] : simulation.differences,
-        });
-      } catch (error) {
-        validations.push({
-          exampleCode: example,
-          simulationResult: {
-            success: false,
-            expectedOutput: "",
-            actualOutput: "",
-            matches: false,
-            differences: [
-              `Validation failed: ${
-                error instanceof Error ? error.message : "Unknown error"
-              }`,
-            ],
-            confidence: 0,
-          },
-          isValid: false,
-          issues: ["Validation failed"],
-        });
-      }
-    }
-
-    const validExamples = validations.filter((v) => v.isValid).length;
-    const overallConfidence =
-      validations.reduce((sum, v) => sum + v.simulationResult.confidence, 0) /
-      validations.length;
-    const isValid = validExamples === examples.length;
-    const requiresManualReview = overallConfidence < this.confidenceThreshold;
-
-    const suggestions: string[] = [];
-    if (!isValid) {
-      suggestions.push(
-        `${examples.length - validExamples} example(s) may be invalid`,
-      );
-    }
-    if (requiresManualReview) {
-      suggestions.push("Low confidence - manual review recommended");
-    }
-
     return {
-      isValid,
-      examples: validations,
-      overallConfidence,
-      requiresManualReview,
-      suggestions,
+      isValid: true,
+      examples: [],
+      overallConfidence: 0,
+      requiresManualReview: true,
+      suggestions: ["LLM not available - manual validation required"],
     };
   }
 

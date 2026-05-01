@@ -290,26 +290,6 @@ export const TOOL_METADATA: Record<string, ToolMetadata> = {
     parallelizable: true,
   },
 
-  simulate_execution: {
-    category: "validation",
-    complexity: "complex",
-    estimatedTokens: 520,
-    suggestedUse: "Simulate code execution to validate documentation examples",
-    typicalExecutionMs: 3000,
-    returnsLargeResults: true,
-    parallelizable: true,
-  },
-
-  batch_simulate_execution: {
-    category: "validation",
-    complexity: "complex",
-    estimatedTokens: 480,
-    suggestedUse: "Batch simulation of multiple code examples",
-    typicalExecutionMs: 5000,
-    returnsLargeResults: true,
-    parallelizable: false,
-  },
-
   // Optimization Tools
   optimize_readme: {
     category: "optimization",
