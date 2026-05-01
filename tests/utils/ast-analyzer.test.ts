@@ -679,4 +679,227 @@ export interface Repository {
       expect(repo?.methods.length).toBe(3);
     });
   });
+
+  // -----------------------------------------------------------------------
+  // Multi-language analysis (Issue #112, ADR-015)
+  //
+  // Verifies that tree-sitter-python and tree-sitter-go are wired up via
+  // web-tree-sitter and produce non-empty signature sets for the curated
+  // fixtures in `tests/fixtures/multi-lang/`. We intentionally assert on
+  // shape and a few high-signal members rather than freezing every detail
+  // — grammar updates can renumber positions and we don't want false
+  // positives on benign upstream changes.
+  // -----------------------------------------------------------------------
+  describe("Multi-Language Analysis (tree-sitter)", () => {
+    const fixtureRoot = join(
+      process.cwd(),
+      "tests",
+      "fixtures",
+      "multi-lang",
+    );
+
+    describe("Python", () => {
+      let result: Awaited<ReturnType<ASTAnalyzer["analyzeFile"]>>;
+
+      beforeAll(async () => {
+        result = await analyzer.analyzeFile(
+          join(fixtureRoot, "python", "sample.py"),
+        );
+      });
+
+      test("returns a non-null Python result", () => {
+        expect(result).not.toBeNull();
+        expect(result?.language).toBe("python");
+        expect(result?.linesOfCode).toBeGreaterThan(10);
+      });
+
+      test("extracts top-level functions with type hints and async", () => {
+        const greet = result?.functions.find((f) => f.name === "greet");
+        expect(greet).toBeDefined();
+        expect(greet?.isAsync).toBe(false);
+        expect(greet?.isExported).toBe(true);
+        expect(greet?.returnType).toBe("str");
+        expect(greet?.parameters.map((p) => p.name)).toEqual([
+          "name",
+          "polite",
+        ]);
+        expect(greet?.parameters[0].type).toBe("str");
+        expect(greet?.parameters[1].optional).toBe(true);
+
+        const fetchUser = result?.functions.find(
+          (f) => f.name === "fetch_user",
+        );
+        expect(fetchUser).toBeDefined();
+        expect(fetchUser?.isAsync).toBe(true);
+        expect(fetchUser?.isExported).toBe(true);
+        // Optional[dict] is a generic alias; tree-sitter returns the verbatim text.
+        expect(fetchUser?.returnType).toContain("Optional");
+
+        const internal = result?.functions.find(
+          (f) => f.name === "_internal_helper",
+        );
+        expect(internal).toBeDefined();
+        expect(internal?.isExported).toBe(false);
+      });
+
+      test("extracts classes, inheritance, and method visibility", () => {
+        const animal = result?.classes.find((c) => c.name === "Animal");
+        expect(animal).toBeDefined();
+        expect(animal?.extends).toBeNull();
+        expect(animal?.methods.map((m) => m.name).sort()).toEqual(
+          ["__init__", "_sniff", "speak"].sort(),
+        );
+
+        // Class-level annotated attribute is captured as a property.
+        const legs = animal?.properties.find((p) => p.name === "legs");
+        expect(legs).toBeDefined();
+        expect(legs?.type).toBe("int");
+
+        const speak = animal?.methods.find((m) => m.name === "speak");
+        expect(speak?.isPublic).toBe(true);
+        const sniff = animal?.methods.find((m) => m.name === "_sniff");
+        expect(sniff?.isPublic).toBe(false);
+
+        const dog = result?.classes.find((c) => c.name === "Dog");
+        expect(dog?.extends).toBe("Animal");
+        const fetch = dog?.methods.find((m) => m.name === "fetch");
+        expect(fetch?.isAsync).toBe(true);
+      });
+
+      test("extracts imports including aliases and from-imports", () => {
+        const sources = result?.imports.map((i) => i.source);
+        expect(sources).toEqual(
+          expect.arrayContaining(["os", "sys", "collections", "typing"]),
+        );
+
+        const sysImport = result?.imports.find((i) => i.source === "sys");
+        expect(sysImport?.imports[0].alias).toBe("system");
+
+        const fromTyping = result?.imports.find((i) => i.source === "typing");
+        expect(fromTyping?.imports.map((i) => i.name).sort()).toEqual([
+          "List",
+          "Optional",
+        ]);
+      });
+
+      test("populates exports for public top-level names", () => {
+        expect(result?.exports).toEqual(
+          expect.arrayContaining(["greet", "fetch_user", "Animal", "Dog"]),
+        );
+        expect(result?.exports).not.toContain("_internal_helper");
+      });
+    });
+
+    describe("Go", () => {
+      let result: Awaited<ReturnType<ASTAnalyzer["analyzeFile"]>>;
+
+      beforeAll(async () => {
+        result = await analyzer.analyzeFile(
+          join(fixtureRoot, "go", "sample.go"),
+        );
+      });
+
+      test("returns a non-null Go result", () => {
+        expect(result).not.toBeNull();
+        expect(result?.language).toBe("go");
+        expect(result?.linesOfCode).toBeGreaterThan(10);
+      });
+
+      test("extracts top-level functions and unexported helpers", () => {
+        const hello = result?.functions.find((f) => f.name === "Hello");
+        expect(hello).toBeDefined();
+        expect(hello?.isExported).toBe(true);
+        expect(hello?.returnType).toBe("string");
+        expect(hello?.parameters[0].name).toBe("name");
+        expect(hello?.parameters[0].type).toBe("string");
+
+        const helloMany = result?.functions.find(
+          (f) => f.name === "helloMany",
+        );
+        expect(helloMany).toBeDefined();
+        expect(helloMany?.isExported).toBe(false);
+        // Variadic param: type is rendered with `...` prefix.
+        const variadic = helloMany?.parameters.find(
+          (p) => p.name === "names",
+        );
+        expect(variadic?.type).toBe("...string");
+      });
+
+      test("extracts struct types with mixed-visibility fields", () => {
+        const server = result?.classes.find((c) => c.name === "Server");
+        expect(server).toBeDefined();
+        expect(server?.isExported).toBe(true);
+
+        const port = server?.properties.find((p) => p.name === "Port");
+        expect(port?.visibility).toBe("public");
+        expect(port?.type).toBe("int");
+
+        const host = server?.properties.find((p) => p.name === "host");
+        expect(host?.visibility).toBe("private");
+      });
+
+      test("attaches methods to their receiver struct", () => {
+        const server = result?.classes.find((c) => c.name === "Server");
+        const methodNames = server?.methods.map((m) => m.name).sort() ?? [];
+        expect(methodNames).toEqual(["Start", "listen"].sort());
+
+        const start = server?.methods.find((m) => m.name === "Start");
+        expect(start?.isExported).toBe(true);
+        const listen = server?.methods.find((m) => m.name === "listen");
+        expect(listen?.isExported).toBe(false);
+      });
+
+      test("extracts interface declarations with method specs", () => {
+        const greeter = result?.interfaces.find((i) => i.name === "Greeter");
+        expect(greeter).toBeDefined();
+        expect(greeter?.isExported).toBe(true);
+        expect(greeter?.methods.map((m) => m.name).sort()).toEqual(
+          ["Greet", "GreetMany"].sort(),
+        );
+      });
+
+      test("extracts imports including aliased imports", () => {
+        const sources = result?.imports.map((i) => i.source);
+        expect(sources).toEqual(
+          expect.arrayContaining(["fmt", "io", "context"]),
+        );
+        const ioImport = result?.imports.find((i) => i.source === "io");
+        expect(ioImport?.imports[0].alias).toBe("stdio");
+      });
+
+      test("populates exports with capitalized identifiers", () => {
+        expect(result?.exports).toEqual(
+          expect.arrayContaining([
+            "Greeter",
+            "Server",
+            "NewServer",
+            "Hello",
+          ]),
+        );
+        expect(result?.exports).not.toContain("helloMany");
+      });
+    });
+
+    describe("Graceful degradation", () => {
+      test("returns a structural-only result for unsupported but-declared languages", async () => {
+        // tree-sitter-rust ships a wasm but we haven't written an extractor
+        // for Rust yet (that's the natural follow-up). The analyzer should
+        // still return a result whose contentHash + linesOfCode are valid so
+        // drift detection can compare files at file granularity.
+        const filePath = join(tempDir, "stub.rs");
+        await fs.writeFile(
+          filePath,
+          'fn main() { println!("hello"); }\n',
+          "utf-8",
+        );
+
+        const result = await analyzer.analyzeFile(filePath);
+        expect(result).not.toBeNull();
+        expect(result?.language).toBe("rust");
+        expect(result?.functions).toEqual([]);
+        expect(result?.contentHash.length).toBe(64); // sha256 hex
+        expect(result?.linesOfCode).toBeGreaterThan(0);
+      });
+    });
+  });
 });

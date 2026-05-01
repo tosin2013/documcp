@@ -9,6 +9,11 @@ import { parse as parseTypeScript } from "@typescript-eslint/typescript-estree";
 import { promises as fs } from "fs";
 import path from "path";
 import crypto from "crypto";
+import {
+  extractGoSignatures,
+  extractPythonSignatures,
+  getParserForLanguage,
+} from "./ast-tree-sitter.js";
 
 // Language configuration
 const LANGUAGE_CONFIGS: Record<
@@ -351,7 +356,18 @@ export class ASTAnalyzer {
   }
 
   /**
-   * Analyze using tree-sitter (placeholder for other languages)
+   * Analyze a non-TS/JS source file using web-tree-sitter (Issue #112, ADR-015).
+   *
+   * Per-language extractors live in `./ast-tree-sitter.ts`; this method is a
+   * thin orchestrator that:
+   *   1. Acquires a lazily-loaded parser for the language.
+   *   2. Routes to the right extractor (currently Python and Go land in their
+   *      typed extractors; the remaining ADR-015 languages — Rust, Java, Ruby,
+   *      Bash — return a structural-only result whose `contentHash` still
+   *      enables drift detection at file granularity).
+   *   3. Falls back to structural-only mode if the parser fails to load (e.g.
+   *      missing wasm asset on a partial install) — the same shape every
+   *      caller already handles.
    */
   private async analyzeWithTreeSitter(
     filePath: string,
@@ -359,29 +375,64 @@ export class ASTAnalyzer {
     language: string,
     lastModified: string,
   ): Promise<ASTAnalysisResult> {
-    // Placeholder for tree-sitter analysis
-    // In a full implementation, we'd parse the content using tree-sitter
-    // and extract language-specific constructs
+    const functions: FunctionSignature[] = [];
+    const classes: ClassInfo[] = [];
+    const interfaces: InterfaceInfo[] = [];
+    const types: TypeInfo[] = [];
+    const imports: ImportInfo[] = [];
+    const exports: string[] = [];
+
+    try {
+      const parser = await getParserForLanguage(language);
+      if (parser) {
+        const tree = parser.parse(content);
+        if (language === "python") {
+          extractPythonSignatures(tree.rootNode, content, {
+            functions,
+            classes,
+            imports,
+            exports,
+          });
+        } else if (language === "go") {
+          extractGoSignatures(tree.rootNode, content, {
+            functions,
+            classes,
+            interfaces,
+            imports,
+            exports,
+          });
+        }
+        // Other declared languages (rust, java, ruby, bash) keep the
+        // structural-only return below intentionally — adding their extractors
+        // is the next-language follow-up per ADR-015.
+      }
+    } catch (error) {
+      console.warn(
+        `Failed to parse ${language} file ${filePath} via tree-sitter:`,
+        (error as Error).message,
+      );
+    }
 
     const contentHash = crypto
       .createHash("sha256")
       .update(content)
       .digest("hex");
     const linesOfCode = content.split("\n").length;
+    const complexity = this.calculateComplexity(functions, classes);
 
     return {
       filePath,
       language,
-      functions: [],
-      classes: [],
-      interfaces: [],
-      types: [],
-      imports: [],
-      exports: [],
+      functions,
+      classes,
+      interfaces,
+      types,
+      imports,
+      exports,
       contentHash,
       lastModified,
       linesOfCode,
-      complexity: 0,
+      complexity,
     };
   }
 
