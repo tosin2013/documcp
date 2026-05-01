@@ -55,6 +55,69 @@ export interface ChangeWatcherResult {
   events: ChangeEvent[];
 }
 
+/**
+ * Persisted watcher state (issue #113).
+ *
+ * Stored as JSONL in `.documcp/watcher-state.jsonl` so each successful
+ * detection appends a single line. On startup we read the LAST line to
+ * recover the most recent state. JSONL is the right shape here because:
+ *
+ *   1. Append-only writes are atomic at the line level on POSIX, so we
+ *      don't have to do read-modify-write that could lose data on crash.
+ *   2. The full history of a long-running watcher is preserved for free,
+ *      which is useful for debugging "why did this drift event fire?"
+ *      without requiring a separate audit log.
+ *   3. It mirrors the JSONL convention already used by `kg-storage.ts`
+ *      and the memory layer (entities/relationships JSONL files).
+ *
+ * Schema versioning: every record carries `version` so we can change the
+ * shape later without breaking older state files (we'd just ignore lines
+ * with unknown versions and start fresh).
+ */
+export interface WatcherState {
+  /** Schema version — bump on incompatible changes. */
+  version: typeof WATCHER_STATE_VERSION;
+  /** ISO timestamp of the most recent successful detection run. */
+  lastDetectionAt: string | null;
+  /** Snapshot timestamp used as the "last known good" baseline. */
+  lastSnapshotId: string | null;
+  /** Cumulative count of change events processed since first run. */
+  eventCount: number;
+  /** Most recent N event types — bounded ring buffer for diagnostics. */
+  recentEventTypes: ChangeTrigger[];
+}
+
+/**
+ * Bumped only on incompatible schema changes. Old state files with a
+ * different version are ignored on load and a fresh run starts.
+ */
+export const WATCHER_STATE_VERSION = "1" as const;
+
+/** Filename written under `snapshotDir` (or `.documcp/`). */
+export const WATCHER_STATE_FILENAME = "watcher-state.jsonl";
+
+/** Maximum number of recent event types to retain in `recentEventTypes`. */
+const RECENT_EVENT_TYPES_LIMIT = 10;
+
+/**
+ * Runtime validator for a parsed JSON object claiming to be a WatcherState.
+ * We accept records whose required fields are present and have the right
+ * primitive types; we tolerate extra unknown fields so we don't break on
+ * future schema additions that aren't actually incompatible.
+ */
+function isWatcherStateRecord(value: unknown): value is WatcherState {
+  if (!value || typeof value !== "object") return false;
+  const v = value as Record<string, unknown>;
+  return (
+    typeof v.version === "string" &&
+    (v.lastDetectionAt === null || typeof v.lastDetectionAt === "string") &&
+    (v.lastSnapshotId === null || typeof v.lastSnapshotId === "string") &&
+    typeof v.eventCount === "number" &&
+    Array.isArray(v.recentEventTypes) &&
+    v.recentEventTypes.every((t) => typeof t === "string")
+  );
+}
+
 interface DriftDetectorLike {
   initialize(): Promise<void>;
   createSnapshot(projectPath: string, docsPath: string): Promise<DriftSnapshot>;
@@ -101,6 +164,18 @@ export class ChangeWatcher {
   private latestSnapshot: DriftSnapshot | null = null;
   private isRunningDetection = false;
   private stopped = false;
+  /**
+   * In-memory mirror of the most recent persisted record. Re-hydrated from
+   * disk on `start()` and updated after every successful `runDetection()`.
+   * Always non-null after `start()` returns.
+   */
+  private currentState: WatcherState = {
+    version: WATCHER_STATE_VERSION,
+    lastDetectionAt: null,
+    lastSnapshotId: null,
+    eventCount: 0,
+    recentEventTypes: [],
+  };
 
   constructor(options: ChangeWatcherOptions, deps: ChangeWatcherDeps = {}) {
     const triggerOnCommit = options.triggerOnCommit ?? true;
@@ -127,6 +202,18 @@ export class ChangeWatcher {
 
   async start(): Promise<void> {
     this.stopped = false;
+    // Rehydrate before initializing the detector so corrupt/missing state
+    // is handled before we do any expensive work. A failure here never
+    // throws — the recovery path is "just start fresh".
+    const persisted = await this.loadState();
+    if (persisted) {
+      this.currentState = persisted;
+      this.logInfo(
+        `Rehydrated watcher state: ${persisted.eventCount} prior event(s), last detection ${
+          persisted.lastDetectionAt ?? "never"
+        }`,
+      );
+    }
     await this.ensureDetector();
     await this.ensureBaseline();
     this.startFsWatcher();
@@ -160,6 +247,10 @@ export class ChangeWatcher {
     watchPaths: string[];
     debounceMs: number;
     pendingEvents: number;
+    lastDetectionAt: string | null;
+    eventCount: number;
+    recentEventTypes: ChangeTrigger[];
+    statePath: string;
   } {
     return {
       running: !this.stopped,
@@ -172,6 +263,10 @@ export class ChangeWatcher {
       watchPaths: this.options.watchPaths,
       debounceMs: this.options.debounceMs,
       pendingEvents: this.queuedEvents.length,
+      lastDetectionAt: this.currentState.lastDetectionAt,
+      eventCount: this.currentState.eventCount,
+      recentEventTypes: [...this.currentState.recentEventTypes],
+      statePath: this.getStatePath(),
     };
   }
 
@@ -441,6 +536,24 @@ fi
       this.logInfo(
         `Drift detection completed: ${result.changedSymbols.length} symbols changed, ${result.affectedDocs.length} doc(s) affected.`,
       );
+
+      // Update + persist state. We do this AFTER the result is built but
+      // INSIDE the try/finally so a persistence failure can't double-fault
+      // (logged + swallowed by appendState's own try/catch). The detection
+      // itself has already succeeded; failing to write the state file just
+      // means the next restart re-uses the prior baseline, which is fine.
+      this.currentState = {
+        version: WATCHER_STATE_VERSION,
+        lastDetectionAt: new Date().toISOString(),
+        lastSnapshotId: currentSnapshot.timestamp,
+        eventCount: this.currentState.eventCount + events.length,
+        recentEventTypes: [
+          ...events.map((e) => e.type),
+          ...this.currentState.recentEventTypes,
+        ].slice(0, RECENT_EVENT_TYPES_LIMIT),
+      };
+      await this.appendState(this.currentState);
+
       return result;
     } catch (error: any) {
       this.logError(`Change watcher detection failed: ${error.message}`);
@@ -449,6 +562,104 @@ fi
     }
 
     return null;
+  }
+
+  /**
+   * Resolve the watcher state file path. Falls under the configured
+   * `snapshotDir` when one is provided so a single watcher run owns
+   * snapshots and state in the same directory; otherwise lands in
+   * `<projectPath>/.documcp/`. Public-as-test-seam (used by integration
+   * tests to assert the file landed where expected).
+   */
+  getStatePath(): string {
+    const baseDir =
+      this.options.snapshotDir ??
+      path.join(this.options.projectPath, ".documcp");
+    return path.join(baseDir, WATCHER_STATE_FILENAME);
+  }
+
+  /**
+   * Load the most recent persisted state, or return null when no usable
+   * record exists. Three failure modes, all non-throwing:
+   *
+   *   - File missing: silent (this is the cold-start case)
+   *   - File present but unparseable: warn, return null (start fresh)
+   *   - File present, valid JSON, but schema version mismatch:
+   *     warn, return null (avoid silently mis-deserializing fields that
+   *     may have changed shape)
+   *
+   * We deliberately read only the LAST line: earlier history is preserved
+   * for diagnostics but doesn't influence the current run.
+   */
+  private async loadState(): Promise<WatcherState | null> {
+    const statePath = this.getStatePath();
+    let raw: string;
+    try {
+      raw = await fs.readFile(statePath, "utf-8");
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code === "ENOENT") {
+        // Cold start — completely normal, no warning needed.
+        return null;
+      }
+      this.logWarn(
+        `Could not read watcher state at ${statePath}: ${
+          (err as Error).message
+        }; starting fresh.`,
+      );
+      return null;
+    }
+
+    const lines = raw.split("\n").filter((l) => l.trim().length > 0);
+    if (lines.length === 0) {
+      return null;
+    }
+
+    const lastLine = lines[lines.length - 1];
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(lastLine);
+    } catch {
+      this.logWarn(
+        `Watcher state file ${statePath} is not valid JSONL; starting fresh.`,
+      );
+      return null;
+    }
+
+    if (!isWatcherStateRecord(parsed)) {
+      this.logWarn(
+        `Watcher state record at ${statePath} has unrecognized shape; starting fresh.`,
+      );
+      return null;
+    }
+
+    if (parsed.version !== WATCHER_STATE_VERSION) {
+      this.logWarn(
+        `Watcher state schema mismatch (got ${parsed.version}, expected ${WATCHER_STATE_VERSION}); starting fresh.`,
+      );
+      return null;
+    }
+
+    return parsed;
+  }
+
+  /**
+   * Append a single state record as a JSON line. Failures are logged but
+   * not thrown — drift detection has already succeeded by the time this
+   * runs and we don't want a transient ENOSPC / EACCES to look like a
+   * detection failure to the caller.
+   */
+  private async appendState(state: WatcherState): Promise<void> {
+    const statePath = this.getStatePath();
+    try {
+      await fs.mkdir(path.dirname(statePath), { recursive: true });
+      await fs.appendFile(statePath, JSON.stringify(state) + "\n", "utf-8");
+    } catch (err) {
+      this.logWarn(
+        `Could not persist watcher state to ${statePath}: ${
+          (err as Error).message
+        }`,
+      );
+    }
   }
 
   private buildResultFromDrift(
