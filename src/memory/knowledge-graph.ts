@@ -35,7 +35,9 @@ export interface GraphNode {
     | "documentation_freshness_event"
     | "documentation_example"
     | "example_validation"
-    | "call_graph";
+    | "call_graph"
+    | "drift_event"
+    | "drift_outcome";
   label: string;
   properties: Record<string, any>;
   weight: number;

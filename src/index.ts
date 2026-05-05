@@ -50,6 +50,10 @@ import {
   handleChangeWatcher,
 } from "./tools/change-watcher.js";
 import {
+  recordDriftOutcomeSchema,
+  handleRecordDriftOutcome,
+} from "./tools/record-drift-outcome.js";
+import {
   manageSitemap,
   ManageSitemapInputSchema,
 } from "./tools/manage-sitemap.js";
@@ -1032,6 +1036,12 @@ const TOOLS = [
     name: changeWatcherTool.name,
     description: changeWatcherTool.description,
     inputSchema: changeWatcherSchema,
+  },
+  {
+    name: "record_drift_outcome",
+    description:
+      "Record the host's judgment ('actionable' | 'noise' | 'deferred') for a previously-detected drift. Outcomes feed back into priority-scoring weights via the knowledge graph (ADR-012 Phase 4, Issue #114).",
+    inputSchema: recordDriftOutcomeSchema,
   },
   {
     name: "generate_contextual_content",
@@ -2948,6 +2958,34 @@ server.setRequestHandler(CallToolRequestSchema, async (request, extra) => {
 
         const result = await handleChangeWatcher(args, extra);
         return wrapToolResult(result, "change_watcher");
+      }
+
+      case "record_drift_outcome": {
+        const projectPath = (args as any)?.projectPath;
+
+        // Project path is the only filesystem-adjacent input — outcomes
+        // themselves are KG metadata, not file edits — but we still gate on
+        // it so the host can't record outcomes against directories they
+        // weren't granted access to via --root.
+        if (projectPath && !isPathAllowed(projectPath, allowedRoots)) {
+          return formatMCPResponse({
+            success: false,
+            error: {
+              code: "PERMISSION_DENIED",
+              message: getPermissionDeniedMessage(projectPath, allowedRoots),
+              resolution:
+                "Request access to this directory by starting the server with --root argument.",
+            },
+            metadata: {
+              toolVersion: packageJson.version,
+              executionTime: 0,
+              timestamp: new Date().toISOString(),
+            },
+          });
+        }
+
+        const result = await handleRecordDriftOutcome(args);
+        return wrapToolResult(result, "record_drift_outcome");
       }
 
       case "generate_contextual_content": {

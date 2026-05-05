@@ -8,6 +8,12 @@
 import { promises as fs } from "fs";
 import path from "path";
 import { ASTAnalyzer, ASTAnalysisResult, CodeDiff } from "./ast-analyzer.js";
+import {
+  generateDriftId,
+  storeDriftEvent,
+  getDriftFeedbackHistory,
+  type DriftFactorSnapshot,
+} from "../memory/kg-drift-feedback.js";
 
 export interface DriftDetectionResult {
   filePath: string;
@@ -115,10 +121,33 @@ export interface PriorityWeights {
 }
 
 /**
- * Extended drift detection result with priority scoring
+ * Extended drift detection result with priority scoring.
+ *
+ * `driftId` is populated whenever the result was produced via one of the
+ * `detectDriftWithPriority*` paths (Issue #114). Hosts pass this value back
+ * through the `record_drift_outcome` MCP tool to close the feedback loop.
  */
 export interface PrioritizedDriftResult extends DriftDetectionResult {
   priorityScore?: DriftPriorityScore;
+  driftId?: string;
+}
+
+/**
+ * Options for the priority-aware drift detection paths. Adding the bag here
+ * (rather than overloading) keeps the existing 3-arg call sites untouched.
+ */
+export interface PriorityDetectionOptions {
+  /**
+   * When provided, every detected drift gets persisted as a `drift_event`
+   * node in the KG so subsequent `record_drift_outcome` calls can find them.
+   */
+  projectPath?: string;
+  /**
+   * When true *and* `projectPath` is provided, the detector swaps in the
+   * calibrated weight set computed from prior outcome history (ADR-012
+   * Phase 4). Falls back to defaults when there isn't enough history yet.
+   */
+  useCalibration?: boolean;
 }
 
 /**
@@ -150,6 +179,22 @@ export class DriftDetector {
     staleness: 0.1,
     userFeedback: 0.05,
   };
+
+  /**
+   * Calibration constants (Issue #114, ADR-012 Phase 4).
+   *
+   * - MIN_EVIDENCE_FOR_CALIBRATION: below this many recorded outcomes the
+   *   detector falls back to DEFAULT_WEIGHTS to avoid overfitting on a tiny
+   *   sample.
+   * - MAX_CALIBRATION_ADJUSTMENT: cap on per-factor weight movement
+   *   (±50% — derived from the average factor credit normalized to [-1, +1]).
+   * - MIN_FACTOR_FLOOR_RATIO: every factor keeps at least this share of its
+   *   default weight, so even consistently-noisy factors never go to zero
+   *   and all six dimensions keep contributing.
+   */
+  private static readonly MIN_EVIDENCE_FOR_CALIBRATION = 3;
+  private static readonly MAX_CALIBRATION_ADJUSTMENT = 0.5;
+  private static readonly MIN_FACTOR_FLOOR_RATIO = 0.25;
 
   private analyzer: ASTAnalyzer;
   private snapshotDir: string;
@@ -1682,48 +1727,82 @@ export class DriftDetector {
   }
 
   /**
-   * Detect drift with priority scoring (synchronous user feedback)
+   * Detect drift with priority scoring (synchronous user feedback).
+   *
+   * Issue #114: when `options.projectPath` is provided, every detected drift
+   * is also persisted as a `drift_event` node in the KG so that subsequent
+   * `record_drift_outcome` MCP calls can look it up by `driftId`. Setting
+   * `options.useCalibration` additionally swaps in the calibrated weight set
+   * derived from prior outcome history for *this call only*.
    */
   async detectDriftWithPriority(
     oldSnapshot: DriftSnapshot,
     newSnapshot: DriftSnapshot,
     usageMetadata?: UsageMetadata,
+    options?: PriorityDetectionOptions,
   ): Promise<PrioritizedDriftResult[]> {
-    const results = await this.detectDrift(oldSnapshot, newSnapshot);
+    const restoreWeights = await this.maybeApplyCalibratedWeights(options);
+    try {
+      const results = await this.detectDrift(oldSnapshot, newSnapshot);
 
-    return results.map((result) => ({
-      ...result,
-      priorityScore: this.calculatePriorityScore(
-        result,
+      const prioritized: PrioritizedDriftResult[] = results.map((result) => {
+        const score = this.calculatePriorityScore(
+          result,
+          newSnapshot,
+          usageMetadata,
+        );
+        const driftId = this.makeDriftIdForResult(result, newSnapshot);
+        return { ...result, driftId, priorityScore: score };
+      });
+
+      await this.persistDriftEventsIfRequested(
+        prioritized,
         newSnapshot,
-        usageMetadata,
-      ),
-    }));
+        options,
+      );
+
+      return prioritized;
+    } finally {
+      restoreWeights();
+    }
   }
 
   /**
-   * Detect drift with priority scoring (async user feedback support)
+   * Detect drift with priority scoring (async user feedback support).
+   * Same `options` semantics as `detectDriftWithPriority`.
    */
   async detectDriftWithPriorityAsync(
     oldSnapshot: DriftSnapshot,
     newSnapshot: DriftSnapshot,
     usageMetadata?: UsageMetadata,
+    options?: PriorityDetectionOptions,
   ): Promise<PrioritizedDriftResult[]> {
-    const results = await this.detectDrift(oldSnapshot, newSnapshot);
+    const restoreWeights = await this.maybeApplyCalibratedWeights(options);
+    try {
+      const results = await this.detectDrift(oldSnapshot, newSnapshot);
 
-    // Calculate priority scores with async user feedback
-    const prioritizedResults = await Promise.all(
-      results.map(async (result) => ({
-        ...result,
-        priorityScore: await this.calculatePriorityScoreAsync(
-          result,
-          newSnapshot,
-          usageMetadata,
-        ),
-      })),
-    );
+      const prioritizedResults: PrioritizedDriftResult[] = await Promise.all(
+        results.map(async (result) => {
+          const score = await this.calculatePriorityScoreAsync(
+            result,
+            newSnapshot,
+            usageMetadata,
+          );
+          const driftId = this.makeDriftIdForResult(result, newSnapshot);
+          return { ...result, driftId, priorityScore: score };
+        }),
+      );
 
-    return prioritizedResults;
+      await this.persistDriftEventsIfRequested(
+        prioritizedResults,
+        newSnapshot,
+        options,
+      );
+
+      return prioritizedResults;
+    } finally {
+      restoreWeights();
+    }
   }
 
   /**
@@ -1733,6 +1812,7 @@ export class DriftDetector {
     oldSnapshot: DriftSnapshot,
     newSnapshot: DriftSnapshot,
     usageMetadata?: UsageMetadata,
+    options?: PriorityDetectionOptions,
   ): Promise<PrioritizedDriftResult[]> {
     // Use async version if user feedback integration is configured
     const useAsyncFeedback = this.userFeedbackIntegration !== undefined;
@@ -1742,11 +1822,13 @@ export class DriftDetector {
           oldSnapshot,
           newSnapshot,
           usageMetadata,
+          options,
         )
       : await this.detectDriftWithPriority(
           oldSnapshot,
           newSnapshot,
           usageMetadata,
+          options,
         );
 
     // Sort by overall score (descending - highest priority first)
@@ -1755,5 +1837,201 @@ export class DriftDetector {
       const scoreB = b.priorityScore?.overall ?? 0;
       return scoreB - scoreA;
     });
+  }
+
+  // ==========================================================================
+  // Feedback-driven calibration (Issue #114, ADR-012 Phase 4)
+  // ==========================================================================
+
+  /**
+   * Compute calibrated priority weights for a project from its recorded
+   * drift-outcome history.
+   *
+   * **Formula (also documented in ADR-012 Phase 4):**
+   *
+   * ```
+   *   For each (event, outcome) entry where outcome ∈ {actionable, noise}:
+   *     delta = +1 if 'actionable', -1 if 'noise'
+   *     for each factor i:
+   *       normalized   = (event.factors[i] - 50) / 50   // ∈ [-1, +1]
+   *       credit[i]   += delta * normalized
+   *
+   *   evidence = count of {actionable | noise} entries
+   *   if evidence < MIN_EVIDENCE_FOR_CALIBRATION (3):
+   *     return DEFAULT_WEIGHTS  // not enough signal
+   *
+   *   for each factor i:
+   *     avg_credit = credit[i] / evidence              // ∈ [-1, +1]
+   *     boost      = avg_credit * MAX_ADJUSTMENT (0.5) // ∈ [-0.5, +0.5]
+   *     raw[i]     = DEFAULT[i] * (1 + boost)
+   *     raw[i]     = max(raw[i], DEFAULT[i] * MIN_FACTOR_FLOOR_RATIO)  // 25% floor
+   *
+   *   calibrated[i] = raw[i] / sum(raw)  // renormalize to ∑w = 1
+   * ```
+   *
+   * Properties:
+   *  - Factors that consistently scored high on actionable drifts get
+   *    boosted; factors that scored high on noisy drifts get suppressed.
+   *  - 'deferred' outcomes contribute zero signal (host hasn't decided).
+   *  - The 25% floor + ±50% cap prevent any factor from going extinct or
+   *    swallowing all weight after a small streak of one-sided outcomes.
+   *  - Renormalization keeps the weight vector summing to 1.0, matching the
+   *    invariant `DEFAULT_WEIGHTS` already satisfies.
+   */
+  async getCalibratedWeights(projectPath: string): Promise<PriorityWeights> {
+    const history = await getDriftFeedbackHistory(projectPath);
+
+    const signalled = history.filter(
+      (h) => h.outcome.outcome !== "deferred",
+    );
+
+    if (signalled.length < DriftDetector.MIN_EVIDENCE_FOR_CALIBRATION) {
+      return DriftDetector.DEFAULT_WEIGHTS;
+    }
+
+    const factorKeys = Object.keys(
+      DriftDetector.DEFAULT_WEIGHTS,
+    ) as (keyof PriorityWeights)[];
+
+    const credit: Record<keyof PriorityWeights, number> = {
+      codeComplexity: 0,
+      usageFrequency: 0,
+      changeMagnitude: 0,
+      documentationCoverage: 0,
+      staleness: 0,
+      userFeedback: 0,
+    };
+
+    for (const entry of signalled) {
+      const delta = entry.outcome.outcome === "actionable" ? 1 : -1;
+      for (const key of factorKeys) {
+        const score = (entry.event.factors as DriftFactorSnapshot)[key] ?? 50;
+        const normalized = (score - 50) / 50; // [-1, +1]
+        credit[key] += delta * normalized;
+      }
+    }
+
+    const evidence = signalled.length;
+    const raw: Record<keyof PriorityWeights, number> = {
+      codeComplexity: 0,
+      usageFrequency: 0,
+      changeMagnitude: 0,
+      documentationCoverage: 0,
+      staleness: 0,
+      userFeedback: 0,
+    };
+
+    for (const key of factorKeys) {
+      const avgCredit = credit[key] / evidence;
+      const boost = avgCredit * DriftDetector.MAX_CALIBRATION_ADJUSTMENT;
+      const adjusted = DriftDetector.DEFAULT_WEIGHTS[key] * (1 + boost);
+      const floor =
+        DriftDetector.DEFAULT_WEIGHTS[key] *
+        DriftDetector.MIN_FACTOR_FLOOR_RATIO;
+      raw[key] = Math.max(adjusted, floor);
+    }
+
+    const total = factorKeys.reduce((sum, k) => sum + raw[k], 0);
+    if (total === 0) {
+      // Degenerate case: every factor hit the floor and the sum still ended
+      // up at zero (only possible with zero default weights, which we don't
+      // ship). Fall back to defaults rather than divide-by-zero.
+      return DriftDetector.DEFAULT_WEIGHTS;
+    }
+
+    const calibrated: PriorityWeights = {
+      codeComplexity: raw.codeComplexity / total,
+      usageFrequency: raw.usageFrequency / total,
+      changeMagnitude: raw.changeMagnitude / total,
+      documentationCoverage: raw.documentationCoverage / total,
+      staleness: raw.staleness / total,
+      userFeedback: raw.userFeedback / total,
+    };
+
+    return calibrated;
+  }
+
+  /**
+   * Compute a deterministic drift ID for a single result. The host receives
+   * this back in `record_drift_outcome` to anchor outcomes to the original
+   * detection.
+   */
+  private makeDriftIdForResult(
+    result: DriftDetectionResult,
+    snapshot: DriftSnapshot,
+  ): string {
+    const symbols = Array.from(
+      new Set(
+        result.drifts.flatMap((d) => d.codeChanges.map((c) => c.name)),
+      ),
+    );
+    return generateDriftId(result.filePath, symbols, snapshot.timestamp);
+  }
+
+  /**
+   * If the caller asked for calibrated weights AND provided a projectPath,
+   * temporarily swap them in. Returns a `restore()` callback the public
+   * detection methods invoke in `finally` so weights revert even on error.
+   */
+  private async maybeApplyCalibratedWeights(
+    options?: PriorityDetectionOptions,
+  ): Promise<() => void> {
+    if (!options?.useCalibration || !options.projectPath) {
+      return () => {
+        /* nothing to restore */
+      };
+    }
+    const previous = this.customWeights;
+    const calibrated = await this.getCalibratedWeights(options.projectPath);
+    this.customWeights = calibrated;
+    return () => {
+      this.customWeights = previous;
+    };
+  }
+
+  /**
+   * Persist a drift_event to the KG for each prioritized result when the
+   * caller supplied a projectPath. Errors are logged but never thrown — KG
+   * persistence is auxiliary to drift detection itself.
+   */
+  private async persistDriftEventsIfRequested(
+    results: PrioritizedDriftResult[],
+    snapshot: DriftSnapshot,
+    options?: PriorityDetectionOptions,
+  ): Promise<void> {
+    if (!options?.projectPath) return;
+
+    for (const result of results) {
+      if (!result.priorityScore || !result.driftId) continue;
+      try {
+        await storeDriftEvent(options.projectPath, {
+          driftId: result.driftId,
+          filePath: result.filePath,
+          severity: this.normalizeSeverityForRecord(result.severity),
+          recommendation: result.priorityScore.recommendation,
+          overallScore: result.priorityScore.overall,
+          factors: result.priorityScore.factors,
+          detectedAt: snapshot.timestamp,
+        });
+      } catch (error) {
+        console.warn(
+          `Failed to persist drift event for ${result.filePath}: ${
+            (error as Error).message
+          }`,
+        );
+      }
+    }
+  }
+
+  /**
+   * `DriftDetectionResult.severity` includes a "none" variant that we don't
+   * want bleeding into the KG record (drift events shouldn't exist for
+   * non-drifts). Map "none" up to "low" so the schema constraint holds.
+   */
+  private normalizeSeverityForRecord(
+    severity: DriftDetectionResult["severity"],
+  ): "critical" | "high" | "medium" | "low" {
+    if (severity === "none") return "low";
+    return severity;
   }
 }
