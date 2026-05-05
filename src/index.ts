@@ -86,6 +86,7 @@ import {
   cleanupOldMemories,
   memoryTools,
 } from "./memory/index.js";
+import { aggregateCommunityInsights } from "./memory/community-insights.js";
 
 // Get version from package.json
 const __filename = fileURLToPath(import.meta.url);
@@ -1224,6 +1225,12 @@ const TOOLS = [
         .describe("Custom patterns to detect in addition to defaults"),
     }),
   },
+  {
+    name: "get_community_insights",
+    description:
+      "Aggregate cross-project signals from the Knowledge Graph and surface community-level insights: deployment success rates per SSG, common technology stacks, frequent drift sources, and project health distribution. All data is anonymized — no raw project paths are exposed.",
+    inputSchema: z.object({}),
+  },
   // Memory system tools
   ...memoryTools.map((tool) => ({
     ...tool,
@@ -1661,6 +1668,14 @@ const RESOURCES = [
     name: "Freshness Metadata Schema",
     description:
       "Schema for documentation frontmatter freshness metadata fields",
+    mimeType: "application/json",
+  },
+  // Community insights resource (Phase 3)
+  {
+    uri: "documcp://insights/community",
+    name: "Community Insights",
+    description:
+      "Aggregated cross-project insights: SSG success rates, common tech stacks, frequent drift sources, and project health — all anonymized",
     mimeType: "application/json",
   },
 ];
@@ -2429,6 +2444,20 @@ documcp:
       default:
         throw new Error(`Unknown freshness resource: ${freshnessType}`);
     }
+  }
+
+  // Handle community insights resource (Phase 3)
+  if (uri === "documcp://insights/community") {
+    const insights = await aggregateCommunityInsights();
+    return {
+      contents: [
+        {
+          uri,
+          mimeType: "application/json",
+          text: JSON.stringify(insights, null, 2),
+        },
+      ],
+    };
   }
 
   throw new Error(`Resource not found: ${uri}`);
@@ -3758,6 +3787,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request, extra) => {
             },
           ],
         };
+      }
+
+      case "get_community_insights": {
+        const insights = await aggregateCommunityInsights();
+        return wrapToolResult(insights, "get_community_insights");
       }
 
       default:
