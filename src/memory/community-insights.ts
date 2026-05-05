@@ -61,7 +61,7 @@ export interface CommunityInsights {
  *   lib/auth.py          →  lib/*.py
  *   index.js             →  *.js
  */
-function anonymiseFilePath(filePath: string): string {
+function anonymizeFilePath(filePath: string): string {
   const parts = filePath.split(/[\\/]/);
   const basename = parts[parts.length - 1] ?? "";
   const dotIndex = basename.lastIndexOf(".");
@@ -157,7 +157,7 @@ export async function aggregateCommunityInsights(): Promise<CommunityInsights> {
     .sort((a, b) => b.deploymentCount - a.deploymentCount);
 
   // ── Frequent drift sources ───────────────────────────────────────────────
-  // Aggregate drift events by anonymised file category, keeping the
+  // Aggregate drift events by anonymized file category, keeping the
   // most-severe observation per category group.
   const driftNodes = allNodes.filter((n) => n.type === "drift_event");
 
@@ -179,7 +179,7 @@ export async function aggregateCommunityInsights(): Promise<CommunityInsights> {
 
   for (const driftNode of driftNodes) {
     const rawPath = (driftNode.properties.filePath as string | undefined) ?? "";
-    const category = anonymiseFilePath(rawPath);
+    const category = anonymizeFilePath(rawPath);
     const severity = (driftNode.properties.severity as string) ?? "low";
     const score = (driftNode.properties.overallScore as number) ?? 0;
 
