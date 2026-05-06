@@ -146,6 +146,9 @@ export class KGStorage {
       }
       const content = lines.join("\n") + "\n";
 
+      // Ensure directory exists for temp file
+      await fs.mkdir(dirname(tempFile), { recursive: true });
+
       // Write all content at once
       await fs.writeFile(tempFile, content, "utf-8");
 
@@ -234,6 +237,9 @@ export class KGStorage {
         lines.push(JSON.stringify(relationship));
       }
       const content = lines.join("\n") + "\n";
+
+      // Ensure directory exists for temp file
+      await fs.mkdir(dirname(tempFile), { recursive: true });
 
       // Write all content at once
       await fs.writeFile(tempFile, content, "utf-8");
