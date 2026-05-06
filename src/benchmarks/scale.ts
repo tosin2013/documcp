@@ -21,7 +21,7 @@ export type BenchmarkOperation =
 
 export interface BenchmarkThresholds {
   maxRegressionPercent: number;
-  baselinesMs: Record<BenchmarkOperation, Record<string, number>>;
+  baselinesMs: Record<BenchmarkOperation, Partial<Record<FixtureSize, number>>>;
 }
 
 export interface Percentiles {
@@ -120,7 +120,7 @@ export function evaluateRegressions(
     for (const [operation, result] of Object.entries(fixture.operations) as Array<
       [BenchmarkOperation, OperationBenchmarkResult]
     >) {
-      const baseline = thresholds.baselinesMs[operation][String(fixture.fixtureSize)];
+      const baseline = thresholds.baselinesMs[operation][fixture.fixtureSize];
       if (typeof baseline !== "number" || baseline <= 0) continue;
 
       const deltaPercent = ((result.percentiles.p50 - baseline) / baseline) * 100;
@@ -146,7 +146,7 @@ export function buildMarkdownSummary(report: ScaleBenchmarkReport): string {
         [BenchmarkOperation, OperationBenchmarkResult]
       >).map(([operation, result]) => {
         const baseline =
-          report.thresholds.baselinesMs[operation][String(fixture.fixtureSize)] ?? 0;
+          report.thresholds.baselinesMs[operation][fixture.fixtureSize] ?? 0;
         const deltaPercent =
           baseline > 0 ? ((result.percentiles.p50 - baseline) / baseline) * 100 : 0;
         const status =
@@ -295,8 +295,11 @@ async function timeOperation(action: () => Promise<unknown>): Promise<number> {
 export async function runScaleBenchmarks(
   thresholdsPath: string,
   outputDir: string,
+  options?: { fixtureRootDir?: string },
 ): Promise<ScaleBenchmarkReport> {
-  const rootDir = await fs.mkdtemp(path.join(os.tmpdir(), "documcp-scale-bench-"));
+  const rootDir = options?.fixtureRootDir
+    ? await fs.mkdtemp(path.join(options.fixtureRootDir, "documcp-scale-bench-"))
+    : await fs.mkdtemp(path.join(os.tmpdir(), "documcp-scale-bench-"));
   const thresholds = JSON.parse(
     await fs.readFile(thresholdsPath, "utf-8"),
   ) as BenchmarkThresholds;
@@ -328,7 +331,6 @@ export async function runScaleBenchmarks(
         );
 
         const docsPath = path.join(fixturePath, `docs-bench-${sample}`);
-        await fs.rm(docsPath, { recursive: true, force: true });
         setupSamples.push(
           await timeOperation(async () => {
             await setupStructure({

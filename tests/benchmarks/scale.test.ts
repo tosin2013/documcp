@@ -40,9 +40,9 @@ describe("Scale benchmark utilities", () => {
     const thresholds: BenchmarkThresholds = {
       maxRegressionPercent: 10,
       baselinesMs: {
-        analyze_repository: { "100": 100 },
-        detect_drift: { "100": 50 },
-        setup_structure: { "100": 20 },
+        analyze_repository: { 100: 100 },
+        detect_drift: { 100: 50 },
+        setup_structure: { 100: 20 },
       },
     };
 
@@ -76,9 +76,9 @@ describe("Scale benchmark utilities", () => {
       thresholds: {
         maxRegressionPercent: 10,
         baselinesMs: {
-          analyze_repository: { "100": 100 },
-          detect_drift: { "100": 10 },
-          setup_structure: { "100": 5 },
+          analyze_repository: { 100: 100 },
+          detect_drift: { 100: 10 },
+          setup_structure: { 100: 5 },
         },
       },
       regressions: [],
