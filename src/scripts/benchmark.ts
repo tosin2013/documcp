@@ -3,6 +3,7 @@
 import { promises as fs } from "fs";
 import path from "path";
 import { createBenchmarker } from "../benchmarks/performance.js";
+import { runScaleBenchmarks } from "../benchmarks/scale.js";
 
 interface BenchmarkConfig {
   testRepos: Array<{
@@ -27,6 +28,9 @@ async function main() {
       break;
     case "create-config":
       await createDefaultConfig();
+      break;
+    case "scale":
+      await runScaleBenchmarkSuite();
       break;
     case "help":
     default:
@@ -151,6 +155,33 @@ async function createDefaultConfig() {
   console.log("   npm run benchmark:run");
 }
 
+async function runScaleBenchmarkSuite() {
+  const cwd = process.cwd();
+  const thresholdsPath = path.join(cwd, "tests", "benchmarks", "thresholds.json");
+  const outputDir = path.join(cwd, "tests", "benchmarks", "results");
+
+  console.log("🏁 Running scale benchmark suite (100 / 1000 / 5000 fixtures)...");
+  console.log(`📥 Thresholds: ${thresholdsPath}`);
+  console.log(`📤 Output directory: ${outputDir}\n`);
+
+  try {
+    const report = await runScaleBenchmarks(thresholdsPath, outputDir);
+    console.log("✅ Scale benchmark completed.");
+    console.log(`Generated: ${report.generatedAt}`);
+    console.log(`Regression threshold: ${report.thresholds.maxRegressionPercent}%`);
+    console.log(`Regressions detected: ${report.regressions.length}`);
+    console.log(`Summary: ${path.join(outputDir, "summary.md")}`);
+    console.log(`Results: ${path.join(outputDir, "results.json")}`);
+    process.exit(report.passed ? 0 : 1);
+  } catch (error) {
+    console.error(
+      "❌ Scale benchmark failed during fixture generation, execution, or report writing:",
+      error,
+    );
+    process.exit(1);
+  }
+}
+
 function printHelp() {
   console.log("🎯 DocuMCP Performance Benchmarking Tool");
   console.log("");
@@ -163,6 +194,9 @@ function printHelp() {
   );
   console.log(
     "  npm run benchmark:create-config         Create default configuration",
+  );
+  console.log(
+    "  npm run benchmark:scale                 Run scale benchmark suite for CI",
   );
   console.log("  npm run benchmark:help                  Show this help");
   console.log("");
