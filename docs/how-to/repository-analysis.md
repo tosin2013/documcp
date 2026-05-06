@@ -21,6 +21,14 @@ DocuMCP's analysis examines your project from multiple perspectives:
 - **Complexity Assessment**: Project size, team size estimates, maintenance requirements
 - **Recommendations**: Tailored suggestions based on your project characteristics
 
+## 🔗 Related Resources
+
+- [Prompting Guide](./prompting-guide.md)
+- [Usage Examples](./usage-examples.md)
+- [Model Context Protocol Specification](https://modelcontextprotocol.io/)
+- [TypeScript Documentation](https://www.typescriptlang.org/docs/)
+- [GitHub Docs](https://docs.github.com/)
+
 ## Basic Analysis
 
 ### Simple Analysis Request
