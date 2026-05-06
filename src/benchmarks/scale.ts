@@ -1,6 +1,7 @@
 import { promises as fs } from "fs";
 import os from "os";
 import path from "path";
+import { z } from "zod";
 import { analyzeRepository } from "../tools/analyze-repository.js";
 import { setupStructure } from "../tools/setup-structure.js";
 import {
@@ -56,28 +57,38 @@ export interface ScaleBenchmarkReport {
   passed: boolean;
 }
 
-const LANGUAGE_TEMPLATES: Array<{ ext: string; content: (i: number) => string }> =
-  [
+const FILES_PER_GROUP = 100;
+
+const LANGUAGE_TEMPLATES: Array<{
+  ext: string;
+  language: string;
+  content: (i: number) => string;
+}> = [
     {
       ext: ".ts",
+      language: "typescript",
       content: (i) =>
         `export function fn${i}(value: number): number { return value + ${i}; }\n`,
     },
     {
       ext: ".py",
+      language: "python",
       content: (i) => `def fn_${i}(value: int) -> int:\n    return value + ${i}\n`,
     },
     {
       ext: ".go",
+      language: "go",
       content: (i) =>
         `package generated\n\nfunc Fn${i}(value int) int { return value + ${i} }\n`,
     },
     {
       ext: ".rb",
+      language: "ruby",
       content: (i) => `def fn_${i}(value)\n  value + ${i}\nend\n`,
     },
     {
       ext: ".java",
+      language: "java",
       content: (i) =>
         `class Generated${i} { int fn(int value) { return value + ${i}; } }\n`,
     },
@@ -88,6 +99,27 @@ const SAMPLE_COUNTS: Record<FixtureSize, number> = {
   1000: 3,
   5000: 1,
 };
+
+const thresholdsSchema = z.object({
+  maxRegressionPercent: z.number().positive(),
+  baselinesMs: z.object({
+    analyze_repository: z.object({
+      "100": z.number().positive(),
+      "1000": z.number().positive(),
+      "5000": z.number().positive(),
+    }),
+    detect_drift: z.object({
+      "100": z.number().positive(),
+      "1000": z.number().positive(),
+      "5000": z.number().positive(),
+    }),
+    setup_structure: z.object({
+      "100": z.number().positive(),
+      "1000": z.number().positive(),
+      "5000": z.number().positive(),
+    }),
+  }),
+});
 
 export function computePercentiles(values: number[]): Percentiles {
   if (values.length === 0) {
@@ -199,7 +231,11 @@ async function synthesizePolyglotRepo(
   const writePromises: Array<Promise<void>> = [];
   for (let i = 0; i < fixtureSize; i++) {
     const language = LANGUAGE_TEMPLATES[i % LANGUAGE_TEMPLATES.length];
-    const dirPath = path.join(repoPath, "src", `group-${Math.floor(i / 100)}`);
+    const dirPath = path.join(
+      repoPath,
+      "src",
+      `group-${Math.floor(i / FILES_PER_GROUP)}`,
+    );
     const filePath = path.join(dirPath, `file-${i}${language.ext}`);
     const task = fs
       .mkdir(dirPath, { recursive: true })
@@ -258,15 +294,15 @@ function buildDriftSnapshots(
   const timestamp = new Date().toISOString();
 
   for (let i = 0; i < fixtureSize; i++) {
+    const template = LANGUAGE_TEMPLATES[i % LANGUAGE_TEMPLATES.length];
     const filePath = path.join(
       repoPath,
       "src",
-      `group-${Math.floor(i / 100)}`,
-      `drift-${i}.ts`,
+      `group-${Math.floor(i / FILES_PER_GROUP)}`,
+      `drift-${i}${template.ext}`,
     );
-    const language = i % 2 === 0 ? "typescript" : "python";
-    oldFiles.set(filePath, createASTResult(filePath, language, "old"));
-    newFiles.set(filePath, createASTResult(filePath, language, "new"));
+    oldFiles.set(filePath, createASTResult(filePath, template.language, "old"));
+    newFiles.set(filePath, createASTResult(filePath, template.language, "new"));
   }
 
   return {
@@ -300,9 +336,29 @@ export async function runScaleBenchmarks(
   const rootDir = options?.fixtureRootDir
     ? await fs.mkdtemp(path.join(options.fixtureRootDir, "documcp-scale-bench-"))
     : await fs.mkdtemp(path.join(os.tmpdir(), "documcp-scale-bench-"));
-  const thresholds = JSON.parse(
-    await fs.readFile(thresholdsPath, "utf-8"),
-  ) as BenchmarkThresholds;
+  const rawThresholds = thresholdsSchema.parse(
+    JSON.parse(await fs.readFile(thresholdsPath, "utf-8")),
+  );
+  const thresholds: BenchmarkThresholds = {
+    maxRegressionPercent: rawThresholds.maxRegressionPercent,
+    baselinesMs: {
+      analyze_repository: {
+        100: rawThresholds.baselinesMs.analyze_repository["100"],
+        1000: rawThresholds.baselinesMs.analyze_repository["1000"],
+        5000: rawThresholds.baselinesMs.analyze_repository["5000"],
+      },
+      detect_drift: {
+        100: rawThresholds.baselinesMs.detect_drift["100"],
+        1000: rawThresholds.baselinesMs.detect_drift["1000"],
+        5000: rawThresholds.baselinesMs.detect_drift["5000"],
+      },
+      setup_structure: {
+        100: rawThresholds.baselinesMs.setup_structure["100"],
+        1000: rawThresholds.baselinesMs.setup_structure["1000"],
+        5000: rawThresholds.baselinesMs.setup_structure["5000"],
+      },
+    },
+  };
   const fixtures: FixtureBenchmarkResult[] = [];
 
   try {

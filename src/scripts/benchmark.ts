@@ -174,7 +174,10 @@ async function runScaleBenchmarkSuite() {
     console.log(`Results: ${path.join(outputDir, "results.json")}`);
     process.exit(report.passed ? 0 : 1);
   } catch (error) {
-    console.error("❌ Scale benchmark failed:", error);
+    console.error(
+      "❌ Scale benchmark failed during fixture generation, execution, or report writing:",
+      error,
+    );
     process.exit(1);
   }
 }
