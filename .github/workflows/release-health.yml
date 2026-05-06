@@ -1,0 +1,49 @@
+name: Release Health Data Collection
+
+# Collect release health metrics nightly and commit to docs/data/
+on:
+  schedule:
+    # Run at 2 AM UTC daily
+    - cron: "0 2 * * *"
+  workflow_dispatch: # Allow manual trigger
+
+permissions:
+  contents: write
+
+jobs:
+  collect-metrics:
+    name: Collect release health metrics
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Collect release health data
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          npx tsx src/scripts/collect-release-health.ts docs/data/release-health.json
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          if [[ -n $(git status --porcelain docs/data/release-health.json) ]]; then
+            git add docs/data/release-health.json
+            git commit -m "chore(data): update release health metrics [skip ci]"
+            git push
+            echo "✅ Release health data updated"
+          else
+            echo "ℹ️ No changes to release health data"
+          fi

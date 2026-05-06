@@ -1,0 +1,85 @@
+{
+  "generatedAt": "2026-05-06T23:00:47.975Z",
+  "recentReleases": [
+    {
+      "version": "v0.7.0",
+      "publishedAt": "2026-05-06T20:01:47Z",
+      "timeToPublishMinutes": 1,
+      "ciSuccess": true
+    },
+    {
+      "version": "v0.7.1",
+      "publishedAt": "0001-01-01T00:00:00Z",
+      "timeToPublishMinutes": -1065228237,
+      "ciSuccess": true
+    },
+    {
+      "version": "v0.6.0",
+      "publishedAt": "2026-05-01T13:33:40Z",
+      "timeToPublishMinutes": 3,
+      "ciSuccess": true
+    },
+    {
+      "version": "v0.5.10",
+      "publishedAt": "2025-12-15T16:33:47Z",
+      "timeToPublishMinutes": 0,
+      "ciSuccess": true
+    },
+    {
+      "version": "v0.5.9",
+      "publishedAt": "2025-12-15T16:33:45Z",
+      "timeToPublishMinutes": 0,
+      "ciSuccess": true
+    },
+    {
+      "version": "v0.5.8",
+      "publishedAt": "2025-12-15T16:25:44Z",
+      "timeToPublishMinutes": 0,
+      "ciSuccess": true
+    },
+    {
+      "version": "v0.5.7",
+      "publishedAt": "2025-12-15T16:25:39Z",
+      "timeToPublishMinutes": 0,
+      "ciSuccess": true
+    },
+    {
+      "version": "v0.5.6",
+      "publishedAt": "2025-12-15T16:19:14Z",
+      "timeToPublishMinutes": 0,
+      "ciSuccess": true
+    },
+    {
+      "version": "v0.5.5",
+      "publishedAt": "2025-12-15T16:19:10Z",
+      "timeToPublishMinutes": 0,
+      "ciSuccess": true
+    },
+    {
+      "version": "v0.5.4",
+      "publishedAt": "2025-12-15T16:10:59Z",
+      "timeToPublishMinutes": 0,
+      "ciSuccess": true
+    }
+  ],
+  "ciMetrics": {
+    "totalRuns": 50,
+    "successfulRuns": 36,
+    "failedRuns": 14,
+    "successRate": 72,
+    "flakeRate": 0,
+    "averageDurationMinutes": 28
+  },
+  "coverageTrend": [
+    {
+      "timestamp": "2026-05-06T23:00:47.826Z",
+      "coverage": 92.52,
+      "trend": "stable"
+    }
+  ],
+  "npmStats": {
+    "weeklyDownloads": 174,
+    "monthlyDownloads": 229,
+    "totalDownloads": 229
+  }
+}
