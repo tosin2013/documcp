@@ -5,6 +5,44 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0](https://github.com/tosin2013/documcp/compare/v0.7.0...v0.8.0) (2026-05-06)
+
+### 📚 Documentation
+
+- add comprehensive Diataxis quality audit report ([#119](https://github.com/tosin2013/documcp/issues/119)) ([ee8bc99](https://github.com/tosin2013/documcp/commit/ee8bc9932585a7bea11e391249c84f847acaa6c0))
+- add comprehensive Diataxis quality audit report ([#119](https://github.com/tosin2013/documcp/issues/119)) ([68c4e22](https://github.com/tosin2013/documcp/commit/68c4e220bc0aa458013b373d123d121cedcd0ff5))
+- add hyperlinks to how-to guides ([#158](https://github.com/tosin2013/documcp/issues/158)) ([9afdfd0](https://github.com/tosin2013/documcp/commit/9afdfd0de185737b1cfd7c0e6b70c0311fd09873))
+- refresh CONTRIBUTING.md with role-based contribution paths ([#120](https://github.com/tosin2013/documcp/issues/120)) ([eee97cf](https://github.com/tosin2013/documcp/commit/eee97cf29c47bad0dce46b2044afbe1f7d02bffe))
+
+### 🐛 Bug Fixes
+
+- ensure directory exists before writing temp files in kg-storage ([dd5aedf](https://github.com/tosin2013/documcp/commit/dd5aedf9e11eb11a652ecdf5154d7029d0ae8ac8)), closes [#25460523083](https://github.com/tosin2013/documcp/issues/25460523083)
+
+### 🚀 Features
+
+- **ci:** Smart Dependabot auto-merge for patch-only dependency bumps ([#157](https://github.com/tosin2013/documcp/issues/157)) ([700314d](https://github.com/tosin2013/documcp/commit/700314d9f1e90108101ba4bc48a87accd5416997))
+- **dashboard:** add release health dashboard ([#116](https://github.com/tosin2013/documcp/issues/116)) ([6636eac](https://github.com/tosin2013/documcp/commit/6636eac99d8a7c60320cd2be8541ca0dc6bbe546))
+- **release:** add template-based enhanced release notes generator ([#115](https://github.com/tosin2013/documcp/issues/115)) ([168c5d8](https://github.com/tosin2013/documcp/commit/168c5d895bdd96ed9489081102876b1cefe943e0))
+
+## [0.8.0](https://github.com/tosin2013/documcp/compare/v0.7.0...v0.8.0) (2026-05-06)
+
+### 📚 Documentation
+
+- add comprehensive Diataxis quality audit report ([#119](https://github.com/tosin2013/documcp/issues/119)) ([ee8bc99](https://github.com/tosin2013/documcp/commit/ee8bc9932585a7bea11e391249c84f847acaa6c0))
+- add comprehensive Diataxis quality audit report ([#119](https://github.com/tosin2013/documcp/issues/119)) ([68c4e22](https://github.com/tosin2013/documcp/commit/68c4e220bc0aa458013b373d123d121cedcd0ff5))
+- add hyperlinks to how-to guides ([#158](https://github.com/tosin2013/documcp/issues/158)) ([9afdfd0](https://github.com/tosin2013/documcp/commit/9afdfd0de185737b1cfd7c0e6b70c0311fd09873))
+- refresh CONTRIBUTING.md with role-based contribution paths ([#120](https://github.com/tosin2013/documcp/issues/120)) ([eee97cf](https://github.com/tosin2013/documcp/commit/eee97cf29c47bad0dce46b2044afbe1f7d02bffe))
+
+### 🐛 Bug Fixes
+
+- ensure directory exists before writing temp files in kg-storage ([dd5aedf](https://github.com/tosin2013/documcp/commit/dd5aedf9e11eb11a652ecdf5154d7029d0ae8ac8)), closes [#25460523083](https://github.com/tosin2013/documcp/issues/25460523083)
+
+### 🚀 Features
+
+- **ci:** Smart Dependabot auto-merge for patch-only dependency bumps ([#157](https://github.com/tosin2013/documcp/issues/157)) ([700314d](https://github.com/tosin2013/documcp/commit/700314d9f1e90108101ba4bc48a87accd5416997))
+- **dashboard:** add release health dashboard ([#116](https://github.com/tosin2013/documcp/issues/116)) ([6636eac](https://github.com/tosin2013/documcp/commit/6636eac99d8a7c60320cd2be8541ca0dc6bbe546))
+- **release:** add template-based enhanced release notes generator ([#115](https://github.com/tosin2013/documcp/issues/115)) ([168c5d8](https://github.com/tosin2013/documcp/commit/168c5d895bdd96ed9489081102876b1cefe943e0))
+
 ## [0.8.0](https://github.com/tosin2013/documcp/compare/v0.6.0...v0.8.0) (2026-05-06)
 
 ### 🐛 Bug Fixes
