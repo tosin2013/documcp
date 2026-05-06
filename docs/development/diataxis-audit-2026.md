@@ -167,7 +167,6 @@ This audit evaluates DocuMCP's documentation quality across all Diataxis categor
 ### Dead Links Identified
 
 1. **GitHub Issues URL** (4 instances)
-
    - URL: `https://github.com/tosin2013/documcp/issues`
    - Status: 406 (Not Acceptable)
    - Files affected:
@@ -179,7 +178,6 @@ This audit evaluates DocuMCP's documentation quality across all Diataxis categor
    - **Fix**: Update to `https://github.com/tosin2013/documcp/issues/new` or remove User-Agent restriction
 
 2. **MCP Specification URL** (1 instance)
-
    - URL: `https://spec.modelcontextprotocol.io/specification/client/sampling/`
    - Status: 0 (Connection failed)
    - File affected: `docs/how-to/llm-integration.md`
@@ -202,13 +200,11 @@ This audit evaluates DocuMCP's documentation quality across all Diataxis categor
 ### 🔴 High Priority (Quality Impact)
 
 1. **Fix GitHub Issues URL** (affects 5 files)
-
    - Replace `https://github.com/tosin2013/documcp/issues` with working URL
    - Estimated effort: 15 minutes
    - Label: `documentation`, `good first issue`
 
 2. **Add Hyperlinks to Sparse How-To Guides**
-
    - Files: `prompting-guide.md`, `repository-analysis.md`, `usage-examples.md`
    - Add relevant internal and external links
    - Estimated effort: 1 hour
@@ -222,7 +218,6 @@ This audit evaluates DocuMCP's documentation quality across all Diataxis categor
 ### 🟡 Medium Priority (Completeness)
 
 4. **Fix Broken Anchor Link**
-
    - Add `#common-workflows` section to `api-overview.md` or update link
    - Estimated effort: 30 minutes
    - Label: `documentation`
