@@ -11,6 +11,14 @@ documcp:
 
 This guide shows you how to interact with DocuMCP using effective prompts to get the best results from the system.
 
+## 🔗 Helpful Resources
+
+- [Repository Analysis Guide](./repository-analysis.md)
+- [Usage Examples](./usage-examples.md)
+- [Model Context Protocol Specification](https://modelcontextprotocol.io/)
+- [GitHub Markdown Guide](https://www.markdownguide.org/)
+- [TypeScript Documentation](https://www.typescriptlang.org/docs/)
+
 ## 🎯 Pro Tip: Use @LLM_CONTEXT.md
 
 When using DocuMCP in your AI assistant (Claude, ChatGPT, etc.), **reference the LLM_CONTEXT.md file** for instant context about all 45 available tools:
