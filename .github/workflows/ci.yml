@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   test:
     name: Test Suite
@@ -54,7 +58,62 @@ jobs:
           name: codecov-umbrella
 
       - name: Performance benchmarks
+        if: matrix.node-version == '20.x'
         run: npm run test:performance
+
+      - name: Upload performance benchmark artifacts
+        if: always() && matrix.node-version == '20.x'
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-benchmark-results
+          path: |
+            tests/benchmarks/results/results.json
+            tests/benchmarks/results/summary.md
+          if-no-files-found: warn
+
+      - name: Post benchmark summary to PR
+        if: always() && github.event_name == 'pull_request' && matrix.node-version == '20.x'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = 'tests/benchmarks/results/summary.md';
+            if (!fs.existsSync(path)) {
+              core.info('Benchmark summary not found; skipping PR comment.');
+              return;
+            }
+
+            const body = fs.readFileSync(path, 'utf8');
+            const marker = '<!-- documcp-benchmark-summary -->';
+            const issue_number = context.payload.pull_request.number;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number,
+              per_page: 100,
+            });
+
+            const existing = comments.find(
+              (comment) =>
+                comment.user.type === 'Bot' && comment.body && comment.body.includes(marker),
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number,
+                body,
+              });
+            }
 
   build:
     name: Build Verification

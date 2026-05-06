@@ -56,6 +56,7 @@ mcp-shrimp-task-manager/
 
 # Benchmark and test artifacts
 benchmark-results/
+tests/benchmarks/results/
 benchmark-config.json
 benchmark-current-*.json
 test-server.js
