@@ -106,6 +106,36 @@ jobs:
           fi
           echo "✅ All commit messages are valid"
 
+      - name: Generate enhanced release notes
+        id: enhanced_notes
+        run: |
+          # Get the previous tag for comparison
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          else
+            # For tag-based releases, get the tag before current
+            CURRENT_TAG="${GITHUB_REF#refs/tags/}"
+            PREV_TAG=$(git describe --tags --abbrev=0 "$CURRENT_TAG^" 2>/dev/null || echo "")
+          fi
+
+          if [ -n "$PREV_TAG" ]; then
+            echo "Generating enhanced release notes from $PREV_TAG to current..."
+            npx tsx src/scripts/generate-release-notes.ts "$PREV_TAG" HEAD > enhanced-notes.md || {
+              echo "Enhanced notes generation failed, will use standard changelog"
+              echo "enhanced_available=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            }
+            echo "enhanced_available=true" >> "$GITHUB_OUTPUT"
+            {
+              echo "enhanced_content<<EOF"
+              cat enhanced-notes.md
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
+          else
+            echo "No previous tag found, skipping enhanced notes"
+            echo "enhanced_available=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Generate changelog and release
         id: release
         run: |
@@ -201,7 +231,7 @@ jobs:
           body: |
             ## DocuMCP Release ${{ steps.release.outputs.new_version }}
 
-            ${{ steps.release.outputs.changelog_content }}
+            ${{ steps.enhanced_notes.outputs.enhanced_available == 'true' && steps.enhanced_notes.outputs.enhanced_content || steps.release.outputs.changelog_content }}
 
             ### Installation
             ```bash
