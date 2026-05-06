@@ -5,9 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.8.0](https://github.com/tosin2013/documcp/compare/v0.6.0...v0.8.0) (2026-05-06)
 
-> Draft section for the next release. PRs land here as `[Unreleased]` entries and get promoted to a versioned section on tag.
+### 🐛 Bug Fixes
+
+- **deps,docs:** bump @docusaurus/core to 3.10.1 and force serialize-javascript@^7.0.5 ([159eb9d](https://github.com/tosin2013/documcp/commit/159eb9db2155fbf301dd10dca4a35567942363eb))
+
+### 🚀 Features
+
+- **ast:** wire up tree-sitter parsers for Python and Go ([#112](https://github.com/tosin2013/documcp/issues/112)) ([#144](https://github.com/tosin2013/documcp/issues/144)) ([c056e45](https://github.com/tosin2013/documcp/commit/c056e45f61a04ab894298522ad75bbb795861a17))
+- **drift:** add priority scoring feedback ingestion loop ([#114](https://github.com/tosin2013/documcp/issues/114)) ([#146](https://github.com/tosin2013/documcp/issues/146)) ([e4ba20d](https://github.com/tosin2013/documcp/commit/e4ba20df094bd6969a3dbe29b6dc85dfed69281c))
+- implement community insights aggregation (Phase 3) ([#147](https://github.com/tosin2013/documcp/issues/147)) ([a06f515](https://github.com/tosin2013/documcp/commit/a06f51558d090aefdd85e512554bb7d503044d2a))
+- **watcher:** persist watcher state to JSONL and add integration tests ([#113](https://github.com/tosin2013/documcp/issues/113)) ([#145](https://github.com/tosin2013/documcp/issues/145)) ([3c94642](https://github.com/tosin2013/documcp/commit/3c94642aa78f342e1ff283e743415c730052834c))
+
+## [0.7.0](https://github.com/tosin2013/documcp/compare/v0.6.0...v0.7.0) (2026-05-06)
+
+### 🐛 Bug Fixes
+
+- **deps,docs:** bump @docusaurus/core to 3.10.1 and force serialize-javascript@^7.0.5 ([159eb9d](https://github.com/tosin2013/documcp/commit/159eb9db2155fbf301dd10dca4a35567942363eb))
+
+### 🚀 Features
+
+- **ast:** wire up tree-sitter parsers for Python and Go ([#112](https://github.com/tosin2013/documcp/issues/112)) ([#144](https://github.com/tosin2013/documcp/issues/144)) ([c056e45](https://github.com/tosin2013/documcp/commit/c056e45f61a04ab894298522ad75bbb795861a17))
+- **drift:** add priority scoring feedback ingestion loop ([#114](https://github.com/tosin2013/documcp/issues/114)) ([#146](https://github.com/tosin2013/documcp/issues/146)) ([e4ba20d](https://github.com/tosin2013/documcp/commit/e4ba20df094bd6969a3dbe29b6dc85dfed69281c))
+- implement community insights aggregation (Phase 3) ([#147](https://github.com/tosin2013/documcp/issues/147)) ([a06f515](https://github.com/tosin2013/documcp/commit/a06f51558d090aefdd85e512554bb7d503044d2a))
+- **watcher:** persist watcher state to JSONL and add integration tests ([#113](https://github.com/tosin2013/documcp/issues/113)) ([#145](https://github.com/tosin2013/documcp/issues/145)) ([3c94642](https://github.com/tosin2013/documcp/commit/3c94642aa78f342e1ff283e743415c730052834c))
 
 ## [0.6.0] - 2026-05-01
 
