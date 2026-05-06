@@ -1,0 +1,198 @@
+name: Dependabot Auto-merge
+
+# Automatically merges Dependabot patch-level bumps that satisfy all safety
+# gates.  Minor and major bumps are left open for human review.
+#
+# Safety gates (all must pass):
+#   1. Actor is dependabot[bot]
+#   2. Update type is semver-patch only
+#   3. Dependency is in the trusted-scope allowlist (see below)
+#   4. PR has neither the "do-not-auto-merge" nor "breaking-change" label
+#   5. All required CI checks pass  (enforced by --auto flag)
+#
+# Manual override:
+#   Add the label "do-not-auto-merge" to any Dependabot PR to block auto-merge.
+#
+# Trusted-scope allowlist (patch bumps from these packages auto-merge):
+#   @modelcontextprotocol/*  – MCP SDK (core runtime)
+#   tree-sitter-*            – Tree-sitter language grammars
+#   web-tree-sitter          – Tree-sitter WASM bindings
+#   @types/*                 – TypeScript type definitions (dev)
+#   zod / zod-to-json-schema – Schema validation
+#   simple-git               – Git operations
+#   globby                   – File globbing
+#   chokidar                 – File watching
+#   gray-matter              – Front-matter parsing
+#   linkinator               – Link checking
+#   tmp                      – Temporary files
+#   @commitlint/*            – Commit message linting (dev)
+#   @typescript-eslint/*     – TypeScript linting (dev)
+#   eslint / prettier        – Code quality (dev)
+#   jest / ts-jest           – Test framework (dev)
+#   husky                    – Git hooks (dev)
+#   standard-version         – Release management (dev)
+#   tsx / typescript         – Build toolchain (dev)
+#   typedoc                  – Documentation generator (dev)
+#   markdown-link-check      – Docs link checker (dev)
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-merge:
+    name: Auto-merge patch bumps
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]'
+
+    steps:
+      # -----------------------------------------------------------------------
+      # 1. Collect Dependabot metadata (update-type, package names, etc.)
+      # -----------------------------------------------------------------------
+      - name: Fetch Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      # -----------------------------------------------------------------------
+      # 2. Detect blocking labels
+      # -----------------------------------------------------------------------
+      - name: Check for blocking labels
+        id: labels
+        env:
+          LABELS: ${{ toJson(github.event.pull_request.labels.*.name) }}
+        run: |
+          if echo "$LABELS" | grep -qE '"do-not-auto-merge"|"breaking-change"'; then
+            echo "blocked=true" >> "$GITHUB_OUTPUT"
+            echo "reason=a blocking label (do-not-auto-merge or breaking-change) is present" >> "$GITHUB_OUTPUT"
+          else
+            echo "blocked=false" >> "$GITHUB_OUTPUT"
+            echo "reason=" >> "$GITHUB_OUTPUT"
+          fi
+
+      # -----------------------------------------------------------------------
+      # 3. Verify the dependency is in the trusted-scope allowlist
+      # -----------------------------------------------------------------------
+      - name: Check trusted-scope allowlist
+        id: allowlist
+        env:
+          DEPS: ${{ steps.metadata.outputs.dependency-names }}
+        run: |
+          # Keep this list in sync with the header comment above.
+          # All dependencies in a PR must be trusted for auto-merge to proceed.
+          #
+          # Matching rules:
+          #   Scoped prefixes  – any package under that npm scope is trusted
+          #   Exact prefixes   – packages whose name starts with the given prefix
+          #   Exact names      – only the specific package listed is trusted
+
+          TRUSTED_SCOPED_PREFIXES=(
+            "@modelcontextprotocol/"
+            "@types/"
+            "@commitlint/"
+            "@typescript-eslint/"
+          )
+
+          TRUSTED_NAME_PREFIXES=(
+            "tree-sitter-"   # e.g. tree-sitter-bash, tree-sitter-go …
+          )
+
+          TRUSTED_EXACT_NAMES=(
+            "web-tree-sitter"
+            "zod"
+            "zod-to-json-schema"
+            "simple-git"
+            "globby"
+            "chokidar"
+            "gray-matter"
+            "linkinator"
+            "tmp"
+            "eslint"
+            "prettier"
+            "jest"
+            "ts-jest"
+            "husky"
+            "standard-version"
+            "tsx"
+            "typescript"
+            "typedoc"
+            "markdown-link-check"
+          )
+
+          is_trusted_dep() {
+            local dep="$1"
+            # Check scoped prefixes
+            for prefix in "${TRUSTED_SCOPED_PREFIXES[@]}"; do
+              [[ "$dep" == "${prefix}"* ]] && return 0
+            done
+            # Check name prefixes
+            for prefix in "${TRUSTED_NAME_PREFIXES[@]}"; do
+              [[ "$dep" == "${prefix}"* ]] && return 0
+            done
+            # Check exact names
+            for name in "${TRUSTED_EXACT_NAMES[@]}"; do
+              [[ "$dep" == "$name" ]] && return 0
+            done
+            return 1
+          }
+
+          # dependabot/fetch-metadata separates multiple deps with ", "
+          ALL_TRUSTED=true
+          IFS=', ' read -ra DEP_ARRAY <<< "$DEPS"
+          for dep in "${DEP_ARRAY[@]}"; do
+            dep="${dep//[$'\t\r\n ']}"   # trim whitespace
+            [[ -z "$dep" ]] && continue
+            if ! is_trusted_dep "$dep"; then
+              ALL_TRUSTED=false
+              echo "Untrusted dependency detected: $dep"
+              break
+            fi
+          done
+
+          echo "trusted=$ALL_TRUSTED" >> "$GITHUB_OUTPUT"
+
+      # -----------------------------------------------------------------------
+      # 4a. Auto-merge: all gates pass
+      # -----------------------------------------------------------------------
+      - name: Auto-merge patch update
+        if: |
+          steps.metadata.outputs.update-type == 'version-update:semver-patch' &&
+          steps.labels.outputs.blocked == 'false' &&
+          steps.allowlist.outputs.trusted == 'true'
+        run: gh pr merge --auto --squash "${{ github.event.pull_request.number }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # -----------------------------------------------------------------------
+      # 4b. Comment when auto-merge is skipped (only on PR open to avoid spam)
+      # -----------------------------------------------------------------------
+      - name: Comment on skipped auto-merge
+        if: |
+          github.event.action == 'opened' &&
+          (
+            steps.metadata.outputs.update-type != 'version-update:semver-patch' ||
+            steps.labels.outputs.blocked == 'true' ||
+            steps.allowlist.outputs.trusted != 'true'
+          )
+        env:
+          UPDATE_TYPE: ${{ steps.metadata.outputs.update-type }}
+          BLOCKED: ${{ steps.labels.outputs.blocked }}
+          BLOCK_REASON: ${{ steps.labels.outputs.reason }}
+          TRUSTED: ${{ steps.allowlist.outputs.trusted }}
+          DEPS: ${{ steps.metadata.outputs.dependency-names }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          if [ "$BLOCKED" = "true" ]; then
+            REASON="$BLOCK_REASON"
+          elif [ "$UPDATE_TYPE" != "version-update:semver-patch" ]; then
+            REASON="update type is \`$UPDATE_TYPE\` — only **patch** bumps are auto-merged. Please review and merge manually."
+          else
+            REASON="dependency \`$DEPS\` is not in the trusted-scope allowlist. Please review and merge manually."
+          fi
+          gh pr comment "$PR_NUMBER" \
+            --body "⏸️ **Dependabot auto-merge skipped**: $REASON"
