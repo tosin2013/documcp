@@ -15,9 +15,10 @@ describe("KGStorage", () => {
   let testDir: string;
 
   beforeEach(async () => {
-    // Create temporary test directory
-    testDir = join(tmpdir(), `kg-storage-test-${Date.now()}`);
-    await fs.mkdir(testDir, { recursive: true });
+    // Create temporary test directory with a non-predictable suffix so the
+    // path cannot be guessed by other processes (mitigates CodeQL
+    // js/insecure-temporary-file).
+    testDir = await fs.mkdtemp(join(tmpdir(), "kg-storage-test-"));
 
     storage = new KGStorage({
       storageDir: testDir,

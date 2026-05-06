@@ -16,8 +16,9 @@ describe("KGStorage - Validation and Error Handling", () => {
   let testDir: string;
 
   beforeEach(async () => {
-    testDir = join(tmpdir(), `kg-storage-validation-test-${Date.now()}`);
-    await fs.mkdir(testDir, { recursive: true });
+    // Use mkdtemp so the suffix is unpredictable (mitigates CodeQL
+    // js/insecure-temporary-file).
+    testDir = await fs.mkdtemp(join(tmpdir(), "kg-storage-validation-test-"));
 
     storage = new KGStorage({
       storageDir: testDir,
@@ -658,8 +659,7 @@ describe("KGStorage - Validation and Error Handling", () => {
 
     it("should handle missing backup directory gracefully (line 388-391)", async () => {
       // Create storage without creating backups first
-      const testDir2 = join(tmpdir(), `kg-no-backup-${Date.now()}`);
-      await fs.mkdir(testDir2, { recursive: true });
+      const testDir2 = await fs.mkdtemp(join(tmpdir(), "kg-no-backup-"));
 
       const storage2 = new KGStorage({
         storageDir: testDir2,
