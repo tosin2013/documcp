@@ -98,6 +98,34 @@ Add to your `settings.json`:
 }
 ```
 
+#### Claude Code (CLI)
+
+If you are using [Claude Code](https://docs.anthropic.com/en/docs/claude-code) from the terminal, register DocuMCP with a single command.
+
+**npm install (global):**
+
+```bash
+claude mcp add documcp -- npx documcp
+```
+
+**git clone / local build** (run from the cloned repo directory):
+
+```bash
+claude mcp add documcp -- node /path/to/documcp/dist/index.js
+```
+
+Example for a repo cloned to `/root/documcp`:
+
+```bash
+claude mcp add documcp -- node /root/documcp/dist/index.js
+```
+
+No restart needed — Claude Code picks up the new server immediately. Verify with:
+
+```bash
+claude mcp list
+```
+
 ---
 
 ### Verify the connection

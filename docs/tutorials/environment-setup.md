@@ -130,6 +130,30 @@ Pick the config for your client and add it to the correct file, then restart the
 }
 ```
 
+### Claude Code (CLI)
+
+If you are using [Claude Code](https://docs.anthropic.com/en/docs/claude-code) from the terminal, register DocuMCP with a single command.
+
+**npm install (global):**
+
+```bash
+claude mcp add documcp -- npx documcp
+```
+
+**git clone / local build** (replace the path with wherever you cloned the repo):
+
+```bash
+claude mcp add documcp -- node /path/to/documcp/dist/index.js
+```
+
+Verify the registration:
+
+```bash
+claude mcp list
+```
+
+No restart needed — Claude Code picks up new MCP servers immediately.
+
 ---
 
 ## Verify the Connection
