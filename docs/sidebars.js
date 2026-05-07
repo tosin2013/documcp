@@ -8,10 +8,10 @@ const sidebars = {
       label: "📚 Tutorials",
       items: [
         "tutorials/getting-started",
-        "tutorials/development-setup",
         "tutorials/environment-setup",
-        "tutorials/first-deployment",
         "tutorials/user-onboarding",
+        "tutorials/first-deployment",
+        "tutorials/development-setup",
         "tutorials/memory-workflows",
       ],
     },

@@ -1,107 +1,94 @@
 ---
 documcp:
-  last_updated: "2025-11-20T00:46:21.972Z"
-  last_validated: "2025-12-09T19:41:38.604Z"
+  last_updated: "2026-05-07"
+  last_validated: "2026-05-07"
   auto_updated: false
   update_frequency: monthly
-  validated_against_commit: 306567b32114502c606244ad6c2930360bcd4201
 ---
 
 # Tutorials
 
 Step-by-step tutorials to get you started with DocuMCP and master advanced features.
 
-## Getting Started
-
-### Beginner Tutorials
-
-- [Getting Started with DocuMCP](getting-started.md) - Your first documentation deployment
-- [First Documentation Deployment](first-deployment.md) - Complete deployment workflow
-- [Development Setup](development-setup.md) - Set up your development environment
-
-### Advanced Tutorials
-
-- [Memory Workflows](memory-workflows.md) - Advanced memory system features
-
 ## Learning Path
+
+Follow this sequence for the best onboarding experience:
 
 ### For New Users
 
-1. **Start Here**: [Getting Started with DocuMCP](getting-started.md)
-2. **First Deployment**: [First Documentation Deployment](first-deployment.md)
-3. **Development Setup**: [Development Setup](development-setup.md)
+1. **[Environment Setup](environment-setup.md)** — Verify prerequisites, install DocuMCP, and connect it to your AI client
+2. **[Getting Started with DocuMCP](getting-started.md)** — Run your first repository analysis and documentation deployment
+3. **[User Onboarding](user-onboarding.md)** — Common MCP usage patterns and best practices
+4. **[First Documentation Deployment](first-deployment.md)** — End-to-end walkthrough with a real project
 
 ### For Advanced Users
 
-1. **Memory System**: [Memory Workflows](memory-workflows.md)
-2. **Custom Configuration**: See [Reference Documentation](../reference/)
-3. **Advanced Features**: See [How-to Guides](../how-to/)
+5. **[Memory Workflows](memory-workflows.md)** — Use the knowledge graph to improve recommendations over time
+6. **[Development Setup](development-setup.md)** — Contribute to DocuMCP (contributor guide)
 
-## Quick Start
+---
 
-If you're new to DocuMCP, start with this simple workflow:
+## Tutorials at a Glance
 
-```bash
-# Analyze your repository
-"analyze my repository and recommend a static site generator"
+| Tutorial                                  | Time   | Who it's for                           |
+| ----------------------------------------- | ------ | -------------------------------------- |
+| [Environment Setup](environment-setup.md) | 5 min  | Everyone — start here                  |
+| [Getting Started](getting-started.md)     | 15 min | New users                              |
+| [User Onboarding](user-onboarding.md)     | 10 min | New users wanting usage patterns       |
+| [First Deployment](first-deployment.md)   | 20 min | Users ready for end-to-end walkthrough |
+| [Memory Workflows](memory-workflows.md)   | 15 min | Users wanting smarter recommendations  |
+| [Development Setup](development-setup.md) | 20 min | Contributors to DocuMCP                |
 
-# Generate documentation
-"generate documentation structure for my project"
+---
 
-# Deploy to GitHub Pages
-"deploy my documentation to GitHub Pages"
+## Quick Start Prompts
+
+Once DocuMCP is connected to your AI client, try these prompts:
+
+```
+Analyze my repository at /path/to/my-project
 ```
 
-## What You'll Learn
+```
+Recommend a static site generator based on my repository analysis
+```
 
-### Core Concepts
+```
+Set up a Diataxis documentation structure for Docusaurus in my docs folder
+```
 
-- **Repository Analysis**: How DocuMCP analyzes your project
-- **SSG Recommendations**: Choosing the right static site generator
-- **Documentation Generation**: Creating comprehensive documentation
-- **Deployment Automation**: Automated deployment workflows
+```
+Deploy my documentation to GitHub Pages
+```
 
-### Advanced Features
+---
 
-- **Memory System**: Learning from your documentation patterns
-- **Custom Configuration**: Tailoring DocuMCP to your needs
-- **Performance Optimization**: Optimizing your documentation site
-- **Analytics Integration**: Tracking documentation usage
+## What You Will Learn
+
+- **Repository Analysis** — how DocuMCP understands your project's structure and tech stack
+- **SSG Recommendations** — choosing the right static site generator with confidence scores
+- **Documentation Generation** — creating Diataxis-compliant documentation structures automatically
+- **Deployment Automation** — GitHub Actions workflows for GitHub Pages and Vercel
+- **Memory System** — how DocuMCP learns from past analyses to improve future recommendations
+
+---
 
 ## Prerequisites
 
-### Basic Requirements
+| Requirement | Details                                                |
+| ----------- | ------------------------------------------------------ |
+| Node.js     | v20.0.0 or higher                                      |
+| npm         | Latest stable                                          |
+| Git         | Latest stable                                          |
+| AI client   | Claude Desktop, Cursor, or VS Code with GitHub Copilot |
 
-- **Git Repository**: Your project in a Git repository
-- **GitHub Account**: For deployment to GitHub Pages
-- **Node.js**: Version 20.0.0 or higher (for local development)
+See [Environment Setup](environment-setup.md) for installation and verification steps.
 
-### Recommended Knowledge
-
-- **Markdown**: Basic Markdown syntax
-- **Git**: Basic Git operations
-- **GitHub**: GitHub repository management
+---
 
 ## Getting Help
 
-### If You Get Stuck
-
-1. **Check the Tutorials**: Review the relevant tutorial section
-2. **How-to Guides**: See [How-to Guides](../how-to/) for specific tasks
-3. **Reference Documentation**: Check [Reference](../reference/) for technical details
-4. **Community Support**: Ask questions in [GitHub Issues](https://github.com/tosin2013/documcp/issues?q=is%3Aissue)
-
-### Common Issues
-
-- **Repository Analysis Issues**: See [Troubleshooting Guide](../how-to/troubleshooting.md)
-- **Deployment Problems**: Check [GitHub Pages Deployment Guide](../how-to/github-pages-deployment.md)
-- **Local Testing**: See [Local Testing Guide](../how-to/local-testing.md)
-
-## Next Steps
-
-After completing the tutorials:
-
-1. **Explore How-to Guides**: [How-to Guides](../how-to/) for specific tasks
-2. **Reference Documentation**: [Reference](../reference/) for technical details
-3. **Architecture Understanding**: [Architecture Documentation](../explanation/)
-4. **Community**: Join [GitHub Issues](https://github.com/tosin2013/documcp/issues?q=is%3Aissue) for support and feature requests
+- **Stuck?** Check the [Troubleshooting Guide](../how-to/troubleshooting.md)
+- **Deployment issues?** See [GitHub Pages Deployment Guide](../how-to/github-pages-deployment.md)
+- **Community**: [GitHub Issues](https://github.com/tosin2013/documcp/issues?q=is%3Aissue)
+- **MCP tool parameters**: [MCP Tools Reference](../reference/mcp-tools.md)

@@ -3,48 +3,132 @@ id: getting-started
 title: Getting Started with DocuMCP
 sidebar_label: Getting Started
 documcp:
-  last_updated: "2025-11-20T00:46:21.972Z"
-  last_validated: "2025-12-09T19:41:38.603Z"
+  last_updated: "2026-05-07"
+  last_validated: "2026-05-07"
   auto_updated: false
   update_frequency: monthly
-  validated_against_commit: 306567b32114502c606244ad6c2930360bcd4201
 ---
 
 # Getting Started with DocuMCP
 
-This tutorial will guide you through setting up and using DocuMCP's intelligent documentation deployment system with memory-enhanced capabilities.
+DocuMCP is a **Model Context Protocol (MCP) server** that gives your AI assistant the ability to analyze repositories, recommend static site generators, generate documentation structures, and deploy documentation sites. It runs as a background server and your AI client (Claude Desktop, Cursor, VS Code) communicates with it automatically — you interact entirely through natural language.
 
 ## Prerequisites
 
-Before you begin, ensure you have:
+- Node.js 20.0.0 or higher
+- npm (latest stable)
+- Git
+- One of: Claude Desktop, Cursor, or VS Code with GitHub Copilot
 
-- Node.js 20.0.0 or higher installed
-- Access to a GitHub repository
-- Claude Desktop, Cursor, or another MCP-compatible client
-- Basic familiarity with documentation workflows
+---
 
-## 🎯 Pro Tip: Reference LLM_CONTEXT.md
+## Step 0: Install DocuMCP and Connect Your AI Client
 
-When using DocuMCP through an AI assistant, **always reference the LLM_CONTEXT.md file** for comprehensive tool context:
+### Install DocuMCP
+
+**Option A — npm global install (recommended)**
+
+```bash
+npm install -g documcp
+```
+
+**Option B — build from source (contributors / local development)**
+
+```bash
+git clone https://github.com/tosin2013/documcp.git
+cd documcp
+npm install
+npm run build
+```
+
+When using Option B, use the full path to `dist/index.js` in the MCP config below instead of `"npx"`.
+
+---
+
+### Connect to your AI client
+
+Choose the config for your client. Add it to the file shown, then restart the application.
+
+#### Claude Desktop
+
+File location:
+
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+- **Linux**: `~/.config/claude/claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "documcp": {
+      "command": "npx",
+      "args": ["documcp"]
+    }
+  }
+}
+```
+
+#### Cursor
+
+File location: `~/.cursor/mcp.json` (or add via **Settings > MCP**)
+
+```json
+{
+  "mcpServers": {
+    "documcp": {
+      "command": "npx",
+      "args": ["documcp"]
+    }
+  }
+}
+```
+
+#### VS Code (GitHub Copilot)
+
+Add to your `settings.json`:
+
+```json
+{
+  "mcp.servers": {
+    "documcp": {
+      "command": "npx",
+      "args": ["documcp"]
+    }
+  }
+}
+```
+
+---
+
+### Verify the connection
+
+After restarting your AI client, ask it:
 
 ```
-@LLM_CONTEXT.md help me set up documentation for my TypeScript project
+What tools does DocuMCP provide?
 ```
 
-The `LLM_CONTEXT.md` file is auto-generated and contains:
+You should receive a list of available tools (analyze_repository, recommend_ssg, deploy_site, and others). If you do not, check that DocuMCP is installed and that the config file is saved correctly.
 
-- All 45 tool descriptions and parameters
-- Usage examples and workflows
-- Memory system documentation
-- Phase 3 code-to-docs sync features
+> **Tip:** For the most detailed tool context, reference `LLM_CONTEXT.md` in your prompts once you have cloned or are working inside a DocuMCP-connected project:
+>
+> ```
+> @LLM_CONTEXT.md help me set up documentation for my TypeScript project
+> ```
 
-**Location**: `/LLM_CONTEXT.md` (in project root)
+---
 
-This ensures your AI assistant has complete context and can provide optimal recommendations.
+## Step 1: Analyze Your Repository
 
-## Step 1: Initial Repository Analysis
+**MCP tool:** `analyze_repository`
 
-Start by analyzing your repository to understand its characteristics and documentation needs:
+Tell your AI assistant:
+
+```
+Analyze my repository at /path/to/your/project
+```
+
+Or with explicit parameters:
 
 ```json
 {
@@ -53,13 +137,13 @@ Start by analyzing your repository to understand its characteristics and documen
 }
 ```
 
-This will analyze your project and return:
+DocuMCP returns:
 
-- **Project structure**: File counts, languages used, and organization
-- **Dependencies**: Production and development packages detected
-- **Documentation status**: Existing docs, README, contributing guidelines
-- **Smart recommendations**: Primary language, project type, team size estimates
-- **Unique analysis ID**: For use in subsequent steps
+- **Project structure** — file counts, languages used, directory layout
+- **Dependencies** — production and development packages detected
+- **Documentation status** — existing docs, README, contributing guidelines
+- **Smart recommendations** — primary language, project type, team size estimates
+- **Analysis ID** — a unique identifier used in the next steps (e.g., `analysis_abc123xyz`)
 
 Example response snippet:
 
@@ -72,10 +156,6 @@ Example response snippet:
     "hasTests": true,
     "hasCI": true
   },
-  "dependencies": {
-    "ecosystem": "javascript",
-    "packages": ["react", "typescript"]
-  },
   "recommendations": {
     "primaryLanguage": "typescript",
     "projectType": "library"
@@ -83,9 +163,17 @@ Example response snippet:
 }
 ```
 
-## Step 2: Memory-Enhanced SSG Recommendation
+---
 
-Next, get intelligent recommendations powered by DocuMCP's memory system:
+## Step 2: Get an SSG Recommendation
+
+**MCP tool:** `recommend_ssg`
+
+```
+Recommend a static site generator based on analysis_abc123xyz
+```
+
+Or with preferences:
 
 ```json
 {
@@ -97,14 +185,7 @@ Next, get intelligent recommendations powered by DocuMCP's memory system:
 }
 ```
 
-The memory system leverages patterns from 130+ previous projects to provide:
-
-- **Confidence-scored recommendations** (e.g., Docusaurus with 85% confidence)
-- **Historical success data** (69% deployment success rate insights)
-- **Pattern-based insights** (Hugo most common with 98 projects, but Docusaurus optimal for TypeScript)
-- **Similar project examples** to learn from successful configurations
-
-Example recommendation response:
+DocuMCP uses its memory system — built from patterns across many past projects — to return confidence-scored recommendations:
 
 ```json
 {
@@ -112,8 +193,7 @@ Example recommendation response:
   "confidence": 0.85,
   "reasoning": [
     "JavaScript/TypeScript ecosystem detected",
-    "Modern React-based framework aligns with project stack",
-    "Strong community support and active development"
+    "Modern React-based framework aligns with project stack"
   ],
   "alternatives": [
     {
@@ -126,12 +206,19 @@ Example recommendation response:
 }
 ```
 
-## Step 3: Configuration Generation
+---
 
-Generate optimized configuration files for your chosen SSG:
+## Step 3: Generate Configuration
 
-```javascript
-// Generate Docusaurus configuration
+**MCP tool:** `generate_config`
+
+```
+Generate a Docusaurus configuration for my project
+```
+
+Or explicitly:
+
+```json
 {
   "ssg": "docusaurus",
   "projectName": "Your Project",
@@ -140,12 +227,21 @@ Generate optimized configuration files for your chosen SSG:
 }
 ```
 
-## Step 4: Diataxis Structure Setup
+This creates a ready-to-use `docusaurus.config.js` (or equivalent) tailored to your project.
 
-Create a professional documentation structure following the Diataxis framework:
+---
 
-```javascript
-// Setup documentation structure
+## Step 4: Set Up Documentation Structure
+
+**MCP tool:** `setup_structure`
+
+```
+Set up a Diataxis documentation structure for my project using Docusaurus
+```
+
+Or explicitly:
+
+```json
 {
   "path": "/path/to/your/repository/docs",
   "ssg": "docusaurus",
@@ -153,79 +249,67 @@ Create a professional documentation structure following the Diataxis framework:
 }
 ```
 
-This creates four optimized sections following the Diataxis framework:
+This creates four Diataxis-compliant sections:
 
-- **Tutorials**: Learning-oriented guides for skill acquisition (study context)
-- **How-to Guides**: Problem-solving guides for specific tasks (work context)
-- **Reference**: Information-oriented content for lookup and verification (information context)
-- **Explanation**: Understanding-oriented content for context and background (understanding context)
+- **Tutorials** — learning-oriented guides for skill acquisition
+- **How-to Guides** — problem-solving guides for specific tasks
+- **Reference** — information-oriented content for lookup
+- **Explanation** — understanding-oriented conceptual content
 
-## Step 5: GitHub Pages Deployment
+---
 
-Set up automated deployment with security best practices:
+## Step 5: Deploy
 
-```javascript
-// Deploy to GitHub Pages
+**MCP tool:** `deploy_site`
+
+To deploy to **GitHub Pages**:
+
+```
+Deploy my documentation to GitHub Pages
+```
+
+```json
 {
-  "repository": "/path/to/your/repository",
-  "ssg": "docusaurus",
-  "branch": "gh-pages"
+  "projectPath": "/path/to/your/repository",
+  "target": "github-pages",
+  "ssg": "docusaurus"
 }
 ```
 
-This generates:
+To deploy to **Vercel**:
 
-- GitHub Actions workflow with OIDC authentication
-- Minimal security permissions (pages:write, id-token:write only)
-- Automated build and deployment pipeline
+```
+Deploy my documentation to Vercel
+```
 
-## Step 6: Memory System Exploration
-
-Explore DocuMCP's advanced memory capabilities:
-
-```javascript
-// Get learning statistics
+```json
 {
-  "includeDetails": true
-}
-
-// Recall similar projects
-{
-  "query": "typescript documentation",
-  "type": "recommendation",
-  "limit": 5
+  "projectPath": "/path/to/your/repository",
+  "target": "vercel",
+  "ssg": "docusaurus"
 }
 ```
 
-The memory system provides:
+`deploy_site` generates:
 
-- **Pattern Recognition**: Most successful SSG choices for your project type
-- **Historical Insights**: Success rates and common issues
-- **Smart Recommendations**: Enhanced suggestions based on similar projects
+- A GitHub Actions workflow file (`.github/workflows/deploy-github-pages.yml` or `deploy-vercel.yml`)
+- OIDC authentication with minimal permissions
+- A setup checklist (`VERCEL_SETUP.md` for Vercel) committed to your repo
 
-## Verification
+> **Back-compat note:** The older `deploy_pages` tool still works and maps to `deploy_site` with `target=github-pages`. It will be removed in v1.1.0.
 
-Verify your setup with these checks:
+---
 
-1. **Documentation Structure**: Confirm all Diataxis directories are created
-2. **Configuration Files**: Check generated config files are valid
-3. **GitHub Actions**: Verify workflow file in `.github/workflows/`
-4. **Memory Insights**: Review recommendations and confidence scores
+## What You Learned
 
-## Summary
-
-In this tutorial, you learned how to:
-
-- **Analyze repositories** with comprehensive project profiling
-- **Get intelligent SSG recommendations** using memory-enhanced insights
-- **Generate optimized configurations** for your chosen static site generator
-- **Create Diataxis-compliant structures** for professional documentation
-- **Set up automated GitHub Pages deployment** with security best practices
-- **Leverage the memory system** for enhanced recommendations and insights
+- What DocuMCP is and how it integrates with your AI client
+- How to install and connect DocuMCP (npm or git clone)
+- How to verify the MCP server is running
+- How to run the core workflow: analyze → recommend → configure → structure → deploy
 
 ## Next Steps
 
-- Explore [Memory-Enhanced Workflows](./memory-workflows.md)
-- Read [How-To Guides](../how-to/) for specific tasks
-- Check the [API Reference](../reference/) for complete tool documentation
-- Learn about [Diataxis Framework](../explanation/) principles
+- [Your First Deployment](./first-deployment.md) — end-to-end walkthrough with a real project
+- [How-To Guides](../how-to/) — task-specific guides for common operations
+- [MCP Tools Reference](../reference/mcp-tools.md) — full parameter documentation for all tools
+- [Memory Workflows](./memory-workflows.md) — advanced memory system features

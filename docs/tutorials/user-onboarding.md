@@ -1,465 +1,291 @@
 ---
 documcp:
-  last_updated: "2025-11-20T00:46:21.973Z"
-  last_validated: "2025-12-09T19:41:38.605Z"
+  last_updated: "2026-05-07"
+  last_validated: "2026-05-07"
   auto_updated: false
   update_frequency: monthly
-  validated_against_commit: 306567b32114502c606244ad6c2930360bcd4201
 ---
 
 # DocuMCP User Onboarding Guide
 
-Welcome to DocuMCP! This comprehensive guide will help you get started with DocuMCP in your own environment, from initial setup to advanced usage patterns.
+Welcome to DocuMCP. This guide covers common usage patterns once you have DocuMCP installed and connected to your AI client. If you have not done that yet, start with the [Getting Started](./getting-started.md) tutorial.
 
-## 🚀 Quick Start
+## Quick Recap: How DocuMCP Works
 
-### Prerequisites
+DocuMCP is an MCP server. You do not run CLI commands — you ask your AI assistant (Claude Desktop, Cursor, VS Code Copilot) and it calls the right DocuMCP tools on your behalf. Every pattern below shows the natural-language prompt alongside the underlying tool so you know what is happening.
 
-- **Node.js**: Version 20.0.0 or higher
-- **npm**: Version 8.0.0 or higher
-- **Git**: For repository analysis
-- **GitHub Account**: For GitHub Pages deployment
+---
 
-### Installation
-
-```bash
-# Install DocuMCP globally
-npm install -g documcp
-
-# Or install locally in your project
-npm install documcp --save-dev
-```
-
-### Verify Installation
-
-```bash
-# Check if DocuMCP is installed correctly
-documcp --version
-
-# Should output: DocuMCP v0.5.0
-```
-
-## 📋 Basic Usage Patterns
+## Usage Patterns
 
 ### Pattern 1: Repository Analysis
 
-Start by analyzing your repository to understand its structure and documentation needs.
+**MCP tool:** `analyze_repository`
 
-```bash
-# Basic repository analysis
-documcp analyze-repository --path ./my-project --depth standard
-
-# Quick analysis for large repositories
-documcp analyze-repository --path ./large-project --depth quick
-
-# Deep analysis for comprehensive documentation
-documcp analyze-repository --path ./complex-project --depth deep
+```
+Analyze my repository at /path/to/my-project
 ```
 
-**Example Output:**
+With depth control:
+
+```
+Do a deep analysis of /path/to/large-project to understand its documentation needs
+```
+
+Parameter reference:
 
 ```json
 {
-  "success": true,
-  "data": {
-    "id": "analysis_abc123_def456",
-    "structure": {
-      "totalFiles": 150,
-      "totalDirectories": 25,
-      "languages": { ".ts": 100, ".md": 20, ".json": 10 },
-      "hasTests": true,
-      "hasCI": true,
-      "hasDocs": false
-    },
-    "recommendations": {
-      "primaryLanguage": "TypeScript",
-      "projectType": "Library",
-      "teamSize": "small"
+  "path": "/path/to/your/project",
+  "depth": "standard"
+}
+```
+
+Depth options: `quick` (large repos), `standard` (default), `deep` (comprehensive).
+
+---
+
+### Pattern 2: SSG Recommendation
+
+**MCP tool:** `recommend_ssg`
+
+```
+Recommend a static site generator based on the analysis I just ran
+```
+
+With explicit preferences:
+
+```
+Recommend an SSG for analysis_abc123xyz, prioritizing performance and JavaScript ecosystem
+```
+
+Parameter reference:
+
+```json
+{
+  "analysisId": "analysis_abc123xyz",
+  "preferences": {
+    "ecosystem": "javascript",
+    "priority": "performance"
+  }
+}
+```
+
+---
+
+### Pattern 3: Documentation Structure Setup
+
+**MCP tool:** `setup_structure`
+
+```
+Set up a Diataxis documentation structure for Docusaurus in my project's docs folder
+```
+
+Parameter reference:
+
+```json
+{
+  "path": "/path/to/your/project/docs",
+  "ssg": "docusaurus",
+  "includeExamples": true
+}
+```
+
+---
+
+### Pattern 4: Configuration Generation
+
+**MCP tool:** `generate_config`
+
+```
+Generate a Docusaurus configuration for My Project
+```
+
+Parameter reference:
+
+```json
+{
+  "ssg": "docusaurus",
+  "projectName": "My Project",
+  "projectDescription": "A description of my project",
+  "outputPath": "/path/to/your/project"
+}
+```
+
+---
+
+### Pattern 5: Content Population
+
+**MCP tool:** `populate_content`
+
+```
+Populate the documentation structure with content based on my repository analysis
+```
+
+Parameter reference:
+
+```json
+{
+  "analysisId": "analysis_abc123xyz",
+  "docsPath": "/path/to/your/project/docs"
+}
+```
+
+---
+
+### Pattern 6: Deployment
+
+**MCP tool:** `deploy_site`
+
+To GitHub Pages:
+
+```
+Deploy my documentation to GitHub Pages
+```
+
+To Vercel:
+
+```
+Deploy my documentation to Vercel
+```
+
+Parameter reference:
+
+```json
+{
+  "projectPath": "/path/to/your/project",
+  "target": "github-pages",
+  "ssg": "docusaurus"
+}
+```
+
+---
+
+## Common Use Cases
+
+### New Open Source Project
+
+```
+1. "Analyze my repository at /path/to/my-oss-project"
+2. "Recommend an SSG focused on community and discoverability"
+3. "Set up a Diataxis documentation structure using the recommended SSG"
+4. "Generate the configuration files"
+5. "Populate the docs with content from my project"
+6. "Deploy to GitHub Pages"
+```
+
+### Enterprise Documentation
+
+```
+1. "Do a deep analysis of /path/to/enterprise-project"
+2. "Recommend an SSG that prioritizes simplicity and low maintenance"
+3. "Set up a minimal documentation structure without examples"
+4. "Generate the Hugo configuration for enterprise-docs/"
+5. "Deploy to GitHub Pages with custom domain docs.example.com"
+```
+
+### API Documentation
+
+```
+1. "Analyze /path/to/api-project"
+2. "Recommend an SSG for API documentation with strong reference support"
+3. "Set up documentation structure with API reference focus"
+4. "Populate the reference section from my source code"
+5. "Deploy to Vercel"
+```
+
+---
+
+## Advanced Configuration
+
+### Storage Directory
+
+DocuMCP stores its memory and knowledge graph locally. To customize the location:
+
+```bash
+export DOCUMCP_STORAGE_DIR="/path/to/custom/storage"
+```
+
+Or pass it in the MCP server config:
+
+```json
+{
+  "mcpServers": {
+    "documcp": {
+      "command": "npx",
+      "args": ["documcp"],
+      "env": {
+        "DOCUMCP_STORAGE_DIR": "/path/to/storage"
+      }
     }
   }
 }
 ```
 
-### Pattern 2: SSG Recommendation
+---
 
-Get intelligent recommendations for the best static site generator for your project.
+## Troubleshooting
 
-```bash
-# Get SSG recommendation based on analysis
-documcp recommend-ssg --analysis-id analysis_abc123_def456
+### Repository Analysis Returns No Results
 
-# With user preferences
-documcp recommend-ssg --analysis-id analysis_abc123_def456 --priority performance --ecosystem javascript
+- Ensure the path is absolute and the directory exists
+- Check that the directory has at least some source files
+- Try `depth: "deep"` for projects with unconventional layouts
 
-# For enterprise users
-documcp recommend-ssg --analysis-id analysis_abc123_def456 --priority simplicity
+### SSG Recommendation Has Low Confidence
+
+Ask DocuMCP for a deeper analysis first:
+
+```
+Do a deep analysis of my project, then recommend an SSG
 ```
 
-**Example Output:**
+### Deployment Fails — Permission Errors
 
-```json
-{
-  "success": true,
-  "data": {
-    "recommended": "docusaurus",
-    "confidence": 0.92,
-    "reasoning": [
-      "React-based project detected",
-      "Documentation focus identified",
-      "Team size suitable for Docusaurus"
-    ],
-    "alternatives": [
-      {
-        "name": "hugo",
-        "score": 0.85,
-        "pros": ["Performance", "Fast builds"],
-        "cons": ["Learning curve", "Go templates"]
-      }
-    ]
-  }
-}
+For GitHub Pages, confirm:
+
+- GitHub Pages is enabled in your repository settings (Settings → Pages → Source: GitHub Actions)
+- The generated workflow file has been committed and pushed
+
+For Vercel, confirm:
+
+- You have run `vercel link` inside the project as described in the generated `VERCEL_SETUP.md`
+- The `VERCEL_TOKEN`, `VERCEL_ORG_ID`, and `VERCEL_PROJECT_ID` secrets are set in your repository
+
+### Content Population Generates Empty Sections
+
+Ensure the documentation structure was created first:
+
+```
+Set up the documentation structure before populating it
 ```
 
-### Pattern 3: Documentation Structure Setup
+---
 
-Create a Diataxis-compliant documentation structure.
+## Best Practices
 
-```bash
-# Set up documentation structure
-documcp setup-structure --path ./docs --ssg docusaurus --include-examples
+### Repository Organization
 
-# Minimal structure for existing projects
-documcp setup-structure --path ./site --ssg hugo --include-examples false
-```
+- Keep a well-maintained `README.md` — DocuMCP uses it as the primary signal for project purpose
+- Include dependency files (`package.json`, `requirements.txt`, `go.mod`) so language detection works accurately
+- Use consistent naming conventions in your source tree
 
-### Pattern 4: Configuration Generation
+### Documentation Quality
 
-Generate configuration files for your chosen SSG.
+- Follow Diataxis principles: separate tutorials (learning) from how-tos (tasks) from reference (lookup) from explanation (concepts)
+- Run `validate_content` after populating to catch missing sections
+- Keep docs close to the code they document
 
-```bash
-# Generate Docusaurus configuration
-documcp generate-config --ssg docusaurus --project-name "My Project" --output-path ./docs
+### Memory System
 
-# Generate Hugo configuration
-documcp generate-config --ssg hugo --project-name "My Site" --output-path ./site
-```
+- Run analyses regularly; DocuMCP learns from each one and improves future recommendations
+- Export the knowledge graph before major changes: ask "export my DocuMCP memory"
 
-### Pattern 5: Content Population
+---
 
-Populate your documentation with intelligent content based on your repository.
+## Getting Help
 
-```bash
-# Populate documentation content
-documcp populate-content --analysis-id analysis_abc123_def456 --docs-path ./docs
-
-# With specific focus areas
-documcp populate-content --analysis-id analysis_abc123_def456 --docs-path ./docs --focus-areas api,examples
-```
-
-### Pattern 6: GitHub Pages Deployment
-
-Deploy your documentation to GitHub Pages.
-
-```bash
-# Deploy to GitHub Pages
-documcp deploy-pages --repository "user/repo" --ssg docusaurus
-
-# With custom domain
-documcp deploy-pages --repository "user/repo" --ssg docusaurus --custom-domain "docs.example.com"
-```
-
-## 🎯 Common Use Cases
-
-### Use Case 1: New Open Source Project
-
-For a new open source project, follow this workflow:
-
-```bash
-# 1. Analyze your repository
-ANALYSIS_ID=$(documcp analyze-repository --path . --depth standard | jq -r '.data.id')
-
-# 2. Get SSG recommendation
-documcp recommend-ssg --analysis-id $ANALYSIS_ID --priority community_focused
-
-# 3. Set up documentation structure
-documcp setup-structure --path ./docs --ssg docusaurus --include-examples
-
-# 4. Generate configuration
-documcp generate-config --ssg docusaurus --project-name "My Open Source Project" --output-path ./docs
-
-# 5. Populate content
-documcp populate-content --analysis-id $ANALYSIS_ID --docs-path ./docs
-
-# 6. Deploy to GitHub Pages
-documcp deploy-pages --repository "$(git remote get-url origin | sed 's/.*github.com[:/]\([^.]*\).*/\1/')" --ssg docusaurus
-```
-
-### Use Case 2: Enterprise Documentation
-
-For enterprise documentation with specific requirements:
-
-```bash
-# 1. Analyze with enterprise focus
-ANALYSIS_ID=$(documcp analyze-repository --path . --depth deep | jq -r '.data.id')
-
-# 2. Get enterprise-focused recommendation
-documcp recommend-ssg --analysis-id $ANALYSIS_ID --priority enterprise_focused
-
-# 3. Set up minimal structure
-documcp setup-structure --path ./enterprise-docs --ssg hugo --include-examples false
-
-# 4. Generate enterprise configuration
-documcp generate-config --ssg hugo --project-name "Enterprise Documentation" --output-path ./enterprise-docs
-
-# 5. Populate with enterprise focus
-documcp populate-content --analysis-id $ANALYSIS_ID --docs-path ./enterprise-docs --focus-areas security,compliance,api
-```
-
-### Use Case 3: API Documentation
-
-For API-focused projects:
-
-```bash
-# 1. Analyze API project
-ANALYSIS_ID=$(documcp analyze-repository --path . --depth standard | jq -r '.data.id')
-
-# 2. Get API-focused recommendation
-documcp recommend-ssg --analysis-id $ANALYSIS_ID --priority features
-
-# 3. Set up API documentation structure
-documcp setup-structure --path ./api-docs --ssg docusaurus --include-examples
-
-# 4. Generate API documentation configuration
-documcp generate-config --ssg docusaurus --project-name "API Documentation" --output-path ./api-docs
-
-# 5. Populate with API focus
-documcp populate-content --analysis-id $ANALYSIS_ID --docs-path ./api-docs --focus-areas api,examples,integration
-```
-
-## 🔧 Advanced Configuration
-
-### Environment Variables
-
-Set up environment variables for advanced configuration:
-
-```bash
-# GitHub token for deployment
-export GITHUB_TOKEN="your_github_token"
-
-# Custom storage directory for memory
-export DOCUMCP_STORAGE_DIR="./.documcp"
-
-# Development mode for debugging
-export NODE_ENV="development"
-```
-
-### Memory System Configuration
-
-Configure the memory system for learning and pattern recognition:
-
-```bash
-# Initialize memory system
-documcp memory initialize --storage-dir ./.documcp
-
-# Export memories for backup
-documcp memory export --format json --output ./documcp-memories.json
-
-# Import memories from backup
-documcp memory import --format json --input ./documcp-memories.json
-```
-
-### User Preferences
-
-Set up user preferences for personalized recommendations:
-
-```bash
-# Set user preferences
-documcp preferences set --user-id "developer123" --priority performance --ecosystem javascript
-
-# Get personalized recommendations
-documcp recommend-ssg --analysis-id $ANALYSIS_ID --user-id "developer123"
-
-# Export preferences
-documcp preferences export --user-id "developer123" --output ./preferences.json
-```
-
-## 🚨 Troubleshooting
-
-### Common Issues
-
-#### Issue 1: Repository Analysis Fails
-
-**Problem:** `Permission denied: Cannot read directory`
-
-**Solution:**
-
-```bash
-# Check directory permissions
-ls -la /path/to/repository
-
-# Fix permissions if needed
-chmod -R 755 /path/to/repository
-
-# Run analysis again
-documcp analyze-repository --path /path/to/repository --depth standard
-```
-
-#### Issue 2: SSG Recommendation Returns Low Confidence
-
-**Problem:** Low confidence scores in recommendations
-
-**Solution:**
-
-```bash
-# Try deeper analysis
-documcp analyze-repository --path . --depth deep
-
-# Use specific preferences
-documcp recommend-ssg --analysis-id $ANALYSIS_ID --priority simplicity --ecosystem any
-
-# Check for similar projects in memory
-documcp memory similar --analysis-id $ANALYSIS_ID
-```
-
-#### Issue 3: GitHub Pages Deployment Fails
-
-**Problem:** Deployment fails with permission errors
-
-**Solution:**
-
-```bash
-# Check GitHub token permissions
-curl -H "Authorization: token $GITHUB_TOKEN" https://api.github.com/user
-
-# Ensure token has repo and pages permissions
-# Regenerate token with correct permissions if needed
-
-# Try deployment again
-documcp deploy-pages --repository "user/repo" --ssg docusaurus
-```
-
-#### Issue 4: Content Population Generates Empty Content
-
-**Problem:** No content is generated during population
-
-**Solution:**
-
-```bash
-# Check if repository has sufficient content
-documcp analyze-repository --path . --depth deep
-
-# Ensure documentation structure exists
-documcp setup-structure --path ./docs --ssg docusaurus
-
-# Try with different population level
-documcp populate-content --analysis-id $ANALYSIS_ID --docs-path ./docs --population-level comprehensive
-```
-
-## 📚 Best Practices
-
-### 1. Repository Organization
-
-- Keep your repository well-organized with clear directory structure
-- Include a comprehensive README.md file
-- Use consistent naming conventions
-- Include package.json or equivalent dependency files
-
-### 2. Documentation Structure
-
-- Follow Diataxis framework principles
-- Use clear, descriptive headings
-- Include code examples and use cases
-- Keep documentation up-to-date with code changes
-
-### 3. Memory System Usage
-
-- Regularly export memories for backup
-- Use consistent user IDs for preference tracking
-- Clean up old memories periodically
-- Share memories across team members for better recommendations
-
-### 4. Deployment Strategy
-
-- Test documentation locally before deployment
-- Use staging environments for testing
-- Monitor deployment success rates
-- Keep deployment configurations in version control
-
-## 🔗 Integration Examples
-
-### GitHub Actions Integration
-
-```yaml
-name: Deploy Documentation
-
-on:
-  push:
-    branches: [main]
-    paths: ["docs/**", "src/**"]
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      - name: Install DocuMCP
-        run: npm install -g documcp
-
-      - name: Analyze Repository
-        id: analyze
-        run: |
-          ANALYSIS_ID=$(documcp analyze-repository --path . --depth standard | jq -r '.data.id')
-          echo "analysis_id=$ANALYSIS_ID" >> $GITHUB_OUTPUT
-
-      - name: Deploy Documentation
-        run: |
-          documcp deploy-pages --repository ${{ github.repository }} --ssg docusaurus
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-```
-
-### Docker Integration
-
-```dockerfile
-FROM node:20-alpine
-
-# Install DocuMCP
-RUN npm install -g documcp
-
-# Set working directory
-WORKDIR /app
-
-# Copy project files
-COPY . .
-
-# Analyze and deploy documentation
-RUN documcp analyze-repository --path . --depth standard && \
-    documcp recommend-ssg --analysis-id $(documcp analyze-repository --path . | jq -r '.data.id') && \
-    documcp deploy-pages --repository $REPOSITORY --ssg docusaurus
-
-EXPOSE 3000
-CMD ["documcp", "serve", "--port", "3000"]
-```
-
-## 📖 Additional Resources
-
-- [Reference](../reference/) - Complete tool and configuration documentation
-- [Configuration Guide](../reference/configuration.md) - Detailed configuration options
-- [MCP Tools Reference](../reference/mcp-tools.md) - MCP tool specifications
-- [GitHub Pages Deployment](../how-to/github-pages-deployment.md) - Deployment guide
-- [Troubleshooting Guide](../how-to/troubleshooting.md) - Common issues and solutions
-
-## 🤝 Getting Help
-
-- **GitHub Issues**: Report bugs and request features
-- **GitHub Discussions**: Ask questions and share ideas
-- **Documentation**: Check the comprehensive documentation
-- **API Reference**: Explore the complete API documentation
-
-Welcome to the DocuMCP community! 🎉
+- **GitHub Issues**: [https://github.com/tosin2013/documcp/issues](https://github.com/tosin2013/documcp/issues)
+- **GitHub Discussions**: Ask questions and share patterns
+- **MCP Tools Reference**: [../reference/mcp-tools.md](../reference/mcp-tools.md)
+- **Troubleshooting Guide**: [../how-to/troubleshooting.md](../how-to/troubleshooting.md)
