@@ -42,7 +42,7 @@ git push
 
 After pushing:
 
-- **Push to `main`** → production deployment at `https://documcp.vercel.app`
+- **Push to `main`** → production deployment at `https://documcp.dev`
 - **Pull request** → preview deployment URL posted automatically by Vercel
 
 Use DocuMCP's `verify_deployment` tool to check the live URL.

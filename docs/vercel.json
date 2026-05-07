@@ -3,5 +3,5 @@
   "outputDirectory": "build",
   "installCommand": "npm install",
   "framework": "docusaurus-2",
-  "alias": ["documcp.vercel.app"]
+  "alias": ["documcp.dev", "www.documcp.dev"]
 }

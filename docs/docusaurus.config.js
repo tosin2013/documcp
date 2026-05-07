@@ -10,7 +10,7 @@ try {
 module.exports = {
   title: "DocuMCP",
   tagline: `Intelligent documentation deployment MCP server v${packageJson.version} with AI-powered repository analysis and Diataxis-compliant content generation`,
-  url: "https://documcp.vercel.app",
+  url: "https://documcp.dev",
   baseUrl: "/",
   onBrokenLinks: "warn",
   onBrokenMarkdownLinks: "warn",
