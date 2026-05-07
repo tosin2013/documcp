@@ -109,7 +109,7 @@ describe("Simple Tool Coverage Tests", () => {
       deployPath,
       ".github",
       "workflows",
-      "deploy-docs.yml",
+      "deploy-github-pages.yml",
     );
     const stat = await fs.stat(workflowPath);
     expect(stat.isFile()).toBe(true);

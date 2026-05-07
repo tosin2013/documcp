@@ -427,7 +427,7 @@ describe("Edge Cases and Error Handling", () => {
         path.join(existingWorkflow, ".github", "workflows"),
       );
       expect(workflows).toContain("existing.yml");
-      expect(workflows).toContain("deploy-docs.yml");
+      expect(workflows).toContain("deploy-github-pages.yml");
     });
 
     it("should handle custom domain validation", async () => {

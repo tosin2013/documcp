@@ -514,7 +514,7 @@ describe("Functional Testing - MCP Tools", () => {
         deploymentRepoDir,
         ".github",
         "workflows",
-        "deploy-docs.yml",
+        "deploy-github-pages.yml",
       );
       expect(
         await fs
@@ -545,7 +545,7 @@ describe("Functional Testing - MCP Tools", () => {
         deploymentRepoDir,
         ".github",
         "workflows",
-        "deploy-docs.yml",
+        "deploy-github-pages.yml",
       );
       const workflowContent = await fs.readFile(workflowPath, "utf-8");
 
@@ -561,7 +561,12 @@ describe("Functional Testing - MCP Tools", () => {
       });
 
       const workflowContent = await fs.readFile(
-        path.join(deploymentRepoDir, ".github", "workflows", "deploy-docs.yml"),
+        path.join(
+          deploymentRepoDir,
+          ".github",
+          "workflows",
+          "deploy-github-pages.yml",
+        ),
         "utf-8",
       );
 
@@ -625,7 +630,7 @@ describe("Functional Testing - MCP Tools", () => {
           verificationRepoDir,
           ".github",
           "workflows",
-          "deploy-docs.yml",
+          "deploy-github-pages.yml",
         ),
         "name: Deploy Docs\non: push\njobs:\n  deploy:\n    runs-on: ubuntu-latest",
       );

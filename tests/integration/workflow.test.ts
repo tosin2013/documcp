@@ -159,7 +159,7 @@ describe("Integration Testing - Complete Workflows", () => {
         workflowDir,
         ".github",
         "workflows",
-        "deploy-docs.yml",
+        "deploy-github-pages.yml",
       );
       const cnamePath = path.join(workflowDir, "CNAME");
 
@@ -312,7 +312,7 @@ describe("Integration Testing - Complete Workflows", () => {
           ssgDir,
           ".github",
           "workflows",
-          "deploy-docs.yml",
+          "deploy-github-pages.yml",
         );
         expect(
           await fs

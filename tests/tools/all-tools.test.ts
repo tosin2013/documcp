@@ -285,7 +285,7 @@ describe("All MCP Tools Coverage Tests", () => {
         repoDir,
         ".github",
         "workflows",
-        "deploy-docs.yml",
+        "deploy-github-pages.yml",
       );
       expect(await fileExists(workflowPath)).toBe(true);
 
@@ -302,7 +302,7 @@ describe("All MCP Tools Coverage Tests", () => {
       });
 
       const workflowContent = await fs.readFile(
-        path.join(repoDir, ".github", "workflows", "deploy-docs.yml"),
+        path.join(repoDir, ".github", "workflows", "deploy-github-pages.yml"),
         "utf-8",
       );
       expect(workflowContent).toContain("mkdocs gh-deploy");
@@ -335,7 +335,7 @@ describe("All MCP Tools Coverage Tests", () => {
       });
 
       const workflowContent = await fs.readFile(
-        path.join(repoDir, ".github", "workflows", "deploy-docs.yml"),
+        path.join(repoDir, ".github", "workflows", "deploy-github-pages.yml"),
         "utf-8",
       );
       expect(workflowContent).toContain("Deploy Hugo");
