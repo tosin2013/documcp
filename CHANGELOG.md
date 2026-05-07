@@ -35,6 +35,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix dead MCP specification URL in `llm-integration.md` ([#154](https://github.com/tosin2013/documcp/issues/154))
 - fix broken `#common-workflows` anchor in `api-overview.md` ([#156](https://github.com/tosin2013/documcp/issues/156))
 - add cross-links to prompting-guide, repository-analysis, and usage-examples how-to guides ([#152](https://github.com/tosin2013/documcp/issues/152))
+- fix all broken internal links and anchors across documentation site
+- publish `LLM_CONTEXT.md` to repository and restore GitHub blob links in reference docs
+- remove stale static `docs/sitemap.xml` — Docusaurus auto-generates the sitemap at build time
+- switch primary documentation domain to `https://documcp.dev`
+
+### 🐛 Bug Fixes
+
+- **deploy:** add `docs/.vercelignore` to exclude TypeDoc `api/` output that caused Vercel path conflicts
+- **deploy:** correct Vercel framework slug from `docusaurus2` to `docusaurus-2` in `vercel.json` and Vercel adapter
+- **deploy:** run `npm run build` locally before `vercel deploy --archive=tgz` to avoid Vercel build conflicts
+- **deploy:** align Vercel Docusaurus framework identifier with `deploy_site` adapter expectations
 
 ## [0.8.0](https://github.com/tosin2013/documcp/compare/v0.7.0...v0.8.0) (2026-05-06)
 
