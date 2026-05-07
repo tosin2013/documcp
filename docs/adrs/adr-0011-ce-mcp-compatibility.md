@@ -352,7 +352,7 @@ Test with actual Code Mode clients:
 - [Cloudflare: Code Mode - The Better Way to Use MCP](https://blog.cloudflare.com/code-mode/)
 - [MCP Specification 2025-11-25](https://modelcontextprotocol.io/specification/2025-06-18)
 - [MCP SDK 1.24.0 Release Notes](https://github.com/modelcontextprotocol/typescript-sdk/releases/tag/1.24.0)
-- [CE-MCP Research Findings](../../CE-MCP-FINDINGS.md)
+- [CE-MCP Research Findings](https://github.com/tosin2013/documcp/blob/main/CE-MCP-FINDINGS.md)
 
 ## Conclusion
 

@@ -449,7 +449,7 @@ CMD ["documcp", "serve", "--port", "3000"]
 
 ## 📖 Additional Resources
 
-- [API Reference](../api/) - Complete API documentation
+- [Reference](../reference/) - Complete tool and configuration documentation
 - [Configuration Guide](../reference/configuration.md) - Detailed configuration options
 - [MCP Tools Reference](../reference/mcp-tools.md) - MCP tool specifications
 - [GitHub Pages Deployment](../how-to/github-pages-deployment.md) - Deployment guide

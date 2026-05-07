@@ -137,6 +137,12 @@ what documentation is missing from my project?
 analyze my repository to determine if it needs user guides or developer documentation
 ```
 
+## Drift Detection {#drift-detection}
+
+Repository analysis powers DocuMCP's drift detection — the process of identifying when source code has changed in ways that make existing documentation inaccurate or incomplete. After an initial analysis, subsequent analyses compare code signatures, function signatures, and dependency versions to flag documentation that may need updating.
+
+Use the `sync_code_to_docs` MCP tool to act on drift findings, or see [Drift Priority Scoring](/how-to/drift-priority-scoring) for how changes are ranked.
+
 ## Using Analysis Results
 
 ### For SSG Selection
