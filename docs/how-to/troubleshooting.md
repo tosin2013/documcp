@@ -714,7 +714,7 @@ git --version
 
 ### Support Channels
 
-- **GitHub Issues**: [Report bugs and feature requests](https://github.com/tosin2013/documcp/issues)
+- **GitHub Issues**: [Report bugs and feature requests](https://github.com/tosin2013/documcp/issues?q=is%3Aissue)
 - **Documentation**: Check other guides in this documentation
 - **Community**: Search existing issues for solutions
 

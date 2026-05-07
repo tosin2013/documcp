@@ -1,12 +1,11 @@
 ---
-
 documcp:
 last_updated: "2025-11-20T00:46:21.957Z"
 last_validated: "2025-12-09T19:41:38.587Z"
 auto_updated: false
 update_frequency: monthly
 validated_against_commit: 306567b32114502c606244ad6c2930360bcd4201
-------------------------------------------------------------------
+---
 
 # DocuMCP Usage Examples
 
@@ -14,11 +13,11 @@ This guide provides comprehensive usage examples for DocuMCP functions, organize
 
 ## 📚 Related Documentation
 
-* [Prompting Guide](./prompting-guide.md)
-* [Repository Analysis Guide](./repository-analysis.md)
-* [GitHub Markdown Guide](https://www.markdownguide.org/)
-* [TypeScript Documentation](https://www.typescriptlang.org/docs/)
-* [Model Context Protocol Specification](https://modelcontextprotocol.io/)
+- [Prompting Guide](./prompting-guide.md)
+- [Repository Analysis Guide](./repository-analysis.md)
+- [GitHub Markdown Guide](https://www.markdownguide.org/)
+- [TypeScript Documentation](https://www.typescriptlang.org/docs/)
+- [Model Context Protocol Specification](https://modelcontextprotocol.io/)
 
 ## 🎯 Repository Analysis Examples
 
@@ -97,3 +96,38 @@ recommendation.data.alternatives.forEach((alt) => {
   console.log(`${alt.name}: ${alt.score} (${alt.pros.join(", ")})`);
 });
 ```
+
+## 🚀 Deployment Examples
+
+### Deploy to GitHub Pages
+
+```typescript
+import { deployPages } from "./dist/tools/deploy-pages.js";
+
+const result = await deployPages({
+  repository: "/path/to/project",
+  ssg: "docusaurus",
+  target: "github-pages",
+});
+```
+
+### Deploy to Vercel
+
+See the [Deploy to Vercel guide](./deploy-to-vercel.md) for the full workflow including secrets setup.
+
+```typescript
+const result = await deployPages({
+  repository: "/path/to/project",
+  ssg: "docusaurus",
+  target: "vercel",
+});
+```
+
+## Related
+
+- [Prompting Guide](./prompting-guide.md) — how to phrase prompts effectively
+- [Repository Analysis Guide](./repository-analysis.md) — understanding analysis results
+- [Deploy to Vercel](./deploy-to-vercel.md) — full Vercel deployment walkthrough
+- [Tutorials: First Deployment](../tutorials/first-deployment.md) — step-by-step guide
+- [API Reference](../reference/api-overview.md) — complete tool documentation
+- [Model Context Protocol](https://modelcontextprotocol.io/) — MCP specification

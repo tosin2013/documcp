@@ -202,7 +202,7 @@ You are a documentation automation expert using the documcp MCP server in Code M
 4. Create Diataxis structure using setup_structure tool
 5. ${
                 args.include_deployment !== "false"
-                  ? "Set up GitHub Pages deployment using deploy_pages tool"
+                  ? "Set up deployment using deploy_site tool (target=github-pages or target=vercel)"
                   : "Skip deployment setup"
               }
 6. Return concise summary of completed setup
@@ -470,9 +470,53 @@ const TOOLS = [
     }),
   },
   {
+    name: "deploy_site",
+    description:
+      "Set up deployment workflow for GitHub Pages or Vercel with deployment tracking and preference learning. Use the 'target' parameter to choose the deployment platform.",
+    inputSchema: z.object({
+      repository: z.string().describe("Repository path or URL"),
+      ssg: z
+        .enum(["jekyll", "hugo", "docusaurus", "mkdocs", "eleventy"])
+        .optional()
+        .describe(
+          "Static site generator to use. If not provided, will be retrieved from knowledge graph using analysisId",
+        ),
+      target: z
+        .enum(["github-pages", "vercel"])
+        .optional()
+        .default("github-pages")
+        .describe(
+          "Deployment target: 'github-pages' (default) or 'vercel'. Vercel generates vercel.json and a Vercel CLI workflow.",
+        ),
+      branch: z.string().optional().default("gh-pages"),
+      customDomain: z.string().optional(),
+      invokeCliCommand: z
+        .boolean()
+        .optional()
+        .default(false)
+        .describe(
+          "When true and target=vercel, includes the vercel deploy --prod CLI command in next steps",
+        ),
+      projectPath: z
+        .string()
+        .optional()
+        .describe("Local path to the project for tracking"),
+      projectName: z.string().optional().describe("Project name for tracking"),
+      analysisId: z
+        .string()
+        .optional()
+        .describe("ID from repository analysis for linking"),
+      userId: z
+        .string()
+        .optional()
+        .default("default")
+        .describe("User ID for preference tracking"),
+    }),
+  },
+  {
     name: "deploy_pages",
     description:
-      "Set up GitHub Pages deployment workflow with deployment tracking and preference learning",
+      "[DEPRECATED — use deploy_site instead] Set up GitHub Pages deployment workflow. This alias will be removed in v1.1.0.",
     inputSchema: z.object({
       repository: z.string().describe("Repository path or URL"),
       ssg: z.enum(["jekyll", "hugo", "docusaurus", "mkdocs", "eleventy"]),
@@ -2587,8 +2631,20 @@ server.setRequestHandler(CallToolRequestSchema, async (request, extra) => {
         return wrapToolResult(result, "setup_playwright_tests");
       }
 
-      case "deploy_pages": {
+      case "deploy_site": {
         const result = await deployPages(args, extra);
+        return wrapToolResult(result, "deploy_site");
+      }
+
+      case "deploy_pages": {
+        console.warn(
+          "[DocuMCP] deploy_pages is deprecated — use deploy_site (target=github-pages). " +
+            "deploy_pages will be removed in v1.1.0.",
+        );
+        const result = await deployPages(
+          { ...(args as object), target: "github-pages" },
+          extra,
+        );
         return wrapToolResult(result, "deploy_pages");
       }
 

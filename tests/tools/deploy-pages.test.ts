@@ -250,7 +250,7 @@ describe("deployPages", () => {
 
       // Check response indicates CNAME was created
       const data = JSON.parse(result.content[0].text);
-      expect(data.cnameCreated).toBe(true);
+      expect(data.generatedFiles).toContain("CNAME");
       expect(data.customDomain).toBe(customDomain);
     });
 
@@ -268,7 +268,7 @@ describe("deployPages", () => {
 
       // Check response indicates CNAME was not created
       const data = JSON.parse(result.content[0].text);
-      expect(data.cnameCreated).toBe(false);
+      expect(data.generatedFiles).not.toContain("CNAME");
       expect(data.customDomain).toBeUndefined();
     });
 
@@ -284,7 +284,7 @@ describe("deployPages", () => {
 
       const data = JSON.parse(result.content[0].text);
       expect(data.customDomain).toBe(customDomain);
-      expect(data.cnameCreated).toBe(true);
+      expect(data.generatedFiles).toContain("CNAME");
     });
 
     it("should not include custom domain recommendation when not specified", async () => {
@@ -297,7 +297,7 @@ describe("deployPages", () => {
 
       const data = JSON.parse(result.content[0].text);
       expect(data.customDomain).toBeUndefined();
-      expect(data.cnameCreated).toBe(false);
+      expect(data.generatedFiles).not.toContain("CNAME");
     });
   });
 
@@ -357,7 +357,9 @@ describe("deployPages", () => {
       expect(data.repository).toBe(testTempDir);
       expect(data.ssg).toBe("jekyll");
       expect(data.branch).toBe("gh-pages");
-      expect(data.workflowPath).toBe("deploy-docs.yml");
+      expect(data.generatedFiles).toContain(
+        ".github/workflows/deploy-docs.yml",
+      );
     });
 
     it("should include execution metadata", async () => {
@@ -380,7 +382,9 @@ describe("deployPages", () => {
 
       const data = JSON.parse(result.content[0].text);
       expect(data.ssg).toBe("hugo");
-      expect(data.workflowPath).toBe("deploy-docs.yml");
+      expect(data.generatedFiles).toContain(
+        ".github/workflows/deploy-docs.yml",
+      );
 
       // Check that workflow file was created
       const workflowPath = path.join(
@@ -401,7 +405,9 @@ describe("deployPages", () => {
 
       const data = JSON.parse(result.content[0].text);
       expect(data.ssg).toBe("jekyll");
-      expect(data.workflowPath).toBe("deploy-docs.yml");
+      expect(data.generatedFiles).toContain(
+        ".github/workflows/deploy-docs.yml",
+      );
 
       // Verify workflow file was created
       const workflowPath = path.join(
@@ -481,7 +487,9 @@ describe("deployPages", () => {
 
       const data = JSON.parse(result.content[0].text);
       expect(data.ssg).toBe("jekyll");
-      expect(data.workflowPath).toBe("deploy-docs.yml");
+      expect(data.generatedFiles).toContain(
+        ".github/workflows/deploy-docs.yml",
+      );
     });
   });
 

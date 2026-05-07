@@ -23,15 +23,15 @@ drive sampling, not the server.
 
 ## What Changed
 
-| Area | v0.5.x | v0.6.0+ |
-|------|--------|---------|
-| `src/utils/llm-client.ts` | Present | **Deleted** |
-| `src/utils/execution-simulator.ts` | Present | **Deleted** |
-| `src/tools/simulate-execution.ts` | Present | **Deleted** |
-| `simulate_execution` MCP tool | Available | **Removed** |
-| `batch_simulate_execution` MCP tool | Available | **Removed** |
-| `DOCUMCP_LLM_*` env vars | Recognized | **Deprecated** (ignored; removed in v0.7.0) |
-| `SemanticAnalyzer.analysisMode` | `'llm'` / `'hybrid'` / `'ast'` | Always `'ast'` |
+| Area                                | v0.5.x                         | v0.6.0+                                     |
+| ----------------------------------- | ------------------------------ | ------------------------------------------- |
+| `src/utils/llm-client.ts`           | Present                        | **Deleted**                                 |
+| `src/utils/execution-simulator.ts`  | Present                        | **Deleted**                                 |
+| `src/tools/simulate-execution.ts`   | Present                        | **Deleted**                                 |
+| `simulate_execution` MCP tool       | Available                      | **Removed**                                 |
+| `batch_simulate_execution` MCP tool | Available                      | **Removed**                                 |
+| `DOCUMCP_LLM_*` env vars            | Recognized                     | **Deprecated** (ignored; removed in v0.7.0) |
+| `SemanticAnalyzer.analysisMode`     | `'llm'` / `'hybrid'` / `'ast'` | Always `'ast'`                              |
 
 ## Migration
 
@@ -44,7 +44,7 @@ log a deprecation warning to stderr if it detects them.
 
 Remove the call from your host config. These tools no longer exist. For
 LLM-driven code validation, implement the logic client-side using
-[MCP Sampling](https://spec.modelcontextprotocol.io/specification/client/sampling/).
+[MCP Sampling](https://modelcontextprotocol.io/docs/concepts/sampling).
 
 ### If you imported `LLMClient` or `createLLMClient` directly
 
@@ -69,7 +69,11 @@ import { createSemanticAnalyzer } from "documcp/utils/semantic-analyzer.js";
 const analyzer = createSemanticAnalyzer();
 await analyzer.initialize();
 
-const result = await analyzer.analyzeSemanticImpact(codeBefore, codeAfter, "myFunction");
+const result = await analyzer.analyzeSemanticImpact(
+  codeBefore,
+  codeAfter,
+  "myFunction",
+);
 // result.analysisMode === 'ast'
 // result.llmAvailable === false
 ```

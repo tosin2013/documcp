@@ -288,3 +288,12 @@ If you need assistance with prompting:
 - Ask for clarification: "I don't understand the recommendation, can you explain?"
 
 Remember: DocuMCP is designed to understand natural language, so don't hesitate to ask questions in your own words!
+
+## Related
+
+- [Usage Examples](./usage-examples.md) — concrete code examples for every tool
+- [Repository Analysis Guide](./repository-analysis.md) — how `analyze_repository` works
+- [Deploy to Vercel](./deploy-to-vercel.md) — deploying your docs site to Vercel
+- [Tutorials: Getting Started](../tutorials/getting-started.md) — end-to-end walkthrough
+- [API Reference](../reference/api-overview.md) — full list of all MCP tools
+- [Model Context Protocol Specification](https://modelcontextprotocol.io/docs/concepts/tools) — MCP tools concepts

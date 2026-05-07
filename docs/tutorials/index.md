@@ -89,7 +89,7 @@ If you're new to DocuMCP, start with this simple workflow:
 1. **Check the Tutorials**: Review the relevant tutorial section
 2. **How-to Guides**: See [How-to Guides](../how-to/) for specific tasks
 3. **Reference Documentation**: Check [Reference](../reference/) for technical details
-4. **Community Support**: Ask questions in [GitHub Issues](https://github.com/tosin2013/documcp/issues)
+4. **Community Support**: Ask questions in [GitHub Issues](https://github.com/tosin2013/documcp/issues?q=is%3Aissue)
 
 ### Common Issues
 
@@ -104,4 +104,4 @@ After completing the tutorials:
 1. **Explore How-to Guides**: [How-to Guides](../how-to/) for specific tasks
 2. **Reference Documentation**: [Reference](../reference/) for technical details
 3. **Architecture Understanding**: [Architecture Documentation](../explanation/)
-4. **Community**: Join [GitHub Issues](https://github.com/tosin2013/documcp/issues) for support and feature requests
+4. **Community**: Join [GitHub Issues](https://github.com/tosin2013/documcp/issues?q=is%3Aissue) for support and feature requests

@@ -136,7 +136,7 @@ Sophisticated memory, learning, and knowledge graph operations:
 - **[CLI Commands](./cli.md)** - Command-line interface reference
 - **[Prompt Templates](./prompt-templates.md)** - Pre-built prompt examples
 
-## 🚀 Common Workflows
+## Common Workflows
 
 ### 1. New Documentation Site
 

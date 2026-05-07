@@ -5,12 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0](https://github.com/tosin2013/documcp/compare/v0.8.0...v1.0.0) (2026-05-06)
+
+### ⚠ BREAKING CHANGES
+
+- `deploy_pages` is now a deprecated alias for `deploy_site` (target=github-pages). Replace usages with `deploy_site`. The alias will be removed in v1.1.0.
+
+### 🚀 Features
+
+- **deploy:** implement Vercel deploy-target adapter (ADR-018 D1) — `deploy_site` tool with `target=vercel` generates `vercel.json` + GitHub Actions workflow ([#127](https://github.com/tosin2013/documcp/issues/127))
+- **deploy:** add `deploy_site` as primary deployment tool; `deploy_pages` kept as back-compat shim ([#130](https://github.com/tosin2013/documcp/issues/130))
+- **deploy-targets:** pluggable `DeployTargetAdapter` interface and adapter registry (`src/deploy-targets/`)
+- **docs:** migrate DocuMCP documentation site to Vercel at `https://documcp.vercel.app`
+
+### 📚 Documentation
+
+- add `docs/how-to/deploy-to-vercel.md` how-to guide ([#127](https://github.com/tosin2013/documcp/issues/127))
+- fix dead GitHub issues URLs in 5 how-to/tutorial files ([#150](https://github.com/tosin2013/documcp/issues/150))
+- fix dead MCP specification URL in `llm-integration.md` ([#154](https://github.com/tosin2013/documcp/issues/154))
+- fix broken `#common-workflows` anchor in `api-overview.md` ([#156](https://github.com/tosin2013/documcp/issues/156))
+- add cross-links to prompting-guide, repository-analysis, and usage-examples how-to guides ([#152](https://github.com/tosin2013/documcp/issues/152))
+
 ## [0.8.0](https://github.com/tosin2013/documcp/compare/v0.7.0...v0.8.0) (2026-05-06)
 
 ### 📚 Documentation
 
 - add comprehensive Diataxis quality audit report ([#119](https://github.com/tosin2013/documcp/issues/119)) ([ee8bc99](https://github.com/tosin2013/documcp/commit/ee8bc9932585a7bea11e391249c84f847acaa6c0))
-- add comprehensive Diataxis quality audit report ([#119](https://github.com/tosin2013/documcp/issues/119)) ([68c4e22](https://github.com/tosin2013/documcp/commit/68c4e220bc0aa458013b373d123d121cedcd0ff5))
 - add hyperlinks to how-to guides ([#158](https://github.com/tosin2013/documcp/issues/158)) ([9afdfd0](https://github.com/tosin2013/documcp/commit/9afdfd0de185737b1cfd7c0e6b70c0311fd09873))
 - refresh CONTRIBUTING.md with role-based contribution paths ([#120](https://github.com/tosin2013/documcp/issues/120)) ([eee97cf](https://github.com/tosin2013/documcp/commit/eee97cf29c47bad0dce46b2044afbe1f7d02bffe))
 
@@ -22,79 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **ci:** Smart Dependabot auto-merge for patch-only dependency bumps ([#157](https://github.com/tosin2013/documcp/issues/157)) ([700314d](https://github.com/tosin2013/documcp/commit/700314d9f1e90108101ba4bc48a87accd5416997))
 - **dashboard:** add release health dashboard ([#116](https://github.com/tosin2013/documcp/issues/116)) ([b9da88e](https://github.com/tosin2013/documcp/commit/b9da88ee2d44572f5e56ee938cbad14768d52fb0))
-- **dashboard:** add release health dashboard ([#116](https://github.com/tosin2013/documcp/issues/116)) ([6636eac](https://github.com/tosin2013/documcp/commit/6636eac99d8a7c60320cd2be8541ca0dc6bbe546))
 - **release:** add template-based enhanced release notes generator ([#115](https://github.com/tosin2013/documcp/issues/115)) ([168c5d8](https://github.com/tosin2013/documcp/commit/168c5d895bdd96ed9489081102876b1cefe943e0))
-
-## [0.8.0](https://github.com/tosin2013/documcp/compare/v0.7.0...v0.8.0) (2026-05-06)
-
-### 📚 Documentation
-
-- add comprehensive Diataxis quality audit report ([#119](https://github.com/tosin2013/documcp/issues/119)) ([ee8bc99](https://github.com/tosin2013/documcp/commit/ee8bc9932585a7bea11e391249c84f847acaa6c0))
-- add comprehensive Diataxis quality audit report ([#119](https://github.com/tosin2013/documcp/issues/119)) ([68c4e22](https://github.com/tosin2013/documcp/commit/68c4e220bc0aa458013b373d123d121cedcd0ff5))
-- add hyperlinks to how-to guides ([#158](https://github.com/tosin2013/documcp/issues/158)) ([9afdfd0](https://github.com/tosin2013/documcp/commit/9afdfd0de185737b1cfd7c0e6b70c0311fd09873))
-- refresh CONTRIBUTING.md with role-based contribution paths ([#120](https://github.com/tosin2013/documcp/issues/120)) ([eee97cf](https://github.com/tosin2013/documcp/commit/eee97cf29c47bad0dce46b2044afbe1f7d02bffe))
-
-### 🐛 Bug Fixes
-
-- ensure directory exists before writing temp files in kg-storage ([dd5aedf](https://github.com/tosin2013/documcp/commit/dd5aedf9e11eb11a652ecdf5154d7029d0ae8ac8)), closes [#25460523083](https://github.com/tosin2013/documcp/issues/25460523083)
-
-### 🚀 Features
-
-- **ci:** Smart Dependabot auto-merge for patch-only dependency bumps ([#157](https://github.com/tosin2013/documcp/issues/157)) ([700314d](https://github.com/tosin2013/documcp/commit/700314d9f1e90108101ba4bc48a87accd5416997))
-- **dashboard:** add release health dashboard ([#116](https://github.com/tosin2013/documcp/issues/116)) ([b9da88e](https://github.com/tosin2013/documcp/commit/b9da88ee2d44572f5e56ee938cbad14768d52fb0))
-- **dashboard:** add release health dashboard ([#116](https://github.com/tosin2013/documcp/issues/116)) ([6636eac](https://github.com/tosin2013/documcp/commit/6636eac99d8a7c60320cd2be8541ca0dc6bbe546))
-- **release:** add template-based enhanced release notes generator ([#115](https://github.com/tosin2013/documcp/issues/115)) ([168c5d8](https://github.com/tosin2013/documcp/commit/168c5d895bdd96ed9489081102876b1cefe943e0))
-
-## [0.8.0](https://github.com/tosin2013/documcp/compare/v0.7.0...v0.8.0) (2026-05-06)
-
-### 📚 Documentation
-
-- add comprehensive Diataxis quality audit report ([#119](https://github.com/tosin2013/documcp/issues/119)) ([ee8bc99](https://github.com/tosin2013/documcp/commit/ee8bc9932585a7bea11e391249c84f847acaa6c0))
-- add comprehensive Diataxis quality audit report ([#119](https://github.com/tosin2013/documcp/issues/119)) ([68c4e22](https://github.com/tosin2013/documcp/commit/68c4e220bc0aa458013b373d123d121cedcd0ff5))
-- add hyperlinks to how-to guides ([#158](https://github.com/tosin2013/documcp/issues/158)) ([9afdfd0](https://github.com/tosin2013/documcp/commit/9afdfd0de185737b1cfd7c0e6b70c0311fd09873))
-- refresh CONTRIBUTING.md with role-based contribution paths ([#120](https://github.com/tosin2013/documcp/issues/120)) ([eee97cf](https://github.com/tosin2013/documcp/commit/eee97cf29c47bad0dce46b2044afbe1f7d02bffe))
-
-### 🐛 Bug Fixes
-
-- ensure directory exists before writing temp files in kg-storage ([dd5aedf](https://github.com/tosin2013/documcp/commit/dd5aedf9e11eb11a652ecdf5154d7029d0ae8ac8)), closes [#25460523083](https://github.com/tosin2013/documcp/issues/25460523083)
-
-### 🚀 Features
-
-- **ci:** Smart Dependabot auto-merge for patch-only dependency bumps ([#157](https://github.com/tosin2013/documcp/issues/157)) ([700314d](https://github.com/tosin2013/documcp/commit/700314d9f1e90108101ba4bc48a87accd5416997))
-- **dashboard:** add release health dashboard ([#116](https://github.com/tosin2013/documcp/issues/116)) ([6636eac](https://github.com/tosin2013/documcp/commit/6636eac99d8a7c60320cd2be8541ca0dc6bbe546))
-- **release:** add template-based enhanced release notes generator ([#115](https://github.com/tosin2013/documcp/issues/115)) ([168c5d8](https://github.com/tosin2013/documcp/commit/168c5d895bdd96ed9489081102876b1cefe943e0))
-
-## [0.8.0](https://github.com/tosin2013/documcp/compare/v0.7.0...v0.8.0) (2026-05-06)
-
-### 📚 Documentation
-
-- add comprehensive Diataxis quality audit report ([#119](https://github.com/tosin2013/documcp/issues/119)) ([ee8bc99](https://github.com/tosin2013/documcp/commit/ee8bc9932585a7bea11e391249c84f847acaa6c0))
-- add comprehensive Diataxis quality audit report ([#119](https://github.com/tosin2013/documcp/issues/119)) ([68c4e22](https://github.com/tosin2013/documcp/commit/68c4e220bc0aa458013b373d123d121cedcd0ff5))
-- add hyperlinks to how-to guides ([#158](https://github.com/tosin2013/documcp/issues/158)) ([9afdfd0](https://github.com/tosin2013/documcp/commit/9afdfd0de185737b1cfd7c0e6b70c0311fd09873))
-- refresh CONTRIBUTING.md with role-based contribution paths ([#120](https://github.com/tosin2013/documcp/issues/120)) ([eee97cf](https://github.com/tosin2013/documcp/commit/eee97cf29c47bad0dce46b2044afbe1f7d02bffe))
-
-### 🐛 Bug Fixes
-
-- ensure directory exists before writing temp files in kg-storage ([dd5aedf](https://github.com/tosin2013/documcp/commit/dd5aedf9e11eb11a652ecdf5154d7029d0ae8ac8)), closes [#25460523083](https://github.com/tosin2013/documcp/issues/25460523083)
-
-### 🚀 Features
-
-- **ci:** Smart Dependabot auto-merge for patch-only dependency bumps ([#157](https://github.com/tosin2013/documcp/issues/157)) ([700314d](https://github.com/tosin2013/documcp/commit/700314d9f1e90108101ba4bc48a87accd5416997))
-- **dashboard:** add release health dashboard ([#116](https://github.com/tosin2013/documcp/issues/116)) ([6636eac](https://github.com/tosin2013/documcp/commit/6636eac99d8a7c60320cd2be8541ca0dc6bbe546))
-- **release:** add template-based enhanced release notes generator ([#115](https://github.com/tosin2013/documcp/issues/115)) ([168c5d8](https://github.com/tosin2013/documcp/commit/168c5d895bdd96ed9489081102876b1cefe943e0))
-
-## [0.8.0](https://github.com/tosin2013/documcp/compare/v0.6.0...v0.8.0) (2026-05-06)
-
-### 🐛 Bug Fixes
-
-- **deps,docs:** bump @docusaurus/core to 3.10.1 and force serialize-javascript@^7.0.5 ([159eb9d](https://github.com/tosin2013/documcp/commit/159eb9db2155fbf301dd10dca4a35567942363eb))
-
-### 🚀 Features
-
-- **ast:** wire up tree-sitter parsers for Python and Go ([#112](https://github.com/tosin2013/documcp/issues/112)) ([#144](https://github.com/tosin2013/documcp/issues/144)) ([c056e45](https://github.com/tosin2013/documcp/commit/c056e45f61a04ab894298522ad75bbb795861a17))
-- **drift:** add priority scoring feedback ingestion loop ([#114](https://github.com/tosin2013/documcp/issues/114)) ([#146](https://github.com/tosin2013/documcp/issues/146)) ([e4ba20d](https://github.com/tosin2013/documcp/commit/e4ba20df094bd6969a3dbe29b6dc85dfed69281c))
-- implement community insights aggregation (Phase 3) ([#147](https://github.com/tosin2013/documcp/issues/147)) ([a06f515](https://github.com/tosin2013/documcp/commit/a06f51558d090aefdd85e512554bb7d503044d2a))
-- **watcher:** persist watcher state to JSONL and add integration tests ([#113](https://github.com/tosin2013/documcp/issues/113)) ([#145](https://github.com/tosin2013/documcp/issues/145)) ([3c94642](https://github.com/tosin2013/documcp/commit/3c94642aa78f342e1ff283e743415c730052834c))
 
 ## [0.7.0](https://github.com/tosin2013/documcp/compare/v0.6.0...v0.7.0) (2026-05-06)
 

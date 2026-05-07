@@ -342,4 +342,4 @@ If you encounter issues:
 3. Verify repository permissions
 4. Confirm GitHub Pages settings
 
-Need help? Open an issue on the [DocuMCP repository](https://github.com/tosin2013/documcp/issues).
+Need help? Open an issue on the [DocuMCP repository](https://github.com/tosin2013/documcp/issues?q=is%3Aissue).

@@ -283,3 +283,12 @@ using analysis analysis_abc123, set up the recommended documentation structure
 5. **Iterate**: Refine based on analysis feedback and results
 
 Analysis is the foundation of effective documentation planning with DocuMCP. Use it to make informed decisions about tools, structure, and deployment strategies.
+
+## Related
+
+- [Usage Examples](./usage-examples.md) — code examples including analysis patterns
+- [Prompting Guide](./prompting-guide.md) — how to phrase prompts for best results
+- [Deploy to Vercel](./deploy-to-vercel.md) — deploying documentation after analysis
+- [Tutorials: First Deployment](../tutorials/first-deployment.md) — end-to-end deployment tutorial
+- [API Reference: analyze_repository](../reference/api-overview.md) — tool parameter reference
+- [Diataxis Framework](https://diataxis.fr/) — the documentation structure DocuMCP generates

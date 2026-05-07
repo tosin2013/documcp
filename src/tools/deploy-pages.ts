@@ -9,6 +9,8 @@ import {
   getKnowledgeGraph,
 } from "../memory/kg-integration.js";
 import { getUserPreferenceManager } from "../memory/user-preferences.js";
+import { getAdapter } from "../deploy-targets/index.js";
+import type { BuildConfig } from "../deploy-targets/types.js";
 
 const inputSchema = z.object({
   repository: z.string(),
@@ -18,8 +20,22 @@ const inputSchema = z.object({
     .describe(
       "Static site generator to use. If not provided, will be retrieved from knowledge graph using analysisId",
     ),
+  target: z
+    .enum(["github-pages", "vercel"])
+    .optional()
+    .default("github-pages")
+    .describe(
+      "Deployment target. 'github-pages' (default) generates a GitHub Actions workflow. 'vercel' generates vercel.json and a Vercel CLI workflow.",
+    ),
   branch: z.string().optional().default("gh-pages"),
   customDomain: z.string().optional(),
+  invokeCliCommand: z
+    .boolean()
+    .optional()
+    .default(false)
+    .describe(
+      "When true and target=vercel, the adapter's CLI command (vercel deploy --prod) is included in next steps",
+    ),
   projectPath: z
     .string()
     .optional()
@@ -36,14 +52,6 @@ const inputSchema = z.object({
     .describe("User ID for preference tracking"),
 });
 
-interface BuildConfig {
-  workingDirectory: string | null;
-  buildCommand: string;
-  outputPath: string;
-  nodeVersion?: string;
-  packageManager?: "npm" | "yarn" | "pnpm";
-}
-
 /**
  * Retrieve SSG from knowledge graph using analysisId
  */
@@ -53,7 +61,6 @@ async function getSSGFromKnowledgeGraph(
   try {
     const kg = await getKnowledgeGraph();
 
-    // Find project node by analysis ID
     const projectNode = await kg.findNode({
       type: "project",
       properties: { id: analysisId },
@@ -63,28 +70,21 @@ async function getSSGFromKnowledgeGraph(
       return null;
     }
 
-    // Get deployment recommendations for this project
     const recommendations = await getDeploymentRecommendations(analysisId);
 
     if (recommendations.length > 0) {
-      // Return the highest confidence SSG
       const topRecommendation = recommendations.sort(
         (a, b) => b.confidence - a.confidence,
       )[0];
       return topRecommendation.ssg;
     }
 
-    // Fallback: check if there are any previous successful deployments
-    const edges = await kg.findEdges({
-      source: projectNode.id,
-    });
-
+    const edges = await kg.findEdges({ source: projectNode.id });
     const deploymentEdges = edges.filter((e) =>
       e.type.startsWith("project_deployed_with"),
     );
 
     if (deploymentEdges.length > 0) {
-      // Get the most recent successful deployment
       const successfulDeployments = deploymentEdges.filter(
         (e) => e.properties?.success === true,
       );
@@ -129,7 +129,6 @@ async function detectDocsFolder(repoPath: string): Promise<string | null> {
     try {
       const stat = await fs.stat(folderPath);
       if (stat.isDirectory()) {
-        // Check if it has package.json or other SSG-specific files
         const hasPackageJson = await fs
           .access(path.join(folderPath, "package.json"))
           .then(() => true)
@@ -199,7 +198,6 @@ async function detectBuildConfig(
   try {
     const packageJson = JSON.parse(await fs.readFile(packageJsonPath, "utf-8"));
 
-    // Detect build command from scripts
     const scripts = packageJson.scripts || {};
     if (scripts.build) {
       config.buildCommand = "npm run build";
@@ -209,7 +207,6 @@ async function detectBuildConfig(
       config.buildCommand = "npm run build";
     }
 
-    // Detect package manager
     const hasYarnLock = await fs
       .access(path.join(repoPath, workingDir, "yarn.lock"))
       .then(() => true)
@@ -229,12 +226,10 @@ async function detectBuildConfig(
       config.packageManager = "npm";
     }
 
-    // Detect Node version from engines field
     if (packageJson.engines?.node) {
       config.nodeVersion = packageJson.engines.node;
     }
   } catch (error) {
-    // If package.json doesn't exist or can't be read, use defaults
     console.warn("Using default build configuration:", error);
   }
 
@@ -249,15 +244,16 @@ export async function deployPages(
   const {
     repository,
     ssg: providedSSG,
+    target,
     branch,
     customDomain,
+    invokeCliCommand,
     projectPath,
     projectName,
     analysisId,
     userId,
   } = inputSchema.parse(args);
 
-  // Declare ssg outside try block so it's accessible in catch
   let ssg:
     | "jekyll"
     | "hugo"
@@ -266,29 +262,23 @@ export async function deployPages(
     | "eleventy"
     | undefined = providedSSG;
 
-  // Report initial progress
   if (context?.meta?.progressToken) {
-    await context.meta.reportProgress?.({
-      progress: 0,
-      total: 100,
-    });
+    await context.meta.reportProgress?.({ progress: 0, total: 100 });
   }
 
-  await context?.info?.("🚀 Starting GitHub Pages deployment configuration...");
+  const targetLabel = target === "vercel" ? "Vercel" : "GitHub Pages";
+  await context?.info?.(
+    `🚀 Starting ${targetLabel} deployment configuration...`,
+  );
 
   try {
-    // Determine repository path (local or remote)
     const repoPath = repository.startsWith("http") ? "." : repository;
     await context?.info?.(`📂 Target repository: ${repository}`);
 
     if (context?.meta?.progressToken) {
-      await context.meta.reportProgress?.({
-        progress: 10,
-        total: 100,
-      });
+      await context.meta.reportProgress?.({ progress: 10, total: 100 });
     }
 
-    // Retrieve SSG from knowledge graph if not provided
     ssg = providedSSG;
     if (!ssg && analysisId) {
       await context?.info?.(
@@ -328,13 +318,9 @@ export async function deployPages(
     }
 
     if (context?.meta?.progressToken) {
-      await context.meta.reportProgress?.({
-        progress: 25,
-        total: 100,
-      });
+      await context.meta.reportProgress?.({ progress: 25, total: 100 });
     }
 
-    // Detect documentation folder
     await context?.info?.("📑 Detecting documentation folder...");
     const docsFolder = await detectDocsFolder(repoPath);
     await context?.info?.(
@@ -342,70 +328,77 @@ export async function deployPages(
     );
 
     if (context?.meta?.progressToken) {
-      await context.meta.reportProgress?.({
-        progress: 40,
-        total: 100,
-      });
+      await context.meta.reportProgress?.({ progress: 40, total: 100 });
     }
 
-    // Detect build configuration
     await context?.info?.(`⚙️ Detecting build configuration for ${ssg}...`);
     const buildConfig = await detectBuildConfig(repoPath, ssg, docsFolder);
 
     if (context?.meta?.progressToken) {
-      await context.meta.reportProgress?.({
-        progress: 55,
-        total: 100,
+      await context.meta.reportProgress?.({ progress: 55, total: 100 });
+    }
+
+    // Resolve adapter and generate deployment artifacts
+    const adapter = getAdapter(target);
+    if (!adapter) {
+      return formatMCPResponse({
+        success: false,
+        error: {
+          code: "UNKNOWN_DEPLOY_TARGET",
+          message: `Unknown deployment target: '${target}'. Supported targets: github-pages, vercel.`,
+          resolution: "Set target to 'github-pages' or 'vercel'.",
+        },
+        metadata: {
+          toolVersion: "1.0.0",
+          executionTime: Date.now() - startTime,
+          timestamp: new Date().toISOString(),
+        },
       });
     }
 
-    // Create .github/workflows directory
-    await context?.info?.("📂 Creating GitHub Actions workflow directory...");
-    const workflowsDir = path.join(repoPath, ".github", "workflows");
-    await fs.mkdir(workflowsDir, { recursive: true });
-
-    if (context?.meta?.progressToken) {
-      await context.meta.reportProgress?.({
-        progress: 70,
-        total: 100,
-      });
-    }
-
-    // Generate workflow based on SSG and build config
-    await context?.info?.(`✍️ Generating ${ssg} deployment workflow...`);
-    const workflow = generateWorkflow(ssg, branch, customDomain, buildConfig);
-    const workflowPath = path.join(workflowsDir, "deploy-docs.yml");
-    await fs.writeFile(workflowPath, workflow);
     await context?.info?.(
-      `✅ Workflow created: .github/workflows/deploy-docs.yml`,
+      `✍️ Generating ${targetLabel} deployment artifacts...`,
     );
+    const generatedFiles = adapter.generateDeploymentArtifact(ssg, {
+      ssg,
+      branch,
+      customDomain,
+      buildConfig,
+      invokeCliCommand,
+    });
 
     if (context?.meta?.progressToken) {
-      await context.meta.reportProgress?.({
-        progress: 85,
-        total: 100,
-      });
+      await context.meta.reportProgress?.({ progress: 70, total: 100 });
     }
 
-    // Create CNAME file if custom domain is specified
-    let cnameCreated = false;
-    if (customDomain) {
-      await context?.info?.(
-        `🌐 Creating CNAME file for custom domain: ${customDomain}...`,
-      );
-      const cnamePath = path.join(repoPath, "CNAME");
-      await fs.writeFile(cnamePath, customDomain);
-      cnameCreated = true;
-      await context?.info?.("✅ CNAME file created");
+    // Write all generated files
+    for (const file of generatedFiles) {
+      const filePath = path.join(repoPath, file.path);
+      await fs.mkdir(path.dirname(filePath), { recursive: true });
+      await fs.writeFile(filePath, file.content);
+      await context?.info?.(`✅ Created: ${file.path}`);
     }
+
+    if (context?.meta?.progressToken) {
+      await context.meta.reportProgress?.({ progress: 85, total: 100 });
+    }
+
+    const cliCommand = adapter.optionalCliCommand({
+      ssg,
+      branch,
+      customDomain,
+      buildConfig,
+      invokeCliCommand,
+    });
 
     const deploymentResult = {
       repository,
       ssg,
+      target,
       branch,
       customDomain,
-      workflowPath: "deploy-docs.yml",
-      cnameCreated,
+      generatedFiles: generatedFiles.map((f) => f.path),
+      cliCommand,
       repoPath,
       detectedConfig: {
         docsFolder: docsFolder || "root",
@@ -416,10 +409,9 @@ export async function deployPages(
       },
     };
 
-    // Phase 2.3: Track deployment setup in knowledge graph
+    // Track deployment setup in knowledge graph
     await context?.info?.("💾 Tracking deployment in Knowledge Graph...");
     try {
-      // Create or update project in knowledge graph
       if (projectPath || projectName) {
         const timestamp = new Date().toISOString();
         const project = await createOrUpdateProject({
@@ -430,30 +422,27 @@ export async function deployPages(
           path: projectPath || repository,
           projectName: projectName || repository,
           structure: {
-            totalFiles: 0, // Unknown at this point
+            totalFiles: 0,
             languages: {},
             hasTests: false,
-            hasCI: true, // We just added CI
-            hasDocs: true, // Setting up docs deployment
+            hasCI: true,
+            hasDocs: true,
           },
         });
 
-        // Track successful deployment setup
         await trackDeployment(project.id, ssg, true, {
           buildTime: Date.now() - startTime,
         });
 
-        // Update user preferences with SSG usage
         const userPreferenceManager = await getUserPreferenceManager(userId);
         await userPreferenceManager.trackSSGUsage({
           ssg,
-          success: true, // Setup successful
+          success: true,
           timestamp,
           projectType: projectPath || repository,
         });
       }
     } catch (trackingError) {
-      // Don't fail the whole deployment if tracking fails
       console.warn(
         "Failed to track deployment in knowledge graph:",
         trackingError,
@@ -461,15 +450,12 @@ export async function deployPages(
     }
 
     if (context?.meta?.progressToken) {
-      await context.meta.reportProgress?.({
-        progress: 100,
-        total: 100,
-      });
+      await context.meta.reportProgress?.({ progress: 100, total: 100 });
     }
 
     const executionTime = Date.now() - startTime;
     await context?.info?.(
-      `✅ Deployment configuration complete! ${ssg} workflow created in ${Math.round(
+      `✅ ${targetLabel} deployment configuration complete in ${Math.round(
         executionTime / 1000,
       )}s`,
     );
@@ -478,15 +464,17 @@ export async function deployPages(
       success: true,
       data: deploymentResult,
       metadata: {
-        toolVersion: "2.0.0",
+        toolVersion: "1.0.0",
         executionTime,
         timestamp: new Date().toISOString(),
       },
       recommendations: [
         {
           type: "info",
-          title: "Deployment Workflow Created",
-          description: `GitHub Actions workflow configured for ${ssg} deployment to ${branch} branch`,
+          title: "Deployment Artifacts Created",
+          description: `${targetLabel} configuration generated for ${ssg}: ${deploymentResult.generatedFiles.join(
+            ", ",
+          )}`,
         },
         ...(!providedSSG && analysisId
           ? [
@@ -502,7 +490,7 @@ export async function deployPages(
               {
                 type: "info" as const,
                 title: "Documentation Folder Detected",
-                description: `Found documentation in '${docsFolder}/' folder. Workflow configured with working-directory.`,
+                description: `Found documentation in '${docsFolder}/' — build config uses this as working directory.`,
               },
             ]
           : []),
@@ -520,7 +508,7 @@ export async function deployPages(
               {
                 type: "info" as const,
                 title: "Custom Domain Configured",
-                description: `CNAME file created for ${customDomain}`,
+                description: `Custom domain ${customDomain} added to deployment config`,
               },
             ]
           : []),
@@ -535,15 +523,33 @@ export async function deployPages(
         {
           action: "Commit and Push",
           toolRequired: "git",
-          description: "Commit workflow files and push to trigger deployment",
+          description: "Commit generated files and push to trigger deployment",
           priority: "high",
         },
+        ...(target === "vercel"
+          ? [
+              {
+                action: "Configure Vercel Secrets",
+                description:
+                  "Add VERCEL_TOKEN, VERCEL_ORG_ID, and VERCEL_PROJECT_ID as GitHub Actions secrets. See docs: https://documcp.vercel.app/how-to/deploy-to-vercel",
+                priority: "high" as const,
+              },
+              ...(cliCommand
+                ? [
+                    {
+                      action: "Deploy via CLI",
+                      description: `Run: ${cliCommand}`,
+                      priority: "medium" as const,
+                    },
+                  ]
+                : []),
+            ]
+          : []),
       ],
     };
 
     return formatMCPResponse(response);
   } catch (error) {
-    // Phase 2.3: Track failed deployment setup
     try {
       if ((projectPath || projectName) && ssg) {
         const timestamp = new Date().toISOString();
@@ -563,17 +569,15 @@ export async function deployPages(
           },
         });
 
-        // Track failed deployment (only if ssg is known)
         await trackDeployment(project.id, ssg, false, {
           errorMessage: String(error),
         });
 
-        // Update user preferences with failed SSG usage
         const userPreferenceManager = await getUserPreferenceManager(userId);
         await userPreferenceManager.trackSSGUsage({
           ssg,
           success: false,
-          timestamp,
+          timestamp: new Date().toISOString(),
           projectType: projectPath || repository,
         });
       }
@@ -587,7 +591,7 @@ export async function deployPages(
         code: "DEPLOYMENT_SETUP_FAILED",
         message: `Failed to setup deployment: ${error}`,
         resolution:
-          "Ensure repository path is accessible and GitHub Actions are enabled",
+          "Ensure repository path is accessible and the deployment target is supported",
       },
       metadata: {
         toolVersion: "1.0.0",
@@ -597,306 +601,4 @@ export async function deployPages(
     };
     return formatMCPResponse(errorResponse);
   }
-}
-
-function generateWorkflow(
-  ssg: string,
-  branch: string,
-  _customDomain: string | undefined,
-  buildConfig: BuildConfig,
-): string {
-  const workingDirPrefix = buildConfig.workingDirectory
-    ? `      working-directory: ${buildConfig.workingDirectory}\n`
-    : "";
-
-  const nodeVersion = buildConfig.nodeVersion || "20";
-  const packageManager = buildConfig.packageManager || "npm";
-
-  // Helper to get install command
-  const getInstallCmd = () => {
-    if (packageManager === "yarn") return "yarn install --frozen-lockfile";
-    if (packageManager === "pnpm") return "pnpm install --frozen-lockfile";
-    return "npm ci";
-  };
-
-  // Helper to add working directory to steps
-  // const _addWorkingDir = (step: string) => {
-  //   if (!buildConfig.workingDirectory) return step;
-  //   return step.replace(
-  //     /^(\s+)run:/gm,
-  //     `$1working-directory: ${buildConfig.workingDirectory}\n$1run:`,
-  //   );
-  // };
-
-  const workflows: Record<string, string> = {
-    docusaurus: `name: Deploy Docusaurus to GitHub Pages
-
-on:
-  push:
-    branches: [main]
-  workflow_dispatch:
-
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '${nodeVersion}'
-          cache: '${packageManager}'${
-            buildConfig.workingDirectory
-              ? `\n          cache-dependency-path: ${buildConfig.workingDirectory}/package-lock.json`
-              : ""
-          }
-
-      - name: Install dependencies
-${workingDirPrefix}        run: ${getInstallCmd()}
-
-      - name: Build website
-${workingDirPrefix}        run: ${buildConfig.buildCommand}
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v2
-        with:
-          path: ${
-            buildConfig.workingDirectory
-              ? `${buildConfig.workingDirectory}/${buildConfig.outputPath}`
-              : buildConfig.outputPath
-          }
-
-  deploy:
-    environment:
-      name: github-pages
-      url: \${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v3`,
-
-    mkdocs: `name: Deploy MkDocs to GitHub Pages
-
-on:
-  push:
-    branches: [main]
-  workflow_dispatch:
-
-permissions:
-  contents: write
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest${
-      buildConfig.workingDirectory
-        ? `\n    defaults:\n      run:\n        working-directory: ${buildConfig.workingDirectory}`
-        : ""
-    }
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'
-
-      - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
-
-      - name: Build and Deploy
-        run: mkdocs gh-deploy --force --branch ${branch}`,
-
-    hugo: `name: Deploy Hugo to GitHub Pages
-
-on:
-  push:
-    branches: [main]
-  workflow_dispatch:
-
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
-
-jobs:
-  build:
-    runs-on: ubuntu-latest${
-      buildConfig.workingDirectory
-        ? `\n    defaults:\n      run:\n        working-directory: ${buildConfig.workingDirectory}`
-        : ""
-    }
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
-
-      - name: Setup Hugo
-        uses: peaceiris/actions-hugo@v2
-        with:
-          hugo-version: 'latest'
-          extended: true
-
-      - name: Build
-        run: ${buildConfig.buildCommand}
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v2
-        with:
-          path: ${
-            buildConfig.workingDirectory
-              ? `${buildConfig.workingDirectory}/${buildConfig.outputPath}`
-              : buildConfig.outputPath
-          }
-
-  deploy:
-    environment:
-      name: github-pages
-      url: \${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v3`,
-
-    jekyll: `name: Deploy Jekyll to GitHub Pages
-
-on:
-  push:
-    branches: [main]
-  workflow_dispatch:
-
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
-
-jobs:
-  build:
-    runs-on: ubuntu-latest${
-      buildConfig.workingDirectory
-        ? `\n    defaults:\n      run:\n        working-directory: ${buildConfig.workingDirectory}`
-        : ""
-    }
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: '3.1'
-          bundler-cache: true${
-            buildConfig.workingDirectory
-              ? `\n          working-directory: ${buildConfig.workingDirectory}`
-              : ""
-          }
-
-      - name: Build with Jekyll
-        run: ${buildConfig.buildCommand}
-        env:
-          JEKYLL_ENV: production
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v2${
-          buildConfig.workingDirectory
-            ? `\n        with:\n          path: ${buildConfig.workingDirectory}/${buildConfig.outputPath}`
-            : ""
-        }
-
-  deploy:
-    environment:
-      name: github-pages
-      url: \${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v3`,
-
-    eleventy: `name: Deploy Eleventy to GitHub Pages
-
-on:
-  push:
-    branches: [main]
-  workflow_dispatch:
-
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '${nodeVersion}'
-          cache: '${packageManager}'${
-            buildConfig.workingDirectory
-              ? `\n          cache-dependency-path: ${buildConfig.workingDirectory}/package-lock.json`
-              : ""
-          }
-
-      - name: Install dependencies
-${workingDirPrefix}        run: ${getInstallCmd()}
-
-      - name: Build site
-${workingDirPrefix}        run: ${buildConfig.buildCommand}
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v2
-        with:
-          path: ${
-            buildConfig.workingDirectory
-              ? `${buildConfig.workingDirectory}/${buildConfig.outputPath}`
-              : buildConfig.outputPath
-          }
-
-  deploy:
-    environment:
-      name: github-pages
-      url: \${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v3`,
-  };
-
-  return workflows[ssg] || workflows.jekyll;
 }

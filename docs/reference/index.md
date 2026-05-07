@@ -117,5 +117,5 @@ DocuMCP includes a sophisticated memory system for learning and optimization:
 
 - **Documentation**: This reference guide
 - **Examples**: See [Tutorials](../tutorials/)
-- **Community**: [GitHub Issues](https://github.com/tosin2013/documcp/issues)
-- **Issues**: [GitHub Issues](https://github.com/tosin2013/documcp/issues)
+- **Community**: [GitHub Issues](https://github.com/tosin2013/documcp/issues?q=is%3Aissue)
+- **Issues**: [GitHub Issues](https://github.com/tosin2013/documcp/issues?q=is%3Aissue)
