@@ -383,6 +383,26 @@ export async function deployPages(
       await context.meta.reportProgress?.({ progress: 85, total: 100 });
     }
 
+    // Detect competing deploy workflows from other targets
+    const TARGET_WORKFLOWS: Record<string, string> = {
+      "github-pages": ".github/workflows/deploy-github-pages.yml",
+      vercel: ".github/workflows/deploy-vercel.yml",
+    };
+    const conflictWarnings: string[] = [];
+    for (const [slug, workflowPath] of Object.entries(TARGET_WORKFLOWS)) {
+      if (slug !== target) {
+        const exists = await fs
+          .access(path.join(repoPath, workflowPath))
+          .then(() => true)
+          .catch(() => false);
+        if (exists) {
+          conflictWarnings.push(
+            `Switching to ${targetLabel}: remove \`${workflowPath}\` to avoid running two competing deploy workflows.`,
+          );
+        }
+      }
+    }
+
     const cliCommand = adapter.optionalCliCommand({
       ssg,
       branch,
@@ -400,6 +420,8 @@ export async function deployPages(
       generatedFiles: generatedFiles.map((f) => f.path),
       cliCommand,
       repoPath,
+      conflictWarnings:
+        conflictWarnings.length > 0 ? conflictWarnings : undefined,
       detectedConfig: {
         docsFolder: docsFolder || "root",
         buildCommand: buildConfig.buildCommand,
@@ -512,6 +534,11 @@ export async function deployPages(
               },
             ]
           : []),
+        ...conflictWarnings.map((msg) => ({
+          type: "warning" as const,
+          title: "Competing Deploy Workflow Detected",
+          description: msg,
+        })),
       ],
       nextSteps: [
         {
@@ -529,9 +556,15 @@ export async function deployPages(
         ...(target === "vercel"
           ? [
               {
+                action: "Link Vercel Project",
+                description:
+                  "Run 'cd <your-docs-dir> && vercel link' to create .vercel/project.json containing your orgId and projectId. Commit this file — it contains no secrets and is required by the deploy workflow.",
+                priority: "high" as const,
+              },
+              {
                 action: "Configure Vercel Secrets",
                 description:
-                  "Add VERCEL_TOKEN, VERCEL_ORG_ID, and VERCEL_PROJECT_ID as GitHub Actions secrets. See docs: https://documcp.vercel.app/how-to/deploy-to-vercel",
+                  "Add VERCEL_TOKEN, VERCEL_ORG_ID, and VERCEL_PROJECT_ID as GitHub Actions secrets. See VERCEL_SETUP.md in your repo or https://documcp.vercel.app/how-to/deploy-to-vercel",
                 priority: "high" as const,
               },
               ...(cliCommand

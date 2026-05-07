@@ -97,7 +97,7 @@ describe("deployPages", () => {
         testTempDir,
         ".github",
         "workflows",
-        "deploy-docs.yml",
+        "deploy-github-pages.yml",
       );
       const workflowContent = await fs.readFile(workflowPath, "utf-8");
 
@@ -118,7 +118,7 @@ describe("deployPages", () => {
         testTempDir,
         ".github",
         "workflows",
-        "deploy-docs.yml",
+        "deploy-github-pages.yml",
       );
       const workflowContent = await fs.readFile(workflowPath, "utf-8");
 
@@ -139,7 +139,7 @@ describe("deployPages", () => {
         testTempDir,
         ".github",
         "workflows",
-        "deploy-docs.yml",
+        "deploy-github-pages.yml",
       );
       const workflowContent = await fs.readFile(workflowPath, "utf-8");
 
@@ -160,7 +160,7 @@ describe("deployPages", () => {
         testTempDir,
         ".github",
         "workflows",
-        "deploy-docs.yml",
+        "deploy-github-pages.yml",
       );
       const workflowContent = await fs.readFile(workflowPath, "utf-8");
 
@@ -181,7 +181,7 @@ describe("deployPages", () => {
         testTempDir,
         ".github",
         "workflows",
-        "deploy-docs.yml",
+        "deploy-github-pages.yml",
       );
       const workflowContent = await fs.readFile(workflowPath, "utf-8");
 
@@ -204,7 +204,7 @@ describe("deployPages", () => {
         testTempDir,
         ".github",
         "workflows",
-        "deploy-docs.yml",
+        "deploy-github-pages.yml",
       );
       const workflowContent = await fs.readFile(workflowPath, "utf-8");
 
@@ -224,7 +224,7 @@ describe("deployPages", () => {
         testTempDir,
         ".github",
         "workflows",
-        "deploy-docs.yml",
+        "deploy-github-pages.yml",
       );
       const workflowContent = await fs.readFile(workflowPath, "utf-8");
 
@@ -358,7 +358,7 @@ describe("deployPages", () => {
       expect(data.ssg).toBe("jekyll");
       expect(data.branch).toBe("gh-pages");
       expect(data.generatedFiles).toContain(
-        ".github/workflows/deploy-docs.yml",
+        ".github/workflows/deploy-github-pages.yml",
       );
     });
 
@@ -383,7 +383,7 @@ describe("deployPages", () => {
       const data = JSON.parse(result.content[0].text);
       expect(data.ssg).toBe("hugo");
       expect(data.generatedFiles).toContain(
-        ".github/workflows/deploy-docs.yml",
+        ".github/workflows/deploy-github-pages.yml",
       );
 
       // Check that workflow file was created
@@ -391,7 +391,7 @@ describe("deployPages", () => {
         testTempDir,
         ".github",
         "workflows",
-        "deploy-docs.yml",
+        "deploy-github-pages.yml",
       );
       const workflowContent = await fs.readFile(workflowPath, "utf-8");
       expect(workflowContent).toContain("hugo");
@@ -406,7 +406,7 @@ describe("deployPages", () => {
       const data = JSON.parse(result.content[0].text);
       expect(data.ssg).toBe("jekyll");
       expect(data.generatedFiles).toContain(
-        ".github/workflows/deploy-docs.yml",
+        ".github/workflows/deploy-github-pages.yml",
       );
 
       // Verify workflow file was created
@@ -414,7 +414,7 @@ describe("deployPages", () => {
         testTempDir,
         ".github",
         "workflows",
-        "deploy-docs.yml",
+        "deploy-github-pages.yml",
       );
       const stats = await fs.stat(workflowPath);
       expect(stats.isFile()).toBe(true);
@@ -488,7 +488,7 @@ describe("deployPages", () => {
       const data = JSON.parse(result.content[0].text);
       expect(data.ssg).toBe("jekyll");
       expect(data.generatedFiles).toContain(
-        ".github/workflows/deploy-docs.yml",
+        ".github/workflows/deploy-github-pages.yml",
       );
     });
   });
@@ -504,7 +504,7 @@ describe("deployPages", () => {
         testTempDir,
         ".github",
         "workflows",
-        "deploy-docs.yml",
+        "deploy-github-pages.yml",
       );
       const workflowContent = await fs.readFile(workflowPath, "utf-8");
 
@@ -524,7 +524,7 @@ describe("deployPages", () => {
         testTempDir,
         ".github",
         "workflows",
-        "deploy-docs.yml",
+        "deploy-github-pages.yml",
       );
       const workflowContent = await fs.readFile(workflowPath, "utf-8");
 
@@ -543,7 +543,7 @@ describe("deployPages", () => {
         testTempDir,
         ".github",
         "workflows",
-        "deploy-docs.yml",
+        "deploy-github-pages.yml",
       );
       const workflowContent = await fs.readFile(workflowPath, "utf-8");
 

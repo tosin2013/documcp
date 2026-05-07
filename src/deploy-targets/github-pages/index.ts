@@ -22,7 +22,7 @@ export class GitHubPagesAdapter implements DeployTargetAdapter {
     const files: GeneratedFile[] = [];
     const workflow = this.generateWorkflow(ssg, opts);
     files.push({
-      path: ".github/workflows/deploy-docs.yml",
+      path: ".github/workflows/deploy-github-pages.yml",
       content: workflow,
     });
 

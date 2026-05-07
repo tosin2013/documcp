@@ -22,6 +22,7 @@ const sidebars = {
         "how-to/repository-analysis",
         "how-to/drift-priority-scoring",
         "how-to/github-pages-deployment",
+        "how-to/deploy-to-vercel",
         "how-to/local-testing",
         "how-to/prompting-guide",
         "how-to/usage-examples",
@@ -97,6 +98,11 @@ const sidebars = {
       type: "category",
       label: "🛠️ Development",
       items: ["development/MCP_INSPECTOR_TESTING"],
+    },
+    {
+      type: "category",
+      label: "🤝 Contributing",
+      items: ["contributing/adding-deploy-targets"],
     },
     {
       type: "category",

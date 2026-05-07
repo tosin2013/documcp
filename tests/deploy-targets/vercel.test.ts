@@ -39,14 +39,15 @@ describe("VercelAdapter", () => {
   });
 
   describe("generateDeploymentArtifact", () => {
-    it("returns vercel.json and a workflow file", () => {
+    it("returns vercel.json, a workflow file, and VERCEL_SETUP.md", () => {
       const files = adapter.generateDeploymentArtifact(
         "docusaurus",
         baseOpts("docusaurus"),
       );
       const paths = files.map((f) => f.path);
       expect(paths).toContain("vercel.json");
-      expect(paths).toContain(".github/workflows/deploy-docs.yml");
+      expect(paths).toContain(".github/workflows/deploy-vercel.yml");
+      expect(paths).toContain("VERCEL_SETUP.md");
     });
 
     describe("vercel.json content", () => {
@@ -150,7 +151,7 @@ describe("VercelAdapter", () => {
           baseOpts("docusaurus"),
         );
         const wf = files.find(
-          (f) => f.path === ".github/workflows/deploy-docs.yml",
+          (f) => f.path === ".github/workflows/deploy-vercel.yml",
         )!;
         expect(wf.content).toContain("VERCEL_TOKEN");
       });
@@ -161,7 +162,7 @@ describe("VercelAdapter", () => {
           baseOpts("docusaurus"),
         );
         const wf = files.find(
-          (f) => f.path === ".github/workflows/deploy-docs.yml",
+          (f) => f.path === ".github/workflows/deploy-vercel.yml",
         )!;
         expect(wf.content).toContain("--prod");
         expect(wf.content).toContain("branches: [main]");
@@ -173,7 +174,7 @@ describe("VercelAdapter", () => {
           baseOpts("docusaurus"),
         );
         const wf = files.find(
-          (f) => f.path === ".github/workflows/deploy-docs.yml",
+          (f) => f.path === ".github/workflows/deploy-vercel.yml",
         )!;
         expect(wf.content).toContain("pull_request");
       });
@@ -191,7 +192,7 @@ describe("VercelAdapter", () => {
           }),
         );
         const wf = files.find(
-          (f) => f.path === ".github/workflows/deploy-docs.yml",
+          (f) => f.path === ".github/workflows/deploy-vercel.yml",
         )!;
         expect(wf.content).toContain("actions-hugo");
       });
@@ -209,9 +210,22 @@ describe("VercelAdapter", () => {
           }),
         );
         const wf = files.find(
-          (f) => f.path === ".github/workflows/deploy-docs.yml",
+          (f) => f.path === ".github/workflows/deploy-vercel.yml",
         )!;
         expect(wf.content).toContain("setup-python");
+      });
+
+      it("includes VERCEL_SETUP.md with vercel link instructions", () => {
+        const files = adapter.generateDeploymentArtifact(
+          "docusaurus",
+          baseOpts("docusaurus"),
+        );
+        const setup = files.find((f) => f.path === "VERCEL_SETUP.md")!;
+        expect(setup).toBeDefined();
+        expect(setup.content).toContain("vercel link");
+        expect(setup.content).toContain("VERCEL_TOKEN");
+        expect(setup.content).toContain("VERCEL_ORG_ID");
+        expect(setup.content).toContain("VERCEL_PROJECT_ID");
       });
     });
   });

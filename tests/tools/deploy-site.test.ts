@@ -50,7 +50,7 @@ describe("deploy_site (deployPages with target param)", () => {
       await deployPages({ repository: testTempDir, ssg: "docusaurus" });
       const workflowPath = path.join(
         testTempDir,
-        ".github/workflows/deploy-docs.yml",
+        ".github/workflows/deploy-github-pages.yml",
       );
       const content = await fs.readFile(workflowPath, "utf-8");
       expect(content).toContain("actions/deploy-pages");
@@ -64,7 +64,7 @@ describe("deploy_site (deployPages with target param)", () => {
       });
       const data = parseSuccess(result);
       expect(data.generatedFiles).toContain(
-        ".github/workflows/deploy-docs.yml",
+        ".github/workflows/deploy-github-pages.yml",
       );
     });
 
@@ -103,7 +103,7 @@ describe("deploy_site (deployPages with target param)", () => {
       });
       const workflowPath = path.join(
         testTempDir,
-        ".github/workflows/deploy-docs.yml",
+        ".github/workflows/deploy-vercel.yml",
       );
       const content = await fs.readFile(workflowPath, "utf-8");
       expect(content).toContain("VERCEL_TOKEN");
@@ -120,7 +120,7 @@ describe("deploy_site (deployPages with target param)", () => {
       expect(data.target).toBe("vercel");
     });
 
-    it("lists both vercel.json and workflow in generatedFiles", async () => {
+    it("lists vercel.json, workflow, and VERCEL_SETUP.md in generatedFiles", async () => {
       const result = await deployPages({
         repository: testTempDir,
         ssg: "docusaurus",
@@ -129,18 +129,19 @@ describe("deploy_site (deployPages with target param)", () => {
       const data = parseSuccess(result);
       expect(data.generatedFiles).toContain("vercel.json");
       expect(data.generatedFiles).toContain(
-        ".github/workflows/deploy-docs.yml",
+        ".github/workflows/deploy-vercel.yml",
       );
+      expect(data.generatedFiles).toContain("VERCEL_SETUP.md");
     });
 
-    it("includes Vercel secrets setup in next steps output", async () => {
+    it("includes vercel link step and Vercel secrets setup in next steps output", async () => {
       const result = await deployPages({
         repository: testTempDir,
         ssg: "docusaurus",
         target: "vercel",
       });
-      // nextSteps are rendered as a separate text block in the content array
       const fullText = allText(result);
+      expect(fullText).toContain("vercel link");
       expect(fullText).toContain("VERCEL_TOKEN");
     });
 

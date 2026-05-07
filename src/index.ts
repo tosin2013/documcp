@@ -472,7 +472,7 @@ const TOOLS = [
   {
     name: "deploy_site",
     description:
-      "Set up deployment workflow for GitHub Pages or Vercel with deployment tracking and preference learning. Use the 'target' parameter to choose the deployment platform.",
+      "Set up deployment workflow for GitHub Pages or Vercel with deployment tracking and preference learning. Use the 'target' parameter to choose one deployment platform per project (github-pages or vercel). If you switch targets, the tool will warn you to remove the old workflow file.",
     inputSchema: z.object({
       repository: z.string().describe("Repository path or URL"),
       ssg: z

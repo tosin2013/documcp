@@ -67,10 +67,11 @@ Use the DocuMCP `deploy_site` tool with `target=vercel`:
 }
 ```
 
-This generates two files:
+This generates three files:
 
 - **`vercel.json`** — build configuration for Vercel
-- **`.github/workflows/deploy-docs.yml`** — GitHub Actions workflow using `vercel deploy`
+- **`.github/workflows/deploy-vercel.yml`** — GitHub Actions workflow using `vercel deploy`
+- **`VERCEL_SETUP.md`** — inline setup checklist committed to your repository
 
 ### Generated `vercel.json` example (Docusaurus)
 
@@ -114,7 +115,7 @@ Then add the domain in your Vercel project's **Settings → Domains** and config
 ## Step 5: Commit and push
 
 ```bash
-git add vercel.json .github/workflows/deploy-docs.yml
+git add vercel.json .github/workflows/deploy-vercel.yml VERCEL_SETUP.md .vercel/project.json
 git commit -m "chore: add Vercel deployment configuration"
 git push
 ```
