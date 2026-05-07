@@ -343,9 +343,9 @@ await metricsDB.insert(metrics);
 ## Related Documentation
 
 - [Drift Detection System](./repository-analysis.md#drift-detection)
-- [AST-Based Analysis](../explanation/ast-analysis.md)
+- [Architecture Overview](../explanation/architecture.md)
 - [CI/CD Integration](./github-pages-deployment.md)
 
 ## API Reference
 
-See [DriftDetector API Reference](../reference/drift-detector.md) for complete method documentation.
+See [MCP Tools Reference](../reference/mcp-tools.md) for complete tool documentation.

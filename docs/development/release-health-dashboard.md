@@ -18,10 +18,12 @@ The dashboard is available at `/release-health` in the documentation site and di
 Metrics are collected by [`src/scripts/collect-release-health.ts`](../../src/scripts/collect-release-health.ts), which:
 
 1. **Fetches GitHub data** via `gh` CLI:
+
    - Recent releases (version, publish time)
    - CI workflow runs (success rate, duration)
 
 2. **Fetches npm data** via npm registry API:
+
    - Weekly and monthly download counts
 
 3. **Generates JSON snapshot** saved to `docs/data/release-health.json`
@@ -37,7 +39,7 @@ The [`.github/workflows/release-health.yml`](../../.github/workflows/release-hea
 
 ### Dashboard Rendering
 
-The dashboard page ([`docs/src/pages/release-health.md`](../src/pages/release-health.md)):
+The dashboard page (`docs/src/pages/release-health.md`):
 
 - Loads `release-health.json` on page load
 - Renders metrics using vanilla JavaScript
@@ -50,7 +52,7 @@ The dashboard page ([`docs/src/pages/release-health.md`](../src/pages/release-he
 
 ```typescript
 interface ReleaseHealthData {
-  generatedAt: string;           // ISO 8601 timestamp
+  generatedAt: string; // ISO 8601 timestamp
   recentReleases: ReleaseMetrics[];
   ciMetrics: CIMetrics;
   coverageTrend: CoverageMetrics[];
@@ -66,10 +68,10 @@ interface ReleaseHealthData {
 
 ```typescript
 interface ReleaseMetrics {
-  version: string;               // e.g., "v0.8.0"
-  publishedAt: string;           // ISO 8601 timestamp
-  timeToPublishMinutes: number;  // Time from tag to npm publish
-  ciSuccess: boolean;            // Whether CI passed
+  version: string; // e.g., "v0.8.0"
+  publishedAt: string; // ISO 8601 timestamp
+  timeToPublishMinutes: number; // Time from tag to npm publish
+  ciSuccess: boolean; // Whether CI passed
 }
 ```
 
@@ -77,11 +79,11 @@ interface ReleaseMetrics {
 
 ```typescript
 interface CIMetrics {
-  totalRuns: number;             // Last 50 runs
+  totalRuns: number; // Last 50 runs
   successfulRuns: number;
   failedRuns: number;
-  successRate: number;           // Percentage
-  flakeRate: number;             // Percentage (retry-based)
+  successRate: number; // Percentage
+  flakeRate: number; // Percentage (retry-based)
   averageDurationMinutes: number;
 }
 ```
@@ -90,8 +92,8 @@ interface CIMetrics {
 
 ```typescript
 interface CoverageMetrics {
-  timestamp: string;             // ISO 8601 timestamp
-  coverage: number;              // Percentage
+  timestamp: string; // ISO 8601 timestamp
+  coverage: number; // Percentage
   trend: "up" | "down" | "stable";
 }
 ```
@@ -125,27 +127,29 @@ npm run start
 ### Adding New Metrics
 
 1. **Update data collection** in `src/scripts/collect-release-health.ts`:
+
    ```typescript
    // Add new metric to ReleaseHealthData interface
    interface ReleaseHealthData {
      // ... existing fields
      newMetric: NewMetricType;
    }
-   
+
    // Add collection function
    async function fetchNewMetric(): Promise<NewMetricType> {
      // Implementation
    }
-   
+
    // Add to Promise.all in collectReleaseHealth()
    ```
 
 2. **Update dashboard rendering** in `docs/src/pages/release-health.md`:
+
    ```javascript
    function renderNewMetric(data) {
      // Render logic
    }
-   
+
    // Call in loadReleaseHealth()
    renderNewMetric(data.newMetric);
    ```
@@ -166,11 +170,13 @@ on:
 ### Data Not Updating
 
 1. **Check workflow runs**:
+
    ```bash
    gh run list --workflow=release-health.yml
    ```
 
 2. **View workflow logs**:
+
    ```bash
    gh run view <run-id> --log
    ```
@@ -183,11 +189,13 @@ on:
 ### Dashboard Shows "Failed to Load"
 
 1. **Verify JSON file exists**:
+
    ```bash
    ls -la docs/data/release-health.json
    ```
 
 2. **Validate JSON**:
+
    ```bash
    cat docs/data/release-health.json | jq .
    ```

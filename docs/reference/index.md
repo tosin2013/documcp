@@ -15,7 +15,7 @@ Complete technical reference for DocuMCP's API, configuration, and tools.
 
 **Essential for AI-powered workflows**: Reference the comprehensive context file:
 
-- **[LLM Context Reference](../../LLM_CONTEXT.md)** - Complete tool reference for AI assistants (45 tools, workflows, examples)
+- **[LLM Context Reference](https://github.com/tosin2013/documcp/blob/main/LLM_CONTEXT.md)** - Complete tool reference for AI assistants (45 tools, workflows, examples)
 
 Use in AI assistants: `@LLM_CONTEXT.md [your query]`
 
@@ -24,7 +24,7 @@ Use in AI assistants: `@LLM_CONTEXT.md [your query]`
 - **[API Overview](api-overview.md)** - Complete tool categorization and quick reference (NEW!)
 - **[MCP Tools API](mcp-tools.md)** - Detailed API reference for all DocuMCP tools
 - **[Deploy Pages Tool](deploy-pages.md)** - Comprehensive deploy_pages tool documentation
-- **[TypeDoc API](../api/)** - Auto-generated API documentation
+- **[Source on GitHub](https://github.com/tosin2013/documcp/tree/main/src)** - Browse source code directly
 - [Configuration Options](configuration.md) - Configuration file reference
 - [CLI Commands](cli.md) - Command-line interface reference
 - [Prompt Templates](prompt-templates.md) - Available prompt templates

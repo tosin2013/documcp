@@ -127,8 +127,8 @@ Sophisticated memory, learning, and knowledge graph operations:
 ### Full API Reference
 
 - **[MCP Tools API](./mcp-tools.md)** - Complete tool descriptions with examples
-- **[TypeDoc API](../api/)** - Auto-generated API documentation for all classes, interfaces, and functions
-- **[LLM Context Reference](../../LLM_CONTEXT.md)** - Comprehensive tool reference for AI assistants
+- **[Source on GitHub](https://github.com/tosin2013/documcp/tree/main/src)** - Browse source code for all classes, interfaces, and functions
+- **[LLM Context Reference](https://github.com/tosin2013/documcp/blob/main/LLM_CONTEXT.md)** - Comprehensive tool reference for AI assistants
 
 ### Configuration & Usage
 
@@ -220,8 +220,8 @@ DocuMCP includes a persistent memory system that learns from every analysis:
 
 - **By functionality**: Use the category tables above
 - **By name**: See [MCP Tools API](./mcp-tools.md)
-- **By code**: Browse [TypeDoc API](../api/)
-- **For AI assistants**: Reference [LLM_CONTEXT.md](../../LLM_CONTEXT.md)
+- **By code**: Browse [source on GitHub](https://github.com/tosin2013/documcp/tree/main/src)
+- **For AI assistants**: Reference [LLM_CONTEXT.md](https://github.com/tosin2013/documcp/blob/main/LLM_CONTEXT.md)
 
 ---
 

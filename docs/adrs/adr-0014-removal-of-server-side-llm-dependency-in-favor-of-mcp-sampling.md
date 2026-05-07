@@ -49,7 +49,7 @@ Remove the bundled LLM client and all server-side LLM execution paths from DocuM
 4. **Remove** the `simulate_execution` tool entry from the `TOOLS` array and `CallToolRequestSchema` switch in `src/index.ts`.
 5. **Mark** Phase 2.5 of ADR-009 as **Superseded** by this ADR. The rest of ADR-009 (the broader content-accuracy framework) remains Accepted.
 6. **Defer** any future LLM-driven semantic analysis to **MCP Sampling**. When DocuMCP genuinely needs an LLM completion (for example, context-aware example generation that AST cannot reach), it will issue a `sampling/createMessage` request through the host so the host's LLM, policy, and quotas apply uniformly.
-7. **Ship** under semver as **v0.6.0** with a `BREAKING CHANGE:` footer in [CHANGELOG.md](../../CHANGELOG.md) and a clear migration note for hybrid-mode users.
+7. **Ship** under semver as **v0.6.0** with a `BREAKING CHANGE:` footer in [CHANGELOG.md](https://github.com/tosin2013/documcp/blob/main/CHANGELOG.md) and a clear migration note for hybrid-mode users.
 
 ## Alternatives Considered
 

@@ -15,7 +15,7 @@ SSG adapters enable DocuMCP to:
 
 - Understanding of the target SSG's configuration and structure
 - Node.js 20.x and npm installed
-- DocuMCP development environment set up ([see setup guide](../tutorials/setting-up-your-development-environment.md))
+- DocuMCP development environment set up ([see setup guide](../tutorials/development-setup.md))
 
 ## Step 1: Research the SSG
 
@@ -24,6 +24,7 @@ Before coding, understand your target SSG:
 ### Key Information to Gather
 
 1. **Detection markers**: How to identify this SSG in a project
+
    - Configuration files (e.g., `docusaurus.config.js`, `mkdocs.yml`)
    - Package.json dependencies
    - Directory structure patterns
@@ -220,7 +221,7 @@ Add your SSG to the documentation:
 
 ### Update API Reference
 
-Add to `docs/reference/api-reference.md`:
+Add to `docs/reference/mcp-tools.md`:
 
 ```markdown
 #### Astro
@@ -344,7 +345,5 @@ Reference these PRs for guidance:
 
 ## Related Documentation
 
-- [How to Create Custom MCP Tools](how-to-add-a-new-feature.md)
-- [Setting Up Development Environment](../tutorials/setting-up-your-development-environment.md)
-- [Writing and Running Tests](../tutorials/writing-and-running-tests.md)
-- [API Reference](../reference/api-reference.md)
+- [Setting Up Development Environment](../tutorials/development-setup.md)
+- [MCP Tools Reference](../reference/mcp-tools.md)
