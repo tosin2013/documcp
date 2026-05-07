@@ -258,41 +258,31 @@ jobs:
       - name: Publish to npm
         if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         id: publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          echo "Publishing to npm using NPM_TOKEN..."
-
-          # Verify the token is available
-          if [ -z "$NODE_AUTH_TOKEN" ]; then
-            echo "❌ NPM_TOKEN secret is not configured."
-            echo "Add an npm access token as NPM_TOKEN in repository secrets:"
-            echo "  https://github.com/tosin2013/documcp/settings/secrets/actions"
-            exit 1
-          fi
-
-          # Sanity-check: ensure the version we are about to publish matches the tag
+          # NODE_AUTH_TOKEN is injected automatically by actions/setup-node via OIDC
+          # (id-token: write permission + registry-url on setup-node step)
           PACKAGE_VERSION=$(node -p "require('./package.json').version")
           echo "package.json version: $PACKAGE_VERSION"
 
+          # Version/tag sanity check for tag-triggered runs
           if [ "${{ github.event_name }}" = "push" ]; then
             TAG_VERSION="${GITHUB_REF#refs/tags/v}"
             if [ "$PACKAGE_VERSION" != "$TAG_VERSION" ]; then
-              echo "❌ Version mismatch: package.json=$PACKAGE_VERSION but tag=v$TAG_VERSION"
+              echo "Version mismatch: package.json=$PACKAGE_VERSION tag=v$TAG_VERSION"
               echo "Ensure package.json version matches the pushed tag."
               exit 1
             fi
-            echo "✅ Version matches tag: $PACKAGE_VERSION"
+            echo "Version matches tag: $PACKAGE_VERSION"
           fi
 
-          # Check whether this version is already published
+          # Skip gracefully if already published
           if npm view "documcp@$PACKAGE_VERSION" version > /dev/null 2>&1; then
-            echo "⚠️  documcp@$PACKAGE_VERSION is already published on npm — skipping."
+            echo "documcp@$PACKAGE_VERSION already published on npm — skipping."
             echo "package_version=$PACKAGE_VERSION" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
-          # Publish with retry mechanism
+          # Publish — NODE_AUTH_TOKEN set by actions/setup-node via OIDC trusted publisher
           MAX_RETRIES=3
           RETRY_COUNT=0
           PUBLISH_SUCCESS=false
@@ -304,22 +294,18 @@ jobs:
             else
               RETRY_COUNT=$((RETRY_COUNT + 1))
               if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
-                echo "Publication attempt $RETRY_COUNT failed, retrying in 5 seconds..."
+                echo "Retry $RETRY_COUNT in 5 seconds..."
                 sleep 5
               else
                 echo "Publication failed after $MAX_RETRIES attempts"
-                echo ""
-                echo "Troubleshooting tips:"
-                echo "1. Add NPM_TOKEN to repository secrets"
-                echo "2. Ensure the token has publish access to the documcp package"
-                echo "3. Verify the token is not expired"
+                echo "Verify trusted publisher is configured: tosin2013/documcp / release.yml"
                 exit 1
               fi
             fi
           done
 
           if [ "$PUBLISH_SUCCESS" = true ]; then
-            echo "✅ Successfully published documcp@$PACKAGE_VERSION to npm!"
+            echo "Successfully published documcp@$PACKAGE_VERSION to npm!"
             echo "package_version=$PACKAGE_VERSION" >> "$GITHUB_OUTPUT"
           fi
 
