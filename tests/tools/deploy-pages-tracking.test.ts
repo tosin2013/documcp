@@ -222,7 +222,9 @@ describe("deployPages with Deployment Tracking (Phase 2.3)", () => {
       const content = result.content[0];
       const data = JSON.parse(content.text);
       expect(data.customDomain).toBe("docs.example.com");
-      expect(data.cnameCreated).toBe(true);
+      expect(data.generatedFiles).toEqual(
+        expect.arrayContaining([expect.stringContaining("CNAME")]),
+      );
     });
 
     it("should track deployment with custom branch", async () => {

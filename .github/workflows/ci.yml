@@ -219,7 +219,29 @@ jobs:
 
             const results = JSON.parse(fs.readFileSync('test-results.json', 'utf8'));
             const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const MAX_ISSUES_PER_RUN = 20;
+
+            // Fetch ALL open test-failure issues once with pagination to build dedup Set
+            const allOpen = [];
+            let page = 1;
+            while (true) {
+              const { data } = await github.rest.issues.listForRepo({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                labels: 'test-failure',
+                state: 'open',
+                per_page: 100,
+                page,
+              });
+              allOpen.push(...data);
+              if (data.length < 100) break;
+              page++;
+            }
+            const openTitles = new Set(allOpen.map(i => i.title));
+            core.info(`Found ${allOpen.length} existing open test-failure issue(s).`);
+
             let created = 0;
+            const overflow = [];
 
             for (const suite of results.testResults ?? []) {
               // Jest JSON uses `name` for the file path and `assertionResults` for the test list
@@ -229,21 +251,19 @@ jobs:
                 if (test.status !== 'failed') continue;
 
                 const title = `[Test Failure] ${test.fullName}`;
-                const errorMsg = (test.failureMessages ?? []).join('\n').slice(0, 2000);
 
-                // Deduplicate: skip if open issue already exists with the same title
-                const { data: existing } = await github.rest.issues.listForRepo({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  labels: 'test-failure',
-                  state: 'open',
-                  per_page: 100,
-                });
-                if (existing.some(i => i.title === title)) {
+                if (openTitles.has(title)) {
                   core.info(`Issue already exists for: ${test.fullName}`);
                   continue;
                 }
 
+                // Cap new issues per run to avoid API spam on mass failures
+                if (created >= MAX_ISSUES_PER_RUN) {
+                  overflow.push(`- \`${test.fullName}\` (${relPath})`);
+                  continue;
+                }
+
+                const errorMsg = (test.failureMessages ?? []).join('\n').slice(0, 2000);
                 await github.rest.issues.create({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
@@ -263,11 +283,36 @@ jobs:
                     '_This issue was created automatically by CI. It will be closed automatically when the test passes on `main`._',
                   ].join('\n'),
                 });
+                // Add to Set immediately to prevent same-run duplicates
+                openTitles.add(title);
                 created++;
                 core.info(`Created issue: ${title}`);
               }
             }
-            core.info(`Created ${created} issue(s).`);
+
+            // Create a single overflow summary issue if cap was hit
+            if (overflow.length > 0) {
+              const overflowTitle = `[Test Failure] ${overflow.length} additional failures (overflow) — ${context.sha.slice(0, 8)}`;
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: overflowTitle,
+                labels: ['test-failure', 'bug'],
+                body: [
+                  `**${overflow.length} additional test(s) failed** but were not given individual issues because the per-run cap of ${MAX_ISSUES_PER_RUN} was reached.`,
+                  `**CI run:** ${runUrl}`,
+                  `**Commit:** ${context.sha.slice(0, 8)}`,
+                  '',
+                  '### Remaining failures',
+                  ...overflow,
+                  '',
+                  '_Fix the tests above and re-run CI to generate individual issues for any that still fail._',
+                ].join('\n'),
+              });
+              core.warning(`Cap of ${MAX_ISSUES_PER_RUN} reached — created 1 overflow summary issue for ${overflow.length} additional failure(s).`);
+            }
+
+            core.info(`Created ${created} individual issue(s)${overflow.length > 0 ? ` + 1 overflow summary` : ''}.`);
 
   security:
     name: Security Audit
