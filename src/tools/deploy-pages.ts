@@ -417,6 +417,7 @@ export async function deployPages(
       target,
       branch,
       customDomain,
+      cnameCreated: generatedFiles.some((f) => f.path === "CNAME"),
       generatedFiles: generatedFiles.map((f) => f.path),
       cliCommand,
       repoPath,
