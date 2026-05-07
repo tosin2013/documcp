@@ -99,29 +99,43 @@ recommendation.data.alternatives.forEach((alt) => {
 
 ## 🚀 Deployment Examples
 
-### Deploy to GitHub Pages
+`deploy_site` generates deployment configuration files — it does **not** deploy directly or require any credentials. Credentials (e.g. `VERCEL_TOKEN`) live in GitHub Actions secrets, not in the MCP server.
 
-```typescript
-import { deployPages } from "./dist/tools/deploy-pages.js";
+### Generate GitHub Pages deployment workflow
 
-const result = await deployPages({
-  repository: "/path/to/project",
-  ssg: "docusaurus",
-  target: "github-pages",
-});
+```json
+{
+  "tool": "deploy_site",
+  "arguments": {
+    "repository": "/path/to/project",
+    "ssg": "docusaurus",
+    "target": "github-pages"
+  }
+}
 ```
 
-### Deploy to Vercel
+Generates `.github/workflows/deploy-docs.yml` — commit it and GitHub Actions deploys automatically.
 
-See the [Deploy to Vercel guide](./deploy-to-vercel.md) for the full workflow including secrets setup.
+### Generate Vercel deployment configuration
 
-```typescript
-const result = await deployPages({
-  repository: "/path/to/project",
-  ssg: "docusaurus",
-  target: "vercel",
-});
+```json
+{
+  "tool": "deploy_site",
+  "arguments": {
+    "repository": "/path/to/project",
+    "ssg": "docusaurus",
+    "target": "vercel"
+  }
+}
 ```
+
+Generates `vercel.json` + `.github/workflows/deploy-docs.yml`. After committing:
+
+1. Run `vercel link` locally to create `.vercel/project.json`
+2. Add `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` as GitHub Actions secrets
+3. Push — GitHub Actions deploys to Vercel automatically
+
+See the [Deploy to Vercel guide](./deploy-to-vercel.md) for the full walkthrough.
 
 ## Related
 
