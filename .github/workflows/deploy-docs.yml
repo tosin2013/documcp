@@ -21,6 +21,14 @@ jobs:
           cache: "npm"
           cache-dependency-path: docs/package-lock.json
 
+      - name: Install docs dependencies
+        working-directory: docs
+        run: npm ci
+
+      - name: Build Docusaurus site
+        working-directory: docs
+        run: npm run build
+
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
 
@@ -28,15 +36,11 @@ jobs:
         working-directory: docs
         run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
 
-      - name: Build project artifacts
-        working-directory: docs
-        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
-
       - name: Deploy to Vercel
         working-directory: docs
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
-            vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
+            vercel deploy --archive=tgz --token=${{ secrets.VERCEL_TOKEN }}
           else
-            vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+            vercel deploy --archive=tgz --prod --token=${{ secrets.VERCEL_TOKEN }}
           fi
