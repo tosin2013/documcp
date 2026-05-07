@@ -18,9 +18,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **deploy-targets:** pluggable `DeployTargetAdapter` interface and adapter registry (`src/deploy-targets/`)
 - **docs:** migrate DocuMCP documentation site to Vercel at `https://documcp.vercel.app`
 
+### 🚀 Features (deploy UX — [65ed3c1](https://github.com/tosin2013/documcp/commit/65ed3c1))
+
+- **deploy:** each adapter now emits a target-specific workflow filename (`deploy-github-pages.yml`, `deploy-vercel.yml`) — eliminates filename collisions when multiple adapters ship
+- **deploy:** Vercel adapter generates `VERCEL_SETUP.md` — an inline numbered setup checklist committed to the user's repo
+- **deploy:** `deploy_site` nextSteps now leads with a `vercel link` step before secrets configuration when `target=vercel`
+- **deploy:** `deploy_site` warns when a competing deploy workflow from another target already exists in the repository
+- **contributing:** add `docs/contributing/adding-deploy-targets.md` — 7-step guide for contributors adding new deployment platforms
+- **community:** post implementation-step guides on issues [#128](https://github.com/tosin2013/documcp/issues/128) (Netlify) and [#129](https://github.com/tosin2013/documcp/issues/129) (Cloudflare Pages)
+
 ### 📚 Documentation
 
 - add `docs/how-to/deploy-to-vercel.md` how-to guide ([#127](https://github.com/tosin2013/documcp/issues/127))
+- add `docs/how-to/deploy-to-vercel.md` and adapter contribution guide to Docusaurus sidebar
 - fix dead GitHub issues URLs in 5 how-to/tutorial files ([#150](https://github.com/tosin2013/documcp/issues/150))
 - fix dead MCP specification URL in `llm-integration.md` ([#154](https://github.com/tosin2013/documcp/issues/154))
 - fix broken `#common-workflows` anchor in `api-overview.md` ([#156](https://github.com/tosin2013/documcp/issues/156))
