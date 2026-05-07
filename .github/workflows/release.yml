@@ -210,7 +210,7 @@ jobs:
 
             # Extract changelog for tagged version
             if [ -f "CHANGELOG.md" ]; then
-              VERSION_NUM=$(echo "$tag" | sed 's/^v//')
+              VERSION_NUM="${tag#v}"
               CHANGELOG_CONTENT=$(awk "/## \[$VERSION_NUM\]/{flag=1; next} /^## \[/{flag=0} flag" CHANGELOG.md | sed '/^$/d' || printf "Release %s\n" "$tag")
               {
                 echo "changelog_content<<EOF"
@@ -258,30 +258,41 @@ jobs:
       - name: Publish to npm
         if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         id: publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          echo "Publishing to npm using trusted publishing (OIDC)..."
+          echo "Publishing to npm using NPM_TOKEN..."
 
-          # Verify npm version supports trusted publishing (11.5.1+ required)
-          NPM_VERSION=$(npm --version)
-          echo "npm version: $NPM_VERSION"
-          # Simple version check: compare major.minor.patch
-          NPM_MAJOR=$(echo "$NPM_VERSION" | cut -d. -f1)
-          NPM_MINOR=$(echo "$NPM_VERSION" | cut -d. -f2)
-          NPM_PATCH=$(echo "$NPM_VERSION" | cut -d. -f3)
-
-          if [ "$NPM_MAJOR" -lt 11 ] || ([ "$NPM_MAJOR" -eq 11 ] && [ "$NPM_MINOR" -lt 5 ]) || ([ "$NPM_MAJOR" -eq 11 ] && [ "$NPM_MINOR" -eq 5 ] && [ "$NPM_PATCH" -lt 1 ]); then
-            echo "Warning: npm version $NPM_VERSION may not support trusted publishing"
-            echo "npm 11.5.1+ is required for trusted publishing (OIDC)"
-          else
-            echo "✅ npm version $NPM_VERSION supports trusted publishing"
+          # Verify the token is available
+          if [ -z "$NODE_AUTH_TOKEN" ]; then
+            echo "❌ NPM_TOKEN secret is not configured."
+            echo "Add an npm access token as NPM_TOKEN in repository secrets:"
+            echo "  https://github.com/tosin2013/documcp/settings/secrets/actions"
+            exit 1
           fi
 
-          # Get package version
+          # Sanity-check: ensure the version we are about to publish matches the tag
           PACKAGE_VERSION=$(node -p "require('./package.json').version")
-          echo "Publishing version: $PACKAGE_VERSION"
+          echo "package.json version: $PACKAGE_VERSION"
+
+          if [ "${{ github.event_name }}" = "push" ]; then
+            TAG_VERSION="${GITHUB_REF#refs/tags/v}"
+            if [ "$PACKAGE_VERSION" != "$TAG_VERSION" ]; then
+              echo "❌ Version mismatch: package.json=$PACKAGE_VERSION but tag=v$TAG_VERSION"
+              echo "Ensure package.json version matches the pushed tag."
+              exit 1
+            fi
+            echo "✅ Version matches tag: $PACKAGE_VERSION"
+          fi
+
+          # Check whether this version is already published
+          if npm view "documcp@$PACKAGE_VERSION" version > /dev/null 2>&1; then
+            echo "⚠️  documcp@$PACKAGE_VERSION is already published on npm — skipping."
+            echo "package_version=$PACKAGE_VERSION" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
 
           # Publish with retry mechanism
-          # Trusted publishing uses OIDC - no NODE_AUTH_TOKEN needed
           MAX_RETRIES=3
           RETRY_COUNT=0
           PUBLISH_SUCCESS=false
@@ -299,17 +310,16 @@ jobs:
                 echo "Publication failed after $MAX_RETRIES attempts"
                 echo ""
                 echo "Troubleshooting tips:"
-                echo "1. Verify trusted publisher is configured on npmjs.com"
-                echo "2. Check that workflow filename matches exactly: release.yml"
-                echo "3. Ensure repository and organization match npmjs.com configuration"
-                echo "4. Verify id-token: write permission is set in workflow"
+                echo "1. Add NPM_TOKEN to repository secrets"
+                echo "2. Ensure the token has publish access to the documcp package"
+                echo "3. Verify the token is not expired"
                 exit 1
               fi
             fi
           done
 
           if [ "$PUBLISH_SUCCESS" = true ]; then
-            echo "✅ Successfully published to npm using trusted publishing!"
+            echo "✅ Successfully published documcp@$PACKAGE_VERSION to npm!"
             echo "package_version=$PACKAGE_VERSION" >> "$GITHUB_OUTPUT"
           fi
 
