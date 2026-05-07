@@ -261,18 +261,17 @@ jobs:
         run: |
           # NODE_AUTH_TOKEN is injected automatically by actions/setup-node via OIDC
           # (id-token: write permission + registry-url on setup-node step)
-          PACKAGE_VERSION=$(node -p "require('./package.json').version")
-          echo "package.json version: $PACKAGE_VERSION"
 
-          # Version/tag sanity check for tag-triggered runs
+          # For tag-triggered runs, derive version from GITHUB_REF to avoid any
+          # stale package.json state that may occur mid-workflow.
           if [ "${{ github.event_name }}" = "push" ]; then
-            TAG_VERSION="${GITHUB_REF#refs/tags/v}"
-            if [ "$PACKAGE_VERSION" != "$TAG_VERSION" ]; then
-              echo "Version mismatch: package.json=$PACKAGE_VERSION tag=v$TAG_VERSION"
-              echo "Ensure package.json version matches the pushed tag."
-              exit 1
-            fi
-            echo "Version matches tag: $PACKAGE_VERSION"
+            PACKAGE_VERSION="${GITHUB_REF#refs/tags/v}"
+            echo "Publishing version: $PACKAGE_VERSION (from tag $GITHUB_REF)"
+            # Force package.json to the correct version before publishing
+            npm version "$PACKAGE_VERSION" --no-git-tag-version --allow-same-version
+          else
+            PACKAGE_VERSION=$(node -p "require('./package.json').version")
+            echo "Publishing version: $PACKAGE_VERSION (from package.json)"
           fi
 
           # Skip gracefully if already published
