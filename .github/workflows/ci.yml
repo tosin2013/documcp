@@ -222,8 +222,10 @@ jobs:
             let created = 0;
 
             for (const suite of results.testResults ?? []) {
-              const relPath = suite.testFilePath.replace(process.env.GITHUB_WORKSPACE + '/', '');
-              for (const test of suite.testResults ?? []) {
+              // Jest JSON uses `name` for the file path and `assertionResults` for the test list
+              const filePath = suite.testFilePath ?? suite.name ?? '';
+              const relPath = filePath.replace((process.env.GITHUB_WORKSPACE ?? '') + '/', '');
+              for (const test of suite.assertionResults ?? suite.testResults ?? []) {
                 if (test.status !== 'failed') continue;
 
                 const title = `[Test Failure] ${test.fullName}`;
