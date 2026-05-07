@@ -95,7 +95,7 @@ pids/
 .prettierrc
 
 # Auto-generated LLM context files
-LLM_CONTEXT.md
+# LLM_CONTEXT.md is intentionally tracked — see docs/reference/
 .mcp-server-context.md
 
 # Invalid/test data

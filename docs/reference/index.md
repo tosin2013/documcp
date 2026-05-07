@@ -15,7 +15,7 @@ Complete technical reference for DocuMCP's API, configuration, and tools.
 
 **Essential for AI-powered workflows**: Reference the comprehensive context file:
 
-- **LLM_CONTEXT.md** - Complete tool reference for AI assistants (45 tools, workflows, examples — located at the root of the DocuMCP project)
+- **[LLM_CONTEXT.md](https://github.com/tosin2013/documcp/blob/main/LLM_CONTEXT.md)** - Complete tool reference for AI assistants (45 tools, workflows, examples)
 
 Use in AI assistants: `@LLM_CONTEXT.md [your query]`
 
