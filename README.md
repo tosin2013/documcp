@@ -52,103 +52,118 @@ DocuMCP analyzes your repository, recommends the perfect static site generator (
 
 ## Installation
 
+**Option A — npm global install (recommended):**
+
 ```bash
-# Clone the repository
+npm install -g documcp
+```
+
+**Option B — build from source (contributors / local dev):**
+
+```bash
 git clone https://github.com/tosin2013/documcp.git
 cd documcp
-
-# Install dependencies
 npm install
-
-# Build the project
 npm run build
 ```
 
 ## MCP Client Setup
 
-DocuMCP works with various MCP-enabled clients. Here's how to configure it:
+DocuMCP works with any MCP-enabled AI client. Pick the one you use:
 
 ### Claude Desktop
 
-1. **Locate Claude Desktop's configuration file**:
+File location:
 
-   - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-   - **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
-   - **Linux**: `~/.config/claude/claude_desktop_config.json`
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+- **Linux**: `~/.config/claude/claude_desktop_config.json`
 
-2. **Add documcp server configuration**:
+```json
+{
+  "mcpServers": {
+    "documcp": {
+      "command": "npx",
+      "args": ["documcp"]
+    }
+  }
+}
+```
 
-   ```json
-   {
-     "mcpServers": {
-       "documcp": {
-         "command": "npx",
-         "args": ["documcp"]
-       }
-     }
-   }
-   ```
+Restart Claude Desktop to load the configuration.
 
-3. **Restart Claude Desktop** to load the configuration.
+### Claude Code (CLI)
 
-### VS Code with GitHub Copilot
+```bash
+# npm global install
+claude mcp add documcp -- npx documcp
 
-1. **Install MCP extension** for VS Code
-2. **Configure in VS Code settings.json**:
-   ```json
-   {
-     "mcp.servers": {
-       "documcp": {
-         "command": "npx",
-         "args": ["documcp"]
-       }
-     }
-   }
-   ```
+# local build (replace path as needed)
+claude mcp add documcp -- node /path/to/documcp/dist/index.js
+```
 
-### Cursor Editor
+Verify with `claude mcp list` — no restart required.
 
-1. **Configure in Cursor settings**:
-   ```json
-   {
-     "mcpServers": {
-       "documcp": {
-         "command": "npx",
-         "args": ["documcp"]
-       }
-     }
-   }
-   ```
+### Cursor
 
-### Gemini Code Assist
+File location: `~/.cursor/mcp.json` (or **Settings > MCP** in the UI)
 
-1. **Check Gemini documentation** for MCP server configuration
-2. **Add similar configuration** as above
+```json
+{
+  "mcpServers": {
+    "documcp": {
+      "command": "npx",
+      "args": ["documcp"]
+    }
+  }
+}
+```
+
+### VS Code (GitHub Copilot)
+
+Add to `settings.json` (**Cmd/Ctrl + Shift + P → Preferences: Open User Settings (JSON)**):
+
+```json
+{
+  "mcp.servers": {
+    "documcp": {
+      "command": "npx",
+      "args": ["documcp"]
+    }
+  }
+}
+```
 
 ### Troubleshooting
 
 - Ensure `npx` is available in your PATH
-- For global installations, use the full path:
+- To find a global install path: `npm list -g documcp`
+- To use the full path instead of npx:
   ```json
   {
     "command": "node",
     "args": ["/usr/local/lib/node_modules/documcp/dist/index.js"]
   }
   ```
-- Find installation path: `npm list -g documcp`
 
 ## Quick Start
 
-Once configured with your MCP client, just prompt DocuMCP with natural language:
+Once connected to your AI client, use natural language prompts:
 
-```bash
-# Complete workflow
-"analyze my repository and deploy documentation to GitHub Pages"
+```
+Analyze my repository at /path/to/my-project
+```
 
-# Step by step
-"analyze my repository for documentation needs"
-"recommend the best static site generator for my project"
-"set up documentation structure and deploy to GitHub Pages"
+```
+Recommend a static site generator based on my analysis
+```
+
+```
+Set up a Diataxis documentation structure using Docusaurus
+```
+
+```
+Deploy my documentation to GitHub Pages
 ```
 
 DocuMCP provides 30+ tools including repository analysis, intelligent SSG recommendations, content generation, deployment automation with tracking, validation, user preference management, deployment analytics, and memory-enhanced insights. See the [complete documentation](docs/index.md) for detailed tool reference.
@@ -163,7 +178,7 @@ DocuMCP provides 30+ tools including repository analysis, intelligent SSG recomm
 
 ### Deployment & Tracking
 
-- `deploy_pages` - Automated GitHub Pages deployment with outcome tracking
+- `deploy_site` - Automated deployment to GitHub Pages or Vercel with outcome tracking (`deploy_pages` still works as a back-compat alias)
 - `verify_deployment` - Comprehensive deployment validation
 - `analyze_deployments` - Analytics and insights from deployment history
 
