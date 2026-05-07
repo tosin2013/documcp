@@ -111,7 +111,7 @@ export class VercelAdapter implements DeployTargetAdapter {
       buildCommand: buildCmd,
       outputDirectory: outputDir,
       installCommand: installCmd,
-      framework: ssg === "docusaurus" ? "docusaurus2" : null,
+      framework: ssg === "docusaurus" ? "docusaurus-2" : null,
     };
 
     if (rootDirectory) {

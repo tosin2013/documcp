@@ -2,6 +2,6 @@
   "buildCommand": "npm run build",
   "outputDirectory": "build",
   "installCommand": "npm install",
-  "framework": "docusaurus2",
+  "framework": "docusaurus-2",
   "alias": ["documcp.vercel.app"]
 }
