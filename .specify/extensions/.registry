@@ -1,0 +1,41 @@
+{
+  "schema_version": "1.0",
+  "extensions": {
+    "roadmap": {
+      "version": "0.1.1",
+      "source": "local",
+      "manifest_hash": "sha256:44f0a2de47237031011dc7ea60b1a4ebf88bb715311327cf1e44539afbac60eb",
+      "enabled": true,
+      "priority": 10,
+      "registered_commands": {
+        "claude": [
+          "speckit.roadmap.write",
+          "speckit.roadmap.brief",
+          "speckit.roadmap.debrief",
+          "speckit.roadmap.sync"
+        ]
+      },
+      "registered_skills": [],
+      "installed_at": "2026-11-23T15:02:47.074159+00:00"
+    },
+    "spec-status": {
+      "version": "0.4.0",
+      "source": "local",
+      "manifest_hash": "sha256:31149d6e290b94df9501b38255c0c33e307e2ca18732ca25d7c4765072f39f5d",
+      "enabled": true,
+      "priority": 10,
+      "registered_commands": {
+        "claude": [
+          "speckit.spec-status.review",
+          "speckit.spec-status.explain",
+          "speckit.spec-status.reconcile",
+          "speckit.spec-status.unblock",
+          "speckit.spec-status.verify-readiness",
+          "speckit.spec-status.close-gap"
+        ]
+      },
+      "registered_skills": [],
+      "installed_at": "2026-11-23T15:02:48.286253+00:00"
+    }
+  }
+}

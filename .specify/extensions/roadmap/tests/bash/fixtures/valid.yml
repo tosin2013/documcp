@@ -1,0 +1,18 @@
+roadmap:
+  # Custom roadmap path (overrides built-in default)
+  path: "docs/roadmap/my-roadmap.md"
+
+adr:
+  # Custom ADR directory
+  dir: "docs/decisions/"
+
+prd:
+  # Custom globs list (overrides built-in defaults).
+  # The second entry has literal double-quotes (unquoted YAML scalar) to exercise JSON escaping.
+  globs:
+    - "**/requirements/*.md"
+    - **/specs/"annotated"/*.md
+    - "**/product-brief.yaml"
+
+report:
+  max_findings: 25

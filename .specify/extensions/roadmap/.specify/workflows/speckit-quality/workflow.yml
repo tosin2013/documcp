@@ -1,0 +1,58 @@
+schema_version: "1.0"
+workflow:
+  id: "speckit-quality"
+  name: "Speckit Quality Gates"
+  version: "1.0.0"
+  author: "sjors"
+  description: "Runs post-implementation quality gates: verify-tasks → verify → review → cleanup → sync → sync-conflicts → retro → checkpoint."
+
+inputs:
+  integration:
+    type: string
+    default: "codex"
+    prompt: "Integration to use (e.g. codex, claude, copilot, gemini)"
+
+steps:
+  - id: verify-tasks
+    command: speckit.verify-tasks.run
+    integration: "{{ inputs.integration }}"
+
+  - id: verify
+    command: speckit.verify.run
+    integration: "{{ inputs.integration }}"
+
+  - id: review
+    command: speckit.review.run
+    integration: "{{ inputs.integration }}"
+
+  - id: review-findings
+    type: gate
+    message: "Review verification and review findings before cleanup and drift analysis."
+    options: [approve, reject]
+    on_reject: abort
+
+  - id: cleanup
+    command: speckit.cleanup.run
+    integration: "{{ inputs.integration }}"
+
+  - id: sync
+    command: speckit.sync.analyze
+    integration: "{{ inputs.integration }}"
+
+  - id: sync-conflicts
+    command: speckit.sync.conflicts
+    integration: "{{ inputs.integration }}"
+
+  - id: retro
+    command: speckit.retro.run
+    integration: "{{ inputs.integration }}"
+
+  - id: review-closeout
+    type: gate
+    message: "Review cleanup, drift, conflicts, and retrospective outputs before the final checkpoint."
+    options: [approve, reject]
+    on_reject: abort
+
+  - id: checkpoint-final
+    command: speckit.checkpoint.commit
+    integration: "{{ inputs.integration }}"

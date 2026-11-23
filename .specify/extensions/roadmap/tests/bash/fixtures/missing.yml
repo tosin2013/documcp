@@ -1,0 +1,2 @@
+# Empty config — all keys absent, so load-config.sh must return all built-in defaults.
+# Intentionally contains only comments (no key: value pairs).

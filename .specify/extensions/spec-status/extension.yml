@@ -1,0 +1,55 @@
+schema_version: '1.0'
+extension:
+  id: spec-status
+  name: Spec Status
+  version: 0.4.0
+  description: >-
+    Agent skills that read `spec status` output: review a roadmap (with pm,
+    developer, qa and architect views), explain findings, reconcile recorded
+    statuses with tasks and evidence, unblock dependencies, and check readiness
+    before marking work verified. Proposes changes; applies them only through
+    Spec Kit commands after the user approves each one.
+  author: tosin2013
+  repository: https://github.com/tosin2013/spec-status
+  license: Apache-2.0
+  homepage: https://github.com/tosin2013/spec-status/tree/main/extensions/spec-status
+requires:
+  speckit_version: '>=1.2.0'
+  tools:
+    - name: spec
+      required: true
+      version: '>=0.1.2'
+provides:
+  commands:
+    - name: speckit.spec-status.review
+      file: commands/speckit.spec-status.review.md
+      description: Summarize where the roadmap stands and route every finding (roles - pm, developer, qa, architect)
+    - name: speckit.spec-status.explain
+      file: commands/speckit.spec-status.explain.md
+      description: Explain any spec status diagnostic code and the command that fixes it
+    - name: speckit.spec-status.reconcile
+      file: commands/speckit.spec-status.reconcile.md
+      description: Find recorded statuses that disagree with tasks or evidence and propose one fix at a time
+    - name: speckit.spec-status.unblock
+      file: commands/speckit.spec-status.unblock.md
+      description: List blockers and human-review dependencies in the order to clear them
+    - name: speckit.spec-status.verify-readiness
+      file: commands/speckit.spec-status.verify-readiness.md
+      description: Check what evidence is still missing before an item can honestly be recorded verified
+    - name: speckit.spec-status.close-gap
+      file: commands/speckit.spec-status.close-gap.md
+      description: Explain a low recorded-verified share by cause and close the gap one approved change at a time
+hooks:
+  after_implement:
+    command: speckit.spec-status.reconcile
+    optional: true
+    prompt: Check recorded statuses against tasks now?
+    description: >-
+      Compare each roadmap item's recorded status with its tasks and files
+      after implementation, and propose corrections for approval
+tags:
+  - roadmap
+  - status
+  - review
+  - verification
+  - spec-alignment

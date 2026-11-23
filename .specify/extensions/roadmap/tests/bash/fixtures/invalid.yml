@@ -1,0 +1,9 @@
+roadmap:
+  path: ".specify/memory/roadmap.md"
+
+adr:
+  dir: "docs/adr/"
+
+report:
+  # Non-numeric max_findings — should cause load-config.sh to exit non-zero.
+  max_findings: abc

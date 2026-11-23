@@ -1,0 +1,17 @@
+name: speckit-roadmap
+version: 1.0.0
+description: APM project for speckit-roadmap
+author: Sjors Robroek
+dependencies:
+  apm:
+  - srobroek/agentic-packages/packages/core
+  - srobroek/agentic-packages/packages/mcp-codebase-memory
+  - srobroek/agentic-packages/packages/mcp-context7
+  - srobroek/agentic-packages/packages/mcp-package-version
+  - srobroek/agentic-packages/packages/write-a-skill
+  - srobroek/agentic-packages/packages/agentic-maintenance
+  - srobroek/agentic-packages/packages/steering-tools-scripts
+  - srobroek/agentic-packages/packages/language-shell
+  mcp: []
+includes: auto
+scripts: {}
