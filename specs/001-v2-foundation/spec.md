@@ -147,6 +147,19 @@ and supports it with the evidence sections below; it links issue #126 and ADR-00
 - **Verdict memo**: one document recording a recommendation on the standalone CLI and its
   evidence.
 
+## Allowed paths
+
+The union of the slices' lists below, for a check or run of the whole item.
+
+- `.nvmrc`
+- `package.json`
+- `src/*`
+- `tests/*`
+- `skills/*`
+- `README.md`
+- `CONTRIBUTING.md`
+- `docs/research/*`
+
 ## Allowed paths (US1)
 
 - `.nvmrc`

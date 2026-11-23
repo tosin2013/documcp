@@ -1,7 +1,10 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 1.0.0 → 1.1.0
+Version change: 1.1.0 → 1.1.1
+Bump rationale: PATCH — Q3 moved into 001's notes (001 answers it).
+
+Prior: Version change: 1.0.0 → 1.1.0
 Bump rationale: MINOR — new planned spec 004 (zod 4 migration) and a new dependency for 003.
 
 Changes this revision (1.1.0):
@@ -79,7 +82,8 @@ Status legend (lifecycle): **undecided** · **needs-info** · **planned** · **s
 - **Governed by:** C-02, C-03, C-05, ADR-0017
 - **Spec dir:** specs/001-v2-foundation/
 - **Notes:** sliced by user story: US1 Node 24 baseline, US2 skills layer, US3 CLI verdict. US2
-  and US3 build on US1's green baseline.
+  and US3 build on US1's green baseline. US3's memo says whether to keep, amend or supersede
+  ADR-0017 (standalone CLI, accepted); a build, if any, is a later item the owner approves.
 
 ### 002 — Rename to the new product name  [status: needs-info]
 
@@ -124,8 +128,8 @@ Status legend (lifecycle): **undecided** · **needs-info** · **planned** · **s
 - Q1 — The new product name (owner decision, C-04). Unblocks 002.
 - Q2 — Compatibility strategy for the rename: clean break or forwarding shims for one major
   version (owner decision, with the name). Unblocks 002.
-- Q3 — Keep or supersede ADR-0017 (standalone CLI, accepted)? Answered by 001's verdict memo;
-  a build, if any, is a later item.
+- ~~Q3 — Keep or supersede ADR-0017?~~ Moved into 001's Notes (2026-11-23): 001's verdict
+  memo answers it, so it isn't an open question blocking 001.
 
 ## Cross-Cutting Notes
 
@@ -136,4 +140,4 @@ Status legend (lifecycle): **undecided** · **needs-info** · **planned** · **s
 
 ---
 
-**Version**: 1.1.0 | **Ratified**: 2026-11-23 | **Last Amended**: 2026-11-23
+**Version**: 1.1.1 | **Ratified**: 2026-11-23 | **Last Amended**: 2026-11-23
