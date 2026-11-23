@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/srobroek/speckit-roadmap/contracts/load-config.schema.json",
+  "title": "speckit-roadmap load-config output contract",
+  "description": "The stable JSON object emitted on stdout by load-config.sh and load-config.ps1. Both platform implementations MUST emit output validating against this schema, and MUST be equal under normalized-JSON comparison for identical inputs (see x-determinism — byte-identity is NOT required).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "roadmap_path",
+    "roadmap_exists",
+    "adr_dir",
+    "adr_present",
+    "prd_globs",
+    "max_findings"
+  ],
+  "properties": {
+    "roadmap_path": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Repo-relative path to the roadmap artifact. Default .specify/memory/roadmap.md."
+    },
+    "roadmap_exists": {
+      "type": "boolean",
+      "description": "True iff a regular file exists at roadmap_path."
+    },
+    "adr_dir": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Repo-relative directory where ADRs live (if used). Default docs/adr/."
+    },
+    "adr_present": {
+      "type": "boolean",
+      "description": "True iff adr_dir exists as a directory."
+    },
+    "prd_globs": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "description": "Glob patterns used to detect PRD documents. May be empty only if explicitly configured so."
+    },
+    "max_findings": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Cap on findings in review reports. Resolved value; invalid input causes a non-zero exit with no JSON emitted."
+    }
+  },
+  "x-resolution-precedence": [
+    "environment override (SPECKIT_ROADMAP_*)",
+    "roadmap-config.yml",
+    "extension.yml defaults",
+    "built-in defaults"
+  ],
+  "x-determinism": "Output MUST contain no judgment or non-deterministic content. For identical filesystem + environment, the bash and PowerShell implementations MUST be equal under NORMALIZED-JSON comparison (parse, then compare field-by-field with order-independent keys and consistent boolean/integer/string typing). Byte-identical output is not required; semantic JSON equality is.",
+  "x-prd-globs-semantics": "prd_globs are the detection PATTERNS only. load-config MUST NOT scan the filesystem for matching documents; any matching is performed by the command body.",
+  "examples": [
+    {
+      "roadmap_path": ".specify/memory/roadmap.md",
+      "roadmap_exists": false,
+      "adr_dir": "docs/adr/",
+      "adr_present": false,
+      "prd_globs": ["**/prd*.md", "**/PRD*.md", "**/prd-intake.yaml", "**/product-spec.md", "docs/product/**/*.md"],
+      "max_findings": 50
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+installed:
+- roadmap
+- spec-status
+settings:
+  auto_execute_hooks: true
+hooks:
+  after_constitution:
+  - extension: roadmap
+    command: speckit.roadmap.write
+    enabled: true
+    optional: true
+    priority: 10
+    prompt: Draft or update the spec roadmap now? (captures spec-specific decisions
+      and future-spec intent from the constitution discussion)
+    description: Capture a durable roadmap so constitution-phase decisions and not-yet-written-spec
+      intent are not lost
+    condition: null
+  before_implement:
+  - extension: roadmap
+    command: speckit.roadmap.brief
+    enabled: true
+    optional: true
+    priority: 10
+    prompt: Review the roadmap for this spec before implementing?
+    description: Surface the roadmap's expectations (outcome, scope, governing decisions,
+      dependencies) for the spec about to be built
+    condition: null
+  after_implement:
+  - extension: roadmap
+    command: speckit.roadmap.debrief
+    enabled: true
+    optional: true
+    priority: 10
+    prompt: Check the implementation against the roadmap?
+    description: Verify the implemented spec matches its roadmap entry's outcome and
+      scope
+    condition: null
+  - extension: spec-status
+    command: speckit.spec-status.reconcile
+    enabled: true
+    optional: true
+    priority: 10
+    prompt: Check recorded statuses against tasks now?
+    description: Compare each roadmap item's recorded status with its tasks and files
+      after implementation, and propose corrections for approval
+    condition: null

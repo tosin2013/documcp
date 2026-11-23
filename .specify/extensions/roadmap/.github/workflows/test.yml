@@ -1,0 +1,85 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Three independent jobs run in parallel:
+#   bash    — Bats (sh) on Linux + macOS  (macOS also proves bash 3.2 compatibility)
+#   powershell — Pester (ps) on Windows
+#   parity  — cross-platform JSON equality; needs BOTH interpreters, so it gets its
+#             own Linux job where bash + PowerShell install cleanly.
+jobs:
+  manifest:
+    name: Specify 1.0 manifest compatibility
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Install Specify CLI 1.0 development release
+        run: uv tool install --from git+https://github.com/github/spec-kit.git specify-cli
+      - name: Install the extension in a clean project
+        run: |
+          repo="$PWD"
+          project="$(mktemp -d)"
+          cd "$project"
+          git init
+          specify init --here --force --non-interactive --ignore-agent-tools --integration codex
+          specify extension add "$repo" --dev
+          specify extension list | grep -F "Status: Enabled"
+
+  bash:
+    name: Bats (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Bats
+        run: |
+          if [ "$RUNNER_OS" = "macOS" ]; then
+            brew install bats-core
+          else
+            sudo apt-get update && sudo apt-get install -y bats
+          fi
+      - name: Run load-config Bats suite
+        run: bats tests/bash/load-config.bats
+
+  powershell:
+    name: Pester (windows-latest)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Pester
+        shell: pwsh
+        run: Install-Module -Name Pester -Scope CurrentUser -Force -SkipPublisherCheck -MinimumVersion 5.0.0
+      - name: Run load-config Pester suite
+        shell: pwsh
+        run: |
+          $cfg = New-PesterConfiguration
+          $cfg.Run.Path = 'tests/powershell/load-config.Tests.ps1'
+          $cfg.Run.Exit = $true
+          $cfg.TestDrive.Enabled = $false
+          $cfg.Output.Verbosity = 'Detailed'
+          Invoke-Pester -Configuration $cfg
+
+  parity:
+    name: Cross-platform parity (ubuntu-latest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Bats + PowerShell
+        run: |
+          sudo apt-get update && sudo apt-get install -y bats
+          if ! command -v pwsh >/dev/null 2>&1; then
+            sudo apt-get install -y powershell || {
+              wget -q "https://github.com/PowerShell/PowerShell/releases/latest/download/powershell-lts_amd64.deb" -O /tmp/pwsh.deb
+              sudo dpkg -i /tmp/pwsh.deb || sudo apt-get install -f -y
+            }
+          fi
+          pwsh --version
+      - name: Run cross-platform parity suite
+        run: bats tests/parity/parity.bats

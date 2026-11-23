@@ -1,0 +1,4 @@
+[tools]
+jq = "latest"
+
+[tasks]

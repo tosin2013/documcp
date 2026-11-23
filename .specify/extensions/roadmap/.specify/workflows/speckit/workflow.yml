@@ -1,0 +1,118 @@
+schema_version: "1.0"
+workflow:
+  id: "speckit"
+  name: "Speckit Steering Cycle"
+  version: "1.0.0"
+  author: "sjors"
+  description: "Runs the steering flow through specification, dependency wiring, critique, issue sync, checkpoint, and implementation."
+
+inputs:
+  feature_name:
+    type: string
+    required: true
+    prompt: "Feature name"
+  integration:
+    type: string
+    default: "codex"
+    prompt: "Integration to use (e.g. codex, claude, copilot, gemini)"
+
+steps:
+  - id: specify
+    command: speckit.specify
+    integration: "{{ inputs.integration }}"
+    input:
+      args: "{{ inputs.feature_name }}"
+
+  - id: review-spec
+    type: gate
+    message: "Review the generated spec before clarification."
+    options: [approve, reject]
+    on_reject: abort
+
+  - id: clarify
+    command: speckit.clarify
+    integration: "{{ inputs.integration }}"
+    input:
+      args: "{{ inputs.feature_name }}"
+
+  - id: review-clarify
+    type: gate
+    message: "Review the clarified spec before planning."
+    options: [approve, reject]
+    on_reject: abort
+
+  - id: checklist
+    command: speckit.checklist
+    integration: "{{ inputs.integration }}"
+    input:
+      args: "{{ inputs.feature_name }}"
+
+  - id: review-checklist
+    type: gate
+    message: "Resolve the checklist before planning."
+    options: [approve, reject]
+    on_reject: abort
+
+  - id: plan
+    command: speckit.plan
+    integration: "{{ inputs.integration }}"
+    input:
+      args: "{{ inputs.feature_name }}"
+
+  - id: review-plan
+    type: gate
+    message: "Review the plan before generating tasks."
+    options: [approve, reject]
+    on_reject: abort
+
+  - id: tasks
+    command: speckit.tasks
+    integration: "{{ inputs.integration }}"
+    input:
+      args: "{{ inputs.feature_name }}"
+
+  - id: dependencies
+    command: speckit.diagram.dependencies
+    integration: "{{ inputs.integration }}"
+    input:
+      args: "{{ inputs.feature_name }}"
+
+  - id: analyze
+    command: speckit.analyze
+    integration: "{{ inputs.integration }}"
+    input:
+      args: "{{ inputs.feature_name }}"
+
+  - id: critique
+    command: speckit.critique.run
+    integration: "{{ inputs.integration }}"
+    input:
+      args: "{{ inputs.feature_name }}"
+
+  - id: review-ready
+    type: gate
+    message: "Review tasks, dependency outputs, analysis, and critique before issue sync."
+    options: [approve, reject]
+    on_reject: abort
+
+  - id: taskstoissues
+    command: speckit.taskstoissues
+    integration: "{{ inputs.integration }}"
+    input:
+      args: "{{ inputs.feature_name }}"
+
+  - id: checkpoint
+    command: speckit.checkpoint.commit
+    integration: "{{ inputs.integration }}"
+
+  - id: review-implementation-ready
+    type: gate
+    message: "Review issue sync and checkpoint state before implementation."
+    options: [approve, reject]
+    on_reject: abort
+
+  - id: implement
+    command: speckit.implement
+    integration: "{{ inputs.integration }}"
+    input:
+      args: "{{ inputs.feature_name }}"

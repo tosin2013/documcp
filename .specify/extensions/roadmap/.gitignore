@@ -1,0 +1,54 @@
+.DS_Store
+Thumbs.db
+.idea
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*~
+*.bak
+*.orig
+*.tmp
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Fastembed
+.fastembed_cache
+
+# Repomix local snapshots
+repomix.xml
+repomix.md
+repomix.json
+repomix.txt
+
+
+# APM dependencies
+apm_modules/
+
+# Installed speckit core extensions are downloaded dependencies (like apm_modules/),
+# not this repo's source. This repo's own extension source lives at the repo root
+# (extension.yml, commands/, templates/, scripts/); its dogfood install under
+# .specify/extensions/ is a build artifact.
+.specify/extensions/
+
+# Generated agent steering — NOT source, fully regenerable and therefore not committed:
+#   - .claude/ : APM-compiled steering (agents, rules, hooks, commands, settings, and
+#     non-speckit skills) + speckit skills installed by `specify` (tracked in
+#     .specify/integrations/claude.manifest.json). Regenerate with `apm install && apm
+#     compile --target claude` and `specify extension enable`.
+#   - .codex/  : APM-compiled Codex steering (regenerate with `apm compile --target codex`).
+#   - .agents/ : APM-compiled shared skills/agents/hooks.
+# The sources that regenerate these ARE committed: apm.yml, apm.lock.yaml, .specify/, and
+# this extension's own commands/ + scripts/ + templates/.
+.claude/
+.codex/
+.agents/
+
+# APM-generated root agent context + MCP config (regenerate with `apm compile`).
+CLAUDE.md
+AGENTS.md
+.mcp.json

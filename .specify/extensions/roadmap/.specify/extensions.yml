@@ -1,0 +1,256 @@
+installed:
+- agent-context
+- archive
+- brownfield
+- bugfix
+- checkpoint
+- cleanup
+- conduct
+- critique
+- diagram
+- doctor
+- fix-findings
+- fleet
+- github-issues
+- iterate
+- onboard
+- optimize
+- qa
+- reconcile
+- refine
+- retro
+- review
+- roadmap
+- security-review
+- status
+- tinyspec
+- verify
+- verify-tasks
+- worktree
+settings:
+  auto_execute_hooks: true
+hooks:
+  after_specify:
+  - extension: agent-context
+    command: speckit.agent-context.update
+    enabled: true
+    optional: true
+    priority: 10
+    prompt: Execute speckit.agent-context.update?
+    description: Refresh agent context after specification
+    condition: null
+  - extension: refine
+    command: speckit.refine.status
+    enabled: true
+    optional: true
+    priority: 10
+    prompt: Check artifact sync status after specification?
+    description: Show sync status after spec generation
+    condition: null
+  - extension: worktree
+    command: speckit.worktree.create
+    enabled: true
+    optional: true
+    priority: 10
+    prompt: Create an isolated worktree for this new feature?
+    description: Auto-spawn a worktree after a new feature is specified
+    condition: null
+  after_plan:
+  - extension: agent-context
+    command: speckit.agent-context.update
+    enabled: true
+    optional: true
+    priority: 10
+    prompt: Execute speckit.agent-context.update?
+    description: Refresh agent context after planning
+    condition: null
+  - extension: critique
+    command: speckit.critique.run
+    enabled: true
+    optional: true
+    priority: 10
+    prompt: Run spec critique before proceeding to tasks?
+    description: Challenges the spec and plan through product and engineering lenses
+    condition: null
+  - extension: refine
+    command: speckit.refine.status
+    enabled: true
+    optional: true
+    priority: 10
+    prompt: Check artifact sync status after planning?
+    description: Show sync status after plan generation
+    condition: null
+  - extension: security-review
+    command: speckit.security-review.plan
+    enabled: true
+    optional: true
+    priority: 10
+    prompt: Would you like to perform a security review on the proposed technical
+      plan?
+    description: ''
+    condition: null
+  after_init:
+  - extension: brownfield
+    command: speckit.brownfield.scan
+    enabled: true
+    optional: true
+    priority: 10
+    prompt: Scan this existing project to customize spec-kit configuration?
+    description: Auto-scan project after spec-kit init to detect tech stack and conventions
+    condition: null
+  after_implement:
+  - extension: bugfix
+    command: speckit.bugfix.verify
+    enabled: true
+    optional: true
+    priority: 10
+    prompt: Run bugfix consistency check after implementation?
+    description: Verify spec artifact consistency after implementation completes
+    condition: null
+  - extension: cleanup
+    command: speckit.cleanup.run
+    enabled: true
+    optional: true
+    priority: 10
+    prompt: Run cleanup to review implementation changes and identify tech debt?
+    description: Post-implementation quality gate
+    condition: null
+  - extension: fix-findings
+    command: speckit.fix-findings.run
+    enabled: true
+    optional: true
+    priority: 10
+    prompt: Run fix-findings to analyze and resolve spec findings automatically?
+    description: Post-implementation automated finding resolution
+    condition: null
+  - extension: onboard
+    command: speckit.onboard.after-implement
+    enabled: true
+    optional: true
+    priority: 10
+    prompt: Execute speckit.onboard.after-implement?
+    description: ''
+    condition: null
+  - extension: qa
+    command: speckit.qa.run
+    enabled: true
+    optional: true
+    priority: 10
+    prompt: Run QA testing?
+    description: Validates acceptance criteria through browser-driven or CLI-based
+      testing
+    condition: null
+  - extension: review
+    command: speckit.review.run
+    enabled: true
+    optional: true
+    priority: 10
+    prompt: Run PR review on implemented changes?
+    description: Comprehensive review after implementation
+    condition: null
+  - extension: security-review
+    command: speckit.security-review.branch
+    enabled: true
+    optional: true
+    priority: 10
+    prompt: Would you like to scan the new implementation for security vulnerabilities?
+    description: ''
+    condition: null
+  - extension: verify
+    command: speckit.verify.run
+    enabled: true
+    optional: true
+    priority: 10
+    prompt: Run verify to validate implementation against specification?
+    description: Post-implementation verification gate
+    condition: null
+  - extension: verify-tasks
+    command: speckit.verify-tasks.run
+    enabled: true
+    optional: true
+    priority: 10
+    prompt: Run verify-tasks in a fresh session to check for phantom completions
+    description: Post-implementation phantom completion detector
+    condition: null
+  - extension: roadmap
+    command: speckit.roadmap.debrief
+    enabled: true
+    optional: true
+    priority: 10
+    prompt: Check the implementation against the roadmap?
+    description: Verify the implemented spec matches its roadmap entry's outcome and
+      scope
+    condition: null
+  after_tasks:
+  - extension: diagram
+    command: speckit.diagram.dependencies
+    enabled: true
+    optional: true
+    priority: 10
+    prompt: Generate task dependency diagram after task breakdown?
+    description: Auto-generate dependency DAG after tasks are created
+    condition: null
+  - extension: fleet
+    command: speckit.fleet.review
+    enabled: true
+    optional: true
+    priority: 10
+    prompt: Run cross-model review to evaluate plan and tasks before implementation?
+    description: Pre-implementation review gate
+    condition: null
+  - extension: security-review
+    command: speckit.security-review.tasks
+    enabled: true
+    optional: true
+    priority: 10
+    prompt: Would you like to verify that security boundaries are represented in the
+      tasks?
+    description: ''
+    condition: null
+  before_implement:
+  - extension: onboard
+    command: speckit.onboard.before-implement
+    enabled: true
+    optional: true
+    priority: 10
+    prompt: Execute speckit.onboard.before-implement?
+    description: ''
+    condition: null
+  - extension: roadmap
+    command: speckit.roadmap.brief
+    enabled: true
+    optional: true
+    priority: 10
+    prompt: Review the roadmap for this spec before implementing?
+    description: Surface the roadmap's expectations (outcome, scope, governing decisions,
+      dependencies) for the spec about to be built
+    condition: null
+  after_explain:
+  - extension: onboard
+    command: speckit.onboard.after-explain
+    enabled: true
+    optional: true
+    priority: 10
+    prompt: Execute speckit.onboard.after-explain?
+    description: ''
+    condition: null
+  before_specify:
+  - extension: tinyspec
+    command: speckit.tinyspec.classify
+    enabled: true
+    optional: true
+    priority: 10
+    prompt: Check if this task is small enough for the lightweight tinyspec workflow?
+    description: Auto-classify task complexity before starting the full SDD workflow
+    condition: null
+  after_constitution:
+  - extension: roadmap
+    command: speckit.roadmap.write
+    enabled: true
+    optional: true
+    priority: 10
+    prompt: Draft or update the spec roadmap now? (captures spec-specific decisions
+      and future-spec intent from the constitution discussion)
+    description: Capture a durable roadmap so constitution-phase decisions and not-yet-written-spec
+      intent are not lost
+    condition: null
