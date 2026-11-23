@@ -1,10 +1,15 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: (none) → 1.0.0
-Bump rationale: initial roadmap.
+Version change: 1.0.0 → 1.1.0
+Bump rationale: MINOR — new planned spec 004 (zod 4 migration) and a new dependency for 003.
 
-Changes this revision:
+Changes this revision (1.1.0):
+  - Added spec 004 — zod 4 migration (production audit: zod high advisory GHSA-mrhx-c7xc-m3w5)
+  - 003 now depends on 004
+  - Planning PR also ran `npm audit fix` and moved simple-git to 4 (critical advisories)
+
+Changes in 1.0.0:
   - Added spec 001 — v2.0 foundation (Node 24, skills layer, CLI verdict)
   - Added spec 002 — Rename (needs-info: the new name)
   - Added spec 003 — v2.0 release
@@ -95,7 +100,24 @@ Status legend (lifecycle): **undecided** · **needs-info** · **planned** · **s
   pointer and still installs; the old docs domain redirects (301) to the new one.
 - **Scope (in):** version, CHANGELOG, migration note in the README.
 - **Scope (out):** publishing to npm and the domain cutover, which the owner does by hand.
-- **Depends on:** 001, 002
+- **Depends on:** 001, 002, 004
+
+### 004 — zod 4 migration  [status: planned]
+
+- **Description:** Move from zod 3 to zod 4, which fixes a high-severity advisory
+  (GHSA-mrhx-c7xc-m3w5) that `npm audit --production` reports, and replace `zod-to-json-schema`
+  (no zod 4 support) with zod 4's own JSON Schema output.
+- **Outcome:** zod 4 is the only zod; the production audit has no high or critical finding; every
+  MCP tool's published input schema is unchanged, or each difference is listed and accepted by
+  the owner.
+- **Scope (in):** the zod dependency change (in its planning PR, constitution VI), code changes
+  for zod 4's API, and a before/after comparison of all tool input schemas.
+- **Scope (out):** new tools or new parameters.
+- **Depends on:** 001
+- **Governed by:** C-05
+- **Notes:** CI's Security Audit job fails on this advisory until 004 lands; the audit step is
+  not loosened meanwhile. Tried 2026-11-23: zod 4 gives 3 type errors (`ZodTypeDef` in
+  `src/index.ts` and `change-watcher.ts`, `ZodError.errors` in `cleanup-agent-artifacts.ts`).
 
 ## Open Questions
 
@@ -114,4 +136,4 @@ Status legend (lifecycle): **undecided** · **needs-info** · **planned** · **s
 
 ---
 
-**Version**: 1.0.0 | **Ratified**: 2026-11-23 | **Last Amended**: 2026-11-23
+**Version**: 1.1.0 | **Ratified**: 2026-11-23 | **Last Amended**: 2026-11-23

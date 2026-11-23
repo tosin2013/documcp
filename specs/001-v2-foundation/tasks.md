@@ -26,6 +26,7 @@ to exit gracefully"; `.nvmrc`, `engines` and the docs say Node 24.
 - [ ] T003 [US1] Locate the suites that leave handles open (run `npx jest tests/<folder> --detectOpenHandles` per folder under `tests/`, research R3)
 - [ ] T004 [US1] Close each leaked timer, server, watcher or child process in the suites' `afterEach`/`afterAll`, or `.unref()` it in `src/` where a timer outlives its work
 - [ ] T004a [US1] Find the test that writes `.github/workflows/deploy-github-pages.yml` into the repository and make it (and any other) write only under a temporary directory, so a full run leaves `git status` clean
+- [ ] T004b [US1] Make `tests/tools/generate-technical-writer-prompts.test.ts` pass reliably in the full run (it failed once under load on 2026-11-23 and passes alone): remove its timing dependence
 - [ ] T005 [US1] Remove `--forceExit` from the `test:ci` script in `package.json`
 - [ ] T006 [P] [US1] Name Node 24 LTS as the requirement in `README.md` and `CONTRIBUTING.md`
 - [ ] T007 [US1] Run the full suite on Node 24 three times: all pass, no force-exit message, `git status` clean afterwards
