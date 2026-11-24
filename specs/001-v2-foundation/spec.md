@@ -117,7 +117,9 @@ and supports it with the evidence sections below; it links issue #126 and ADR-00
   write only to temporary directories (today a run creates
   `.github/workflows/deploy-github-pages.yml` in the repository).
 - **FR-003b** (US1): No test MAY depend on timing or run order; a test that fails under load
-  and passes alone is fixed (constitution VII).
+  and passes alone is fixed (constitution VII). Known on 2026-11-24:
+  `tests/tools/generate-technical-writer-prompts.test.ts` and
+  `tests/memory/kg-storage-validation.test.ts` ("should log restoration in debug mode").
 - **FR-004** (US1): The README and the contributing guide MUST name Node 24 LTS as the
   requirement.
 - **FR-005** (US2): The repository MUST have a top-level `skills/` folder with one folder per
