@@ -44,14 +44,14 @@ jobs:
         run: npm run lint
 
       - name: Run tests
-        run: npm test -- --forceExit
+        run: npm test
 
       - name: Clean up memory files before coverage run
         run: rm -rf .documcp
 
       - name: Save test results JSON
         if: failure() && matrix.node-version == '24.x'
-        run: npm test -- --forceExit --json --outputFile=test-results.json 2>/dev/null || true
+        run: npm test -- --json --outputFile=test-results.json 2>/dev/null || true
         continue-on-error: true
 
       - name: Upload test results artifact
@@ -64,7 +64,7 @@ jobs:
           retention-days: 7
 
       - name: Run tests with coverage
-        run: npm test -- --coverage --forceExit
+        run: npm test -- --coverage
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
