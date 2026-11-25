@@ -94,17 +94,15 @@ async function validateSingleLink(
 ): Promise<LinkValidationResult> {
   const startTime = Date.now();
 
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeout);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
 
+  try {
     const response = await fetch(url, {
       method: "HEAD",
       signal: controller.signal,
       redirect: "follow",
     });
-
-    clearTimeout(timeoutId);
 
     const responseTime = Date.now() - startTime;
 
@@ -133,6 +131,8 @@ async function validateSingleLink(
       errorMessage: error.message || "Network error",
       lastChecked: new Date().toISOString(),
     };
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
 

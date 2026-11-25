@@ -542,8 +542,22 @@ describe("KGStorage - Validation and Error Handling", () => {
       const entityBackups = backupFiles.filter((f) => f.startsWith("entities"));
       expect(entityBackups.length).toBeGreaterThan(0);
 
+      // Identify the pre-modification backup by content and restore it by
+      // timestamp. This avoids depending on filesystem mtime ordering, which
+      // can tie under load and make `restoreFromBackup` pick the wrong backup.
+      let targetTimestamp: string | null = null;
+      for (const file of entityBackups) {
+        const content = await fs.readFile(join(backupDir, file), "utf-8");
+        if (content.includes("project:debug")) {
+          const match = file.match(/entities-(.*?)\.jsonl/);
+          targetTimestamp = match ? match[1] : null;
+          break;
+        }
+      }
+      expect(targetTimestamp).not.toBeNull();
+
       // Restore (should log in debug mode)
-      await storage.restoreFromBackup("entities");
+      await storage.restoreFromBackup("entities", targetTimestamp!);
 
       // Restore original DEBUG setting
       if (originalDebug !== undefined) {

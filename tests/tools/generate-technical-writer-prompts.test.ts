@@ -7,9 +7,9 @@ describe("generate-technical-writer-prompts", () => {
   let testProjectPath: string;
 
   beforeEach(async () => {
-    // Create temporary test project directory
-    testProjectPath = join(tmpdir(), `test-project-${Date.now()}`);
-    await fs.mkdir(testProjectPath, { recursive: true });
+    // Create a unique temporary test project directory. mkdtemp guarantees a
+    // unique suffix, so the path never collides under load (no Date.now()).
+    testProjectPath = await fs.mkdtemp(join(tmpdir(), "test-project-"));
   });
 
   afterEach(async () => {

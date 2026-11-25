@@ -47,7 +47,7 @@ DocuMCP analyzes your repository, recommends the perfect static site generator (
 
 ## Requirements
 
-- **Node.js**: 20.0.0 or higher
+- **Node.js**: 24 LTS or higher
 - **npm**: Latest stable version
 
 ## Installation

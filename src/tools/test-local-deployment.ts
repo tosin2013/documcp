@@ -338,38 +338,34 @@ async function startLocalServer(
 ): Promise<{ started: boolean; url?: string }> {
   return new Promise((resolve) => {
     let serverProcess: any = null;
+    let serverTimeout: NodeJS.Timeout | null = null;
     let resolved = false;
 
     const cleanup = () => {
-      if (serverProcess && !serverProcess.killed) {
+      if (serverProcess && serverProcess.pid && !serverProcess.killed) {
         try {
-          serverProcess.kill("SIGTERM");
-          // Force kill if SIGTERM doesn't work after 1 second
-          const forceKillTimeout = setTimeout(() => {
-            if (serverProcess && !serverProcess.killed) {
-              serverProcess.kill("SIGKILL");
-            }
-          }, 1000);
-
-          // Clear the timeout if process exits normally
-          serverProcess.on("exit", () => {
-            clearTimeout(forceKillTimeout);
-          });
+          // Kill the whole process group (negative PID): the server is spawned
+          // detached so it leads its own group, and killing only the `sh`
+          // wrapper would orphan the real server process.
+          process.kill(-serverProcess.pid, "SIGTERM");
         } catch (error) {
-          // Process may already be dead
+          // Process group may already be gone
         }
       }
     };
 
     const safeResolve = (result: { started: boolean; url?: string }) => {
-      if (!resolved) {
-        resolved = true;
-        cleanup();
-        resolve(result);
+      if (resolved) return;
+      resolved = true;
+      if (serverTimeout) {
+        clearTimeout(serverTimeout);
+        serverTimeout = null;
       }
+      cleanup();
+      resolve(result);
     };
 
-    const serverTimeout = setTimeout(() => {
+    serverTimeout = setTimeout(() => {
       safeResolve({ started: false });
     }, timeout * 1000);
 
@@ -389,11 +385,20 @@ async function startLocalServer(
 
       serverProcess = spawn("sh", ["-c", command], {
         cwd: repoPath,
-        detached: false,
+        detached: true,
         stdio: "pipe",
       });
 
       let serverStarted = false;
+
+      const markStarted = () => {
+        if (serverStarted) return;
+        serverStarted = true;
+        safeResolve({
+          started: true,
+          url: `http://localhost:${port}`,
+        });
+      };
 
       serverProcess.stdout?.on("data", (data: Buffer) => {
         const output = data.toString();
@@ -408,13 +413,7 @@ async function startLocalServer(
             output.includes(`http://127.0.0.1:${port}`) ||
             output.includes(`http://localhost:${port}`))
         ) {
-          serverStarted = true;
-          clearTimeout(serverTimeout);
-
-          safeResolve({
-            started: true,
-            url: `http://localhost:${port}`,
-          });
+          markStarted();
         }
       });
 
@@ -428,29 +427,18 @@ async function startLocalServer(
             error.includes("Local:") ||
             error.includes("localhost:"))
         ) {
-          serverStarted = true;
-          clearTimeout(serverTimeout);
-
-          safeResolve({
-            started: true,
-            url: `http://localhost:${port}`,
-          });
+          markStarted();
         }
       });
 
       serverProcess.on("error", (_error: Error) => {
-        clearTimeout(serverTimeout);
         safeResolve({ started: false });
       });
 
       serverProcess.on("exit", () => {
-        clearTimeout(serverTimeout);
-        if (!resolved) {
-          safeResolve({ started: false });
-        }
+        safeResolve({ started: false });
       });
     } catch (_error) {
-      clearTimeout(serverTimeout);
       safeResolve({ started: false });
     }
   });
