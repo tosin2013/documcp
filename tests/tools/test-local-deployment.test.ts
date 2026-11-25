@@ -1,11 +1,34 @@
 import { testLocalDeployment } from "../../src/tools/test-local-deployment.js";
 import * as childProcess from "child_process";
 import * as fs from "fs";
+import { EventEmitter } from "events";
 
-// Create simpler mocking approach
+// Mock only `spawn` (keep `exec` real for the build paths) so no test starts a
+// real server process. The mock child exits immediately so the server-start
+// path resolves without waiting for the real timeout.
+jest.mock("child_process", () => {
+  const actual = jest.requireActual("child_process");
+  return {
+    ...actual,
+    spawn: jest.fn(),
+  };
+});
 
 describe("testLocalDeployment", () => {
   const testRepoPath = process.cwd();
+
+  beforeEach(() => {
+    (childProcess.spawn as any).mockImplementation(() => {
+      const child = new EventEmitter() as any;
+      child.stdout = new EventEmitter();
+      child.stderr = new EventEmitter();
+      child.pid = 424242;
+      child.killed = true;
+      child.kill = jest.fn();
+      setImmediate(() => child.emit("exit", 0, "SIGTERM"));
+      return child;
+    });
+  });
 
   afterEach(() => {
     jest.restoreAllMocks();

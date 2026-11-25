@@ -60,6 +60,7 @@ export class MemoryPruningSystem extends EventEmitter {
   private defaultPolicy: PruningPolicy;
   private compressionCache: Map<string, any>;
   private similarityCache: Map<string, Map<string, number>>;
+  private cleanupInterval: NodeJS.Timeout | null = null;
 
   constructor(
     storage: JSONLStorage,
@@ -87,8 +88,6 @@ export class MemoryPruningSystem extends EventEmitter {
       compressionThreshold: 30, // Compress after 30 days
       redundancyThreshold: 0.85, // 85% similarity threshold
     };
-
-    this.setupPeriodicCleanup();
   }
 
   /**
@@ -803,11 +802,31 @@ export class MemoryPruningSystem extends EventEmitter {
   }
 
   /**
+   * Start the periodic cleanup job. The server starts this explicitly when it
+   * wants background optimization; nothing calls it today, so constructing the
+   * class no longer leaks a timer.
+   */
+  start(): void {
+    if (this.cleanupInterval) return;
+    this.setupPeriodicCleanup();
+  }
+
+  /**
+   * Stop the periodic cleanup job.
+   */
+  stop(): void {
+    if (this.cleanupInterval) {
+      clearInterval(this.cleanupInterval);
+      this.cleanupInterval = null;
+    }
+  }
+
+  /**
    * Setup periodic cleanup
    */
   private setupPeriodicCleanup(): void {
     // Run optimization every 24 hours
-    setInterval(
+    this.cleanupInterval = setInterval(
       async () => {
         try {
           await this.prune();

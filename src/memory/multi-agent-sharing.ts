@@ -139,10 +139,29 @@ export class MultiAgentMemorySharing extends EventEmitter {
     await this.loadKnownAgents();
     await this.loadPendingSyncRequests();
 
-    // Start periodic sync
-    this.startPeriodicSync();
+    // Periodic sync now starts only from start(); nothing calls it today, so
+    // initialize() no longer leaks a timer.
 
     this.emit("initialized", { agentId: this.agentId });
+  }
+
+  /**
+   * Start the periodic sync job. The server starts this explicitly when it
+   * wants background synchronization; nothing calls it today.
+   */
+  start(): void {
+    if (this.syncInterval) return;
+    this.startPeriodicSync();
+  }
+
+  /**
+   * Stop the periodic sync job.
+   */
+  stop(): void {
+    if (this.syncInterval) {
+      clearInterval(this.syncInterval);
+      this.syncInterval = null;
+    }
   }
 
   /**

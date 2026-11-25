@@ -1,10 +1,11 @@
 import { describe, it, expect, beforeEach, afterEach } from "@jest/globals";
 import * as fs from "fs/promises";
 import * as path from "path";
+import * as os from "os";
 import { deployPages } from "../../src/tools/deploy-pages.js";
 
 describe("deployPages", () => {
-  const testTempDir = path.join(__dirname, "../../.tmp/test-deploy-pages");
+  const testTempDir = path.join(os.tmpdir(), "documcp-test-deploy-pages");
 
   beforeEach(async () => {
     // Create test directory
@@ -316,29 +317,46 @@ describe("deployPages", () => {
 
     it("should handle remote repository URL", async () => {
       const remoteRepo = "https://github.com/user/repo.git";
-      const result = await deployPages({
-        repository: remoteRepo,
-        ssg: "jekyll",
-      });
 
-      expect(result.content).toBeDefined();
+      // `deployPages` resolves remote URLs to the current working directory;
+      // run from the temporary directory so the generated workflow is written
+      // there instead of the repository.
+      const originalCwd = process.cwd();
+      process.chdir(testTempDir);
+      try {
+        const result = await deployPages({
+          repository: remoteRepo,
+          ssg: "jekyll",
+        });
 
-      const data = JSON.parse(result.content[0].text);
-      expect(data.repoPath).toBe(".");
-      expect(data.repository).toBe(remoteRepo);
+        expect(result.content).toBeDefined();
+
+        const data = JSON.parse(result.content[0].text);
+        expect(data.repoPath).toBe(".");
+        expect(data.repository).toBe(remoteRepo);
+      } finally {
+        process.chdir(originalCwd);
+      }
     });
 
     it("should handle HTTP repository URL", async () => {
       const httpRepo = "http://github.com/user/repo.git";
-      const result = await deployPages({
-        repository: httpRepo,
-        ssg: "jekyll",
-      });
 
-      expect(result.content).toBeDefined();
+      const originalCwd = process.cwd();
+      process.chdir(testTempDir);
+      try {
+        const result = await deployPages({
+          repository: httpRepo,
+          ssg: "jekyll",
+        });
 
-      const data = JSON.parse(result.content[0].text);
-      expect(data.repoPath).toBe(".");
+        expect(result.content).toBeDefined();
+
+        const data = JSON.parse(result.content[0].text);
+        expect(data.repoPath).toBe(".");
+      } finally {
+        process.chdir(originalCwd);
+      }
     });
   });
 

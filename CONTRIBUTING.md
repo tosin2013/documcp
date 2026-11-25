@@ -277,7 +277,7 @@ See [PR #143](https://github.com/tosin2013/documcp/pull/143) - Skip commitlint v
 
 ### Prerequisites
 
-- Node.js 20.x or higher
+- Node.js 24 LTS or higher
 - npm (comes with Node.js)
 - Git
 
