@@ -153,6 +153,7 @@ The union of the slices' lists below, for a check or run of the whole item.
 
 - `.nvmrc`
 - `package.json`
+- `package-lock.json`
 - `src/*`
 - `tests/*`
 - `skills/*`
@@ -164,6 +165,7 @@ The union of the slices' lists below, for a check or run of the whole item.
 
 - `.nvmrc`
 - `package.json`
+- `package-lock.json` (only the root package's `engines`, with `engines.node`; no dependency changes)
 - `src/*`
 - `tests/*`
 - `README.md`
