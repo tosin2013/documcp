@@ -27,6 +27,24 @@
   timer outlives its work), and drop `--forceExit` from `test:ci`.
 - **Note:** `jest --detectOpenHandles` runs in band and took over 10 minutes on the full suite;
   run it per folder (`npx jest tests/<folder> --detectOpenHandles`) to locate the leaks.
+- **Findings (2026-11-25):** a per-folder scan of `main` on Node 24.22.3
+  (`npx jest tests/<folder> --detectOpenHandles --runInBand`, and each top-level test file
+  alone) found every leak and the only test that writes into the repository:
+  - `tests/memory/kg-link-validator.test.ts` (lines 92, 104 and 146) sends real HEAD requests
+    to `httpstat.us`, against constitution VII (offline tests). `validateSingleLink` in
+    `src/memory/kg-link-validator.ts` (line 99) clears its abort timer only when `fetch`
+    succeeds. The folder's 380 tests passed in 18 s, then the process never exited (stopped at
+    900 s).
+  - `tests/change-watcher-priority.integration.test.ts` starts a `ChangeWatcher` (line 190)
+    and never stops it (`stop()` is at `src/utils/change-watcher.ts:228`); the test passes,
+    then the process never exits (stopped at 300 s).
+  - `tests/tools/deploy-pages.test.ts` is the only file that writes into the repository
+    (`.github/workflows/deploy-github-pages.yml`); `all-tools`, `deploy-site` and
+    `simple-coverage` leave it clean.
+  - Every other folder and top-level test file: no open handles, nothing written.
+    `tests/performance/` is excluded by the Jest config.
+- **So:** US1's fixes are known changes (tasks T004–T004a); there is nothing left to search
+  for in the build.
 
 ## R4 — Skill format
 
