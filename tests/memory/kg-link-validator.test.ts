@@ -87,11 +87,19 @@ describe("KG Link Validator", () => {
     });
 
     it("should handle validation errors gracefully", async () => {
+      const fetchMock = jest.spyOn(globalThis, "fetch").mockResolvedValue({
+        ok: false,
+        status: 500,
+        statusText: "Internal Server Error",
+      } as any);
+
       const urls = ["https://httpstat.us/500"]; // Returns 500 error
 
       const result = await validateExternalLinks(urls, {
         timeout: 5000,
       });
+
+      fetchMock.mockRestore();
 
       expect(result.totalLinks).toBe(1);
       // Should be marked as broken or unknown
@@ -99,11 +107,19 @@ describe("KG Link Validator", () => {
     });
 
     it("should count warning links correctly", async () => {
+      const fetchMock = jest.spyOn(globalThis, "fetch").mockResolvedValue({
+        ok: true,
+        status: 301,
+        statusText: "Moved Permanently",
+      } as any);
+
       const urls = ["https://httpstat.us/301"]; // Redirect
 
       const result = await validateExternalLinks(urls, {
         timeout: 5000,
       });
+
+      fetchMock.mockRestore();
 
       expect(result.totalLinks).toBe(1);
       // Should handle redirects as valid (fetch follows redirects)
@@ -141,11 +157,19 @@ describe("KG Link Validator", () => {
     });
 
     it("should include response time in broken results", async () => {
+      const fetchMock = jest.spyOn(globalThis, "fetch").mockResolvedValue({
+        ok: false,
+        status: 404,
+        statusText: "Not Found",
+      } as any);
+
       const urls = ["https://httpstat.us/404"];
 
       const result = await validateExternalLinks(urls, {
         timeout: 5000,
       });
+
+      fetchMock.mockRestore();
 
       expect(result.results[0].lastChecked).toBeDefined();
       if (

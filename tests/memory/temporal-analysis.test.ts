@@ -164,4 +164,42 @@ describe("TemporalMemoryAnalysis", () => {
       ).resolves.toBeDefined();
     });
   });
+
+  describe("Periodic analysis (start/stop)", () => {
+    afterEach(() => {
+      temporalAnalysis.stop();
+      jest.useRealTimers();
+    });
+
+    test("starts no timer until start() is called, and start() is idempotent", () => {
+      jest.useFakeTimers();
+      expect(jest.getTimerCount()).toBe(0);
+      temporalAnalysis.start();
+      temporalAnalysis.start();
+      expect(jest.getTimerCount()).toBe(1);
+      temporalAnalysis.stop();
+      expect(jest.getTimerCount()).toBe(0);
+      temporalAnalysis.stop(); // stopping twice is harmless
+    });
+
+    test("emits the outcome of each periodic run", async () => {
+      jest.useFakeTimers();
+      const insights = jest
+        .spyOn(temporalAnalysis, "getTemporalInsights")
+        .mockResolvedValueOnce([] as any)
+        .mockRejectedValueOnce(new Error("boom"));
+      const completed = jest.fn();
+      const failed = jest.fn();
+      temporalAnalysis.on("periodic_analysis_completed", completed);
+      temporalAnalysis.on("periodic_analysis_error", failed);
+      temporalAnalysis.start();
+
+      await jest.advanceTimersByTimeAsync(6 * 60 * 60 * 1000);
+      expect(completed).toHaveBeenCalledWith({ insights: 0 });
+
+      await jest.advanceTimersByTimeAsync(6 * 60 * 60 * 1000);
+      expect(failed).toHaveBeenCalledWith({ error: "boom" });
+      expect(insights).toHaveBeenCalledTimes(2);
+    });
+  });
 });

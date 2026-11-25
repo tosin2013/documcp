@@ -91,6 +91,7 @@ export class TemporalMemoryAnalysis extends EventEmitter {
   private patternCache: Map<string, TemporalPattern[]>;
   private metricsCache: Map<string, TemporalMetrics>;
   private predictionCache: Map<string, PredictionResult>;
+  private analysisInterval: NodeJS.Timeout | null = null;
 
   constructor(
     storage: JSONLStorage,
@@ -106,8 +107,6 @@ export class TemporalMemoryAnalysis extends EventEmitter {
     this.patternCache = new Map();
     this.metricsCache = new Map();
     this.predictionCache = new Map();
-
-    this.setupPeriodicAnalysis();
   }
 
   /**
@@ -1420,11 +1419,31 @@ export class TemporalMemoryAnalysis extends EventEmitter {
   }
 
   /**
+   * Start the periodic analysis job. The server starts this explicitly when it
+   * wants background analysis; nothing calls it today, so constructing the
+   * class no longer leaks a timer.
+   */
+  start(): void {
+    if (this.analysisInterval) return;
+    this.setupPeriodicAnalysis();
+  }
+
+  /**
+   * Stop the periodic analysis job.
+   */
+  stop(): void {
+    if (this.analysisInterval) {
+      clearInterval(this.analysisInterval);
+      this.analysisInterval = null;
+    }
+  }
+
+  /**
    * Setup periodic analysis
    */
   private setupPeriodicAnalysis(): void {
     // Run analysis every 6 hours
-    setInterval(
+    this.analysisInterval = setInterval(
       async () => {
         try {
           const insights = await this.getTemporalInsights();

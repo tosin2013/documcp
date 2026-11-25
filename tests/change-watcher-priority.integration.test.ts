@@ -206,5 +206,7 @@ describe("ChangeWatcher priority integration", () => {
     expect(result.driftResults[0].priorityScore?.factors.usageFrequency).toBe(
       1,
     );
+
+    await watcher.stop();
   });
 });

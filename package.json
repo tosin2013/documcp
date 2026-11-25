@@ -16,7 +16,7 @@
     "test": "jest",
     "test:coverage": "jest --coverage",
     "test:performance": "jest --testPathPattern=benchmarks && npm run benchmark:scale",
-    "test:ci": "jest --coverage --ci --watchAll=false --forceExit",
+    "test:ci": "jest --coverage --ci --watchAll=false",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
     "format": "prettier --write \"src/**/*.ts\"",
@@ -115,7 +115,7 @@
     "typescript": "^5.3.3"
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=24"
   },
   "overrides": {
     "markdown-link-check": {
