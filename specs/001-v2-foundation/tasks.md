@@ -22,10 +22,9 @@ worker.
 to exit gracefully"; `.nvmrc`, `engines` and the docs say Node 24.
 
 - [ ] T001 [P] [US1] Set `.nvmrc` to `24`
-- [ ] T002 [P] [US1] Set `engines.node` in `package.json` to `>=24`
-- [ ] T003 [US1] Locate the suites that leave handles open (run `npx jest tests/<folder> --detectOpenHandles` per folder under `tests/`, research R3)
-- [ ] T004 [US1] Close each leaked timer, server, watcher or child process in the suites' `afterEach`/`afterAll`, or `.unref()` it in `src/` where a timer outlives its work
-- [ ] T004a [US1] Find the test that writes `.github/workflows/deploy-github-pages.yml` into the repository and make it (and any other) write only under a temporary directory, so a full run leaves `git status` clean
+- [ ] T002 [P] [US1] Set `engines.node` in `package.json` to `>=24`; don't run `npm install` (`package-lock.json` is outside US1's allowed paths and needn't change)
+- [ ] T004 [US1] Close the two leaks research R3 found: in `tests/memory/kg-link-validator.test.ts`, replace the real requests to `httpstat.us` with a mocked `fetch` (tests stay offline), and in `src/memory/kg-link-validator.ts` `validateSingleLink`, clear the abort timer in a `finally` block; in `tests/change-watcher-priority.integration.test.ts`, stop the `ChangeWatcher` (`await watcher.stop()`) when the test ends
+- [ ] T004a [US1] Make `tests/tools/deploy-pages.test.ts` write only under a temporary directory, so a full run no longer creates `.github/workflows/deploy-github-pages.yml` in the repository (research R3: the only test that writes there)
 - [ ] T004b [US1] Make `tests/tools/generate-technical-writer-prompts.test.ts` pass reliably in the full run (it failed once under load on 2026-11-23 and passes alone): remove its timing dependence
 - [ ] T004c [US1] Make `tests/memory/kg-storage-validation.test.ts` › "should log restoration in debug mode" pass reliably in the full run (on 2 CPUs it failed 1 run in 4 on 2026-11-24 and passes alone): remove its timing or order dependence
 - [ ] T005 [US1] Remove `--forceExit` from the `test:ci` script in `package.json`
