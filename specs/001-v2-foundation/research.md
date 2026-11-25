@@ -45,6 +45,28 @@
     `tests/performance/` is excluded by the Jest config.
 - **So:** US1's fixes are known changes (tasks T004–T004a); there is nothing left to search
   for in the build.
+- **Findings, part 2 (2026-11-25, after forge run `20261125T200730Z`):** with attempt 2's
+  changes the full suite passes (1,706 tests, 33 s, exit 0) and writes nothing into the
+  repository, but Jest still force-exits a *worker process*. Running each file alone (in band)
+  can't show such leaks; running each `tests/memory/` and `tests/tools/` file together with a
+  small test at `--maxWorkers=2` found the two that do:
+  - `tests/memory/temporal-analysis.test.ts`: `TemporalMemoryAnalysis` starts a 6-hour
+    `setInterval` in its constructor (`src/memory/temporal-analysis.ts`,
+    `setupPeriodicAnalysis`). `MemoryPruningSystem` (24 hours, `src/memory/pruning.ts`) and
+    `MultiAgentMemorySharing` (5 minutes, `src/memory/multi-agent-sharing.ts`) do the same. The
+    server never creates these classes: its `memory_pruning`, `memory_temporal_analysis` and
+    `memory_agent_network` tools are stubs that answer "feature is being developed"
+    (`src/index.ts`), so the timers only ever run in tests. `.unref()` alone was not enough.
+  - `tests/tools/test-local-deployment.test.ts` ("should exercise server start paths with short
+    timeout") runs the real tool, which spawns `sh -c "hugo server --port …"`
+    (`src/tools/test-local-deployment.ts`): a unit test that starts real processes (against
+    constitution VII). Its cleanup sends SIGTERM to the `sh` wrapper only (`.killed` is then
+    true, so the SIGKILL fallback never runs), and the server timeout isn't cleared on every
+    path.
+- **Decision:** no timers in constructors (the periodic jobs start only from an explicit
+  `start()`, which nothing calls today); the local-deployment test mocks `spawn`, and the tool
+  clears its timer on every path and stops the whole process group. Whether to keep, remove or
+  implement the three memory subsystems is roadmap item 005 (deferred).
 
 ## R4 — Skill format
 

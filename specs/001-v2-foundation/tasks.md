@@ -22,9 +22,11 @@ worker.
 to exit gracefully"; `.nvmrc`, `engines` and the docs say Node 24.
 
 - [ ] T001 [P] [US1] Set `.nvmrc` to `24`
-- [ ] T002 [P] [US1] Set `engines.node` in `package.json` to `>=24`; don't run `npm install` (`package-lock.json` is outside US1's allowed paths and needn't change)
+- [ ] T002 [P] [US1] Set `engines.node` in `package.json` to `>=24`, and the root package's `engines` in `package-lock.json` to match; change nothing else in the lock file (no dependency changes, constitution VI)
 - [ ] T004 [US1] Close the two leaks research R3 found: in `tests/memory/kg-link-validator.test.ts`, replace the real requests to `httpstat.us` with a mocked `fetch` (tests stay offline), and in `src/memory/kg-link-validator.ts` `validateSingleLink`, clear the abort timer in a `finally` block; in `tests/change-watcher-priority.integration.test.ts`, stop the `ChangeWatcher` (`await watcher.stop()`) when the test ends
 - [ ] T004a [US1] Make `tests/tools/deploy-pages.test.ts` write only under a temporary directory, so a full run no longer creates `.github/workflows/deploy-github-pages.yml` in the repository (research R3: the only test that writes there)
+- [ ] T004d [US1] Remove the `setInterval` calls from the constructors of `TemporalMemoryAnalysis` (`src/memory/temporal-analysis.ts`), `MemoryPruningSystem` (`src/memory/pruning.ts`) and `MultiAgentMemorySharing` (`src/memory/multi-agent-sharing.ts`): each class gets a `start()` that starts its periodic job and a `stop()` that clears it, and nothing calls `start()` today (research R3, part 2); keep the public methods and the stub MCP tools unchanged
+- [ ] T004e [US1] In `tests/tools/test-local-deployment.test.ts`, mock `child_process.spawn` so no test starts a real server; in `src/tools/test-local-deployment.ts`, clear the server timeout on every path and stop the whole process group (spawn with `detached: true`, then `process.kill(-pid, …)`) instead of only the `sh` wrapper (research R3, part 2)
 - [ ] T004b [US1] Make `tests/tools/generate-technical-writer-prompts.test.ts` pass reliably in the full run (it failed once under load on 2026-11-23 and passes alone): remove its timing dependence
 - [ ] T004c [US1] Make `tests/memory/kg-storage-validation.test.ts` › "should log restoration in debug mode" pass reliably in the full run (on 2 CPUs it failed 1 run in 4 on 2026-11-24 and passes alone): remove its timing or order dependence
 - [ ] T005 [US1] Remove `--forceExit` from the `test:ci` script in `package.json`

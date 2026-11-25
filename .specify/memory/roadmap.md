@@ -1,7 +1,10 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 1.1.0 → 1.1.1
+Version change: 1.1.1 → 1.2.0
+Bump rationale: MINOR — new deferred item 005 (unused memory subsystems).
+
+Prior: Version change: 1.1.0 → 1.1.1
 Bump rationale: PATCH — Q3 moved into 001's notes (001 answers it).
 
 Prior: Version change: 1.0.0 → 1.1.0
@@ -123,6 +126,22 @@ Status legend (lifecycle): **undecided** · **needs-info** · **planned** · **s
   not loosened meanwhile. Tried 2026-11-23: zod 4 gives 3 type errors (`ZodTypeDef` in
   `src/index.ts` and `change-watcher.ts`, `ZodError.errors` in `cleanup-agent-artifacts.ts`).
 
+### 005 — Unused memory subsystems: remove or implement  [status: deferred]
+
+- **Description:** Decide the fate of the memory subsystems behind three stub MCP tools
+  (`memory_pruning`, `memory_temporal_analysis`, `memory_agent_network`): the classes
+  `MemoryPruningSystem`, `TemporalMemoryAnalysis` and `MultiAgentMemorySharing` (about 3,200
+  lines with `visualization.ts` and `export-import.ts`) exist and are tested, but the server
+  never uses them; its tools answer "feature is being developed".
+- **Outcome:** _to be defined_: either the unused code is removed (the three tools stay as they
+  are, or are retired with the owner's approval, constitution IV), or the tools are implemented
+  on top of it (a new feature, after 2.0, C-05).
+- **Scope (in):** _to be defined_
+- **Depends on:** 001
+- **Notes:** Added 2026-11-25 (owner), from 001 US1's leak research: their constructor timers
+  kept Jest workers alive (fixed in 001 by not starting timers in constructors). Deferred: the
+  owner doesn't see their value yet.
+
 ## Open Questions
 
 - Q1 — The new product name (owner decision, C-04). Unblocks 002.
@@ -140,4 +159,4 @@ Status legend (lifecycle): **undecided** · **needs-info** · **planned** · **s
 
 ---
 
-**Version**: 1.1.1 | **Ratified**: 2026-11-23 | **Last Amended**: 2026-11-23
+**Version**: 1.2.0 | **Ratified**: 2026-11-23 | **Last Amended**: 2026-11-25
