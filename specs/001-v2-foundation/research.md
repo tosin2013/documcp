@@ -89,6 +89,12 @@
 - **Finding:** `package.json` has no `files` field and there is no `.npmignore`, so npm publishes
   everything `.gitignore` doesn't exclude; `skills/` is included. US2 adds a test with
   `npm pack --dry-run --json` to keep it so.
+- **Finding (2026-11-26, forge run `20261126T160519Z`):** `npm pack` writes to its cache (logs,
+  the update check) and fails with exit 243 when the cache directory is read-only, as it is in
+  forge's offline grader; the test passed in the worker and on a normal machine. With
+  `npm_config_cache` pointing at a fresh temporary directory, `npm_config_offline=true` and
+  `npm_config_update_notifier=false`, `npm pack --dry-run --json --ignore-scripts` succeeds with a
+  read-only home and no network, and still lists `skills/`.
 
 ## R7 — The CLI question
 

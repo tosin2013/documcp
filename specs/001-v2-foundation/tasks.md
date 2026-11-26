@@ -48,7 +48,7 @@ through DocuMCP's tools, and a test keeps it in step with the tool list.
 
 - [ ] T008 [P] [US2] Add `tests/skills/skill-format.test.ts`: every `skills/*/SKILL.md` has frontmatter `name` equal to its folder and a non-empty `description` (contracts/skill.md)
 - [ ] T009 [P] [US2] Add `tests/skills/skill-tools.test.ts`: every DocuMCP tool the skill names is in `TOOLS` in `src/index.ts`, with the parameter names the skill uses (research R5)
-- [ ] T010 [P] [US2] Add `tests/skills/skill-packaging.test.ts`: `npm pack --dry-run --json` includes `skills/documentation-analysis/SKILL.md` (research R6)
+- [ ] T010 [P] [US2] Add `tests/skills/skill-packaging.test.ts`: `npm pack --dry-run --json --ignore-scripts` includes `skills/documentation-analysis/SKILL.md`; run it with `npm_config_cache` set to a fresh temporary directory, `npm_config_offline=true` and `npm_config_update_notifier=false` in its environment, so it works where the npm cache is read-only and there is no network (research R6)
 
 ### Implementation for User Story 2
 
