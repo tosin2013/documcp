@@ -1,7 +1,11 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 1.1.1 → 1.2.0
+Version change: 1.2.0 → 1.2.1
+Bump rationale: PATCH — 004 specced as a dependency item; its dependency on 001 dropped (it needs
+only Node 24, which 001's US1 merged).
+
+Prior: Version change: 1.1.1 → 1.2.0
 Bump rationale: MINOR — new deferred item 005 (unused memory subsystems).
 
 Prior: Version change: 1.1.0 → 1.1.1
@@ -109,7 +113,7 @@ Status legend (lifecycle): **undecided** · **needs-info** · **planned** · **s
 - **Scope (out):** publishing to npm and the domain cutover, which the owner does by hand.
 - **Depends on:** 001, 002, 004
 
-### 004 — zod 4 migration  [status: planned]
+### 004 — zod 4 migration  [status: specced]
 
 - **Description:** Move from zod 3 to zod 4, which fixes a high-severity advisory
   (GHSA-mrhx-c7xc-m3w5) that `npm audit --production` reports, and replace `zod-to-json-schema`
@@ -120,11 +124,15 @@ Status legend (lifecycle): **undecided** · **needs-info** · **planned** · **s
 - **Scope (in):** the zod dependency change (in its planning PR, constitution VI), code changes
   for zod 4's API, and a before/after comparison of all tool input schemas.
 - **Scope (out):** new tools or new parameters.
-- **Depends on:** 001
+- **Depends on:** none
 - **Governed by:** C-05
+- **Spec dir:** specs/004-zod-4-migration/
 - **Notes:** CI's Security Audit job fails on this advisory until 004 lands; the audit step is
   not loosened meanwhile. Tried 2026-11-23: zod 4 gives 3 type errors (`ZodTypeDef` in
   `src/index.ts` and `change-watcher.ts`, `ZodError.errors` in `cleanup-agent-artifacts.ts`).
+  2026-11-27: specced as a dependency item (approved bump: commit `d63d0e1` on `deps/zod-4`);
+  research found one helper keeps all 52 tool schemas identical. No longer depends on 001: it
+  needs only Node 24, which 001's US1 merged, and readiness requires dependencies `verified`.
 
 ### 005 — Unused memory subsystems: remove or implement  [status: deferred]
 
