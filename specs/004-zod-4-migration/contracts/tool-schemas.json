@@ -1,0 +1,2194 @@
+[
+ {
+  "description": "Analyze repository structure, dependencies, and documentation needs",
+  "inputSchema": {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "additionalProperties": false,
+   "properties": {
+    "depth": {
+     "default": "standard",
+     "enum": [
+      "quick",
+      "standard",
+      "deep"
+     ],
+     "type": "string"
+    },
+    "path": {
+     "description": "Path to the repository to analyze",
+     "type": "string"
+    }
+   },
+   "required": [
+    "path"
+   ],
+   "type": "object"
+  },
+  "name": "analyze_repository"
+ },
+ {
+  "description": "Recommend the best static site generator based on project analysis and user preferences",
+  "inputSchema": {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "additionalProperties": false,
+   "properties": {
+    "analysisId": {
+     "description": "ID from previous repository analysis",
+     "type": "string"
+    },
+    "preferences": {
+     "additionalProperties": false,
+     "properties": {
+      "ecosystem": {
+       "enum": [
+        "javascript",
+        "python",
+        "ruby",
+        "go",
+        "any"
+       ],
+       "type": "string"
+      },
+      "priority": {
+       "enum": [
+        "simplicity",
+        "features",
+        "performance"
+       ],
+       "type": "string"
+      }
+     },
+     "type": "object"
+    },
+    "userId": {
+     "default": "default",
+     "description": "User ID for personalized recommendations based on usage history",
+     "type": "string"
+    }
+   },
+   "required": [
+    "analysisId"
+   ],
+   "type": "object"
+  },
+  "name": "recommend_ssg"
+ },
+ {
+  "description": "Generate configuration files for the selected static site generator",
+  "inputSchema": {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "additionalProperties": false,
+   "properties": {
+    "outputPath": {
+     "description": "Where to generate config files",
+     "type": "string"
+    },
+    "projectDescription": {
+     "type": "string"
+    },
+    "projectName": {
+     "type": "string"
+    },
+    "ssg": {
+     "enum": [
+      "jekyll",
+      "hugo",
+      "docusaurus",
+      "mkdocs",
+      "eleventy"
+     ],
+     "type": "string"
+    }
+   },
+   "required": [
+    "ssg",
+    "projectName",
+    "outputPath"
+   ],
+   "type": "object"
+  },
+  "name": "generate_config"
+ },
+ {
+  "description": "Create Diataxis-compliant documentation structure",
+  "inputSchema": {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "additionalProperties": false,
+   "properties": {
+    "includeExamples": {
+     "default": true,
+     "type": "boolean"
+    },
+    "path": {
+     "description": "Root path for documentation",
+     "type": "string"
+    },
+    "ssg": {
+     "enum": [
+      "jekyll",
+      "hugo",
+      "docusaurus",
+      "mkdocs",
+      "eleventy"
+     ],
+     "type": "string"
+    }
+   },
+   "required": [
+    "path",
+    "ssg"
+   ],
+   "type": "object"
+  },
+  "name": "setup_structure"
+ },
+ {
+  "description": "Generate Playwright E2E test setup for documentation site (containers + CI/CD)",
+  "inputSchema": {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "additionalProperties": false,
+   "properties": {
+    "includeAccessibilityTests": {
+     "default": true,
+     "type": "boolean"
+    },
+    "includeDockerfile": {
+     "default": true,
+     "type": "boolean"
+    },
+    "includeGitHubActions": {
+     "default": true,
+     "type": "boolean"
+    },
+    "mainBranch": {
+     "default": "main",
+     "type": "string"
+    },
+    "projectName": {
+     "description": "Project name for tests",
+     "type": "string"
+    },
+    "repositoryPath": {
+     "description": "Path to documentation repository",
+     "type": "string"
+    },
+    "ssg": {
+     "enum": [
+      "jekyll",
+      "hugo",
+      "docusaurus",
+      "mkdocs",
+      "eleventy"
+     ],
+     "type": "string"
+    }
+   },
+   "required": [
+    "repositoryPath",
+    "ssg",
+    "projectName"
+   ],
+   "type": "object"
+  },
+  "name": "setup_playwright_tests"
+ },
+ {
+  "description": "Set up deployment workflow for GitHub Pages or Vercel with deployment tracking and preference learning. Use the 'target' parameter to choose one deployment platform per project (github-pages or vercel). If you switch targets, the tool will warn you to remove the old workflow file.",
+  "inputSchema": {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "additionalProperties": false,
+   "properties": {
+    "analysisId": {
+     "description": "ID from repository analysis for linking",
+     "type": "string"
+    },
+    "branch": {
+     "default": "gh-pages",
+     "type": "string"
+    },
+    "customDomain": {
+     "type": "string"
+    },
+    "invokeCliCommand": {
+     "default": false,
+     "description": "When true and target=vercel, includes the vercel deploy --prod CLI command in next steps",
+     "type": "boolean"
+    },
+    "projectName": {
+     "description": "Project name for tracking",
+     "type": "string"
+    },
+    "projectPath": {
+     "description": "Local path to the project for tracking",
+     "type": "string"
+    },
+    "repository": {
+     "description": "Repository path or URL",
+     "type": "string"
+    },
+    "ssg": {
+     "description": "Static site generator to use. If not provided, will be retrieved from knowledge graph using analysisId",
+     "enum": [
+      "jekyll",
+      "hugo",
+      "docusaurus",
+      "mkdocs",
+      "eleventy"
+     ],
+     "type": "string"
+    },
+    "target": {
+     "default": "github-pages",
+     "description": "Deployment target: 'github-pages' (default) or 'vercel'. Vercel generates vercel.json and a Vercel CLI workflow.",
+     "enum": [
+      "github-pages",
+      "vercel"
+     ],
+     "type": "string"
+    },
+    "userId": {
+     "default": "default",
+     "description": "User ID for preference tracking",
+     "type": "string"
+    }
+   },
+   "required": [
+    "repository"
+   ],
+   "type": "object"
+  },
+  "name": "deploy_site"
+ },
+ {
+  "description": "[DEPRECATED — use deploy_site instead] Set up GitHub Pages deployment workflow. This alias will be removed in v1.1.0.",
+  "inputSchema": {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "additionalProperties": false,
+   "properties": {
+    "analysisId": {
+     "description": "ID from repository analysis for linking",
+     "type": "string"
+    },
+    "branch": {
+     "default": "gh-pages",
+     "type": "string"
+    },
+    "customDomain": {
+     "type": "string"
+    },
+    "projectName": {
+     "description": "Project name for tracking",
+     "type": "string"
+    },
+    "projectPath": {
+     "description": "Local path to the project for tracking",
+     "type": "string"
+    },
+    "repository": {
+     "description": "Repository path or URL",
+     "type": "string"
+    },
+    "ssg": {
+     "enum": [
+      "jekyll",
+      "hugo",
+      "docusaurus",
+      "mkdocs",
+      "eleventy"
+     ],
+     "type": "string"
+    },
+    "userId": {
+     "default": "default",
+     "description": "User ID for preference tracking",
+     "type": "string"
+    }
+   },
+   "required": [
+    "repository",
+    "ssg"
+   ],
+   "type": "object"
+  },
+  "name": "deploy_pages"
+ },
+ {
+  "description": "Verify and troubleshoot GitHub Pages deployment",
+  "inputSchema": {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "additionalProperties": false,
+   "properties": {
+    "repository": {
+     "description": "Repository path or URL",
+     "type": "string"
+    },
+    "url": {
+     "description": "Expected deployment URL",
+     "type": "string"
+    }
+   },
+   "required": [
+    "repository"
+   ],
+   "type": "object"
+  },
+  "name": "verify_deployment"
+ },
+ {
+  "description": "Intelligently populate Diataxis documentation with project-specific content",
+  "inputSchema": {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "additionalProperties": false,
+   "properties": {
+    "analysisId": {
+     "description": "Repository analysis ID from analyze_repository tool",
+     "type": "string"
+    },
+    "docsPath": {
+     "description": "Path to documentation directory",
+     "type": "string"
+    },
+    "includeProjectSpecific": {
+     "default": true,
+     "type": "boolean"
+    },
+    "populationLevel": {
+     "default": "comprehensive",
+     "enum": [
+      "basic",
+      "comprehensive",
+      "intelligent"
+     ],
+     "type": "string"
+    },
+    "preserveExisting": {
+     "default": true,
+     "type": "boolean"
+    },
+    "technologyFocus": {
+     "description": "Specific technologies to emphasize",
+     "items": {
+      "type": "string"
+     },
+     "type": "array"
+    }
+   },
+   "required": [
+    "analysisId",
+    "docsPath"
+   ],
+   "type": "object"
+  },
+  "name": "populate_diataxis_content"
+ },
+ {
+  "description": "Intelligently analyze and update existing documentation using memory insights and code comparison",
+  "inputSchema": {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "additionalProperties": false,
+   "properties": {
+    "analysisId": {
+     "description": "Repository analysis ID from analyze_repository tool",
+     "type": "string"
+    },
+    "compareMode": {
+     "default": "comprehensive",
+     "description": "Mode of comparison between code and documentation",
+     "enum": [
+      "comprehensive",
+      "gap-detection",
+      "accuracy-check"
+     ],
+     "type": "string"
+    },
+    "docsPath": {
+     "description": "Path to existing documentation directory",
+     "type": "string"
+    },
+    "focusAreas": {
+     "description": "Specific areas to focus updates on (e.g., \"dependencies\", \"scripts\", \"api\")",
+     "items": {
+      "type": "string"
+     },
+     "type": "array"
+    },
+    "preserveStyle": {
+     "default": true,
+     "description": "Preserve existing documentation style and formatting",
+     "type": "boolean"
+    },
+    "updateStrategy": {
+     "default": "moderate",
+     "description": "How aggressively to suggest updates",
+     "enum": [
+      "conservative",
+      "moderate",
+      "aggressive"
+     ],
+     "type": "string"
+    }
+   },
+   "required": [
+    "analysisId",
+    "docsPath"
+   ],
+   "type": "object"
+  },
+  "name": "update_existing_documentation"
+ },
+ {
+  "description": "Validate the accuracy, completeness, and compliance of generated Diataxis documentation",
+  "inputSchema": {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "additionalProperties": false,
+   "properties": {
+    "analysisId": {
+     "description": "Optional repository analysis ID for context-aware validation",
+     "type": "string"
+    },
+    "confidence": {
+     "default": "moderate",
+     "description": "Validation confidence level: strict, moderate, or permissive",
+     "enum": [
+      "strict",
+      "moderate",
+      "permissive"
+     ],
+     "type": "string"
+    },
+    "contentPath": {
+     "description": "Path to the documentation directory to validate",
+     "type": "string"
+    },
+    "includeCodeValidation": {
+     "default": true,
+     "description": "Whether to validate code examples",
+     "type": "boolean"
+    },
+    "validationType": {
+     "default": "all",
+     "description": "Type of validation: accuracy, completeness, compliance, or all",
+     "enum": [
+      "accuracy",
+      "completeness",
+      "compliance",
+      "all"
+     ],
+     "type": "string"
+    }
+   },
+   "required": [
+    "contentPath"
+   ],
+   "type": "object"
+  },
+  "name": "validate_diataxis_content"
+ },
+ {
+  "description": "Validate general content quality: broken links, code syntax, references, and basic accuracy",
+  "inputSchema": {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "additionalProperties": false,
+   "properties": {
+    "contentPath": {
+     "description": "Path to the content directory to validate",
+     "type": "string"
+    },
+    "followExternalLinks": {
+     "default": false,
+     "description": "Whether to validate external URLs (slower)",
+     "type": "boolean"
+    },
+    "includeCodeValidation": {
+     "default": true,
+     "description": "Whether to validate code blocks",
+     "type": "boolean"
+    },
+    "validationType": {
+     "default": "all",
+     "description": "Type of validation: links, code, references, or all",
+     "type": "string"
+    }
+   },
+   "required": [
+    "contentPath"
+   ],
+   "type": "object"
+  },
+  "name": "validate_content"
+ },
+ {
+  "description": "Analyze repository and existing documentation to identify missing content and gaps",
+  "inputSchema": {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "additionalProperties": false,
+   "properties": {
+    "analysisId": {
+     "description": "Optional existing analysis ID to reuse",
+     "type": "string"
+    },
+    "depth": {
+     "default": "standard",
+     "enum": [
+      "quick",
+      "standard",
+      "comprehensive"
+     ],
+     "type": "string"
+    },
+    "documentationPath": {
+     "description": "Path to existing documentation (if any)",
+     "type": "string"
+    },
+    "repositoryPath": {
+     "description": "Path to the repository to analyze",
+     "type": "string"
+    }
+   },
+   "required": [
+    "repositoryPath"
+   ],
+   "type": "object"
+  },
+  "name": "detect_documentation_gaps"
+ },
+ {
+  "description": "Test documentation build and local server before deploying to GitHub Pages",
+  "inputSchema": {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "additionalProperties": false,
+   "properties": {
+    "port": {
+     "default": 3000,
+     "description": "Port for local server",
+     "type": "number"
+    },
+    "repositoryPath": {
+     "description": "Path to the repository",
+     "type": "string"
+    },
+    "skipBuild": {
+     "default": false,
+     "description": "Skip build step and only start server",
+     "type": "boolean"
+    },
+    "ssg": {
+     "enum": [
+      "jekyll",
+      "hugo",
+      "docusaurus",
+      "mkdocs",
+      "eleventy"
+     ],
+     "type": "string"
+    },
+    "timeout": {
+     "default": 60,
+     "description": "Timeout in seconds for build process",
+     "type": "number"
+    }
+   },
+   "required": [
+    "repositoryPath",
+    "ssg"
+   ],
+   "type": "object"
+  },
+  "name": "test_local_deployment"
+ },
+ {
+  "description": "Evaluate README files for community health, accessibility, and onboarding effectiveness",
+  "inputSchema": {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "additionalProperties": false,
+   "properties": {
+    "project_type": {
+     "default": "community_library",
+     "description": "Type of project for tailored evaluation",
+     "enum": [
+      "community_library",
+      "enterprise_tool",
+      "personal_project",
+      "documentation"
+     ],
+     "type": "string"
+    },
+    "readme_path": {
+     "description": "Path to the README file to evaluate",
+     "type": "string"
+    },
+    "repository_path": {
+     "description": "Optional path to repository for additional context",
+     "type": "string"
+    }
+   },
+   "required": [
+    "readme_path"
+   ],
+   "type": "object"
+  },
+  "name": "evaluate_readme_health"
+ },
+ {
+  "description": "Analyze README files against best practices checklist and generate templates for improvement",
+  "inputSchema": {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "additionalProperties": false,
+   "properties": {
+    "generate_template": {
+     "default": false,
+     "description": "Generate README templates and community files",
+     "type": "boolean"
+    },
+    "include_community_files": {
+     "default": true,
+     "description": "Generate community health files (CONTRIBUTING.md, CODE_OF_CONDUCT.md, etc.)",
+     "type": "boolean"
+    },
+    "output_directory": {
+     "description": "Directory to write generated templates and community files",
+     "type": "string"
+    },
+    "project_type": {
+     "default": "library",
+     "description": "Type of project for tailored analysis",
+     "enum": [
+      "library",
+      "application",
+      "tool",
+      "documentation",
+      "framework"
+     ],
+     "type": "string"
+    },
+    "readme_path": {
+     "description": "Path to the README file to analyze",
+     "type": "string"
+    },
+    "target_audience": {
+     "default": "mixed",
+     "description": "Target audience for recommendations",
+     "enum": [
+      "beginner",
+      "intermediate",
+      "advanced",
+      "mixed"
+     ],
+     "type": "string"
+    }
+   },
+   "required": [
+    "readme_path"
+   ],
+   "type": "object"
+  },
+  "name": "readme_best_practices"
+ },
+ {
+  "description": "Comprehensive link checking for documentation deployment with external, internal, and anchor link validation",
+  "inputSchema": {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "additionalProperties": false,
+   "properties": {
+    "allowed_domains": {
+     "default": [],
+     "description": "Whitelist of allowed external domains (empty = all allowed)",
+     "items": {
+      "type": "string"
+     },
+     "type": "array"
+    },
+    "check_anchor_links": {
+     "default": true,
+     "description": "Validate anchor links within documents",
+     "type": "boolean"
+    },
+    "check_external_links": {
+     "default": true,
+     "description": "Validate external URLs (slower but comprehensive)",
+     "type": "boolean"
+    },
+    "check_internal_links": {
+     "default": true,
+     "description": "Validate internal file references",
+     "type": "boolean"
+    },
+    "documentation_path": {
+     "default": "./docs",
+     "description": "Path to the documentation directory to check",
+     "type": "string"
+    },
+    "fail_on_broken_links": {
+     "default": false,
+     "description": "Fail the check if broken links are found",
+     "type": "boolean"
+    },
+    "ignore_patterns": {
+     "default": [],
+     "description": "URL patterns to ignore during checking",
+     "items": {
+      "type": "string"
+     },
+     "type": "array"
+    },
+    "max_concurrent_checks": {
+     "default": 5,
+     "description": "Maximum concurrent link checks",
+     "maximum": 20,
+     "minimum": 1,
+     "type": "number"
+    },
+    "output_format": {
+     "default": "detailed",
+     "description": "Output format for results",
+     "enum": [
+      "summary",
+      "detailed",
+      "json"
+     ],
+     "type": "string"
+    },
+    "timeout_ms": {
+     "default": 5000,
+     "description": "Timeout for external link requests in milliseconds",
+     "maximum": 30000,
+     "minimum": 1000,
+     "type": "number"
+    }
+   },
+   "type": "object"
+  },
+  "name": "check_documentation_links"
+ },
+ {
+  "description": "Generate standardized README templates for different project types with best practices",
+  "inputSchema": {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "additionalProperties": false,
+   "properties": {
+    "author": {
+     "description": "Project author/organization name",
+     "type": "string"
+    },
+    "description": {
+     "description": "Brief description of what the project does",
+     "minLength": 1,
+     "type": "string"
+    },
+    "includeBadges": {
+     "default": true,
+     "description": "Include status badges",
+     "type": "boolean"
+    },
+    "includeContributing": {
+     "default": true,
+     "description": "Include contributing section",
+     "type": "boolean"
+    },
+    "includeScreenshots": {
+     "default": false,
+     "description": "Include screenshot placeholders for applications",
+     "type": "boolean"
+    },
+    "license": {
+     "default": "MIT",
+     "description": "Project license",
+     "type": "string"
+    },
+    "outputPath": {
+     "description": "Path to write the generated README.md file",
+     "type": "string"
+    },
+    "projectName": {
+     "description": "Name of the project",
+     "minLength": 1,
+     "type": "string"
+    },
+    "templateType": {
+     "description": "Type of project template to generate",
+     "enum": [
+      "library",
+      "application",
+      "cli-tool",
+      "api",
+      "documentation"
+     ],
+     "type": "string"
+    }
+   },
+   "required": [
+    "projectName",
+    "description",
+    "templateType"
+   ],
+   "type": "object"
+  },
+  "name": "generate_readme_template"
+ },
+ {
+  "description": "Validate README files against community best practices checklist with detailed scoring",
+  "inputSchema": {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "additionalProperties": false,
+   "properties": {
+    "outputFormat": {
+     "default": "console",
+     "description": "Output format for the validation report",
+     "enum": [
+      "json",
+      "markdown",
+      "console"
+     ],
+     "type": "string"
+    },
+    "projectPath": {
+     "description": "Path to project directory for additional context",
+     "type": "string"
+    },
+    "readmePath": {
+     "description": "Path to the README file to validate",
+     "minLength": 1,
+     "type": "string"
+    },
+    "strict": {
+     "default": false,
+     "description": "Use strict validation rules",
+     "type": "boolean"
+    }
+   },
+   "required": [
+    "readmePath"
+   ],
+   "type": "object"
+  },
+  "name": "validate_readme_checklist"
+ },
+ {
+  "description": "Comprehensive README analysis with length assessment, structure evaluation, and optimization opportunities",
+  "inputSchema": {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "additionalProperties": false,
+   "properties": {
+    "max_length_target": {
+     "default": 300,
+     "description": "Target maximum length in lines",
+     "maximum": 1000,
+     "minimum": 50,
+     "type": "number"
+    },
+    "optimization_level": {
+     "default": "moderate",
+     "description": "Level of optimization suggestions",
+     "enum": [
+      "light",
+      "moderate",
+      "aggressive"
+     ],
+     "type": "string"
+    },
+    "project_path": {
+     "description": "Path to the project directory containing README",
+     "minLength": 1,
+     "type": "string"
+    },
+    "target_audience": {
+     "default": "community_contributors",
+     "description": "Target audience for analysis",
+     "enum": [
+      "community_contributors",
+      "enterprise_users",
+      "developers",
+      "general"
+     ],
+     "type": "string"
+    }
+   },
+   "required": [
+    "project_path"
+   ],
+   "type": "object"
+  },
+  "name": "analyze_readme"
+ },
+ {
+  "description": "Optimize README content by restructuring, condensing, and extracting detailed sections to separate documentation",
+  "inputSchema": {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "additionalProperties": false,
+   "properties": {
+    "create_docs_directory": {
+     "default": true,
+     "description": "Create docs/ directory for extracted content",
+     "type": "boolean"
+    },
+    "include_tldr": {
+     "default": true,
+     "description": "Generate and include TL;DR section",
+     "type": "boolean"
+    },
+    "max_length": {
+     "default": 300,
+     "description": "Target maximum length in lines",
+     "maximum": 1000,
+     "minimum": 50,
+     "type": "number"
+    },
+    "output_path": {
+     "description": "Path to write optimized README (if not specified, returns content only)",
+     "type": "string"
+    },
+    "preserve_existing": {
+     "default": true,
+     "description": "Preserve existing content structure where possible",
+     "type": "boolean"
+    },
+    "readme_path": {
+     "description": "Path to the README file to optimize",
+     "minLength": 1,
+     "type": "string"
+    },
+    "strategy": {
+     "default": "community_focused",
+     "description": "Optimization strategy",
+     "enum": [
+      "community_focused",
+      "enterprise_focused",
+      "developer_focused",
+      "general"
+     ],
+     "type": "string"
+    }
+   },
+   "required": [
+    "readme_path"
+   ],
+   "type": "object"
+  },
+  "name": "optimize_readme"
+ },
+ {
+  "description": "Manage user preferences for documentation generation and SSG recommendations",
+  "inputSchema": {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "additionalProperties": false,
+   "properties": {
+    "action": {
+     "description": "Action to perform on preferences",
+     "enum": [
+      "get",
+      "update",
+      "reset",
+      "export",
+      "import",
+      "recommendations"
+     ],
+     "type": "string"
+    },
+    "json": {
+     "description": "JSON string for import action",
+     "type": "string"
+    },
+    "preferences": {
+     "additionalProperties": false,
+     "description": "Preference updates (for update action)",
+     "properties": {
+      "autoApplyPreferences": {
+       "description": "Automatically apply preferences to recommendations",
+       "type": "boolean"
+      },
+      "documentationStyle": {
+       "description": "Preferred documentation style",
+       "enum": [
+        "minimal",
+        "comprehensive",
+        "tutorial-heavy"
+       ],
+       "type": "string"
+      },
+      "expertiseLevel": {
+       "description": "User's technical expertise level",
+       "enum": [
+        "beginner",
+        "intermediate",
+        "advanced"
+       ],
+       "type": "string"
+      },
+      "preferredDiataxisCategories": {
+       "description": "Preferred Diataxis documentation categories",
+       "items": {
+        "enum": [
+         "tutorials",
+         "how-to",
+         "reference",
+         "explanation"
+        ],
+        "type": "string"
+       },
+       "type": "array"
+      },
+      "preferredSSGs": {
+       "description": "List of preferred static site generators",
+       "items": {
+        "type": "string"
+       },
+       "type": "array"
+      },
+      "preferredTechnologies": {
+       "description": "Preferred technologies and frameworks",
+       "items": {
+        "type": "string"
+       },
+       "type": "array"
+      }
+     },
+     "type": "object"
+    },
+    "userId": {
+     "default": "default",
+     "description": "User ID for multi-user setups",
+     "type": "string"
+    }
+   },
+   "required": [
+    "action"
+   ],
+   "type": "object"
+  },
+  "name": "manage_preferences"
+ },
+ {
+  "description": "Analyze deployment patterns and generate insights from historical deployment data",
+  "inputSchema": {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "additionalProperties": false,
+   "properties": {
+    "analysisType": {
+     "default": "full_report",
+     "description": "Type of analysis: full_report (comprehensive), ssg_stats (per-SSG), compare (compare SSGs), health (deployment health score), trends (temporal analysis)",
+     "enum": [
+      "full_report",
+      "ssg_stats",
+      "compare",
+      "health",
+      "trends"
+     ],
+     "type": "string"
+    },
+    "periodDays": {
+     "default": 30,
+     "description": "Period in days for trend analysis",
+     "type": "number"
+    },
+    "ssg": {
+     "description": "SSG name for ssg_stats analysis",
+     "type": "string"
+    },
+    "ssgs": {
+     "description": "Array of SSG names for comparison",
+     "items": {
+      "type": "string"
+     },
+     "type": "array"
+    }
+   },
+   "type": "object"
+  },
+  "name": "analyze_deployments"
+ },
+ {
+  "description": "List files and directories within allowed roots. Use this to discover files without requiring full absolute paths from the user.",
+  "inputSchema": {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "additionalProperties": false,
+   "properties": {
+    "path": {
+     "description": "Path to directory (relative to root or absolute within root)",
+     "type": "string"
+    }
+   },
+   "required": [
+    "path"
+   ],
+   "type": "object"
+  },
+  "name": "read_directory"
+ },
+ {
+  "description": "Automatically synchronize documentation with code changes using AST-based drift detection (Phase 3)",
+  "inputSchema": {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "additionalProperties": false,
+   "properties": {
+    "autoApplyThreshold": {
+     "default": 0.8,
+     "description": "Confidence threshold (0-1) for automatic application of changes",
+     "maximum": 1,
+     "minimum": 0,
+     "type": "number"
+    },
+    "createSnapshot": {
+     "default": true,
+     "description": "Create a snapshot before making changes (recommended)",
+     "type": "boolean"
+    },
+    "docsPath": {
+     "description": "Path to the documentation directory",
+     "type": "string"
+    },
+    "mode": {
+     "default": "detect",
+     "description": "Sync mode: detect=analyze only, preview=show changes, apply=apply safe changes, auto=apply all",
+     "enum": [
+      "detect",
+      "preview",
+      "apply",
+      "auto"
+     ],
+     "type": "string"
+    },
+    "projectPath": {
+     "description": "Path to the project root directory",
+     "type": "string"
+    }
+   },
+   "required": [
+    "projectPath",
+    "docsPath"
+   ],
+   "type": "object"
+  },
+  "name": "sync_code_to_docs"
+ },
+ {
+  "description": "Watch code changes and trigger documentation drift detection in near real-time.",
+  "inputSchema": {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "additionalProperties": false,
+   "properties": {
+    "action": {
+     "default": "status",
+     "description": "Action to perform",
+     "enum": [
+      "start",
+      "status",
+      "stop",
+      "trigger",
+      "install_hook"
+     ],
+     "type": "string"
+    },
+    "debounceMs": {
+     "default": 500,
+     "description": "Debounce window for drift detection",
+     "maximum": 600000,
+     "minimum": 50,
+     "type": "number"
+    },
+    "docsPath": {
+     "description": "Documentation path",
+     "type": "string"
+    },
+    "excludePatterns": {
+     "description": "Glob patterns to exclude",
+     "items": {
+      "type": "string"
+     },
+     "type": "array"
+    },
+    "files": {
+     "description": "Changed files (for manual trigger)",
+     "items": {
+      "type": "string"
+     },
+     "type": "array"
+    },
+    "port": {
+     "description": "Port for webhook server (default 8787)",
+     "maximum": 65535,
+     "minimum": 1,
+     "type": "number"
+    },
+    "projectPath": {
+     "description": "Project root path",
+     "type": "string"
+    },
+    "reason": {
+     "description": "Reason for manual trigger",
+     "type": "string"
+    },
+    "snapshotDir": {
+     "description": "Snapshot directory override",
+     "type": "string"
+    },
+    "triggerOnCommit": {
+     "default": true,
+     "description": "Respond to git commit events",
+     "type": "boolean"
+    },
+    "triggerOnPR": {
+     "default": true,
+     "description": "Respond to PR/merge events",
+     "type": "boolean"
+    },
+    "watchPaths": {
+     "description": "Paths to watch (defaults to src/)",
+     "items": {
+      "type": "string"
+     },
+     "type": "array"
+    },
+    "webhookEndpoint": {
+     "description": "Webhook endpoint path (e.g., /hooks/documcp/change-watcher)",
+     "type": "string"
+    },
+    "webhookSecret": {
+     "description": "Shared secret for webhook signature validation",
+     "type": "string"
+    }
+   },
+   "required": [
+    "projectPath",
+    "docsPath"
+   ],
+   "type": "object"
+  },
+  "name": "change_watcher"
+ },
+ {
+  "description": "Record the host's judgment ('actionable' | 'noise' | 'deferred') for a previously-detected drift. Outcomes feed back into priority-scoring weights via the knowledge graph (ADR-012 Phase 4, Issue #114).",
+  "inputSchema": {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "additionalProperties": false,
+   "properties": {
+    "driftId": {
+     "description": "The driftId returned alongside a PrioritizedDriftResult. Without this anchor the outcome can't be attributed to a specific factor snapshot.",
+     "minLength": 1,
+     "type": "string"
+    },
+    "notes": {
+     "description": "Optional free-form notes from the host (why the drift was actionable/noise, link to PR, etc.).",
+     "type": "string"
+    },
+    "outcome": {
+     "description": "User judgment: 'actionable' (drift was real, doc update needed), 'noise' (false positive, dismiss), or 'deferred' (revisit later — neutral signal).",
+     "enum": [
+      "actionable",
+      "noise",
+      "deferred"
+     ],
+     "type": "string"
+    },
+    "projectPath": {
+     "description": "Absolute path to the project root. Must match the path used during drift detection so the outcome lands on the right project node.",
+     "minLength": 1,
+     "type": "string"
+    }
+   },
+   "required": [
+    "projectPath",
+    "driftId",
+    "outcome"
+   ],
+   "type": "object"
+  },
+  "name": "record_drift_outcome"
+ },
+ {
+  "description": "Generate context-aware documentation using AST analysis and knowledge graph insights (Phase 3)",
+  "inputSchema": {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "additionalProperties": false,
+   "properties": {
+    "documentationType": {
+     "default": "reference",
+     "description": "Type of Diataxis documentation to generate",
+     "enum": [
+      "tutorial",
+      "how-to",
+      "reference",
+      "explanation",
+      "all"
+     ],
+     "type": "string"
+    },
+    "filePath": {
+     "description": "Path to the source code file to document",
+     "type": "string"
+    },
+    "includeExamples": {
+     "default": true,
+     "description": "Include code examples in generated documentation",
+     "type": "boolean"
+    },
+    "outputFormat": {
+     "default": "markdown",
+     "description": "Output format for generated content",
+     "enum": [
+      "markdown",
+      "mdx",
+      "html"
+     ],
+     "type": "string"
+    },
+    "style": {
+     "default": "detailed",
+     "description": "Documentation detail level",
+     "enum": [
+      "concise",
+      "detailed",
+      "verbose"
+     ],
+     "type": "string"
+    }
+   },
+   "required": [
+    "filePath"
+   ],
+   "type": "object"
+  },
+  "name": "generate_contextual_content"
+ },
+ {
+  "description": "Scan documentation directory for staleness markers and identify files needing updates based on configurable time thresholds (minutes, hours, days)",
+  "inputSchema": {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "additionalProperties": false,
+   "properties": {
+    "criticalThreshold": {
+     "additionalProperties": false,
+     "description": "Critical threshold (red flag)",
+     "properties": {
+      "unit": {
+       "enum": [
+        "minutes",
+        "hours",
+        "days"
+       ],
+       "type": "string"
+      },
+      "value": {
+       "exclusiveMinimum": 0,
+       "type": "number"
+      }
+     },
+     "required": [
+      "value",
+      "unit"
+     ],
+     "type": "object"
+    },
+    "docsPath": {
+     "description": "Path to documentation directory",
+     "type": "string"
+    },
+    "includeFileList": {
+     "default": true,
+     "description": "Include detailed file list in response",
+     "type": "boolean"
+    },
+    "preset": {
+     "description": "Use predefined threshold preset",
+     "enum": [
+      "realtime",
+      "active",
+      "recent",
+      "weekly",
+      "monthly",
+      "quarterly"
+     ],
+     "type": "string"
+    },
+    "projectPath": {
+     "description": "Path to project root (for knowledge graph tracking)",
+     "type": "string"
+    },
+    "sortBy": {
+     "default": "staleness",
+     "description": "Sort order for file list",
+     "enum": [
+      "age",
+      "path",
+      "staleness"
+     ],
+     "type": "string"
+    },
+    "staleThreshold": {
+     "additionalProperties": false,
+     "description": "Stale threshold (orange flag)",
+     "properties": {
+      "unit": {
+       "enum": [
+        "minutes",
+        "hours",
+        "days"
+       ],
+       "type": "string"
+      },
+      "value": {
+       "exclusiveMinimum": 0,
+       "type": "number"
+      }
+     },
+     "required": [
+      "value",
+      "unit"
+     ],
+     "type": "object"
+    },
+    "storeInKG": {
+     "default": true,
+     "description": "Store tracking event in knowledge graph for historical analysis",
+     "type": "boolean"
+    },
+    "warningThreshold": {
+     "additionalProperties": false,
+     "description": "Warning threshold (yellow flag)",
+     "properties": {
+      "unit": {
+       "enum": [
+        "minutes",
+        "hours",
+        "days"
+       ],
+       "type": "string"
+      },
+      "value": {
+       "exclusiveMinimum": 0,
+       "type": "number"
+      }
+     },
+     "required": [
+      "value",
+      "unit"
+     ],
+     "type": "object"
+    }
+   },
+   "required": [
+    "docsPath"
+   ],
+   "type": "object"
+  },
+  "name": "track_documentation_freshness"
+ },
+ {
+  "description": "Validate documentation freshness, initialize metadata for files without it, and update timestamps based on code changes",
+  "inputSchema": {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "additionalProperties": false,
+   "properties": {
+    "docsPath": {
+     "description": "Path to documentation directory",
+     "type": "string"
+    },
+    "initializeMissing": {
+     "default": true,
+     "description": "Initialize metadata for files without it",
+     "type": "boolean"
+    },
+    "projectPath": {
+     "description": "Path to project root (for git integration)",
+     "type": "string"
+    },
+    "updateExisting": {
+     "default": false,
+     "description": "Update last_validated timestamp for all files",
+     "type": "boolean"
+    },
+    "updateFrequency": {
+     "default": "monthly",
+     "description": "Default update frequency for new metadata",
+     "enum": [
+      "realtime",
+      "active",
+      "recent",
+      "weekly",
+      "monthly",
+      "quarterly"
+     ],
+     "type": "string"
+    },
+    "validateAgainstGit": {
+     "default": true,
+     "description": "Validate against current git commit",
+     "type": "boolean"
+    }
+   },
+   "required": [
+    "docsPath",
+    "projectPath"
+   ],
+   "type": "object"
+  },
+  "name": "validate_documentation_freshness"
+ },
+ {
+  "description": "Generate, validate, and manage sitemap.xml as the source of truth for documentation links. Sitemap.xml is used for SEO, search engine submission, and deployment tracking.",
+  "inputSchema": {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "additionalProperties": false,
+   "properties": {
+    "action": {
+     "description": "Action to perform: generate (create new), validate (check structure), update (sync with docs), list (show all URLs)",
+     "enum": [
+      "generate",
+      "validate",
+      "update",
+      "list"
+     ],
+     "type": "string"
+    },
+    "baseUrl": {
+     "description": "Base URL for the site (e.g., https://user.github.io/repo). Required for generate/update actions.",
+     "type": "string"
+    },
+    "docsPath": {
+     "description": "Path to documentation root directory",
+     "type": "string"
+    },
+    "excludePatterns": {
+     "description": "File patterns to exclude (default: node_modules, .git, dist, build, .documcp)",
+     "items": {
+      "type": "string"
+     },
+     "type": "array"
+    },
+    "includePatterns": {
+     "description": "File patterns to include (default: **/*.md, **/*.html, **/*.mdx)",
+     "items": {
+      "type": "string"
+     },
+     "type": "array"
+    },
+    "sitemapPath": {
+     "description": "Custom path for sitemap.xml (default: docsPath/sitemap.xml)",
+     "type": "string"
+    },
+    "updateFrequency": {
+     "description": "Default change frequency for pages",
+     "enum": [
+      "always",
+      "hourly",
+      "daily",
+      "weekly",
+      "monthly",
+      "yearly",
+      "never"
+     ],
+     "type": "string"
+    },
+    "useGitHistory": {
+     "default": true,
+     "description": "Use git history for last modified dates (default: true)",
+     "type": "boolean"
+    }
+   },
+   "required": [
+    "action",
+    "docsPath"
+   ],
+   "type": "object"
+  },
+  "name": "manage_sitemap"
+ },
+ {
+  "description": "Generate a comprehensive LLM context reference file documenting all tools, memory system, and workflows for easy @ reference",
+  "inputSchema": {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "additionalProperties": false,
+   "properties": {
+    "format": {
+     "default": "detailed",
+     "description": "Level of detail in the generated context",
+     "enum": [
+      "detailed",
+      "concise"
+     ],
+     "type": "string"
+    },
+    "includeExamples": {
+     "default": true,
+     "description": "Include usage examples for tools",
+     "type": "boolean"
+    },
+    "projectPath": {
+     "description": "Path to the project root directory where LLM_CONTEXT.md will be generated",
+     "type": "string"
+    }
+   },
+   "required": [
+    "projectPath"
+   ],
+   "type": "object"
+  },
+  "name": "generate_llm_context"
+ },
+ {
+  "description": "Detect, classify, and clean up artifacts generated by AI coding agents (e.g., TODO.md, PLAN.md, agent markers, temporary files). Supports scan, clean, and archive operations with configurable patterns.",
+  "inputSchema": {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "additionalProperties": false,
+   "properties": {
+    "autoDeleteThreshold": {
+     "default": 0.9,
+     "description": "Confidence threshold for automatic deletion (0-1)",
+     "maximum": 1,
+     "minimum": 0,
+     "type": "number"
+    },
+    "customPatterns": {
+     "additionalProperties": false,
+     "description": "Custom patterns to detect in addition to defaults",
+     "properties": {
+      "directories": {
+       "items": {
+        "type": "string"
+       },
+       "type": "array"
+      },
+      "files": {
+       "items": {
+        "type": "string"
+       },
+       "type": "array"
+      },
+      "inlineMarkers": {
+       "items": {
+        "type": "string"
+       },
+       "type": "array"
+      }
+     },
+     "type": "object"
+    },
+    "dryRun": {
+     "default": false,
+     "description": "Show what would be changed without making changes",
+     "type": "boolean"
+    },
+    "includeGitIgnored": {
+     "default": false,
+     "description": "Include artifacts that are already in .gitignore",
+     "type": "boolean"
+    },
+    "interactive": {
+     "default": false,
+     "description": "Prompt for confirmation (not supported in MCP, treated as dryRun)",
+     "type": "boolean"
+    },
+    "operation": {
+     "description": "Operation: scan (detect only), clean (remove), or archive (move to .agent-archive/)",
+     "enum": [
+      "scan",
+      "clean",
+      "archive"
+     ],
+     "type": "string"
+    },
+    "path": {
+     "description": "Path to the project directory to scan",
+     "type": "string"
+    }
+   },
+   "required": [
+    "path",
+    "operation"
+   ],
+   "type": "object"
+  },
+  "name": "cleanup_agent_artifacts"
+ },
+ {
+  "description": "Aggregate cross-project signals from the Knowledge Graph and surface community-level insights: deployment success rates per SSG, common technology stacks, frequent drift sources, and project health distribution. All data is anonymized — no raw project paths are exposed.",
+  "inputSchema": {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "additionalProperties": false,
+   "properties": {},
+   "type": "object"
+  },
+  "name": "get_community_insights"
+ },
+ {
+  "description": "Recall memories about a project or topic",
+  "inputSchema": {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "additionalProperties": false,
+   "properties": {
+    "limit": {
+     "default": 10,
+     "description": "Maximum number of memories to return",
+     "type": "number"
+    },
+    "query": {
+     "description": "Search query or project ID",
+     "type": "string"
+    },
+    "type": {
+     "description": "Type of memory to recall",
+     "enum": [
+      "analysis",
+      "recommendation",
+      "deployment",
+      "configuration",
+      "interaction",
+      "all"
+     ],
+     "type": "string"
+    }
+   },
+   "required": [
+    "query"
+   ],
+   "type": "object"
+  },
+  "name": "memory_recall"
+ },
+ {
+  "description": "Get intelligent analysis with patterns, predictions, and recommendations",
+  "inputSchema": {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "additionalProperties": false,
+   "properties": {
+    "baseAnalysis": {
+     "additionalProperties": false,
+     "description": "Base analysis data to enhance",
+     "properties": {},
+     "type": "object"
+    },
+    "projectPath": {
+     "description": "Path to the project for analysis",
+     "type": "string"
+    }
+   },
+   "required": [
+    "projectPath",
+    "baseAnalysis"
+   ],
+   "type": "object"
+  },
+  "name": "memory_intelligent_analysis"
+ },
+ {
+  "description": "Get enhanced recommendations using learning and knowledge graph",
+  "inputSchema": {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "additionalProperties": false,
+   "properties": {
+    "baseRecommendation": {
+     "additionalProperties": false,
+     "description": "Base recommendation to enhance",
+     "properties": {},
+     "type": "object"
+    },
+    "projectFeatures": {
+     "additionalProperties": false,
+     "properties": {},
+     "type": "object"
+    },
+    "projectPath": {
+     "description": "Path to the project",
+     "type": "string"
+    }
+   },
+   "required": [
+    "projectPath",
+    "baseRecommendation",
+    "projectFeatures"
+   ],
+   "type": "object"
+  },
+  "name": "memory_enhanced_recommendation"
+ },
+ {
+  "description": "Get comprehensive learning and knowledge graph statistics",
+  "inputSchema": {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "additionalProperties": false,
+   "properties": {
+    "includeDetails": {
+     "default": true,
+     "description": "Include detailed statistics",
+     "type": "boolean"
+    }
+   },
+   "type": "object"
+  },
+  "name": "memory_learning_stats"
+ },
+ {
+  "description": "Query the knowledge graph for relationships and paths",
+  "inputSchema": {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "additionalProperties": false,
+   "properties": {
+    "query": {
+     "additionalProperties": false,
+     "properties": {},
+     "type": "object"
+    }
+   },
+   "required": [
+    "query"
+   ],
+   "type": "object"
+  },
+  "name": "memory_knowledge_graph"
+ },
+ {
+  "description": "Perform contextual memory retrieval with intelligent ranking",
+  "inputSchema": {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "additionalProperties": false,
+   "properties": {
+    "context": {
+     "additionalProperties": false,
+     "properties": {},
+     "type": "object"
+    },
+    "options": {
+     "additionalProperties": false,
+     "properties": {},
+     "type": "object"
+    },
+    "query": {
+     "description": "Search query",
+     "type": "string"
+    }
+   },
+   "required": [
+    "query",
+    "context"
+   ],
+   "type": "object"
+  },
+  "name": "memory_contextual_search"
+ },
+ {
+  "description": "Manage multi-agent memory sharing and collaboration",
+  "inputSchema": {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "additionalProperties": false,
+   "properties": {
+    "action": {
+     "description": "Action to perform",
+     "enum": [
+      "register_agent",
+      "share_memory",
+      "sync_request",
+      "get_insights",
+      "network_status"
+     ],
+     "type": "string"
+    },
+    "agentInfo": {
+     "additionalProperties": false,
+     "properties": {},
+     "type": "object"
+    },
+    "memoryId": {
+     "description": "Memory ID for sharing operations",
+     "type": "string"
+    },
+    "options": {
+     "additionalProperties": false,
+     "properties": {},
+     "type": "object"
+    },
+    "targetAgent": {
+     "description": "Target agent for sync operations",
+     "type": "string"
+    }
+   },
+   "required": [
+    "action"
+   ],
+   "type": "object"
+  },
+  "name": "memory_agent_network"
+ },
+ {
+  "description": "Get insights and patterns from memory",
+  "inputSchema": {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "additionalProperties": false,
+   "properties": {
+    "projectId": {
+     "description": "Project ID to analyze",
+     "type": "string"
+    },
+    "timeRange": {
+     "additionalProperties": false,
+     "description": "Time range for analysis",
+     "properties": {},
+     "type": "object"
+    }
+   },
+   "type": "object"
+  },
+  "name": "memory_insights"
+ },
+ {
+  "description": "Find similar projects from memory",
+  "inputSchema": {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "additionalProperties": false,
+   "properties": {
+    "analysisId": {
+     "description": "Analysis ID to find similar projects for",
+     "type": "string"
+    },
+    "limit": {
+     "default": 5,
+     "description": "Maximum number of similar projects",
+     "type": "number"
+    }
+   },
+   "required": [
+    "analysisId"
+   ],
+   "type": "object"
+  },
+  "name": "memory_similar"
+ },
+ {
+  "description": "Export memories to JSON or CSV",
+  "inputSchema": {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "additionalProperties": false,
+   "properties": {
+    "filter": {
+     "additionalProperties": false,
+     "description": "Filter memories to export",
+     "properties": {},
+     "type": "object"
+    },
+    "format": {
+     "default": "json",
+     "description": "Export format",
+     "enum": [
+      "json",
+      "csv"
+     ],
+     "type": "string"
+    }
+   },
+   "type": "object"
+  },
+  "name": "memory_export"
+ },
+ {
+  "description": "Clean up old memories",
+  "inputSchema": {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "additionalProperties": false,
+   "properties": {
+    "daysToKeep": {
+     "default": 30,
+     "description": "Number of days of memories to keep",
+     "type": "number"
+    },
+    "dryRun": {
+     "default": false,
+     "description": "Preview what would be deleted without actually deleting",
+     "type": "boolean"
+    }
+   },
+   "type": "object"
+  },
+  "name": "memory_cleanup"
+ },
+ {
+  "description": "Intelligent memory pruning and optimization",
+  "inputSchema": {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "additionalProperties": false,
+   "properties": {
+    "dryRun": {
+     "default": false,
+     "description": "Preview pruning without executing",
+     "type": "boolean"
+    },
+    "policy": {
+     "additionalProperties": false,
+     "properties": {},
+     "type": "object"
+    }
+   },
+   "type": "object"
+  },
+  "name": "memory_pruning"
+ },
+ {
+  "description": "Analyze temporal patterns and trends in memory data",
+  "inputSchema": {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "additionalProperties": false,
+   "properties": {
+    "analysisType": {
+     "default": "patterns",
+     "enum": [
+      "patterns",
+      "metrics",
+      "predictions",
+      "insights"
+     ],
+     "type": "string"
+    },
+    "query": {
+     "additionalProperties": false,
+     "properties": {},
+     "type": "object"
+    }
+   },
+   "type": "object"
+  },
+  "name": "memory_temporal_analysis"
+ },
+ {
+  "description": "Generate visual representations of memory data",
+  "inputSchema": {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "additionalProperties": false,
+   "properties": {
+    "customVisualization": {
+     "additionalProperties": false,
+     "properties": {},
+     "type": "object"
+    },
+    "options": {
+     "additionalProperties": false,
+     "properties": {},
+     "type": "object"
+    },
+    "visualizationType": {
+     "default": "dashboard",
+     "enum": [
+      "dashboard",
+      "timeline",
+      "network",
+      "heatmap",
+      "distribution",
+      "trends",
+      "custom"
+     ],
+     "type": "string"
+    }
+   },
+   "type": "object"
+  },
+  "name": "memory_visualization"
+ },
+ {
+  "description": "Advanced memory export with multiple formats and options",
+  "inputSchema": {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "additionalProperties": false,
+   "properties": {
+    "options": {
+     "additionalProperties": false,
+     "properties": {},
+     "type": "object"
+    },
+    "outputPath": {
+     "description": "Output file path",
+     "type": "string"
+    }
+   },
+   "required": [
+    "outputPath"
+   ],
+   "type": "object"
+  },
+  "name": "memory_export_advanced"
+ },
+ {
+  "description": "Advanced memory import with validation and conflict resolution",
+  "inputSchema": {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "additionalProperties": false,
+   "properties": {
+    "inputPath": {
+     "description": "Input file path",
+     "type": "string"
+    },
+    "options": {
+     "additionalProperties": false,
+     "properties": {},
+     "type": "object"
+    }
+   },
+   "required": [
+    "inputPath"
+   ],
+   "type": "object"
+  },
+  "name": "memory_import_advanced"
+ },
+ {
+  "description": "Create and execute migration plans between different memory systems",
+  "inputSchema": {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "additionalProperties": false,
+   "properties": {
+    "action": {
+     "default": "create_plan",
+     "enum": [
+      "create_plan",
+      "execute_migration",
+      "validate_compatibility"
+     ],
+     "type": "string"
+    },
+    "migrationPlan": {
+     "additionalProperties": false,
+     "properties": {},
+     "type": "object"
+    },
+    "options": {
+     "additionalProperties": false,
+     "properties": {},
+     "type": "object"
+    },
+    "sourcePath": {
+     "description": "Source data path",
+     "type": "string"
+    },
+    "sourceSchema": {
+     "additionalProperties": false,
+     "description": "Source system schema",
+     "properties": {},
+     "type": "object"
+    },
+    "targetSchema": {
+     "additionalProperties": false,
+     "description": "Target system schema",
+     "properties": {},
+     "type": "object"
+    }
+   },
+   "type": "object"
+  },
+  "name": "memory_migration"
+ },
+ {
+  "description": "Get comprehensive optimization metrics and recommendations",
+  "inputSchema": {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "additionalProperties": false,
+   "properties": {
+    "includeRecommendations": {
+     "default": true,
+     "type": "boolean"
+    },
+    "timeRange": {
+     "additionalProperties": false,
+     "properties": {},
+     "type": "object"
+    }
+   },
+   "type": "object"
+  },
+  "name": "memory_optimization_metrics"
+ }
+]
