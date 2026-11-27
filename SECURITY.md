@@ -1,107 +1,56 @@
-# Security Policy
+# Security policy
 
-## Supported Versions
+## Supported versions
 
-We release security updates for the following versions of DocuMCP:
+| Version | Supported |
+|---|---|
+| 1.x (latest: 1.0.0 on npm) | ✅ security fixes |
+| < 1.0 | ❌ |
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 1.x.x   | :white_check_mark: |
-| < 1.0   | :x:                |
+v2.0 is in development on `main`; when it is released, 1.x gets fixes for high and critical
+issues for three months.
 
-## Reporting a Vulnerability
+## Reporting a vulnerability
 
-We take the security of DocuMCP seriously. If you believe you have found a security vulnerability, please follow these steps:
+**Please don't open a public issue.** Report it privately through GitHub:
+[Report a vulnerability](https://github.com/tosin2013/documcp/security/advisories/new)
+(the repository's Security tab → Advisories → *Report a vulnerability*).
 
-### 1. **Do Not Disclose Publicly**
+Include what you found, how to reproduce it (a repository layout or a tool call with its
+arguments is ideal), which version you ran, and what an attacker gains.
 
-Please do not disclose the vulnerability publicly until we have had time to investigate and provide a fix.
+This is a project maintained by one person. You can expect an acknowledgement within a week and
+an assessment within two; a fix for a confirmed issue is released as soon as it is ready, and you
+are credited in the advisory unless you ask not to be.
 
-### 2. **Submit a Private Report**
+## What DocuMCP can touch
 
-Email your findings to [security@yourdomain.com] or create a private security advisory on GitHub.
+DocuMCP is an MCP server that runs locally, over stdio, with the permissions of the user who
+starts it. It has no network listener and no authentication of its own: whoever can send it MCP
+requests (your MCP client, and the model driving it) can use every tool. Knowing what the tools
+do helps you judge a report, or your own setup:
 
-### 3. **Include Details**
+- **Files.** Tools read the repository paths they are given, and some write documentation,
+  configuration and workflow files into them. DocuMCP keeps its own state in
+  `.documcp/memory/` in the working directory (or `DOCUMCP_STORAGE_DIR`).
+- **Commands.** `test_local_deployment` runs the chosen static site generator's build and serve
+  commands (for example `npm run build`, `hugo server`) in the repository, so it runs that
+  repository's scripts. Only point it at repositories you trust.
+- **Network.** Off by default. Link checking contacts external URLs only when asked
+  (`followExternalLinks`), and the GitHub issues integration calls the GitHub API only when
+  configured with a token.
+- **Credentials.** DocuMCP stores none. Generated deployment workflows refer to secrets (for
+  example `VERCEL_TOKEN`) by name, for you to add to your CI; review a generated workflow before
+  you commit it.
 
-Please provide:
+In scope: a tool that reads or writes outside the paths it was given, runs commands it
+shouldn't, leaks file contents or tokens, or generates an unsafe workflow; and vulnerabilities in
+DocuMCP's dependencies that affect it. Out of scope: what a model does with tools you allowed it
+to use, and issues that need an attacker who can already run commands as you.
 
-- Description of the vulnerability
-- Steps to reproduce
-- Potential impact
-- Any suggested fixes
-- Your contact information
+## How dependencies are kept safe
 
-### 4. **Response Time**
-
-We will:
-
-- Acknowledge receipt within 48 hours
-- Provide a preliminary assessment within 3 business days
-- Keep you informed of our progress
-- Work with you on public disclosure timing
-
-## Security Best Practices
-
-### For Users
-
-- Keep your DocuMCP installation up to date
-- Review and understand the permissions required
-- Use secure communication channels
-- Regularly audit your documentation deployment workflows
-
-### For Developers
-
-- Follow secure coding practices
-- Use dependency scanning tools
-- Regular security reviews of code
-- Implement proper input validation
-- Keep dependencies updated
-
-## Security Considerations
-
-### MCP Protocol Security
-
-DocuMCP operates as a Model Context Protocol server. Please ensure:
-
-- Proper authentication and authorization for MCP connections
-- Secure transport layer (TLS/SSL) for network communications
-- Regular review of MCP client permissions
-
-### Documentation Deployment
-
-When using DocuMCP for documentation deployment:
-
-- Review generated GitHub Actions workflows
-- Ensure proper secret management
-- Validate deployment configurations
-- Monitor deployment logs for anomalies
-
-## Dependency Security
-
-We regularly monitor our dependencies for security vulnerabilities:
-
-- Automated dependency scanning with GitHub Dependabot
-- Regular security updates
-- Pinned dependency versions for stability
-
-## Incident Response
-
-In case of a security incident:
-
-1. **Contain**: Isolate affected systems
-2. **Assess**: Determine scope and impact
-3. **Fix**: Develop and deploy patches
-4. **Communicate**: Notify affected users
-5. **Learn**: Conduct post-mortem analysis
-
-## Contact
-
-For security-related concerns:
-
-- **Email**: security@yourdomain.com
-- **PGP Key**: [Available upon request]
-- **Response Time**: Within 48 hours for initial response
-
-## Acknowledgments
-
-We thank security researchers and users who help us keep DocuMCP secure through responsible disclosure.
+- CI's **Security Audit** job runs `npm audit --production` and fails on any high or critical
+  finding; it is not loosened to get a release out.
+- Dependabot opens update pull requests; CodeQL and dependency review run on pull requests.
+- Dependency changes go through a reviewed planning pull request (constitution VI).
