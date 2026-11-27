@@ -92,8 +92,7 @@
     "tree-sitter-typescript": "^0.23.2",
     "tree-sitter-yaml": "^0.5.0",
     "web-tree-sitter": "^0.25.9",
-    "zod": "^3.22.4",
-    "zod-to-json-schema": "^3.24.6"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.8.1",
